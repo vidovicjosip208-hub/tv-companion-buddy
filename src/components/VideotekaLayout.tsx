@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import StarryBackground from "@/components/StarryBackground";
 import VideotekaHeader, { VideotekaHeaderHandle } from "@/components/VideotekaHeader";
@@ -114,7 +114,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
         case "Backspace":
         case "Escape":
           e.preventDefault();
-          navigate({ to: "/" });
+          navigate("/");
           break;
         case "Enter":
           e.preventDefault();
