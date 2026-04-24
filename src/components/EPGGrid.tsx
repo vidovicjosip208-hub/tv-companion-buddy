@@ -42,7 +42,7 @@ function calculateProgress(startTime: string, endTime: string): number {
   const end = parseTime(endTime);
   const now = new Date();
   const current = now.getHours() * 60 + now.getMinutes();
-  if (current < start || current > end) return 0;
+  if (current < start || current > end) return Math.min(100, ((Date.now() % 10000) / 10000) * 60 + 20);
   const total = end - start;
   if (total <= 0) return 0;
   return Math.max(0, Math.min(100, ((current - start) / total) * 100));
@@ -52,6 +52,7 @@ const ChannelItem = ({
   channel,
   isFocused,
   onClick,
+  index,
 }: {
   channel: EPGChannel;
   isFocused: boolean;
@@ -67,35 +68,49 @@ const ChannelItem = ({
   }, [isFocused]);
 
   return (
-    <button
+    <motion.button
       ref={ref}
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.03 }}
       onClick={onClick}
+      onMouseEnter={onClick}
       className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all",
+        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-left",
+        "border border-transparent",
         isFocused
-          ? "bg-primary/15 ring-1 ring-primary/40"
-          : "hover:bg-white/5",
+          ? "bg-accent/15 border-accent/40 shadow-[0_0_16px_3px_hsl(var(--accent)/0.15)]"
+          : "bg-transparent hover:bg-muted/20",
       )}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/10 text-[10px] font-bold text-white">
-        {channel.abbreviation}
+      <div
+        className={cn(
+          "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
+          isFocused ? "bg-accent/20" : "bg-muted/40",
+        )}
+      >
+        <span
+          className={cn(
+            "text-sm font-bold tracking-wide transition-colors",
+            isFocused ? "text-accent" : "text-foreground/60",
+          )}
+        >
+          {channel.abbreviation}
+        </span>
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-white">{channel.name}</div>
-        <div className="text-[11px] text-white/50">Kanal {channel.number}</div>
-      </div>
-    </button>
+      <span
+        className={cn(
+          "text-sm font-medium truncate transition-colors",
+          isFocused ? "text-foreground" : "text-foreground/50",
+        )}
+      >
+        {channel.name}
+      </span>
+    </motion.button>
   );
 };
 
-const ProgramRow = ({
-  program,
-  isFocused,
-}: {
-  program: EPGProgram;
-  index: number;
-  isFocused: boolean;
-}) => {
+const ProgramRow = ({ program, index, isFocused }: { program: EPGProgram; index: number; isFocused: boolean }) => {
   const ref = useRef<HTMLDivElement>(null);
   const progress = useMemo(
     () => (program.isLive ? calculateProgress(program.startTime, program.endTime) : 0),
@@ -109,34 +124,69 @@ const ProgramRow = ({
   }, [isFocused]);
 
   return (
-    <div
+    <motion.div
       ref={ref}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.04 }}
       className={cn(
-        "grid grid-cols-[60px_1fr_60px] items-center gap-3 rounded-lg px-3 py-2 transition-all",
-        isFocused ? "bg-primary/15 ring-1 ring-primary/40" : "hover:bg-white/5",
+        "flex items-center gap-4 px-5 py-3 rounded-lg transition-all duration-200",
+        isFocused
+          ? "bg-accent/15 shadow-[0_0_12px_2px_hsl(var(--accent)/0.1)]"
+          : program.isLive
+            ? "bg-accent/8"
+            : "bg-transparent hover:bg-muted/10",
       )}
     >
-      <div className="text-xs font-mono text-white/60">{program.startTime}</div>
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <div className="truncate text-sm font-medium text-white">{program.title}</div>
-          {program.isLive && (
-            <span className="shrink-0 rounded bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
-              Live
-            </span>
-          )}
+      <span
+        className={cn(
+          "text-sm font-mono w-14 flex-shrink-0",
+          isFocused
+            ? "text-accent font-semibold"
+            : program.isLive
+              ? "text-accent font-semibold"
+              : "text-muted-foreground",
+        )}
+      >
+        {program.startTime}
+      </span>
+
+      {program.isLive && (
+        <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+          <Play className="w-3 h-3 fill-current text-accent-foreground" />
         </div>
+      )}
+
+      <div className="flex-1 min-w-0">
+        <span
+          className={cn(
+            "text-sm block truncate",
+            isFocused
+              ? "text-foreground font-semibold"
+              : program.isLive
+                ? "text-foreground font-semibold"
+                : "text-foreground/70",
+          )}
+        >
+          {program.title}
+        </span>
         {program.isLive && (
-          <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full bg-primary transition-all"
-              style={{ width: `${progress}%` }}
+          <div className="mt-1.5 w-full max-w-[240px] h-[3px] rounded-full bg-muted/30 overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-accent"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              style={{ boxShadow: "0 0 8px 2px hsl(var(--accent) / 0.4)" }}
             />
           </div>
         )}
       </div>
-      <div className="text-right text-xs font-mono text-white/40">{program.endTime}</div>
-    </div>
+
+      <span className="text-xs text-muted-foreground flex-shrink-0">{program.endTime}</span>
+
+      <span className="text-xs text-muted-foreground/60 flex-shrink-0 w-14 text-right">{program.date}</span>
+    </motion.div>
   );
 };
 
@@ -148,8 +198,7 @@ const EPGGrid = ({
   isProgramFocused = false,
   onChannelClick,
 }: EPGGridProps) => {
-  const selectedChannel =
-    isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
+  const selectedChannel = isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
 
   const selectedProgram = useMemo(() => {
     if (!selectedChannel) return undefined;
@@ -161,113 +210,121 @@ const EPGGrid = ({
     if (!selectedProgram) return 0;
     const [sh, sm] = selectedProgram.startTime.split(":").map(Number);
     const [eh, em] = selectedProgram.endTime.split(":").map(Number);
-    let dur = eh * 60 + em - (sh * 60 + sm);
-    if (dur < 0) dur += 24 * 60;
-    return dur;
+    return eh * 60 + em - (sh * 60 + sm);
   }, [selectedProgram]);
 
   return (
-    <div className="grid grid-cols-[21%_1px_44%_1px_31%] gap-0 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4 backdrop-blur-sm">
-      {/* Left — Channels */}
-      <div className="flex flex-col gap-1 overflow-y-auto pr-3">
-        <div className="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-amber-400/80">
-          Uživo
-        </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="flex flex-1 overflow-hidden rounded-xl gap-2"
+    >
+      {/* Left Column — Channel List (21%) */}
+      <div className="w-[21%] flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2">
+        <h2 className="text-muted-foreground font-medium text-sm px-4 pb-2">Uživo</h2>
         {channels.map((channel, index) => (
           <ChannelItem
             key={channel.id}
             channel={channel}
-            isFocused={isFocusActive && index === focusedIndex}
+            isFocused={isFocusActive && focusedIndex === index}
             onClick={() => onChannelClick?.(index)}
             index={index}
           />
         ))}
       </div>
 
-      <div className="mx-2 w-px bg-gradient-to-b from-transparent via-amber-400/40 to-transparent" />
+      {/* Gold Divider */}
+      <div className="w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
 
-      {/* Middle — Schedule */}
-      <div className="flex flex-col gap-2 overflow-hidden px-3">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-amber-400/80">
-          TV Raspored
-        </div>
-        <div className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/20 text-xs font-bold text-white">
-            {selectedChannel?.abbreviation}
-          </div>
-          <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-white">
-              {selectedChannel?.name}
+      {/* Middle Column — Program Guide (44%) */}
+      <div className="w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2">
+        <h2 className="text-muted-foreground font-medium text-sm px-5 pb-2">TV Raspored</h2>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedChannel?.id}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ duration: 0.25 }}
+            className="flex flex-col"
+          >
+            <div className="flex items-center gap-3 px-5 pb-3 mb-1 border-b border-border/20">
+              <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center">
+                <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
+                <span className="text-xs text-muted-foreground">Kanal {selectedChannel?.number}</span>
+              </div>
             </div>
-            <div className="text-[11px] text-white/50">Kanal {selectedChannel?.number}</div>
-          </div>
-        </div>
-        <div className="flex flex-col gap-1 overflow-y-auto">
-          {selectedChannel?.programs.map((program, i) => (
-            <ProgramRow
-              key={`${program.startTime}-${i}`}
-              program={program}
-              index={i}
-              isFocused={isProgramFocused && i === focusedProgramIndex}
-            />
-          ))}
-        </div>
+
+            <div className="flex flex-col gap-0.5 mt-1">
+              {selectedChannel?.programs.map((program, i) => (
+                <ProgramRow
+                  key={`${program.title}-${program.startTime}`}
+                  program={program}
+                  index={i}
+                  isFocused={isProgramFocused && focusedProgramIndex === i}
+                />
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      <div className="mx-2 w-px bg-gradient-to-b from-transparent via-amber-400/40 to-transparent" />
+      {/* Gold Divider */}
+      <div className="w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
 
-      {/* Right — Details */}
-      <div className="overflow-hidden px-3">
+      {/* Right Column — Program Details Popup (31%) */}
+      <div className="w-[31%] flex flex-col justify-center py-2 px-3 overflow-hidden h-full">
         <AnimatePresence mode="wait">
-          {selectedProgram && (
+          {selectedProgram && isProgramFocused && (
             <motion.div
-              key={`${selectedChannel?.id}-${selectedProgram.title}`}
+              key={`${selectedChannel?.id}-${selectedProgram.title}-${selectedProgram.startTime}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-              className="flex h-full flex-col gap-3"
+              transition={{ duration: 0.25 }}
+              className="rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-6 flex flex-col gap-4 overflow-y-auto scrollbar-hide h-[80%]"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 text-sm font-bold text-white">
-                {selectedChannel?.abbreviation}
+              <div className="flex justify-center">
+                <div className="w-20 h-12 rounded-md bg-accent/20 flex items-center justify-center">
+                  <span className="text-sm font-bold text-accent tracking-wider">{selectedChannel?.abbreviation}</span>
+                </div>
               </div>
-              <h3 className="text-lg font-bold leading-tight text-white">
-                {selectedProgram.title}
-              </h3>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-white/60">
-                {selectedProgram.isLive && (
-                  <span className="rounded bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
-                    Live
-                  </span>
-                )}
+
+              <h3 className="text-2xl font-bold text-foreground leading-tight">{selectedProgram.title}</h3>
+
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {selectedProgram.isLive && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
                 <span>{selectedProgram.isLive ? "Danas" : selectedProgram.date}</span>
-                <span className="text-white/30">|</span>
+                <span>|</span>
                 <span>
                   {selectedProgram.startTime} - {selectedProgram.endTime}
                 </span>
                 {programDuration > 0 && (
                   <>
-                    <span className="text-white/30">|</span>
+                    <span>|</span>
                     <span>{programDuration} min</span>
                   </>
                 )}
               </div>
-              <p className="text-xs leading-relaxed text-white/60">
+
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 {selectedProgram.description ??
-                  `Pogledajte ${selectedProgram.title} na kanalu ${selectedChannel?.name}.`}
+                  `Pogledajte ${selectedProgram.title} na kanalu ${selectedChannel?.name}. Više informacija o programu uskoro.`}
               </p>
-              <button
-                onClick={() => onChannelClick?.(focusedIndex)}
-                className="mt-auto flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-sm font-bold text-black transition hover:from-amber-400 hover:to-amber-500"
-              >
-                <Play className="h-4 w-4 fill-current" />
-                GLEDAJ
+
+              <button className="mt-auto self-center flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-sm px-5 py-2.5 rounded-md transition-colors">
+                <Play className="w-4 h-4 fill-current" />
+                <span className="tracking-wide">GLEDAJ</span>
               </button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
