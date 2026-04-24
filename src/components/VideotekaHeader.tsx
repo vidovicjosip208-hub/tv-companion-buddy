@@ -132,7 +132,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
             {/* Home button — index 0 */}
             <button
               ref={(el) => (buttonRefs.current[0] = el)}
-              onClick={() => navigate("/")}
+              onClick={() => navigate({ to: "/" })}
               onFocus={() => handleButtonFocus(0)}
               onBlur={handleButtonBlur}
               className={cn(

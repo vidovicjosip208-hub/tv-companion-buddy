@@ -114,7 +114,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
         case "Backspace":
         case "Escape":
           e.preventDefault();
-          navigate("/");
+          navigate({ to: "/" });
           break;
         case "Enter":
           e.preventDefault();
