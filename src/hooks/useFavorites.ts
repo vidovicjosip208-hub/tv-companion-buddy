@@ -1,37 +1,45 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 
-const KEY = "tv_favorites";
+const STORAGE_KEY = "tv-favorites";
 
-export function useFavorites() {
-  const [favorites, setFavorites] = useState<string[]>([]);
-
-  useEffect(() => {
-    try {
-      const raw = typeof window !== "undefined" ? window.localStorage.getItem(KEY) : null;
-      if (raw) setFavorites(JSON.parse(raw));
-    } catch {
-      // ignore
+/** Stored as an ordered array — insertion order determines the channel number. */
+const loadFavorites = (): string[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
     }
+  } catch {}
+  return [];
+};
+
+const saveFavorites = (favs: string[]) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
+};
+
+export const useFavorites = () => {
+  const [favorites, setFavorites] = useState<string[]>(loadFavorites);
+
+  const toggleFavorite = useCallback((channelName: string) => {
+    setFavorites((prev) => {
+      const idx = prev.indexOf(channelName);
+      const next = idx >= 0 ? prev.filter((n) => n !== channelName) : [...prev, channelName];
+      saveFavorites(next);
+      return next;
+    });
   }, []);
 
-  const persist = (next: string[]) => {
-    setFavorites(next);
-    try {
-      window.localStorage.setItem(KEY, JSON.stringify(next));
-    } catch {
-      // ignore
-    }
-  };
+  const isFavorite = useCallback((channelName: string) => favorites.includes(channelName), [favorites]);
 
-  const toggleFavorite = useCallback(
-    (id: string) => {
-      const next = favorites.includes(id) ? favorites.filter((f) => f !== id) : [...favorites, id];
-      persist(next);
+  /** Returns the 1-based order number of the channel, or 0 if not a favorite. */
+  const favoriteNumber = useCallback(
+    (channelName: string) => {
+      const idx = favorites.indexOf(channelName);
+      return idx >= 0 ? idx + 1 : 0;
     },
     [favorites],
   );
 
-  const isFavorite = useCallback((id: string) => favorites.includes(id), [favorites]);
-
-  return { favorites, toggleFavorite, isFavorite };
-}
+  return { favorites, toggleFavorite, isFavorite, favoriteNumber };
+};
