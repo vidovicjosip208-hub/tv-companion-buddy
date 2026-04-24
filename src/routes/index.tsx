@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import TVSidebar from "@/components/TVSidebar";
 import TVHeader from "@/components/TVHeader";
@@ -702,9 +702,9 @@ const Index = () => {
   const handleSidebarAction = useCallback(
     (index: number) => {
       if (index === FILMOVI_INDEX) {
-        navigate("/videoteka");
+        navigate({ to: "/videoteka" });
       } else if (index === SETTINGS_INDEX) {
-        navigate("/settings");
+        navigate({ to: "/settings" });
       } else if (index === PROFILE_INDEX) {
         setShowProfile(true);
       } else if (index === TV_KANALI_INDEX) {
@@ -1044,9 +1044,9 @@ const Index = () => {
           setFocusZone("sidebar");
           setSidebarExpanded(true);
           if (i === FILMOVI_INDEX) {
-            navigate("/videoteka");
+            navigate({ to: "/videoteka" });
           } else if (i === SETTINGS_INDEX) {
-            navigate("/settings");
+            navigate({ to: "/settings" });
           } else if (i === PROFILE_INDEX) {
             setShowProfile(true);
           } else if (i === TV_KANALI_INDEX) {
