@@ -1,37 +1,58 @@
-import { useEffect, useState } from "react";
-import { Volume2, Wifi, Search } from "lucide-react";
+import { Clock, CloudRain } from "lucide-react";
+import { useState, useEffect } from "react";
+import logo from "@/assets/max-ovizija-logo.png";
+import { motion } from "framer-motion";
 
 const TVHeader = () => {
-  const [now, setNow] = useState<Date | null>(null);
+  const [time, setTime] = useState(new Date());
 
   useEffect(() => {
-    setNow(new Date());
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  const time = now
-    ? now.toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" })
-    : "--:--";
-  const date = now
-    ? now.toLocaleDateString("sr-RS", { weekday: "long", day: "numeric", month: "long" })
-    : "";
+  const hours = time.getHours().toString().padStart(2, "0");
+  const minutes = time.getMinutes().toString().padStart(2, "0");
+  const dateStr = `${time.getDate().toString().padStart(2, "0")}.${(time.getMonth() + 1).toString().padStart(2, "0")}. ${["Ned", "Pon", "Uto", "Sri", "Čet", "Pet", "Sub"][time.getDay()]}`;
 
   return (
-    <header className="flex items-center justify-between border-b border-white/5 bg-black/40 px-8 py-4 backdrop-blur-md">
-      <div>
-        <h1 className="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-2xl font-black tracking-tight text-transparent">
-          LovableTV
-        </h1>
-        <p className="mt-0.5 text-xs capitalize text-white/50">{date}</p>
+    <motion.header
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="flex items-center justify-between px-8 py-4"
+    >
+      {/* Logo */}
+      <div className="flex items-center">
+        <img src={logo} alt="Max Ovizija" className="h-28 w-auto -mt-5" />
       </div>
-      <div className="flex items-center gap-6 text-white/70">
-        <Search className="h-5 w-5 cursor-pointer transition hover:text-white" />
-        <Volume2 className="h-5 w-5" />
-        <Wifi className="h-5 w-5" />
-        <div className="font-mono text-lg font-semibold tabular-nums text-white">{time}</div>
+
+      {/* Center - Subscription Notice */}
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full border border-accent/40 flex items-center justify-center">
+          <Clock className="w-4 h-4 text-accent" />
+        </div>
+        <span className="text-accent font-medium text-sm">Vaša pretplata ističe za 30 dan/a</span>
       </div>
-    </header>
+
+      {/* Right - Time & Weather */}
+      <div className="flex items-center gap-6">
+        <div className="text-right">
+          <div className="text-foreground font-bold text-2xl leading-none">
+            {hours}:{minutes}
+          </div>
+          <div className="text-muted-foreground text-xs">{dateStr}</div>
+        </div>
+        <div className="w-px h-8 bg-border" />
+        <div className="flex items-center gap-2">
+          <CloudRain className="w-5 h-5 text-muted-foreground" />
+          <div className="text-right">
+            <div className="text-foreground font-semibold text-sm">12°C</div>
+            <div className="text-muted-foreground text-xs">Belgrade</div>
+          </div>
+        </div>
+      </div>
+    </motion.header>
   );
 };
 
