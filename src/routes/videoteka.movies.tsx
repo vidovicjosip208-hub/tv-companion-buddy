@@ -1,9 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import VideotekaLayout from "@/components/VideotekaLayout";
 
-export const Route = createFileRoute("/videoteka/movies")({
-  component: VideotekaMovies,
-});
+const VideotekaMovies = () => {
+  return <VideotekaLayout initialTab="Movies" />;
+};
 
-function VideotekaMovies() {
-  return <div className="p-6 text-white">Filmovi</div>;
-}
+export default VideotekaMovies;
