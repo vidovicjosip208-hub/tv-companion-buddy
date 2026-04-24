@@ -1,12 +1,8 @@
-import { Link, type LinkProps } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { type ComponentProps } from "react";
 
-interface NavLinkProps extends LinkProps {
-  children: ReactNode;
+type ThemeProviderProps = ComponentProps<typeof NextThemesProvider>;
+
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
-
-const NavLink = ({ children, ...props }: NavLinkProps) => {
-  return <Link {...props}>{children}</Link>;
-};
-
-export default NavLink;
