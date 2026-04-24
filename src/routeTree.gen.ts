@@ -9,8 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VideotekaRouteImport } from './routes/videoteka'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProfiliRouteImport } from './routes/profili'
 import { Route as IndexRouteImport } from './routes/index'
 
+const VideotekaRoute = VideotekaRouteImport.update({
+  id: '/videoteka',
+  path: '/videoteka',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfiliRoute = ProfiliRouteImport.update({
+  id: '/profili',
+  path: '/profili',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +37,61 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/profili': typeof ProfiliRoute
+  '/settings': typeof SettingsRoute
+  '/videoteka': typeof VideotekaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/profili': typeof ProfiliRoute
+  '/settings': typeof SettingsRoute
+  '/videoteka': typeof VideotekaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/profili': typeof ProfiliRoute
+  '/settings': typeof SettingsRoute
+  '/videoteka': typeof VideotekaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/profili' | '/settings' | '/videoteka'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/profili' | '/settings' | '/videoteka'
+  id: '__root__' | '/' | '/profili' | '/settings' | '/videoteka'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProfiliRoute: typeof ProfiliRoute
+  SettingsRoute: typeof SettingsRoute
+  VideotekaRoute: typeof VideotekaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/videoteka': {
+      id: '/videoteka'
+      path: '/videoteka'
+      fullPath: '/videoteka'
+      preLoaderRoute: typeof VideotekaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profili': {
+      id: '/profili'
+      path: '/profili'
+      fullPath: '/profili'
+      preLoaderRoute: typeof ProfiliRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +104,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProfiliRoute: ProfiliRoute,
+  SettingsRoute: SettingsRoute,
+  VideotekaRoute: VideotekaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
