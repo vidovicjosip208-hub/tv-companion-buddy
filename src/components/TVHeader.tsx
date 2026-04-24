@@ -2,19 +2,20 @@ import { useEffect, useState } from "react";
 import { Volume2, Wifi, Search } from "lucide-react";
 
 const TVHeader = () => {
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    setNow(new Date());
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  const time = now.toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" });
-  const date = now.toLocaleDateString("sr-RS", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const time = now
+    ? now.toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" })
+    : "--:--";
+  const date = now
+    ? now.toLocaleDateString("sr-RS", { weekday: "long", day: "numeric", month: "long" })
+    : "";
 
   return (
     <header className="flex items-center justify-between border-b border-white/5 bg-black/40 px-8 py-4 backdrop-blur-md">
