@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfiliRouteImport } from './routes/profili'
 import { Route as PlayerRouteImport } from './routes/player'
-import { Route as VideotekaShowsRouteImport } from './routes/videoteka.shows'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -29,44 +28,35 @@ const PlayerRoute = PlayerRouteImport.update({
   path: '/player',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VideotekaShowsRoute = VideotekaShowsRouteImport.update({
-  id: '/videoteka/shows',
-  path: '/videoteka/shows',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/player': typeof PlayerRoute
   '/profili': typeof ProfiliRoute
   '/settings': typeof SettingsRoute
-  '/videoteka/shows': typeof VideotekaShowsRoute
 }
 export interface FileRoutesByTo {
   '/player': typeof PlayerRoute
   '/profili': typeof ProfiliRoute
   '/settings': typeof SettingsRoute
-  '/videoteka/shows': typeof VideotekaShowsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/player': typeof PlayerRoute
   '/profili': typeof ProfiliRoute
   '/settings': typeof SettingsRoute
-  '/videoteka/shows': typeof VideotekaShowsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/player' | '/profili' | '/settings' | '/videoteka/shows'
+  fullPaths: '/player' | '/profili' | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/player' | '/profili' | '/settings' | '/videoteka/shows'
-  id: '__root__' | '/player' | '/profili' | '/settings' | '/videoteka/shows'
+  to: '/player' | '/profili' | '/settings'
+  id: '__root__' | '/player' | '/profili' | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   PlayerRoute: typeof PlayerRoute
   ProfiliRoute: typeof ProfiliRoute
   SettingsRoute: typeof SettingsRoute
-  VideotekaShowsRoute: typeof VideotekaShowsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,13 +82,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayerRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/videoteka/shows': {
-      id: '/videoteka/shows'
-      path: '/videoteka/shows'
-      fullPath: '/videoteka/shows'
-      preLoaderRoute: typeof VideotekaShowsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -106,7 +89,6 @@ const rootRouteChildren: RootRouteChildren = {
   PlayerRoute: PlayerRoute,
   ProfiliRoute: ProfiliRoute,
   SettingsRoute: SettingsRoute,
-  VideotekaShowsRoute: VideotekaShowsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
