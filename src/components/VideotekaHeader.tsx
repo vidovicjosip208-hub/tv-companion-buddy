@@ -1,6 +1,6 @@
 import { Home, Search } from "lucide-react";
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-videoteka-logo.png";
 
