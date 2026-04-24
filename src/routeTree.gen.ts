@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfiliRouteImport } from './routes/profili'
 import { Route as PlayerRouteImport } from './routes/player'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as VideotekaShowsRouteImport } from './routes/videoteka.shows'
 import { Route as VideotekaMoviesRouteImport } from './routes/videoteka.movies'
 
@@ -31,11 +30,6 @@ const PlayerRoute = PlayerRouteImport.update({
   path: '/player',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const VideotekaShowsRoute = VideotekaShowsRouteImport.update({
   id: '/videoteka/shows',
   path: '/videoteka/shows',
@@ -48,7 +42,6 @@ const VideotekaMoviesRoute = VideotekaMoviesRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/player': typeof PlayerRoute
   '/profili': typeof ProfiliRoute
   '/settings': typeof SettingsRoute
@@ -56,7 +49,6 @@ export interface FileRoutesByFullPath {
   '/videoteka/shows': typeof VideotekaShowsRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/player': typeof PlayerRoute
   '/profili': typeof ProfiliRoute
   '/settings': typeof SettingsRoute
@@ -65,7 +57,6 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/player': typeof PlayerRoute
   '/profili': typeof ProfiliRoute
   '/settings': typeof SettingsRoute
@@ -75,7 +66,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/player'
     | '/profili'
     | '/settings'
@@ -83,7 +73,6 @@ export interface FileRouteTypes {
     | '/videoteka/shows'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/player'
     | '/profili'
     | '/settings'
@@ -91,7 +80,6 @@ export interface FileRouteTypes {
     | '/videoteka/shows'
   id:
     | '__root__'
-    | '/'
     | '/player'
     | '/profili'
     | '/settings'
@@ -100,7 +88,6 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   PlayerRoute: typeof PlayerRoute
   ProfiliRoute: typeof ProfiliRoute
   SettingsRoute: typeof SettingsRoute
@@ -131,13 +118,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayerRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/videoteka/shows': {
       id: '/videoteka/shows'
       path: '/videoteka/shows'
@@ -156,7 +136,6 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   PlayerRoute: PlayerRoute,
   ProfiliRoute: ProfiliRoute,
   SettingsRoute: SettingsRoute,
