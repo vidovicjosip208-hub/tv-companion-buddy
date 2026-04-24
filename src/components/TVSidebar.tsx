@@ -1,45 +1,131 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { Tv, Radio, Film, Heart, Camera, User, Settings } from "lucide-react";
+import { Home, Tv, Radio, Heart, Film, Cctv, Sparkles, User, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
-const items = [
-  { label: "TV", to: "/", icon: Tv },
-  { label: "Radio", to: "/radio", icon: Radio },
-  { label: "Filmovi", to: "/videoteka", icon: Film },
-  { label: "Omiljeni", to: "/omiljeni", icon: Heart },
-  { label: "Kamere", to: "/kamere", icon: Camera },
-  { label: "Profil", to: "/profili", icon: User },
-  { label: "Settings", to: "/settings", icon: Settings },
-] as const;
+interface SidebarItem {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+}
 
-const TVSidebar = () => {
-  const { pathname } = useLocation();
+const sidebarItems: SidebarItem[] = [
+  { id: "home", label: "Početna", icon: <Home className="w-6 h-6" /> },
+  { id: "tv", label: "TV Kanali", icon: <Tv className="w-6 h-6" /> },
+  { id: "radio", label: "Radio stanice", icon: <Radio className="w-6 h-6" /> },
+  { id: "favorites", label: "Omiljeni", icon: <Heart className="w-6 h-6" /> },
+  { id: "movies", label: "Videoteka", icon: <Film className="w-6 h-6" /> },
+  { id: "news", label: "Kamere uživo", icon: <Cctv className="w-6 h-6" /> },
+  { id: "settings", label: "Podešavanja", icon: <Settings className="w-6 h-6" /> },
+];
+
+const PROFILE_INDEX = sidebarItems.length; // index 6
+
+interface TVSidebarProps {
+  focusedIndex: number;
+  isExpanded: boolean;
+  isMini?: boolean;
+  onItemClick: (index: number) => void;
+  onItemHover?: (index: number) => void;
+}
+
+const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onItemHover }: TVSidebarProps) => {
+  const showLabels = isExpanded && !isMini;
+  const sidebarWidth = isMini ? 72 : isExpanded ? 240 : 80;
 
   return (
-    <aside className="flex w-20 flex-col items-center gap-2 border-r border-white/5 bg-black/40 py-6 backdrop-blur-md">
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 text-sm font-black text-black">
-        TV
+    <motion.aside
+      initial={{ width: 80 }}
+      animate={{ width: sidebarWidth }}
+      transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+      className="h-full flex flex-col pt-8 pb-6 bg-transparent border-r border-sidebar-border relative z-20 flex-shrink-0"
+    >
+      {/* AI Button at top */}
+      <div className="px-3 mb-8">
+        <button
+          className={cn(
+            "w-full flex items-center justify-center gap-3 px-3 py-3 rounded-xl transition-all duration-300",
+            "bg-accent/10 border border-accent/20 hover:bg-accent/20",
+          )}
+        >
+          <Sparkles className="w-6 h-6 text-accent flex-shrink-0" />
+          {showLabels && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-accent font-semibold text-sm whitespace-nowrap"
+            >
+              AI Analyze
+            </motion.span>
+          )}
+        </button>
       </div>
-      {items.map((item) => {
-        const active = pathname === item.to;
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.to}
-            to={item.to}
-            className={cn(
-              "group flex w-14 flex-col items-center gap-1 rounded-xl px-2 py-3 transition-all",
-              active
-                ? "bg-primary/15 text-amber-400"
-                : "text-white/60 hover:bg-white/5 hover:text-white",
-            )}
-          >
-            <Icon className="h-5 w-5" />
-            <span className="text-[9px] font-medium uppercase tracking-wide">{item.label}</span>
-          </Link>
-        );
-      })}
-    </aside>
+
+      {/* Nav Items */}
+      <nav className="flex-1 flex flex-col gap-1 px-2">
+        {sidebarItems.map((item, index) => {
+          const isFocused = focusedIndex === index;
+          return (
+            <motion.button
+              key={item.id}
+              onClick={() => onItemClick(index)}
+              onMouseEnter={() => {
+                if (item.id !== "movies") {
+                  onItemHover ? onItemHover(index) : onItemClick(index);
+                }
+              }}
+              whileHover={{ scale: 1.02 }}
+              className={cn(
+                "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 w-full",
+                isMini && "justify-center px-2",
+                isFocused ? "text-white bg-muted" : "text-sidebar-foreground hover:bg-muted hover:text-white",
+              )}
+            >
+              <span className="flex-shrink-0">{item.icon}</span>
+              {showLabels && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="font-medium text-base whitespace-nowrap"
+                >
+                  {item.label}
+                </motion.span>
+              )}
+            </motion.button>
+          );
+        })}
+      </nav>
+
+      {/* Profile Button */}
+      <div className="px-2 mt-auto pt-4 border-t border-sidebar-border mx-2">
+        <motion.button
+          onClick={() => onItemClick(PROFILE_INDEX)}
+          onMouseEnter={() => onItemClick(PROFILE_INDEX)}
+          whileHover={{ scale: 1.02 }}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200",
+            isMini && "justify-center px-2",
+            focusedIndex === PROFILE_INDEX
+              ? "text-white bg-muted"
+              : "text-sidebar-foreground hover:bg-muted hover:text-white",
+          )}
+        >
+          <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+            <User className="w-5 h-5 text-white" />
+          </div>
+          {showLabels && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="font-medium text-base whitespace-nowrap"
+            >
+              Profil
+            </motion.span>
+          )}
+        </motion.button>
+      </div>
+    </motion.aside>
   );
 };
 
