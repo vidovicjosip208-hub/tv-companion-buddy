@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 2%;
+    --foreground: 220 20% 95%;
+
+    --card: 0 0% 4%;
+    --card-foreground: 220 20% 95%;
+
+    --popover: 0 0% 4%;
+    --popover-foreground: 220 20% 95%;
+
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 6%;
+    --secondary-foreground: 220 20% 85%;
+
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 45 100% 55%;
+    --accent-foreground: 225 40% 3%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 10%;
+    --input: 0 0% 8%;
+    --ring: 199 89% 48%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 2%;
+    --sidebar-foreground: 0 0% 60%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 199 89% 48%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 8%;
+    --sidebar-ring: 199 89% 48%;
+
+    --glow-primary: 199 89% 48%;
+    --glow-accent: 45 100% 55%;
+  }
+
+  .dark {
+    --background: 0 0% 2%;
+    --foreground: 220 20% 95%;
+
+    --card: 0 0% 4%;
+    --card-foreground: 220 20% 95%;
+
+    --popover: 0 0% 4%;
+    --popover-foreground: 220 20% 95%;
+
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 6%;
+    --secondary-foreground: 220 20% 85%;
+
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 45 100% 55%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 10%;
+    --input: 0 0% 8%;
+    --ring: 199 89% 48%;
+
+    --sidebar-background: 0 0% 2%;
+    --sidebar-foreground: 0 0% 60%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 199 89% 48%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 8%;
+    --sidebar-ring: 199 89% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    overflow: hidden;
+  }
+}
+
+/* Focus glow effect for TV navigation */
+.tv-focus-glow {
+  box-shadow:
+    0 0 0 3px hsl(var(--accent) / 0.6),
+    0 0 25px 8px rgba(255, 255, 255, 0.08),
+    0 0 50px 16px rgba(255, 255, 255, 0.04);
+}
+
+/* Smooth scrollbar hide */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ambient background gradient */
+@keyframes ambient-shift {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-ambient {
+  animation: ambient-shift 8s ease-in-out infinite;
+}
+
+/* Hide scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
