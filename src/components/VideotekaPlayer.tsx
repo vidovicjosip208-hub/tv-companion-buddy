@@ -381,15 +381,35 @@ const VideotekaPlayer = ({
       // back-buffer trimming. Aggressive overrides cause stutter on most
       // connections because the player tries to download huge top-tier
       // segments before it can start.
+      // Buffer-heavy but ABR-friendly config:
+      // - Veliki forward buffer (do 90s / 120MB) → blago usporenje mreže ne
+      //   prazni buffer pa video ne zastajkuje.
+      // - Niži startLevel + brza ABR reakcija (abrEwma*Fast) → odmah skače na
+      //   nižu rezoluciju ako brzina padne, umjesto da se zaustavi.
+      // - Više retry-a za fragmente i manifest da kratki dropovi ne ruše stream.
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: false,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
-        backBufferLength: 90,
         autoStartLoad: true,
-        // startLevel undefined => hls.js auto-starts at a reasonable level
-        // based on the first segment's bandwidth estimate (same as HLSPlayer.net).
+        // Buffering — drži dovoljno naprijed da preživi kratke padove brzine.
+        maxBufferLength: 60,
+        maxMaxBufferLength: 120,
+        maxBufferSize: 120 * 1000 * 1000,
+        backBufferLength: 30,
+        // ABR — brza reakcija na promjene brzine, konzervativan start.
+        startLevel: -1,
+        abrEwmaFastLive: 2.0,
+        abrEwmaSlowLive: 6.0,
+        abrEwmaFastVoD: 2.0,
+        abrEwmaSlowVoD: 6.0,
+        abrBandWidthFactor: 0.85,
+        abrBandWidthUpFactor: 0.65,
+        // Robusniji retry kod kratkih mrežnih problema.
+        manifestLoadingMaxRetry: 6,
+        levelLoadingMaxRetry: 6,
+        fragLoadingMaxRetry: 8,
+        fragLoadingRetryDelay: 500,
+        levelLoadingRetryDelay: 500,
       });
       hlsRef.current = hls;
       hls.loadSource(streamUrl);
