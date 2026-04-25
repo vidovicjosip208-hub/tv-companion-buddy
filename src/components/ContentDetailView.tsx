@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, RotateCcw, Layers, Captions, ThumbsUp, ThumbsDown, Plus } from "lucide-react";
+import { Play, RotateCcw, Layers, Captions, ThumbsUp, ThumbsDown, Plus, Film } from "lucide-react";
 import { ContentDetailsData } from "@/data/videotekaContent";
 import EpisodesView from "@/components/EpisodesView";
 import VideotekaPlayer from "@/components/VideotekaPlayer";
-import logo from "@/assets/max-ovizija-videoteka-logo.png";
 
 interface ContentDetailViewProps {
   details: ContentDetailsData;
@@ -23,7 +22,6 @@ const VISIBLE_COUNT = 4;
 const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetailViewProps) => {
   const [showEpisodes, setShowEpisodes] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
-  // Počinjemo na Resume (idx 0)
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [scrollOffset, setScrollOffset] = useState(0);
 
@@ -46,12 +44,10 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
 
             if (nextMainIndex === -1) return currentOffset;
 
-            // Gore: simetrično logici dolje
             if (direction === -1 && nextMainIndex <= currentOffset && currentOffset > 0) {
               return Math.max(0, currentOffset - 1);
             }
 
-            // Dolje: scroll kad fokus ulazi na donji peek i još ima gumba ispod
             if (
               direction === 1 &&
               nextMainIndex >= currentOffset + VISIBLE_COUNT - 1 &&
@@ -95,7 +91,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
   const f = (id: ButtonId) => ALL_BUTTONS[focusedIndex] === id;
 
   const isMovie = !details.episodes;
-  const hasProgress = false; // TODO: hook up to real watch progress
+  const hasProgress = false;
   const showPlaySeries = !isMovie && !hasProgress;
 
   const getButtonContent = (id: ButtonId, isFocused: boolean) => {
@@ -201,14 +197,17 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center px-12 w-full h-full text-center pb-[280px]">
-        {/* Logo */}
+        {/* Logo - text fallback until image asset is added */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="mb-4 -mt-52"
+          className="mb-4 -mt-52 flex items-center gap-2"
         >
-          <img src={logo} alt="Max Ovizija" className="h-[280px] w-auto" />
+          <Film className="w-10 h-10 text-accent" />
+          <span className="text-foreground font-bold text-3xl tracking-wide">
+            Max<span className="text-accent">Videoteka</span>
+          </span>
         </motion.div>
 
         {/* Title */}
@@ -258,7 +257,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
           {details.description}
         </motion.p>
 
-        {/* Action buttons — podignuti više prema gore */}
+        {/* Action buttons */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -301,7 +300,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
           </div>
         </motion.div>
 
-        {/* Thumbs — ostaju na dnu */}
+        {/* Thumbs */}
         <div className="absolute bottom-8 left-0 right-0 flex items-center justify-center gap-2">
           <button
             className={`flex items-center justify-center w-11 h-11 rounded-full border transition-all ${
