@@ -479,7 +479,7 @@ const VideotekaPlayer = ({
               setFocusedCol(2);
             } else if (focusedCol === 2) {
               // Već na FastForward: seek 10s naprijed + prikaži thumbnails
-              const next = Math.min(currentTime + SEEK_STEP, TOTAL_DURATION);
+              const next = Math.min(currentTime + SEEK_STEP, totalDuration);
               setIsSeeking(true);
               setSeekTime(next);
               setCurrentTime(next);
@@ -544,7 +544,7 @@ const VideotekaPlayer = ({
               setIsSeeking(false);
               startPlayback(150);
             }
-            if (focusedCol === 2) setCurrentTime((prev) => Math.min(prev + 10, TOTAL_DURATION));
+            if (focusedCol === 2) setCurrentTime((prev) => Math.min(prev + 10, totalDuration));
           } else if (focusedRow === 3) {
             if (focusedCol === 0) openSubtitleModal(DUMMY_SUBTITLES.findIndex((s) => s.code === selectedSubtitle));
             if (focusedCol === 1) openAudioModal(DUMMY_AUDIO_TRACKS.findIndex((a) => a.code === selectedAudio));
@@ -819,7 +819,7 @@ const VideotekaPlayer = ({
                         color: GOLD,
                         transform: focusedRow === 2 && focusedCol === 2 ? "scale(1.2)" : "scale(1)",
                       }}
-                      onClick={() => setCurrentTime((prev) => Math.min(prev + 10, TOTAL_DURATION))}
+                      onClick={() => setCurrentTime((prev) => Math.min(prev + 10, totalDuration))}
                     >
                       <FastForward className="w-7 h-7 fill-current" />
                     </div>
