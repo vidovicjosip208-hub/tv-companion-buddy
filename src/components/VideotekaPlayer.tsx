@@ -359,8 +359,6 @@ const VideotekaPlayer = ({
     }
 
     setStreamError(null);
-    setVideoReady(false);
-    setLoaderDone(false);
     video.muted = true;
     video.autoplay = true;
     video.preload = "auto";
