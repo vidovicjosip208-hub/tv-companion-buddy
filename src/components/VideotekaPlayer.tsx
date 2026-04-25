@@ -58,7 +58,7 @@ const SEEK_STEP = 10;
 const THUMBNAIL_COUNT = 7;
 const GOLD = "#F5C518";
 const LOADER_MIN_DURATION = 1200; // minimum visible time so loader doesn't flash
-const LOADER_MAX_DURATION = 20000; // hard cap before we surface the player anyway
+const LOADER_MAX_DURATION = 5000; // bypass loader if browser readiness events do not fire
 
 const DUMMY_SUBTITLES = [
   { code: "off", label: "Isključeno" },
@@ -303,6 +303,21 @@ const VideotekaPlayer = ({
   // Use real video duration if available
   const totalDuration = videoDuration || TOTAL_DURATION;
 
+  const markVideoReady = useCallback(() => {
+    setVideoReady(true);
+    setLoaderDone(true);
+  }, []);
+
+  const playMuted = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    video.autoplay = true;
+    video.play().catch(() => {
+      // Muted autoplay can still be blocked on some browsers until user gesture.
+    });
+  }, []);
+
   // ── HLS / native HLS bootstrap ──
   useEffect(() => {
     const video = videoRef.current;
@@ -320,6 +335,10 @@ const VideotekaPlayer = ({
 
     setStreamError(null);
     setVideoReady(false);
+    setLoaderDone(false);
+    video.muted = true;
+    video.autoplay = true;
+    video.preload = "auto";
 
     // Cleanup previous HLS
     if (hlsRef.current) {
@@ -351,6 +370,9 @@ const VideotekaPlayer = ({
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        hls.startLoad();
+        playMuted();
+
         if (!hasHEVC && hls.levels?.length) {
           const supported = hls.levels
             .map((lvl, idx) => ({ lvl, idx }))
@@ -382,13 +404,19 @@ const VideotekaPlayer = ({
       setStreamError("Vaš preglednik ne podržava HLS reprodukciju.");
     }
 
+    const bypassTimer = setTimeout(() => {
+      markVideoReady();
+      playMuted();
+    }, LOADER_MAX_DURATION);
+
     return () => {
+      clearTimeout(bypassTimer);
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
     };
-  }, [streamUrl, fetchingStream, fetchError]);
+  }, [streamUrl, fetchingStream, fetchError, markVideoReady, playMuted]);
 
   // Video event listeners — sync time, duration, ready state with UI
   useEffect(() => {
@@ -399,8 +427,13 @@ const VideotekaPlayer = ({
       if (Number.isFinite(video.duration) && video.duration > 0) {
         setVideoDuration(Math.floor(video.duration));
       }
+      markVideoReady();
+      playMuted();
     };
-    const onCanPlay = () => setVideoReady(true);
+    const onCanPlay = () => {
+      markVideoReady();
+      playMuted();
+    };
     const onTimeUpdate = () => {
       if (!isSeeking) setCurrentTime(Math.floor(video.currentTime));
     };
@@ -408,22 +441,19 @@ const VideotekaPlayer = ({
     const onPause = () => setIsPlaying(false);
 
     video.addEventListener("loadedmetadata", onLoadedMeta);
-    // canplaythrough = browser estimates it can play to the end without
-    // re-buffering at current rate. Stricter than `canplay`, so the spinner
-    // only disappears when playback is truly stable.
-    video.addEventListener("canplaythrough", onCanPlay);
+    video.addEventListener("canplay", onCanPlay);
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
 
     return () => {
       video.removeEventListener("loadedmetadata", onLoadedMeta);
-      video.removeEventListener("canplaythrough", onCanPlay);
+      video.removeEventListener("canplay", onCanPlay);
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
     };
-  }, [isSeeking]);
+  }, [isSeeking, markVideoReady, playMuted]);
 
   // When loader finishes AND video is ready, start playback for real
   useEffect(() => {
@@ -675,7 +705,10 @@ const VideotekaPlayer = ({
           ref={videoRef}
           poster={thumbnail}
           playsInline
-          className="w-full h-full object-contain bg-black"
+          muted
+          autoPlay
+          preload="auto"
+          className="relative z-10 w-full h-full object-contain bg-black"
         />
       </div>
 
@@ -695,9 +728,7 @@ const VideotekaPlayer = ({
       )}
 
       <AnimatePresence>
-        {(!loaderDone || !videoReady) && !streamError && (
-          <Loader key="loader" ready={videoReady} onDone={() => setLoaderDone(true)} />
-        )}
+        {!loaderDone && !streamError && <Loader key="loader" ready={videoReady} onDone={markVideoReady} />}
 
         {loaderDone && isVisible && (
           <motion.div
