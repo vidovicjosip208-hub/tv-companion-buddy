@@ -1,6 +1,5 @@
 import { Clock, CloudRain } from "lucide-react";
 import { useState, useEffect } from "react";
-import logo from "@/assets/max-ovizija-logo.png";
 import { motion } from "framer-motion";
 
 const TVHeader = () => {
@@ -22,9 +21,11 @@ const TVHeader = () => {
       transition={{ duration: 0.6, delay: 0.2 }}
       className="flex items-center justify-between px-8 py-4"
     >
-      {/* Logo */}
+      {/* Logo - text fallback until image asset is added */}
       <div className="flex items-center">
-        <img src={logo} alt="Max Ovizija" className="h-28 w-auto -mt-5" />
+        <span className="text-foreground font-bold text-2xl tracking-wide">
+          Max<span className="text-accent">Ovizija</span>
+        </span>
       </div>
 
       {/* Center - Subscription Notice */}
