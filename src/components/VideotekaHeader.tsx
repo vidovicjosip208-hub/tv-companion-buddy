@@ -1,8 +1,7 @@
-import { Home, Search } from "lucide-react";
+import { Home, Search, Film } from "lucide-react";
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/max-ovizija-videoteka-logo.png";
 
 export interface VideotekaHeaderHandle {
   focus: (index?: number) => void;
@@ -41,7 +40,6 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       },
     }));
 
-    // 0 = Home, 1 = Home tab, 2 = Shows, 3 = Movies, 4 = Search
     const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
     const totalButtons = 1 + navTabs.length + 1;
 
@@ -122,9 +120,12 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
     return (
       <header className="relative z-10 px-12 -mt-[65px] pb-0">
         <div className="flex items-center">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="Max Ovizija" className="h-[221px] w-auto" />
+          {/* Logo - text fallback until image asset is added */}
+          <div className="flex items-center gap-2">
+            <Film className="w-8 h-8 text-accent" />
+            <span className="text-foreground font-bold text-2xl tracking-wide">
+              Max<span className="text-accent">Videoteka</span>
+            </span>
           </div>
 
           {/* Navigation */}
