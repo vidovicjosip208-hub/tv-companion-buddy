@@ -204,8 +204,8 @@ const VideotekaPlayer = ({
 
   const [isVisible, setIsVisible] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [loaderDone, setLoaderDone] = useState(false);
-  const [videoReady, setVideoReady] = useState(false);
+  const [loaderDone, setLoaderDone] = useState(true);
+  const [videoReady, setVideoReady] = useState(true);
   const [streamError, setStreamError] = useState<string | null>(null);
   const [videoDuration, setVideoDuration] = useState<number>(TOTAL_DURATION);
   const [focusedRow, setFocusedRow] = useState(2);
