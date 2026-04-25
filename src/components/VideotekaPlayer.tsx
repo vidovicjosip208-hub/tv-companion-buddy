@@ -280,12 +280,38 @@ const VideotekaPlayer = ({
 
   const startPlayback = useCallback(
     (delay = 150) => {
-      setIsPlaying(true);
-      if (delay > 0) setTimeout(() => setIsVisible(false), delay);
-      else startHideTimer();
+      const video = videoRef.current;
+      if (video) {
+        video.muted = true;
+        video.autoplay = true;
+        if (video.paused) {
+          video.play().catch(() => {
+            // Autoplay can still be blocked until a user gesture.
+          });
+        }
+      }
+
+      cancelHideTimer();
+      if (delay > 0) {
+        hideTimerRef.current = setTimeout(() => {
+          setIsVisible(false);
+          hideTimerRef.current = null;
+        }, delay);
+      } else {
+        startHideTimer();
+      }
     },
-    [startHideTimer],
+    [cancelHideTimer, startHideTimer],
   );
+
+  const pausePlayback = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.pause();
+    setIsPlaying(false);
+    setIsVisible(true);
+    cancelHideTimer();
+  }, [cancelHideTimer]);
 
   useEffect(() => {
     if (isVisible && isPlaying) startHideTimer();
@@ -295,10 +321,9 @@ const VideotekaPlayer = ({
 
   useEffect(() => {
     if (loaderDone) {
-      setIsPlaying(true);
-      startHideTimer();
+      startPlayback(0);
     }
-  }, [loaderDone, startHideTimer]);
+  }, [loaderDone, startPlayback]);
 
   // Use real video duration if available
   const totalDuration = videoDuration || TOTAL_DURATION;
