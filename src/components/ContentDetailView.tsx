@@ -203,12 +203,13 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="mb-4 -mt-52 flex items-center gap-2"
+          className="mb-4 -mt-52 flex items-center justify-center"
         >
-          <Film className="w-10 h-10 text-accent" />
-          <span className="text-foreground font-bold text-3xl tracking-wide">
-            Max<span className="text-accent">Videoteka</span>
-          </span>
+          <img
+            src={maxOvizijaLogo}
+            alt="MaxOvizija Videoteka"
+            className="h-20 w-auto object-contain"
+          />
         </motion.div>
 
         {/* Title */}
