@@ -708,7 +708,7 @@ const VideotekaPlayer = ({
           muted
           autoPlay
           preload="auto"
-          className="relative z-[120] w-full h-full object-contain bg-black"
+          className="relative z-10 w-full h-full object-contain bg-black"
         />
       </div>
 
