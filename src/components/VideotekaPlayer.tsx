@@ -408,14 +408,17 @@ const VideotekaPlayer = ({
     const onPause = () => setIsPlaying(false);
 
     video.addEventListener("loadedmetadata", onLoadedMeta);
-    video.addEventListener("canplay", onCanPlay);
+    // canplaythrough = browser estimates it can play to the end without
+    // re-buffering at current rate. Stricter than `canplay`, so the spinner
+    // only disappears when playback is truly stable.
+    video.addEventListener("canplaythrough", onCanPlay);
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
 
     return () => {
       video.removeEventListener("loadedmetadata", onLoadedMeta);
-      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("canplaythrough", onCanPlay);
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
