@@ -282,27 +282,169 @@ const VideotekaPlayer = ({
     }
   }, [loaderDone, startHideTimer]);
 
-  // Playback timer
+  // Use real video duration if available
+  const totalDuration = videoDuration || TOTAL_DURATION;
+
+  // ── HLS / native HLS bootstrap ──
   useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      setCurrentTime((prev) => (prev >= TOTAL_DURATION ? TOTAL_DURATION : prev + 1));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isPlaying]);
+    const video = videoRef.current;
+    if (!video) return;
+    if (fetchingStream) return;
+
+    if (fetchError) {
+      setStreamError("Greška pri dohvaćanju stream URL-a.");
+      return;
+    }
+    if (!streamUrl) {
+      setStreamError("Stream URL nije dostupan.");
+      return;
+    }
+
+    setStreamError(null);
+    setVideoReady(false);
+
+    // Cleanup previous HLS
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    const isNativeHls = video.canPlayType("application/vnd.apple.mpegurl") !== "";
+    const hasHEVC = supportsHEVC();
+
+    if (Hls.isSupported() && !isNativeHls) {
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: false,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        backBufferLength: 30,
+        startLevel: -1,
+        capLevelToPlayerSize: false,
+        autoStartLoad: true,
+      });
+      hlsRef.current = hls;
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (!hasHEVC && hls.levels?.length) {
+          const supported = hls.levels
+            .map((lvl, idx) => ({ lvl, idx }))
+            .filter(({ lvl }) => {
+              const codec = (lvl.videoCodec ?? "").toLowerCase();
+              return !(codec.startsWith("hvc1") || codec.startsWith("hev1"));
+            });
+          if (supported.length && supported.length < hls.levels.length) {
+            hls.autoLevelCapping = supported[supported.length - 1].idx;
+          }
+        }
+      });
+
+      hls.on(Hls.Events.ERROR, (_evt, data) => {
+        if (!data.fatal) return;
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          try {
+            hls.recoverMediaError();
+            return;
+          } catch {
+            /* fallthrough */
+          }
+        }
+        setStreamError("Reprodukcija nije uspjela.");
+      });
+    } else if (isNativeHls) {
+      video.src = streamUrl;
+    } else {
+      setStreamError("Vaš preglednik ne podržava HLS reprodukciju.");
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [streamUrl, fetchingStream, fetchError]);
+
+  // Video event listeners — sync time, duration, ready state with UI
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onLoadedMeta = () => {
+      if (Number.isFinite(video.duration) && video.duration > 0) {
+        setVideoDuration(Math.floor(video.duration));
+      }
+    };
+    const onCanPlay = () => setVideoReady(true);
+    const onTimeUpdate = () => {
+      if (!isSeeking) setCurrentTime(Math.floor(video.currentTime));
+    };
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+
+    video.addEventListener("loadedmetadata", onLoadedMeta);
+    video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("timeupdate", onTimeUpdate);
+    video.addEventListener("play", onPlay);
+    video.addEventListener("pause", onPause);
+
+    return () => {
+      video.removeEventListener("loadedmetadata", onLoadedMeta);
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("timeupdate", onTimeUpdate);
+      video.removeEventListener("play", onPlay);
+      video.removeEventListener("pause", onPause);
+    };
+  }, [isSeeking]);
+
+  // When loader finishes AND video is ready, start playback for real
+  useEffect(() => {
+    if (!loaderDone || !videoReady) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.play().catch(() => {
+      // Autoplay block — user can press play
+    });
+  }, [loaderDone, videoReady]);
+
+  // Sync isPlaying state to actual video element
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoReady) return;
+    if (isPlaying && video.paused) video.play().catch(() => {});
+    if (!isPlaying && !video.paused) video.pause();
+  }, [isPlaying, videoReady]);
+
+  // Sync seek operations to the real video
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (Math.abs(video.currentTime - currentTime) > 1.5) {
+      try {
+        video.currentTime = currentTime;
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [currentTime]);
 
   const displayTime = isSeeking ? seekTime : currentTime;
-  const progress = useMemo(() => (displayTime / TOTAL_DURATION) * 100, [displayTime]);
+  const progress = useMemo(
+    () => (totalDuration > 0 ? (displayTime / totalDuration) * 100 : 0),
+    [displayTime, totalDuration],
+  );
   const elapsed = formatTime(displayTime);
-  const remaining = formatTime(TOTAL_DURATION - displayTime);
+  const remaining = formatTime(Math.max(0, totalDuration - displayTime));
 
   const seekThumbnails = useMemo(() => {
     const half = Math.floor(THUMBNAIL_COUNT / 2);
     return Array.from({ length: THUMBNAIL_COUNT }, (_, i) => {
       const t = seekTime + (i - half) * 30;
-      return Math.max(0, Math.min(TOTAL_DURATION, t));
+      return Math.max(0, Math.min(totalDuration, t));
     });
-  }, [seekTime]);
+  }, [seekTime, totalDuration]);
 
   // ── Main keyboard handler ──
   useEffect(() => {
