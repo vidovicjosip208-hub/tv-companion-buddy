@@ -57,8 +57,8 @@ const TOTAL_DURATION = 55 * 60 + 48;
 const SEEK_STEP = 10;
 const THUMBNAIL_COUNT = 7;
 const GOLD = "#F5C518";
-const LOADER_MIN_DURATION = 1200; // minimum visible time so loader doesn't flash
-const LOADER_MAX_DURATION = 5000; // bypass loader if browser readiness events do not fire
+const LOADER_MIN_DURATION = 1200;
+const LOADER_MAX_DURATION = 5000;
 
 const DUMMY_SUBTITLES = [
   { code: "off", label: "Isključeno" },
@@ -190,9 +190,11 @@ const VideotekaPlayer = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
 
-  const { data: movie, isLoading: fetchingStream, error: fetchError } = useMovieStream(
-    streamUrlProp ? undefined : itemId,
-  );
+  const {
+    data: movie,
+    isLoading: fetchingStream,
+    error: fetchError,
+  } = useMovieStream(streamUrlProp ? undefined : itemId);
   const streamUrl = streamUrlProp ?? movie?.stream_url ?? null;
 
   const [isVisible, setIsVisible] = useState(true);
@@ -202,7 +204,7 @@ const VideotekaPlayer = ({
   const [streamError, setStreamError] = useState<string | null>(null);
   const [videoDuration, setVideoDuration] = useState<number>(TOTAL_DURATION);
   const [focusedRow, setFocusedRow] = useState(2);
-  const [focusedCol, setFocusedCol] = useState(1); // default na Play gumb (sredina)
+  const [focusedCol, setFocusedCol] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekTime, setSeekTime] = useState(0);
@@ -226,6 +228,11 @@ const VideotekaPlayer = ({
   const subtitleFocusIdxRef = useRef(0);
   const audioFocusIdxRef = useRef(0);
   const fontFocusIdxRef = useRef(0);
+
+  // FIX #4: ref za currentTime da keyboard handler uvijek ima svježu vrijednost
+  // bez da bude u dependency arrayu (što bi uzrokovalo ponovnu registraciju listenera)
+  const currentTimeRef = useRef(0);
+  const totalDurationRef = useRef(TOTAL_DURATION);
 
   const openSubtitleModal = (idx: number) => {
     setSubtitleFocusIdx(idx);
@@ -278,9 +285,7 @@ const VideotekaPlayer = ({
         video.muted = true;
         video.autoplay = true;
         if (video.paused) {
-          video.play().catch(() => {
-            // Autoplay can still be blocked until a user gesture.
-          });
+          video.play().catch(() => {});
         }
       }
 
@@ -318,8 +323,12 @@ const VideotekaPlayer = ({
     }
   }, [loaderDone, startPlayback]);
 
-  // Use real video duration if available
   const totalDuration = videoDuration || TOTAL_DURATION;
+
+  // FIX: keep refs in sync so keyboard handler always has fresh values
+  useEffect(() => {
+    totalDurationRef.current = totalDuration;
+  }, [totalDuration]);
 
   const markVideoReady = useCallback(() => {
     setVideoReady(true);
@@ -331,12 +340,10 @@ const VideotekaPlayer = ({
     if (!video) return;
     video.muted = true;
     video.autoplay = true;
-    video.play().catch(() => {
-      // Muted autoplay can still be blocked on some browsers until user gesture.
-    });
+    video.play().catch(() => {});
   }, []);
 
-  // ── HLS / native HLS bootstrap ──
+  // ── FIX #3: Smanjeni HLS buffer — sprječava agresivno preuzimanje koje uzrokuje štekanje ──
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -356,7 +363,6 @@ const VideotekaPlayer = ({
     video.autoplay = true;
     video.preload = "auto";
 
-    // Cleanup previous HLS
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -366,28 +372,16 @@ const VideotekaPlayer = ({
     const hasHEVC = supportsHEVC();
 
     if (Hls.isSupported() && !isNativeHls) {
-      // HLSPlayer.net-style config: rely on hls.js defaults for smooth playback.
-      // Defaults give a 30s forward buffer, ABR that picks the right level for
-      // the user's bandwidth (instead of forcing top quality), and balanced
-      // back-buffer trimming. Aggressive overrides cause stutter on most
-      // connections because the player tries to download huge top-tier
-      // segments before it can start.
-      // Buffer-heavy but ABR-friendly config:
-      // - Veliki forward buffer (do 90s / 120MB) → blago usporenje mreže ne
-      //   prazni buffer pa video ne zastajkuje.
-      // - Niži startLevel + brza ABR reakcija (abrEwma*Fast) → odmah skače na
-      //   nižu rezoluciju ako brzina padne, umjesto da se zaustavi.
-      // - Više retry-a za fragmente i manifest da kratki dropovi ne ruše stream.
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: false,
         autoStartLoad: true,
-        // Buffering — drži dovoljno naprijed da preživi kratke padove brzine.
-        maxBufferLength: 60,
-        maxMaxBufferLength: 120,
-        maxBufferSize: 120 * 1000 * 1000,
-        backBufferLength: 30,
-        // ABR — brza reakcija na promjene brzine, konzervativan start.
+        // FIX #3: Smanjen buffer — ne preuzima previše segmenata odjednom
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        maxBufferSize: 60 * 1000 * 1000, // 60 MB
+        backBufferLength: 10,
+        // ABR — brza reakcija na promjene brzine, konzervativan start
         startLevel: -1,
         abrEwmaFastLive: 2.0,
         abrEwmaSlowLive: 6.0,
@@ -395,7 +389,7 @@ const VideotekaPlayer = ({
         abrEwmaSlowVoD: 6.0,
         abrBandWidthFactor: 0.85,
         abrBandWidthUpFactor: 0.65,
-        // Robusniji retry kod kratkih mrežnih problema.
+        // Robusniji retry kod kratkih mrežnih problema
         manifestLoadingMaxRetry: 6,
         levelLoadingMaxRetry: 6,
         fragLoadingMaxRetry: 8,
@@ -460,7 +454,7 @@ const VideotekaPlayer = ({
     };
   }, [streamUrl, fetchingStream, fetchError, markVideoReady, playMuted]);
 
-  // Video event listeners — sync time, duration, ready state with UI
+  // Video event listeners
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -477,16 +471,22 @@ const VideotekaPlayer = ({
       playMuted();
     };
     const onTimeUpdate = () => {
-      if (!isSeeking) setCurrentTime(Math.floor(video.currentTime));
+      // FIX #1: Samo čitamo currentTime iz videa, NE upisujemo natrag
+      const t = Math.floor(video.currentTime);
+      setCurrentTime(t);
+      currentTimeRef.current = t;
     };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
+    // FIX #4: Resetiraj isSeeking čim video završi seek
+    const onSeeked = () => setIsSeeking(false);
 
     video.addEventListener("loadedmetadata", onLoadedMeta);
     video.addEventListener("canplay", onCanPlay);
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
+    video.addEventListener("seeked", onSeeked);
 
     return () => {
       video.removeEventListener("loadedmetadata", onLoadedMeta);
@@ -494,21 +494,13 @@ const VideotekaPlayer = ({
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
+      video.removeEventListener("seeked", onSeeked);
     };
-  }, [isSeeking, markVideoReady, playMuted]);
+  }, [markVideoReady, playMuted]);
 
-  // Sync seek operations to the real video
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (Math.abs(video.currentTime - currentTime) > 1.5) {
-      try {
-        video.currentTime = currentTime;
-      } catch {
-        /* ignore */
-      }
-    }
-  }, [currentTime]);
+  // FIX #1: UKLONJEN useEffect koji je pisao video.currentTime na svaku promjenu
+  // state-a — to je bio glavni uzrok štekanja jer je prekidalo HLS buffering.
+  // Seek se sada radi DIREKTNO na video element u event handlerima (vidi dolje).
 
   const displayTime = isSeeking ? seekTime : currentTime;
   const progress = useMemo(
@@ -526,6 +518,18 @@ const VideotekaPlayer = ({
     });
   }, [seekTime, totalDuration]);
 
+  // FIX #2: Helper za direktan seek na video element
+  const seekVideo = useCallback((time: number) => {
+    const clamped = Math.max(0, Math.min(time, totalDurationRef.current));
+    if (videoRef.current) {
+      videoRef.current.currentTime = clamped;
+    }
+    setCurrentTime(clamped);
+    currentTimeRef.current = clamped;
+    setSeekTime(clamped);
+    setIsSeeking(true);
+  }, []);
+
   // ── Main keyboard handler ──
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -537,10 +541,8 @@ const VideotekaPlayer = ({
         return;
       }
 
-      // Resetiraj auto-hide na svaku tipku
       startHideTimer();
 
-      // Modali se obrađuju u capture-phase listeneru
       if (subtitleModalRef.current || audioModalRef.current || fontModalRef.current) return;
 
       switch (e.key) {
@@ -554,14 +556,10 @@ const VideotekaPlayer = ({
           e.preventDefault();
           if (focusedRow === 2) {
             if (focusedCol === 1) {
-              // Prva strelica desno s Play gumba: idi na FastForward
               setFocusedCol(2);
             } else if (focusedCol === 2) {
-              // Već na FastForward: seek 10s naprijed + prikaži thumbnails
-              const next = Math.min(currentTime + SEEK_STEP, totalDuration);
-              setIsSeeking(true);
-              setSeekTime(next);
-              setCurrentTime(next);
+              // FIX #2: Seek direktno na video
+              seekVideo(currentTimeRef.current + SEEK_STEP);
             } else {
               setFocusedCol((prev) => Math.min(prev + 1, ROW_SIZES[focusedRow] - 1));
             }
@@ -574,14 +572,10 @@ const VideotekaPlayer = ({
           e.preventDefault();
           if (focusedRow === 2) {
             if (focusedCol === 1) {
-              // Prva strelica lijevo s Play gumba: idi na Rewind
               setFocusedCol(0);
             } else if (focusedCol === 0) {
-              // Već na Rewind: seek 10s unazad + prikaži thumbnails
-              const next = Math.max(currentTime - SEEK_STEP, 0);
-              setIsSeeking(true);
-              setSeekTime(next);
-              setCurrentTime(next);
+              // FIX #2: Seek direktno na video
+              seekVideo(currentTimeRef.current - SEEK_STEP);
             } else {
               setFocusedCol((prev) => Math.max(prev - 1, 0));
             }
@@ -613,18 +607,21 @@ const VideotekaPlayer = ({
           if (focusedRow === 0) {
             if (focusedCol === 0) onClose();
             if (focusedCol === 1) {
+              // FIX #2: Seek na početak direktno
+              if (videoRef.current) videoRef.current.currentTime = 0;
               setCurrentTime(0);
+              currentTimeRef.current = 0;
               startPlayback(800);
             }
             if (focusedCol === 2 && onNextEpisode) onNextEpisode();
           } else if (focusedRow === 2) {
-            if (focusedCol === 0) setCurrentTime((prev) => Math.max(prev - 10, 0));
+            if (focusedCol === 0) seekVideo(currentTimeRef.current - 10);
             if (focusedCol === 1) {
               setIsSeeking(false);
               if (videoRef.current?.paused) startPlayback(150);
               else pausePlayback();
             }
-            if (focusedCol === 2) setCurrentTime((prev) => Math.min(prev + 10, totalDuration));
+            if (focusedCol === 2) seekVideo(currentTimeRef.current + 10);
           } else if (focusedRow === 3) {
             if (focusedCol === 0) openSubtitleModal(DUMMY_SUBTITLES.findIndex((s) => s.code === selectedSubtitle));
             if (focusedCol === 1) openAudioModal(DUMMY_AUDIO_TRACKS.findIndex((a) => a.code === selectedAudio));
@@ -641,7 +638,7 @@ const VideotekaPlayer = ({
     isVisible,
     focusedRow,
     focusedCol,
-    currentTime,
+    seekVideo,
     startHideTimer,
     onClose,
     startPlayback,
@@ -650,6 +647,7 @@ const VideotekaPlayer = ({
     selectedSubtitle,
     selectedAudio,
     selectedFont,
+    videoReady,
   ]);
 
   // ── Capture-phase listener za modale ──
@@ -753,9 +751,7 @@ const VideotekaPlayer = ({
       )}
 
       <AnimatePresence>
-        {!loaderDone && !streamError && (
-          <Loader key="loader" ready={videoReady} onDone={markVideoReady} />
-        )}
+        {!loaderDone && !streamError && <Loader key="loader" ready={videoReady} onDone={markVideoReady} />}
       </AnimatePresence>
 
       <AnimatePresence>
@@ -773,7 +769,7 @@ const VideotekaPlayer = ({
               <div className="w-full max-w-5xl mx-auto flex flex-col h-full px-4">
                 {/* TOP AREA */}
                 <div className="flex-1 flex flex-col">
-                  {/* Gornja navigacija — skriva se pri seekanju */}
+                  {/* Gornja navigacija */}
                   <div
                     className={`flex items-center justify-between transition-opacity duration-300 ${isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"}`}
                   >
@@ -846,7 +842,7 @@ const VideotekaPlayer = ({
 
                 {/* BOTTOM AREA */}
                 <div className="flex flex-col gap-4 pb-4 w-full">
-                  {/* Thumbnail strip — prikazuje se pri seekanju */}
+                  {/* Thumbnail strip */}
                   <div className="h-32 flex items-end justify-center">
                     <AnimatePresence>
                       {isSeeking && (
@@ -898,7 +894,7 @@ const VideotekaPlayer = ({
                         color: GOLD,
                         transform: focusedRow === 2 && focusedCol === 0 ? "scale(1.2)" : "scale(1)",
                       }}
-                      onClick={() => setCurrentTime((prev) => Math.max(prev - 10, 0))}
+                      onClick={() => seekVideo(currentTimeRef.current - 10)}
                     >
                       <Rewind className="w-7 h-7 fill-current" />
                     </div>
@@ -906,10 +902,10 @@ const VideotekaPlayer = ({
                     <div className="w-[52px] h-[52px]">
                       <div
                         className="flex items-center justify-center rounded-full w-full h-full transition-all duration-200"
-              onClick={() => {
-                if (videoRef.current?.paused) startPlayback(150);
-                else pausePlayback();
-              }}
+                        onClick={() => {
+                          if (videoRef.current?.paused) startPlayback(150);
+                          else pausePlayback();
+                        }}
                         style={{
                           backgroundColor: GOLD,
                           color: "#0d0d0d",
@@ -932,7 +928,7 @@ const VideotekaPlayer = ({
                         color: GOLD,
                         transform: focusedRow === 2 && focusedCol === 2 ? "scale(1.2)" : "scale(1)",
                       }}
-                      onClick={() => setCurrentTime((prev) => Math.min(prev + 10, totalDuration))}
+                      onClick={() => seekVideo(currentTimeRef.current + 10)}
                     >
                       <FastForward className="w-7 h-7 fill-current" />
                     </div>
