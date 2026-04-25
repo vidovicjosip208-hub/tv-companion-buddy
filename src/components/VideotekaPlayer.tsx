@@ -115,8 +115,8 @@ const VideotekaPlayer = ({
 
   const [isVisible, setIsVisible] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [loaderDone, setLoaderDone] = useState(true);
-  const [videoReady, setVideoReady] = useState(true);
+  const [loaderDone, setLoaderDone] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
   const [videoDuration, setVideoDuration] = useState<number>(TOTAL_DURATION);
   const [focusedRow, setFocusedRow] = useState(2);
@@ -669,6 +669,26 @@ const VideotekaPlayer = ({
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {!loaderDone && !streamError && (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.4 } }}
+            className="absolute inset-0 z-[140] flex items-center justify-center bg-black"
+          >
+            <div className="flex flex-col items-center gap-5">
+              <img src={logo} alt="Max Ovizija Videoteka" className="h-12 w-auto opacity-90" />
+              <div
+                className="h-10 w-10 rounded-full border-2 border-white/20 animate-spin"
+                style={{ borderTopColor: GOLD }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {loaderDone && isVisible && (
