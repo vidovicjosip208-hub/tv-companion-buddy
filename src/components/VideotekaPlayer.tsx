@@ -12,6 +12,7 @@ import {
   Rewind,
   FastForward,
 } from "lucide-react";
+import logo from "@/assets/max-ovizija-videoteka-logo.png";
 
 interface Episode {
   title: string;
@@ -73,6 +74,8 @@ const formatTime = (seconds: number) => {
   const s = seconds % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
+
+// ── Loader ────────────────────────────────────────────────────────────────────
 
 const CIRCLE_SIZE = 80;
 const STROKE = 5;
@@ -144,6 +147,8 @@ const Loader = ({ onDone }: { onDone: () => void }) => {
   );
 };
 
+// ── Player ────────────────────────────────────────────────────────────────────
+
 const VideotekaPlayer = ({
   title,
   episodeInfo,
@@ -156,12 +161,13 @@ const VideotekaPlayer = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [loaderDone, setLoaderDone] = useState(false);
   const [focusedRow, setFocusedRow] = useState(2);
-  const [focusedCol, setFocusedCol] = useState(1);
+  const [focusedCol, setFocusedCol] = useState(1); // default na Play gumb (sredina)
   const [currentTime, setCurrentTime] = useState(47 * 60 + 54);
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekTime, setSeekTime] = useState(47 * 60 + 54);
   const [skipHovered, setSkipHovered] = useState(false);
 
+  // Modal state
   const [showSubtitleModal, setShowSubtitleModal] = useState(false);
   const [selectedSubtitle, setSelectedSubtitle] = useState("off");
   const [subtitleFocusIdx, setSubtitleFocusIdx] = useState(0);
@@ -172,6 +178,7 @@ const VideotekaPlayer = ({
   const [selectedFont, setSelectedFont] = useState("default");
   const [fontFocusIdx, setFontFocusIdx] = useState(0);
 
+  // Refs za modal state — uvijek svježe vrijednosti u keyboard handleru
   const subtitleModalRef = useRef(false);
   const audioModalRef = useRef(false);
   const fontModalRef = useRef(false);
@@ -210,6 +217,7 @@ const VideotekaPlayer = ({
     setShowFontModal(false);
   };
 
+  // Auto-hide timer
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelHideTimer = useCallback(() => {
     if (hideTimerRef.current) {
@@ -244,6 +252,7 @@ const VideotekaPlayer = ({
     }
   }, [loaderDone, startHideTimer]);
 
+  // Playback timer
   useEffect(() => {
     if (!isPlaying) return;
     const interval = setInterval(() => {
@@ -265,15 +274,21 @@ const VideotekaPlayer = ({
     });
   }, [seekTime]);
 
+  // ── Main keyboard handler ──
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!loaderDone) return;
+
       if (!isVisible) {
         setIsVisible(true);
         setIsPlaying(false);
         return;
       }
+
+      // Resetiraj auto-hide na svaku tipku
       startHideTimer();
+
+      // Modali se obrađuju u capture-phase listeneru
       if (subtitleModalRef.current || audioModalRef.current || fontModalRef.current) return;
 
       switch (e.key) {
@@ -283,30 +298,47 @@ const VideotekaPlayer = ({
           setIsVisible(false);
           setIsPlaying(true);
           break;
+
         case "ArrowRight":
           e.preventDefault();
           if (focusedRow === 2) {
-            if (focusedCol === 1) setFocusedCol(2);
-            else if (focusedCol === 2) {
+            if (focusedCol === 1) {
+              // Prva strelica desno s Play gumba: idi na FastForward
+              setFocusedCol(2);
+            } else if (focusedCol === 2) {
+              // Već na FastForward: seek 10s naprijed + prikaži thumbnails
               const next = Math.min(currentTime + SEEK_STEP, TOTAL_DURATION);
               setIsSeeking(true);
               setSeekTime(next);
               setCurrentTime(next);
-            } else setFocusedCol((prev) => Math.min(prev + 1, ROW_SIZES[focusedRow] - 1));
-          } else setFocusedCol((prev) => Math.min(prev + 1, ROW_SIZES[focusedRow] - 1));
+            } else {
+              setFocusedCol((prev) => Math.min(prev + 1, ROW_SIZES[focusedRow] - 1));
+            }
+          } else {
+            setFocusedCol((prev) => Math.min(prev + 1, ROW_SIZES[focusedRow] - 1));
+          }
           break;
+
         case "ArrowLeft":
           e.preventDefault();
           if (focusedRow === 2) {
-            if (focusedCol === 1) setFocusedCol(0);
-            else if (focusedCol === 0) {
+            if (focusedCol === 1) {
+              // Prva strelica lijevo s Play gumba: idi na Rewind
+              setFocusedCol(0);
+            } else if (focusedCol === 0) {
+              // Već na Rewind: seek 10s unazad + prikaži thumbnails
               const next = Math.max(currentTime - SEEK_STEP, 0);
               setIsSeeking(true);
               setSeekTime(next);
               setCurrentTime(next);
-            } else setFocusedCol((prev) => Math.max(prev - 1, 0));
-          } else setFocusedCol((prev) => Math.max(prev - 1, 0));
+            } else {
+              setFocusedCol((prev) => Math.max(prev - 1, 0));
+            }
+          } else {
+            setFocusedCol((prev) => Math.max(prev - 1, 0));
+          }
           break;
+
         case "ArrowDown":
           e.preventDefault();
           if (focusedRow < ROW_SIZES.length - 1) {
@@ -315,6 +347,7 @@ const VideotekaPlayer = ({
             setFocusedCol(0);
           }
           break;
+
         case "ArrowUp":
           e.preventDefault();
           if (focusedRow > 0) {
@@ -323,6 +356,7 @@ const VideotekaPlayer = ({
             setFocusedCol(0);
           }
           break;
+
         case "Enter":
           e.preventDefault();
           if (focusedRow === 0) {
@@ -347,6 +381,7 @@ const VideotekaPlayer = ({
           break;
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
@@ -364,11 +399,13 @@ const VideotekaPlayer = ({
     selectedFont,
   ]);
 
+  // ── Capture-phase listener za modale ──
   useEffect(() => {
     const handleModalKeyDown = (e: KeyboardEvent) => {
       if (!subtitleModalRef.current && !audioModalRef.current && !fontModalRef.current) return;
       e.preventDefault();
       e.stopPropagation();
+
       if (subtitleModalRef.current) {
         if (e.key === "Escape" || e.key === "Backspace") closeSubtitleModal();
         else if (e.key === "ArrowDown")
@@ -425,6 +462,7 @@ const VideotekaPlayer = ({
         }
       }
     };
+
     window.addEventListener("keydown", handleModalKeyDown, { capture: true });
     return () => window.removeEventListener("keydown", handleModalKeyDown, { capture: true });
   }, []);
@@ -449,9 +487,12 @@ const VideotekaPlayer = ({
             className="absolute inset-0 flex flex-col z-20"
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/70" />
+
             <div className="relative flex flex-col h-full pt-14 pb-6">
               <div className="w-full max-w-5xl mx-auto flex flex-col h-full px-4">
+                {/* TOP AREA */}
                 <div className="flex-1 flex flex-col">
+                  {/* Gornja navigacija — skriva se pri seekanju */}
                   <div
                     className={`flex items-center justify-between transition-opacity duration-300 ${isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"}`}
                   >
@@ -490,17 +531,15 @@ const VideotekaPlayer = ({
                     </div>
                   </div>
 
+                  {/* Logo + naslov + like/dislike */}
                   <div className="flex-1 flex flex-col justify-end items-center pb-6">
                     <div className="relative w-full flex justify-center" style={{ height: 0 }}>
-                      {/* Tekstualni logo — zamjena za nedostajuću sliku */}
-                      <div
-                        className="pointer-events-none transition-opacity duration-300 flex items-center gap-2"
-                        style={{ position: "absolute", bottom: "-60px", opacity: isSeeking ? 0 : 1 }}
-                      >
-                        <span className="text-white font-bold text-3xl tracking-wide">
-                          Max<span style={{ color: GOLD }}>Videoteka</span>
-                        </span>
-                      </div>
+                      <img
+                        src={logo}
+                        alt="Logo"
+                        className="w-auto pointer-events-none transition-opacity duration-300"
+                        style={{ height: "280px", position: "absolute", bottom: "-90px", opacity: isSeeking ? 0 : 1 }}
+                      />
                     </div>
                     <div
                       className={`transition-opacity duration-300 ${isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"} flex flex-col items-center`}
@@ -524,7 +563,9 @@ const VideotekaPlayer = ({
                   </div>
                 </div>
 
+                {/* BOTTOM AREA */}
                 <div className="flex flex-col gap-4 pb-4 w-full">
+                  {/* Thumbnail strip — prikazuje se pri seekanju */}
                   <div className="h-32 flex items-end justify-center">
                     <AnimatePresence>
                       {isSeeking && (
@@ -552,6 +593,7 @@ const VideotekaPlayer = ({
                     </AnimatePresence>
                   </div>
 
+                  {/* Progress bar */}
                   <div className="flex items-center gap-4 w-full">
                     <span className="text-sm font-mono tabular-nums text-muted-foreground w-12">{elapsed}</span>
                     <div className="flex-1 rounded-full relative bg-white/20" style={{ height: "3px" }}>
@@ -567,6 +609,7 @@ const VideotekaPlayer = ({
                     </div>
                   </div>
 
+                  {/* Rewind | Play/Pause | FastForward */}
                   <div className="flex justify-center items-center gap-4">
                     <div
                       className="flex items-center justify-center w-[42px] h-[42px] transition-all duration-200 cursor-pointer"
@@ -578,6 +621,7 @@ const VideotekaPlayer = ({
                     >
                       <Rewind className="w-7 h-7 fill-current" />
                     </div>
+
                     <div className="w-[52px] h-[52px]">
                       <div
                         className="flex items-center justify-center rounded-full w-full h-full transition-all duration-200"
@@ -596,6 +640,7 @@ const VideotekaPlayer = ({
                         )}
                       </div>
                     </div>
+
                     <div
                       className="flex items-center justify-center w-[42px] h-[42px] transition-all duration-200 cursor-pointer"
                       style={{
@@ -608,6 +653,7 @@ const VideotekaPlayer = ({
                     </div>
                   </div>
 
+                  {/* Subtitle | Audio | Aa */}
                   <div className="flex w-full">
                     <div className="min-w-[136px]" />
                     <div className="flex-1 flex justify-center items-center gap-4">
@@ -645,6 +691,7 @@ const VideotekaPlayer = ({
         )}
       </AnimatePresence>
 
+      {/* ── Subtitle Modal ── */}
       <AnimatePresence>
         {showSubtitleModal && (
           <>
@@ -719,6 +766,7 @@ const VideotekaPlayer = ({
         )}
       </AnimatePresence>
 
+      {/* ── Audio Modal ── */}
       <AnimatePresence>
         {showAudioModal && (
           <>
@@ -801,6 +849,7 @@ const VideotekaPlayer = ({
         )}
       </AnimatePresence>
 
+      {/* ── Font Modal ── */}
       <AnimatePresence>
         {showFontModal && (
           <>
