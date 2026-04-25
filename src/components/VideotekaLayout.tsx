@@ -150,44 +150,49 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
         onTabChange={handleTabChange}
       />
       {searchOpen && <VideotekaSearch allItems={allContentItems} onClose={() => setSearchOpen(false)} />}
-      <div className="-mt-[35px]">
-        <ContentRow
-          title={rows[focusedRow].title}
-          titleHighlight={rows[focusedRow].titleHighlight}
-          items={rows[focusedRow].items}
-          focusedIndex={focusedItems[focusedRow]}
-          isActive={!headerFocused}
-          uniform={headerFocused || rowTransitioning}
-          showIndicator={focusedRow === 0 && !headerFocused}
-          onItemClick={(i) => {
-            setFocusedItems((prev) => {
-              const next = [...prev];
-              next[focusedRow] = i;
-              return next;
-            });
-          }}
-        />
-        <ContentDetails {...details} />
-        {nextRow !== null && (
+      {!hasContent ? (
+        <div className="flex h-[60vh] items-center justify-center text-white/60">
+          {isLoading ? "Učitavanje sadržaja…" : "Nema sadržaja u Videoteci."}
+        </div>
+      ) : (
+        <div className="-mt-[35px]">
           <ContentRow
-            title={rows[nextRow].title}
-            titleHighlight={rows[nextRow].titleHighlight}
-            items={rows[nextRow].items}
-            peek
-            portrait
-            focusedIndex={focusedItems[nextRow]}
+            title={currentRow!.title}
+            titleHighlight={currentRow!.titleHighlight}
+            items={currentRow!.items}
+            focusedIndex={focusedItems[focusedRow] ?? 0}
+            isActive={!headerFocused}
+            uniform={headerFocused || rowTransitioning}
+            showIndicator={focusedRow === 0 && !headerFocused}
             onItemClick={(i) => {
-              setFocusedRow(nextRow);
               setFocusedItems((prev) => {
                 const next = [...prev];
-                next[nextRow] = i;
+                next[focusedRow] = i;
                 return next;
               });
             }}
           />
-        )}
-      </div>
-
+          <ContentDetails {...details} />
+          {nextRow !== null && rows[nextRow] && (
+            <ContentRow
+              title={rows[nextRow].title}
+              titleHighlight={rows[nextRow].titleHighlight}
+              items={rows[nextRow].items}
+              peek
+              portrait
+              focusedIndex={focusedItems[nextRow] ?? 0}
+              onItemClick={(i) => {
+                setFocusedRow(nextRow);
+                setFocusedItems((prev) => {
+                  const next = [...prev];
+                  next[nextRow] = i;
+                  return next;
+                });
+              }}
+            />
+          )}
+        </div>
+      )}
       <AnimatePresence>
         {detailViewOpen && currentItem && (
           <ContentDetailView
