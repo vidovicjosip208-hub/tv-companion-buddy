@@ -93,6 +93,88 @@ const formatTime = (seconds: number) => {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
 
+// ── Loader ────────────────────────────────────────────────────────────────────
+
+const CIRCLE_SIZE = 80;
+const STROKE = 5;
+const RADIUS = (CIRCLE_SIZE - STROKE) / 2;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+const Loader = ({ ready, onDone }: { ready: boolean; onDone: () => void }) => {
+  const [percent, setPercent] = useState(0);
+  const doneRef = useRef(false);
+
+  useEffect(() => {
+    const startTime = performance.now();
+    let raf = 0;
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime;
+
+      if (ready || elapsed >= LOADER_MAX_DURATION) {
+        setPercent(100);
+        if (!doneRef.current) {
+          doneRef.current = true;
+          setTimeout(onDone, 250);
+        }
+        return;
+      }
+
+      const raw = elapsed / LOADER_MIN_DURATION;
+      const eased = 1 - Math.pow(1 - Math.min(raw, 1), 2);
+      const p = Math.min(90, Math.round(eased * 90));
+      setPercent(p);
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [ready, onDone]);
+
+  const dashOffset = CIRCUMFERENCE - (percent / 100) * CIRCUMFERENCE;
+
+  return (
+    <motion.div
+      key="loader"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.4 } }}
+      className="fixed inset-0 z-[200] bg-black flex items-center justify-center"
+    >
+      <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+        <svg width={CIRCLE_SIZE} height={CIRCLE_SIZE} style={{ transform: "rotate(-90deg)" }}>
+          <circle
+            cx={CIRCLE_SIZE / 2}
+            cy={CIRCLE_SIZE / 2}
+            r={RADIUS}
+            fill="none"
+            stroke="rgba(255,255,255,0.12)"
+            strokeWidth={STROKE}
+          />
+          <circle
+            cx={CIRCLE_SIZE / 2}
+            cy={CIRCLE_SIZE / 2}
+            r={RADIUS}
+            fill="none"
+            stroke={GOLD}
+            strokeWidth={STROKE}
+            strokeLinecap="round"
+            strokeDasharray={CIRCUMFERENCE}
+            strokeDashoffset={dashOffset}
+            style={{ transition: "stroke-dashoffset 0.15s linear" }}
+          />
+        </svg>
+        <div
+          className="absolute inset-0 flex items-center justify-center font-mono font-bold tabular-nums select-none"
+          style={{ color: GOLD, fontSize: "15px" }}
+        >
+          {percent}%
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // ── Player ────────────────────────────────────────────────────────────────────
 
 const VideotekaPlayer = ({
