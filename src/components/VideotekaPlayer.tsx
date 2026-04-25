@@ -332,10 +332,15 @@ const VideotekaPlayer = ({
 
     if (Hls.isSupported() && !isNativeHls) {
       const hls = new Hls({
+        // Move demux/parse off the main thread for smooth UI during 4K playback.
         enableWorker: true,
+        // Disable LL-HLS so we can buffer aggressively for stability.
         lowLatencyMode: false,
-        maxBufferLength: 30,
+        // 60s forward buffer prevents stutters on bitrate switches & jitter.
+        maxBufferLength: 60,
         maxMaxBufferLength: 60,
+        // Allow up to ~60MB of buffered video before back-pressure kicks in.
+        maxBufferSize: 60 * 1000 * 1000,
         backBufferLength: 30,
         startLevel: -1,
         capLevelToPlayerSize: false,
