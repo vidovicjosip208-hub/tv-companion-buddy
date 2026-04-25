@@ -350,20 +350,18 @@ const VideotekaPlayer = ({
     const hasHEVC = supportsHEVC();
 
     if (Hls.isSupported() && !isNativeHls) {
+      // HLSPlayer.net-style config: rely on hls.js defaults for smooth playback.
+      // Defaults give a 30s forward buffer, ABR that picks the right level for
+      // the user's bandwidth (instead of forcing top quality), and balanced
+      // back-buffer trimming. Aggressive overrides cause stutter on most
+      // connections because the player tries to download huge top-tier
+      // segments before it can start.
       const hls = new Hls({
-        // Move demux/parse off the main thread for smooth UI during 4K playback.
         enableWorker: true,
-        // Disable LL-HLS so we can buffer aggressively for stability.
         lowLatencyMode: false,
-        // 60s forward buffer prevents stutters on bitrate switches & jitter.
-        maxBufferLength: 60,
-        maxMaxBufferLength: 60,
-        // Allow up to ~60MB of buffered video before back-pressure kicks in.
-        maxBufferSize: 60 * 1000 * 1000,
-        backBufferLength: 30,
-        startLevel: -1,
-        capLevelToPlayerSize: false,
-        autoStartLoad: true,
+        backBufferLength: 90,
+        // startLevel undefined => hls.js auto-starts at a reasonable level
+        // based on the first segment's bandwidth estimate (same as HLSPlayer.net).
       });
       hlsRef.current = hls;
       hls.loadSource(streamUrl);
