@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, RotateCcw, Layers, Captions, ThumbsUp, ThumbsDown, Plus, Film } from "lucide-react";
+import { Play, RotateCcw, Layers, Captions, ThumbsUp, ThumbsDown, Plus } from "lucide-react";
 import { ContentDetailsData } from "@/data/videotekaContent";
 import EpisodesView from "@/components/EpisodesView";
 import VideotekaPlayer from "@/components/VideotekaPlayer";
+import maxOvizijaLogo from "@/assets/max-ovizija-videoteka-logo.png";
 
 interface ContentDetailViewProps {
   details: ContentDetailsData;
