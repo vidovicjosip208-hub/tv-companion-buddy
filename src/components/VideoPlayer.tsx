@@ -2,6 +2,24 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
+import videojs from "video.js";
+import type Player from "video.js/dist/types/player";
+import "video.js/dist/video-js.css";
+import "videojs-contrib-quality-levels";
+import "videojs-hls-quality-selector";
+
+// Detect HEVC (H.265) decoding support — most 4K IPTV streams use HEVC.
+const supportsHEVC = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const v = document.createElement("video");
+  // Common HEVC codec strings in HLS fMP4
+  const codecs = ['video/mp4; codecs="hvc1.1.6.L93.B0"', 'video/mp4; codecs="hev1.1.6.L93.B0"'];
+  if (codecs.some((c) => v.canPlayType(c) !== "")) return true;
+  if (typeof MediaSource !== "undefined" && MediaSource.isTypeSupported) {
+    return codecs.some((c) => MediaSource.isTypeSupported(c));
+  }
+  return false;
+};
 
 const calculateTimeFromProgress = (pct: number, range: string) => {
   const [startPart, endPart] = range.split(" - ");
