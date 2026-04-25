@@ -449,7 +449,7 @@ const VideotekaPlayer = ({
   // ── Main keyboard handler ──
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!loaderDone) return;
+      if (!loaderDone || !videoReady) return;
 
       if (!isVisible) {
         setIsVisible(true);
