@@ -910,7 +910,7 @@ const VideoPlayer = ({
         {streamUrl && (
           <video
             ref={videoRef}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="video-js vjs-default-skin absolute inset-0 w-full h-full object-cover"
             style={{ zIndex: 1 }}
             playsInline
             muted
