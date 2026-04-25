@@ -12,8 +12,6 @@ import {
   Rewind,
   FastForward,
 } from "lucide-react";
-import logo from "@/assets/max-ovizija-videoteka-logo.png";
-
 import Hls from "hls.js";
 import logo from "@/assets/max-ovizija-videoteka-logo.png";
 import { useMovieStream } from "@/hooks/useMovieStream";
