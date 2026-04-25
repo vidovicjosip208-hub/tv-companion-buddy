@@ -384,7 +384,10 @@ const VideotekaPlayer = ({
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: false,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
         backBufferLength: 90,
+        autoStartLoad: true,
         // startLevel undefined => hls.js auto-starts at a reasonable level
         // based on the first segment's bandwidth estimate (same as HLSPlayer.net).
       });
@@ -411,6 +414,10 @@ const VideotekaPlayer = ({
 
       hls.on(Hls.Events.ERROR, (_evt, data) => {
         if (!data.fatal) return;
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          hls.startLoad();
+          return;
+        }
         if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
           try {
             hls.recoverMediaError();
@@ -423,6 +430,7 @@ const VideotekaPlayer = ({
       });
     } else if (isNativeHls) {
       video.src = streamUrl;
+      playMuted();
     } else {
       setStreamError("Vaš preglednik ne podržava HLS reprodukciju.");
     }
