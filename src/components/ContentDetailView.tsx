@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Play, RotateCcw, Layers, Captions, ThumbsUp, ThumbsDown, Plus } from "lucide-react";
 import { ContentDetailsData } from "@/data/videotekaContent";
 import EpisodesView from "@/components/EpisodesView";
-import VideotekaPlayer from "@/components/VideotekaPlayer";
+import VODPlayer from "@/components/VODPlayer";
 import logo from "@/assets/max-ovizija-videoteka-logo.png";
 
 interface ContentDetailViewProps {
@@ -336,10 +336,10 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
       {/* Player overlay */}
       <AnimatePresence>
         {showPlayer && (
-          <VideotekaPlayer
+          <VODPlayer
+            itemId={itemId}
             title={details.title}
-            episodeInfo={details.episodes ? `S1: E1 "${details.title}"` : undefined}
-            thumbnail={thumbnail}
+            poster={thumbnail}
             onClose={() => setShowPlayer(false)}
           />
         )}
