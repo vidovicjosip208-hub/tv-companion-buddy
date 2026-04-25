@@ -14,6 +14,10 @@ import {
 } from "lucide-react";
 import logo from "@/assets/max-ovizija-videoteka-logo.png";
 
+import Hls from "hls.js";
+import logo from "@/assets/max-ovizija-videoteka-logo.png";
+import { useMovieStream } from "@/hooks/useMovieStream";
+
 interface Episode {
   title: string;
   episodeInfo?: string;
@@ -27,7 +31,22 @@ interface VideotekaPlayerProps {
   onClose: () => void;
   nextEpisode?: Episode;
   onNextEpisode?: () => void;
+  /** Supabase movies_series row id; loads stream_url via useMovieStream. */
+  itemId?: string;
+  /** Optional explicit stream URL (skips Supabase fetch). */
+  streamUrl?: string;
 }
+
+const supportsHEVC = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const v = document.createElement("video");
+  const codecs = ['video/mp4; codecs="hvc1.1.6.L93.B0"', 'video/mp4; codecs="hev1.1.6.L93.B0"'];
+  if (codecs.some((c) => v.canPlayType(c) !== "")) return true;
+  if (typeof MediaSource !== "undefined" && MediaSource.isTypeSupported) {
+    return codecs.some((c) => MediaSource.isTypeSupported(c));
+  }
+  return false;
+};
 
 const CONTROL_OPTIONS = [
   { label: "Subtitle", hasIcon: false },
