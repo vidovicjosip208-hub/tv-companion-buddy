@@ -57,7 +57,8 @@ const TOTAL_DURATION = 55 * 60 + 48;
 const SEEK_STEP = 10;
 const THUMBNAIL_COUNT = 7;
 const GOLD = "#F5C518";
-const LOADER_DURATION = 3000;
+const LOADER_MIN_DURATION = 1200; // minimum visible time so loader doesn't flash
+const LOADER_MAX_DURATION = 20000; // hard cap before we surface the player anyway
 
 const DUMMY_SUBTITLES = [
   { code: "off", label: "Isključeno" },
@@ -99,26 +100,43 @@ const STROKE = 5;
 const RADIUS = (CIRCLE_SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-const Loader = ({ onDone }: { onDone: () => void }) => {
+/**
+ * Loader stays visible until the video is truly ready to play.
+ * Progress eases up to ~90% over LOADER_MIN_DURATION while we wait,
+ * then snaps to 100% the moment `ready` flips true (or the hard cap hits).
+ */
+const Loader = ({ ready, onDone }: { ready: boolean; onDone: () => void }) => {
   const [percent, setPercent] = useState(0);
+  const doneRef = useRef(false);
 
   useEffect(() => {
     const startTime = performance.now();
+    let raf = 0;
+
     const tick = (now: number) => {
       const elapsed = now - startTime;
-      const raw = elapsed / LOADER_DURATION;
-      const eased = 1 - Math.pow(1 - Math.min(raw, 1), 2);
-      const p = Math.round(eased * 100);
-      setPercent(p);
-      if (elapsed < LOADER_DURATION) {
-        requestAnimationFrame(tick);
-      } else {
+
+      if (ready || elapsed >= LOADER_MAX_DURATION) {
+        // Animate the final stretch to 100% then signal done.
         setPercent(100);
-        setTimeout(onDone, 200);
+        if (!doneRef.current) {
+          doneRef.current = true;
+          setTimeout(onDone, 250);
+        }
+        return;
       }
+
+      // Cap at 90% while we're still waiting on the player.
+      const raw = elapsed / LOADER_MIN_DURATION;
+      const eased = 1 - Math.pow(1 - Math.min(raw, 1), 2);
+      const p = Math.min(90, Math.round(eased * 90));
+      setPercent(p);
+      raf = requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
-  }, [onDone]);
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [ready, onDone]);
 
   const dashOffset = CIRCUMFERENCE - (percent / 100) * CIRCUMFERENCE;
 
@@ -150,7 +168,7 @@ const Loader = ({ onDone }: { onDone: () => void }) => {
             strokeLinecap="round"
             strokeDasharray={CIRCUMFERENCE}
             strokeDashoffset={dashOffset}
-            style={{ transition: "stroke-dashoffset 0.05s linear" }}
+            style={{ transition: "stroke-dashoffset 0.15s linear" }}
           />
         </svg>
         <div
@@ -314,10 +332,15 @@ const VideotekaPlayer = ({
 
     if (Hls.isSupported() && !isNativeHls) {
       const hls = new Hls({
+        // Move demux/parse off the main thread for smooth UI during 4K playback.
         enableWorker: true,
+        // Disable LL-HLS so we can buffer aggressively for stability.
         lowLatencyMode: false,
-        maxBufferLength: 30,
+        // 60s forward buffer prevents stutters on bitrate switches & jitter.
+        maxBufferLength: 60,
         maxMaxBufferLength: 60,
+        // Allow up to ~60MB of buffered video before back-pressure kicks in.
+        maxBufferSize: 60 * 1000 * 1000,
         backBufferLength: 30,
         startLevel: -1,
         capLevelToPlayerSize: false,
@@ -385,14 +408,17 @@ const VideotekaPlayer = ({
     const onPause = () => setIsPlaying(false);
 
     video.addEventListener("loadedmetadata", onLoadedMeta);
-    video.addEventListener("canplay", onCanPlay);
+    // canplaythrough = browser estimates it can play to the end without
+    // re-buffering at current rate. Stricter than `canplay`, so the spinner
+    // only disappears when playback is truly stable.
+    video.addEventListener("canplaythrough", onCanPlay);
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
 
     return () => {
       video.removeEventListener("loadedmetadata", onLoadedMeta);
-      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("canplaythrough", onCanPlay);
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
@@ -670,7 +696,7 @@ const VideotekaPlayer = ({
 
       <AnimatePresence>
         {(!loaderDone || !videoReady) && !streamError && (
-          <Loader key="loader" onDone={() => setLoaderDone(true)} />
+          <Loader key="loader" ready={videoReady} onDone={() => setLoaderDone(true)} />
         )}
 
         {loaderDone && isVisible && (
