@@ -7,29 +7,20 @@ import ContentRow from "@/components/ContentRow";
 import ContentDetails from "@/components/ContentDetails";
 import ContentDetailView from "@/components/ContentDetailView";
 import VideotekaSearch from "@/components/VideotekaSearch";
-import {
-  ContentRowData,
-  detailsData,
-  defaultDetails,
-  allContentItems,
-  homeRows,
-  showsRows,
-  moviesRows,
-  myListRows,
-} from "@/data/videotekaContent";
-
-const tabRowsMap: Record<string, ContentRowData[]> = {
-  Home: homeRows,
-  Shows: showsRows,
-  Movies: moviesRows,
-  "My List": myListRows,
-};
+import { ContentRowData, defaultDetails } from "@/data/videotekaContent";
+import { useVideotekaContent } from "@/hooks/useVideotekaContent";
 
 interface VideotekaLayoutProps {
   initialTab?: string;
 }
 
+const EMPTY_ROWS: ContentRowData[] = [{ title: "Učitavanje", items: [] }];
+
 const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
+  const { data: vt, isLoading } = useVideotekaContent();
+  const tabRowsMap = vt?.rowsByTab ?? {};
+  const detailsData = vt?.detailsById ?? {};
+  const allContentItems = vt?.allItems ?? [];
   const navigate = useNavigate();
   const headerRef = useRef<VideotekaHeaderHandle>(null);
   const headerFocusedIndexRef = useRef<number | null>(null);
