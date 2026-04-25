@@ -36,7 +36,10 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
   }, []);
   const [detailViewOpen, setDetailViewOpen] = useState(false);
 
-  const rows = useMemo(() => tabRowsMap[activeTab] || homeRows, [activeTab]);
+  const rows = useMemo(
+    () => tabRowsMap[activeTab] ?? tabRowsMap.Home ?? EMPTY_ROWS,
+    [activeTab, tabRowsMap],
+  );
   const [focusedItems, setFocusedItems] = useState<number[]>(rows.map(() => 0));
 
   // Reset content state when tab changes
