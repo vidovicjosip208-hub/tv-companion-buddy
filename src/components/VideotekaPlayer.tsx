@@ -12,7 +12,9 @@ import {
   Rewind,
   FastForward,
 } from "lucide-react";
+import Hls from "hls.js";
 import logo from "@/assets/max-ovizija-videoteka-logo.png";
+import { useMovieStream } from "@/hooks/useMovieStream";
 
 interface Episode {
   title: string;
@@ -27,7 +29,22 @@ interface VideotekaPlayerProps {
   onClose: () => void;
   nextEpisode?: Episode;
   onNextEpisode?: () => void;
+  /** Supabase movies_series row id; loads stream_url via useMovieStream. */
+  itemId?: string;
+  /** Optional explicit stream URL (skips Supabase fetch). */
+  streamUrl?: string;
 }
+
+const supportsHEVC = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const v = document.createElement("video");
+  const codecs = ['video/mp4; codecs="hvc1.1.6.L93.B0"', 'video/mp4; codecs="hev1.1.6.L93.B0"'];
+  if (codecs.some((c) => v.canPlayType(c) !== "")) return true;
+  if (typeof MediaSource !== "undefined" && MediaSource.isTypeSupported) {
+    return codecs.some((c) => MediaSource.isTypeSupported(c));
+  }
+  return false;
+};
 
 const CONTROL_OPTIONS = [
   { label: "Subtitle", hasIcon: false },
@@ -156,15 +173,28 @@ const VideotekaPlayer = ({
   onClose,
   nextEpisode,
   onNextEpisode,
+  itemId,
+  streamUrl: streamUrlProp,
 }: VideotekaPlayerProps) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hlsRef = useRef<Hls | null>(null);
+
+  const { data: movie, isLoading: fetchingStream, error: fetchError } = useMovieStream(
+    streamUrlProp ? undefined : itemId,
+  );
+  const streamUrl = streamUrlProp ?? movie?.stream_url ?? null;
+
   const [isVisible, setIsVisible] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [loaderDone, setLoaderDone] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [streamError, setStreamError] = useState<string | null>(null);
+  const [videoDuration, setVideoDuration] = useState<number>(TOTAL_DURATION);
   const [focusedRow, setFocusedRow] = useState(2);
   const [focusedCol, setFocusedCol] = useState(1); // default na Play gumb (sredina)
-  const [currentTime, setCurrentTime] = useState(47 * 60 + 54);
+  const [currentTime, setCurrentTime] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
-  const [seekTime, setSeekTime] = useState(47 * 60 + 54);
+  const [seekTime, setSeekTime] = useState(0);
   const [skipHovered, setSkipHovered] = useState(false);
 
   // Modal state
@@ -252,32 +282,174 @@ const VideotekaPlayer = ({
     }
   }, [loaderDone, startHideTimer]);
 
-  // Playback timer
+  // Use real video duration if available
+  const totalDuration = videoDuration || TOTAL_DURATION;
+
+  // ── HLS / native HLS bootstrap ──
   useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      setCurrentTime((prev) => (prev >= TOTAL_DURATION ? TOTAL_DURATION : prev + 1));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isPlaying]);
+    const video = videoRef.current;
+    if (!video) return;
+    if (fetchingStream) return;
+
+    if (fetchError) {
+      setStreamError("Greška pri dohvaćanju stream URL-a.");
+      return;
+    }
+    if (!streamUrl) {
+      setStreamError("Stream URL nije dostupan.");
+      return;
+    }
+
+    setStreamError(null);
+    setVideoReady(false);
+
+    // Cleanup previous HLS
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    const isNativeHls = video.canPlayType("application/vnd.apple.mpegurl") !== "";
+    const hasHEVC = supportsHEVC();
+
+    if (Hls.isSupported() && !isNativeHls) {
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: false,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        backBufferLength: 30,
+        startLevel: -1,
+        capLevelToPlayerSize: false,
+        autoStartLoad: true,
+      });
+      hlsRef.current = hls;
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (!hasHEVC && hls.levels?.length) {
+          const supported = hls.levels
+            .map((lvl, idx) => ({ lvl, idx }))
+            .filter(({ lvl }) => {
+              const codec = (lvl.videoCodec ?? "").toLowerCase();
+              return !(codec.startsWith("hvc1") || codec.startsWith("hev1"));
+            });
+          if (supported.length && supported.length < hls.levels.length) {
+            hls.autoLevelCapping = supported[supported.length - 1].idx;
+          }
+        }
+      });
+
+      hls.on(Hls.Events.ERROR, (_evt, data) => {
+        if (!data.fatal) return;
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          try {
+            hls.recoverMediaError();
+            return;
+          } catch {
+            /* fallthrough */
+          }
+        }
+        setStreamError("Reprodukcija nije uspjela.");
+      });
+    } else if (isNativeHls) {
+      video.src = streamUrl;
+    } else {
+      setStreamError("Vaš preglednik ne podržava HLS reprodukciju.");
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [streamUrl, fetchingStream, fetchError]);
+
+  // Video event listeners — sync time, duration, ready state with UI
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onLoadedMeta = () => {
+      if (Number.isFinite(video.duration) && video.duration > 0) {
+        setVideoDuration(Math.floor(video.duration));
+      }
+    };
+    const onCanPlay = () => setVideoReady(true);
+    const onTimeUpdate = () => {
+      if (!isSeeking) setCurrentTime(Math.floor(video.currentTime));
+    };
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+
+    video.addEventListener("loadedmetadata", onLoadedMeta);
+    video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("timeupdate", onTimeUpdate);
+    video.addEventListener("play", onPlay);
+    video.addEventListener("pause", onPause);
+
+    return () => {
+      video.removeEventListener("loadedmetadata", onLoadedMeta);
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("timeupdate", onTimeUpdate);
+      video.removeEventListener("play", onPlay);
+      video.removeEventListener("pause", onPause);
+    };
+  }, [isSeeking]);
+
+  // When loader finishes AND video is ready, start playback for real
+  useEffect(() => {
+    if (!loaderDone || !videoReady) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.play().catch(() => {
+      // Autoplay block — user can press play
+    });
+  }, [loaderDone, videoReady]);
+
+  // Sync isPlaying state to actual video element
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoReady) return;
+    if (isPlaying && video.paused) video.play().catch(() => {});
+    if (!isPlaying && !video.paused) video.pause();
+  }, [isPlaying, videoReady]);
+
+  // Sync seek operations to the real video
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (Math.abs(video.currentTime - currentTime) > 1.5) {
+      try {
+        video.currentTime = currentTime;
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [currentTime]);
 
   const displayTime = isSeeking ? seekTime : currentTime;
-  const progress = useMemo(() => (displayTime / TOTAL_DURATION) * 100, [displayTime]);
+  const progress = useMemo(
+    () => (totalDuration > 0 ? (displayTime / totalDuration) * 100 : 0),
+    [displayTime, totalDuration],
+  );
   const elapsed = formatTime(displayTime);
-  const remaining = formatTime(TOTAL_DURATION - displayTime);
+  const remaining = formatTime(Math.max(0, totalDuration - displayTime));
 
   const seekThumbnails = useMemo(() => {
     const half = Math.floor(THUMBNAIL_COUNT / 2);
     return Array.from({ length: THUMBNAIL_COUNT }, (_, i) => {
       const t = seekTime + (i - half) * 30;
-      return Math.max(0, Math.min(TOTAL_DURATION, t));
+      return Math.max(0, Math.min(totalDuration, t));
     });
-  }, [seekTime]);
+  }, [seekTime, totalDuration]);
 
   // ── Main keyboard handler ──
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!loaderDone) return;
+      if (!loaderDone || !videoReady) return;
 
       if (!isVisible) {
         setIsVisible(true);
@@ -307,7 +479,7 @@ const VideotekaPlayer = ({
               setFocusedCol(2);
             } else if (focusedCol === 2) {
               // Već na FastForward: seek 10s naprijed + prikaži thumbnails
-              const next = Math.min(currentTime + SEEK_STEP, TOTAL_DURATION);
+              const next = Math.min(currentTime + SEEK_STEP, totalDuration);
               setIsSeeking(true);
               setSeekTime(next);
               setCurrentTime(next);
@@ -372,7 +544,7 @@ const VideotekaPlayer = ({
               setIsSeeking(false);
               startPlayback(150);
             }
-            if (focusedCol === 2) setCurrentTime((prev) => Math.min(prev + 10, TOTAL_DURATION));
+            if (focusedCol === 2) setCurrentTime((prev) => Math.min(prev + 10, totalDuration));
           } else if (focusedRow === 3) {
             if (focusedCol === 0) openSubtitleModal(DUMMY_SUBTITLES.findIndex((s) => s.code === selectedSubtitle));
             if (focusedCol === 1) openAudioModal(DUMMY_AUDIO_TRACKS.findIndex((a) => a.code === selectedAudio));
@@ -471,12 +643,35 @@ const VideotekaPlayer = ({
 
   return (
     <div className="fixed inset-0 z-[100] bg-black font-sans overflow-hidden">
+      {/* Real video stream — fills entire screen */}
       <div className="absolute inset-0">
-        <img src={thumbnail} alt="Background" className="w-full h-full object-cover" />
+        <video
+          ref={videoRef}
+          poster={thumbnail}
+          playsInline
+          className="w-full h-full object-contain bg-black"
+        />
       </div>
 
+      {/* Stream error overlay */}
+      {streamError && (
+        <div className="absolute inset-0 z-[150] flex items-center justify-center bg-black/85">
+          <div className="flex flex-col items-center gap-4 text-center px-6 max-w-md">
+            <p className="text-white text-lg">{streamError}</p>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 rounded-md bg-white text-black font-semibold hover:bg-white/90 transition"
+            >
+              Zatvori
+            </button>
+          </div>
+        </div>
+      )}
+
       <AnimatePresence>
-        {!loaderDone && <Loader key="loader" onDone={() => setLoaderDone(true)} />}
+        {(!loaderDone || !videoReady) && !streamError && (
+          <Loader key="loader" onDone={() => setLoaderDone(true)} />
+        )}
 
         {loaderDone && isVisible && (
           <motion.div
@@ -647,7 +842,7 @@ const VideotekaPlayer = ({
                         color: GOLD,
                         transform: focusedRow === 2 && focusedCol === 2 ? "scale(1.2)" : "scale(1)",
                       }}
-                      onClick={() => setCurrentTime((prev) => Math.min(prev + 10, TOTAL_DURATION))}
+                      onClick={() => setCurrentTime((prev) => Math.min(prev + 10, totalDuration))}
                     >
                       <FastForward className="w-7 h-7 fill-current" />
                     </div>
