@@ -173,15 +173,28 @@ const VideotekaPlayer = ({
   onClose,
   nextEpisode,
   onNextEpisode,
+  itemId,
+  streamUrl: streamUrlProp,
 }: VideotekaPlayerProps) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hlsRef = useRef<Hls | null>(null);
+
+  const { data: movie, isLoading: fetchingStream, error: fetchError } = useMovieStream(
+    streamUrlProp ? undefined : itemId,
+  );
+  const streamUrl = streamUrlProp ?? movie?.stream_url ?? null;
+
   const [isVisible, setIsVisible] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [loaderDone, setLoaderDone] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [streamError, setStreamError] = useState<string | null>(null);
+  const [videoDuration, setVideoDuration] = useState<number>(TOTAL_DURATION);
   const [focusedRow, setFocusedRow] = useState(2);
   const [focusedCol, setFocusedCol] = useState(1); // default na Play gumb (sredina)
-  const [currentTime, setCurrentTime] = useState(47 * 60 + 54);
+  const [currentTime, setCurrentTime] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
-  const [seekTime, setSeekTime] = useState(47 * 60 + 54);
+  const [seekTime, setSeekTime] = useState(0);
   const [skipHovered, setSkipHovered] = useState(false);
 
   // Modal state
