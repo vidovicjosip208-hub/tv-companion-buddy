@@ -486,24 +486,6 @@ const VideotekaPlayer = ({
     };
   }, [isSeeking, markVideoReady, playMuted]);
 
-  // When loader finishes AND video is ready, start playback for real
-  useEffect(() => {
-    if (!loaderDone || !videoReady) return;
-    const video = videoRef.current;
-    if (!video) return;
-    video.play().catch(() => {
-      // Autoplay block — user can press play
-    });
-  }, [loaderDone, videoReady]);
-
-  // Sync isPlaying state to actual video element
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !videoReady) return;
-    if (isPlaying && video.paused) video.play().catch(() => {});
-    if (!isPlaying && !video.paused) video.pause();
-  }, [isPlaying, videoReady]);
-
   // Sync seek operations to the real video
   useEffect(() => {
     const video = videoRef.current;
@@ -909,6 +891,10 @@ const VideotekaPlayer = ({
                     <div className="w-[52px] h-[52px]">
                       <div
                         className="flex items-center justify-center rounded-full w-full h-full transition-all duration-200"
+              onClick={() => {
+                if (videoRef.current?.paused) startPlayback(150);
+                else pausePlayback();
+              }}
                         style={{
                           backgroundColor: GOLD,
                           color: "#0d0d0d",
