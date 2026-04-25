@@ -540,7 +540,7 @@ const VideotekaPlayer = ({
 
       if (!isVisible) {
         setIsVisible(true);
-        setIsPlaying(false);
+        startHideTimer();
         return;
       }
 
@@ -629,7 +629,8 @@ const VideotekaPlayer = ({
             if (focusedCol === 0) setCurrentTime((prev) => Math.max(prev - 10, 0));
             if (focusedCol === 1) {
               setIsSeeking(false);
-              startPlayback(150);
+              if (videoRef.current?.paused) startPlayback(150);
+              else pausePlayback();
             }
             if (focusedCol === 2) setCurrentTime((prev) => Math.min(prev + 10, totalDuration));
           } else if (focusedRow === 3) {
