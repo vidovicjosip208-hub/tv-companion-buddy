@@ -280,12 +280,38 @@ const VideotekaPlayer = ({
 
   const startPlayback = useCallback(
     (delay = 150) => {
-      setIsPlaying(true);
-      if (delay > 0) setTimeout(() => setIsVisible(false), delay);
-      else startHideTimer();
+      const video = videoRef.current;
+      if (video) {
+        video.muted = true;
+        video.autoplay = true;
+        if (video.paused) {
+          video.play().catch(() => {
+            // Autoplay can still be blocked until a user gesture.
+          });
+        }
+      }
+
+      cancelHideTimer();
+      if (delay > 0) {
+        hideTimerRef.current = setTimeout(() => {
+          setIsVisible(false);
+          hideTimerRef.current = null;
+        }, delay);
+      } else {
+        startHideTimer();
+      }
     },
-    [startHideTimer],
+    [cancelHideTimer, startHideTimer],
   );
+
+  const pausePlayback = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.pause();
+    setIsPlaying(false);
+    setIsVisible(true);
+    cancelHideTimer();
+  }, [cancelHideTimer]);
 
   useEffect(() => {
     if (isVisible && isPlaying) startHideTimer();
@@ -295,10 +321,9 @@ const VideotekaPlayer = ({
 
   useEffect(() => {
     if (loaderDone) {
-      setIsPlaying(true);
-      startHideTimer();
+      startPlayback(0);
     }
-  }, [loaderDone, startHideTimer]);
+  }, [loaderDone, startPlayback]);
 
   // Use real video duration if available
   const totalDuration = videoDuration || TOTAL_DURATION;
@@ -359,7 +384,10 @@ const VideotekaPlayer = ({
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: false,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
         backBufferLength: 90,
+        autoStartLoad: true,
         // startLevel undefined => hls.js auto-starts at a reasonable level
         // based on the first segment's bandwidth estimate (same as HLSPlayer.net).
       });
@@ -386,6 +414,10 @@ const VideotekaPlayer = ({
 
       hls.on(Hls.Events.ERROR, (_evt, data) => {
         if (!data.fatal) return;
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          hls.startLoad();
+          return;
+        }
         if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
           try {
             hls.recoverMediaError();
@@ -398,6 +430,7 @@ const VideotekaPlayer = ({
       });
     } else if (isNativeHls) {
       video.src = streamUrl;
+      playMuted();
     } else {
       setStreamError("Vaš preglednik ne podržava HLS reprodukciju.");
     }
@@ -453,24 +486,6 @@ const VideotekaPlayer = ({
     };
   }, [isSeeking, markVideoReady, playMuted]);
 
-  // When loader finishes AND video is ready, start playback for real
-  useEffect(() => {
-    if (!loaderDone || !videoReady) return;
-    const video = videoRef.current;
-    if (!video) return;
-    video.play().catch(() => {
-      // Autoplay block — user can press play
-    });
-  }, [loaderDone, videoReady]);
-
-  // Sync isPlaying state to actual video element
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !videoReady) return;
-    if (isPlaying && video.paused) video.play().catch(() => {});
-    if (!isPlaying && !video.paused) video.pause();
-  }, [isPlaying, videoReady]);
-
   // Sync seek operations to the real video
   useEffect(() => {
     const video = videoRef.current;
@@ -507,7 +522,7 @@ const VideotekaPlayer = ({
 
       if (!isVisible) {
         setIsVisible(true);
-        setIsPlaying(false);
+        startHideTimer();
         return;
       }
 
@@ -522,7 +537,6 @@ const VideotekaPlayer = ({
         case "Backspace":
           e.preventDefault();
           setIsVisible(false);
-          setIsPlaying(true);
           break;
 
         case "ArrowRight":
@@ -596,7 +610,8 @@ const VideotekaPlayer = ({
             if (focusedCol === 0) setCurrentTime((prev) => Math.max(prev - 10, 0));
             if (focusedCol === 1) {
               setIsSeeking(false);
-              startPlayback(150);
+              if (videoRef.current?.paused) startPlayback(150);
+              else pausePlayback();
             }
             if (focusedCol === 2) setCurrentTime((prev) => Math.min(prev + 10, totalDuration));
           } else if (focusedRow === 3) {
@@ -619,6 +634,7 @@ const VideotekaPlayer = ({
     startHideTimer,
     onClose,
     startPlayback,
+    pausePlayback,
     onNextEpisode,
     selectedSubtitle,
     selectedAudio,
@@ -875,6 +891,10 @@ const VideotekaPlayer = ({
                     <div className="w-[52px] h-[52px]">
                       <div
                         className="flex items-center justify-center rounded-full w-full h-full transition-all duration-200"
+              onClick={() => {
+                if (videoRef.current?.paused) startPlayback(150);
+                else pausePlayback();
+              }}
                         style={{
                           backgroundColor: GOLD,
                           color: "#0d0d0d",
