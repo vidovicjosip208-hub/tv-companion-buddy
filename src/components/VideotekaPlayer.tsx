@@ -696,7 +696,7 @@ const VideotekaPlayer = ({
 
       <AnimatePresence>
         {(!loaderDone || !videoReady) && !streamError && (
-          <Loader key="loader" onDone={() => setLoaderDone(true)} />
+          <Loader key="loader" ready={videoReady} onDone={() => setLoaderDone(true)} />
         )}
 
         {loaderDone && isVisible && (
