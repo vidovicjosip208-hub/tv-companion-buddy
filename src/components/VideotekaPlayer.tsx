@@ -100,26 +100,43 @@ const STROKE = 5;
 const RADIUS = (CIRCLE_SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-const Loader = ({ onDone }: { onDone: () => void }) => {
+/**
+ * Loader stays visible until the video is truly ready to play.
+ * Progress eases up to ~90% over LOADER_MIN_DURATION while we wait,
+ * then snaps to 100% the moment `ready` flips true (or the hard cap hits).
+ */
+const Loader = ({ ready, onDone }: { ready: boolean; onDone: () => void }) => {
   const [percent, setPercent] = useState(0);
+  const doneRef = useRef(false);
 
   useEffect(() => {
     const startTime = performance.now();
+    let raf = 0;
+
     const tick = (now: number) => {
       const elapsed = now - startTime;
-      const raw = elapsed / LOADER_DURATION;
-      const eased = 1 - Math.pow(1 - Math.min(raw, 1), 2);
-      const p = Math.round(eased * 100);
-      setPercent(p);
-      if (elapsed < LOADER_DURATION) {
-        requestAnimationFrame(tick);
-      } else {
+
+      if (ready || elapsed >= LOADER_MAX_DURATION) {
+        // Animate the final stretch to 100% then signal done.
         setPercent(100);
-        setTimeout(onDone, 200);
+        if (!doneRef.current) {
+          doneRef.current = true;
+          setTimeout(onDone, 250);
+        }
+        return;
       }
+
+      // Cap at 90% while we're still waiting on the player.
+      const raw = elapsed / LOADER_MIN_DURATION;
+      const eased = 1 - Math.pow(1 - Math.min(raw, 1), 2);
+      const p = Math.min(90, Math.round(eased * 90));
+      setPercent(p);
+      raf = requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
-  }, [onDone]);
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [ready, onDone]);
 
   const dashOffset = CIRCUMFERENCE - (percent / 100) * CIRCUMFERENCE;
 
@@ -151,7 +168,7 @@ const Loader = ({ onDone }: { onDone: () => void }) => {
             strokeLinecap="round"
             strokeDasharray={CIRCUMFERENCE}
             strokeDashoffset={dashOffset}
-            style={{ transition: "stroke-dashoffset 0.05s linear" }}
+            style={{ transition: "stroke-dashoffset 0.15s linear" }}
           />
         </svg>
         <div
