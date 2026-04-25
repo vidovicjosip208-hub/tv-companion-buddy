@@ -643,12 +643,35 @@ const VideotekaPlayer = ({
 
   return (
     <div className="fixed inset-0 z-[100] bg-black font-sans overflow-hidden">
+      {/* Real video stream — fills entire screen */}
       <div className="absolute inset-0">
-        <img src={thumbnail} alt="Background" className="w-full h-full object-cover" />
+        <video
+          ref={videoRef}
+          poster={thumbnail}
+          playsInline
+          className="w-full h-full object-contain bg-black"
+        />
       </div>
 
+      {/* Stream error overlay */}
+      {streamError && (
+        <div className="absolute inset-0 z-[150] flex items-center justify-center bg-black/85">
+          <div className="flex flex-col items-center gap-4 text-center px-6 max-w-md">
+            <p className="text-white text-lg">{streamError}</p>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 rounded-md bg-white text-black font-semibold hover:bg-white/90 transition"
+            >
+              Zatvori
+            </button>
+          </div>
+        </div>
+      )}
+
       <AnimatePresence>
-        {!loaderDone && <Loader key="loader" onDone={() => setLoaderDone(true)} />}
+        {(!loaderDone || !videoReady) && !streamError && (
+          <Loader key="loader" onDone={() => setLoaderDone(true)} />
+        )}
 
         {loaderDone && isVisible && (
           <motion.div
