@@ -760,8 +760,6 @@ const VideotekaPlayer = ({
       )}
 
       <AnimatePresence>
-        {!loaderDone && !streamError && <Loader key="loader" ready={videoReady} onDone={markVideoReady} />}
-
         {loaderDone && isVisible && (
           <motion.div
             key="player-ui"
