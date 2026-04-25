@@ -2,6 +2,24 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
+import videojs from "video.js";
+import type Player from "video.js/dist/types/player";
+import "video.js/dist/video-js.css";
+import "videojs-contrib-quality-levels";
+import "videojs-hls-quality-selector";
+
+// Detect HEVC (H.265) decoding support — most 4K IPTV streams use HEVC.
+const supportsHEVC = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const v = document.createElement("video");
+  // Common HEVC codec strings in HLS fMP4
+  const codecs = ['video/mp4; codecs="hvc1.1.6.L93.B0"', 'video/mp4; codecs="hev1.1.6.L93.B0"'];
+  if (codecs.some((c) => v.canPlayType(c) !== "")) return true;
+  if (typeof MediaSource !== "undefined" && MediaSource.isTypeSupported) {
+    return codecs.some((c) => MediaSource.isTypeSupported(c));
+  }
+  return false;
+};
 
 const calculateTimeFromProgress = (pct: number, range: string) => {
   const [startPart, endPart] = range.split(" - ");
@@ -491,6 +509,7 @@ const VideoPlayer = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const playerRef = useRef<Player | null>(null);
   const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
@@ -498,31 +517,94 @@ const VideoPlayer = ({
     if (!video || !streamUrl) return;
     setVideoReady(false);
 
+    const hevcOk = supportsHEVC();
+
+    // Initialize Video.js on the existing <video> element (UI + plugins).
+    const player = videojs(video, {
+      controls: false,
+      autoplay: true,
+      muted: true,
+      preload: "auto",
+      fluid: false,
+      html5: {
+        vhs: {
+          // Defer HLS handling to hls.js below; keep VHS off for native MSE control.
+          overrideNative: false,
+        },
+      },
+    });
+    playerRef.current = player;
+
     const onPlaying = () => setVideoReady(true);
     video.addEventListener("playing", onPlaying);
 
+    let hls: Hls | null = null;
+
+    const wireQualitySelector = (levels: { height?: number; bitrate: number }[]) => {
+      // Populate Video.js qualityLevels from hls.js levels so the
+      // videojs-hls-quality-selector plugin can render the SD/HD/4K menu.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const qlPlugin = (player as any).qualityLevels?.();
+      if (!qlPlugin) return;
+
+      levels.forEach((lvl, index) => {
+        qlPlugin.addQualityLevel({
+          id: String(index),
+          width: undefined,
+          height: lvl.height,
+          bitrate: lvl.bitrate,
+          enabled_(enabled?: boolean) {
+            if (typeof enabled === "boolean" && hls) {
+              hls.currentLevel = enabled ? index : -1;
+            }
+            return hls ? hls.currentLevel === index || hls.currentLevel === -1 : true;
+          },
+        });
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (player as any).hlsQualitySelector?.({ displayCurrentQuality: true });
+    };
+
     if (Hls.isSupported()) {
-      const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+      hls = new Hls({
+        enableWorker: true, // offload demuxing/parsing to a Web Worker (smooth 4K)
+        lowLatencyMode: true,
+        capLevelToPlayerSize: false, // allow manual 4K selection regardless of element size
+      });
       hlsRef.current = hls;
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+
+      hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
+        // Filter out HEVC variants if the device cannot decode them.
+        const usableLevels = data.levels.filter((lvl) => {
+          const codecs = (lvl.videoCodec || "").toLowerCase();
+          const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
+          return isHevc ? hevcOk : true;
+        });
+        wireQualitySelector(usableLevels);
         video.play().catch(() => {});
       });
-      return () => {
-        video.removeEventListener("playing", onPlaying);
-        hls.destroy();
-        hlsRef.current = null;
-      };
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      // Native HLS (Safari) — supports HEVC where the OS does.
       video.src = streamUrl;
       video.addEventListener("loadedmetadata", () => {
         video.play().catch(() => {});
       });
-      return () => {
-        video.removeEventListener("playing", onPlaying);
-      };
     }
+
+    return () => {
+      video.removeEventListener("playing", onPlaying);
+      if (hls) {
+        hls.destroy();
+        hlsRef.current = null;
+      }
+      if (playerRef.current) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
+    };
   }, [streamUrl]);
 
   useEffect(() => {
@@ -828,7 +910,7 @@ const VideoPlayer = ({
         {streamUrl && (
           <video
             ref={videoRef}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="video-js vjs-default-skin absolute inset-0 w-full h-full object-cover"
             style={{ zIndex: 1 }}
             playsInline
             muted
