@@ -124,9 +124,11 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  const currentItem = rows[focusedRow]?.items[focusedItems[focusedRow]];
+  const currentRow = rows[focusedRow];
+  const currentItem = currentRow?.items[focusedItems[focusedRow] ?? 0];
   const details = detailsData[currentItem?.id || ""] || defaultDetails;
   const nextRow = focusedRow + 1 < rows.length ? focusedRow + 1 : null;
+  const hasContent = !!currentRow && currentRow.items.length > 0;
 
   return (
     <motion.div
