@@ -537,7 +537,6 @@ const VideotekaPlayer = ({
         case "Backspace":
           e.preventDefault();
           setIsVisible(false);
-          setIsPlaying(true);
           break;
 
         case "ArrowRight":
@@ -635,6 +634,7 @@ const VideotekaPlayer = ({
     startHideTimer,
     onClose,
     startPlayback,
+    pausePlayback,
     onNextEpisode,
     selectedSubtitle,
     selectedAudio,
