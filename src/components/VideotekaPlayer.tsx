@@ -705,7 +705,10 @@ const VideotekaPlayer = ({
           ref={videoRef}
           poster={thumbnail}
           playsInline
-          className="w-full h-full object-contain bg-black"
+          muted
+          autoPlay
+          preload="auto"
+          className="relative z-[120] w-full h-full object-contain bg-black"
         />
       </div>
 
@@ -725,9 +728,7 @@ const VideotekaPlayer = ({
       )}
 
       <AnimatePresence>
-        {(!loaderDone || !videoReady) && !streamError && (
-          <Loader key="loader" ready={videoReady} onDone={() => setLoaderDone(true)} />
-        )}
+        {!loaderDone && !streamError && <Loader key="loader" ready={videoReady} onDone={markVideoReady} />}
 
         {loaderDone && isVisible && (
           <motion.div
