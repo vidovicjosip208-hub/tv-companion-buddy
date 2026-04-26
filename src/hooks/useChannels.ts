@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * UI shape used across the app. Mapped from the actual `tv_channels` row
+ * in the user's external Supabase, which has these columns:
+ *   id, name, logo_url, stream_url, category, language, country,
+ *   is_active, sort_order, created_at
+ */
 export interface Channel {
   id: string;
   name: string;
@@ -11,6 +17,29 @@ export interface Channel {
   abbreviation: string | null;
   thumbnail_url: string | null;
 }
+
+interface TvChannelRow {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  stream_url: string | null;
+  category: string | null;
+  language: string | null;
+  country: string | null;
+  is_active: boolean | null;
+  sort_order: number | null;
+}
+
+const mapChannel = (row: TvChannelRow): Channel => ({
+  id: row.id,
+  name: row.name,
+  logo_url: row.logo_url,
+  stream_url: row.stream_url,
+  category: row.category ?? "",
+  channel_number: row.sort_order ?? 0,
+  abbreviation: row.name?.slice(0, 4).toUpperCase() ?? null,
+  thumbnail_url: row.logo_url,
+});
 
 export interface EPGProgram {
   id: string;
@@ -24,27 +53,30 @@ export interface EPGProgram {
 
 export const useChannels = () => {
   return useQuery({
-    queryKey: ["channels"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("channels").select("*").order("channel_number");
+    queryKey: ["tv_channels"],
+    queryFn: async (): Promise<Channel[]> => {
+      const { data, error } = await supabase
+        .from("tv_channels")
+        .select("id, name, logo_url, stream_url, category, language, country, is_active, sort_order")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
       if (error) throw error;
-      return data as Channel[];
+      return ((data ?? []) as TvChannelRow[]).map(mapChannel);
     },
   });
 };
 
-export const useEPGData = (channelIds?: string[]) => {
+/**
+ * EPG data hook. The user's Supabase does not yet contain a programs/EPG
+ * table, so this resolves to an empty array. Once a `tv_programs` table
+ * exists, swap the queryFn to read from it and keep the same return shape.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const useEPGData = (_channelIds?: string[]) => {
   return useQuery({
-    queryKey: ["epg_data", channelIds],
-    queryFn: async () => {
-      let query = supabase.from("epg_data").select("*").order("start_time");
-      if (channelIds && channelIds.length > 0) {
-        query = query.in("channel_id", channelIds);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as EPGProgram[];
-    },
+    queryKey: ["tv_programs"],
+    queryFn: async (): Promise<EPGProgram[]> => [],
+    staleTime: Infinity,
   });
 };
 
@@ -54,6 +86,7 @@ export const useMoviesSeries = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("movies_series").select("*").order("title");
       if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return data as any[];
     },
   });
