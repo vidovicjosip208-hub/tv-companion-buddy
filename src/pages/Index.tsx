@@ -526,16 +526,18 @@ const Index = () => {
       });
   }, [dbChannels, dbEpg]);
 
-  // Build EPG channels from DB data (fallback to hardcoded)
+  // Build EPG channels from DB data — only valid channels
   const liveEpgChannels: EPGChannel[] = useMemo(() => {
-    if (!dbChannels || dbChannels.length === 0 || !dbEpg) return epgChannels;
+    if (!dbChannels || dbChannels.length === 0) return [];
     const epgByChannel = new Map<string, typeof dbEpg>();
-    for (const ep of dbEpg) {
-      if (!epgByChannel.has(ep.channel_id)) epgByChannel.set(ep.channel_id, []);
-      epgByChannel.get(ep.channel_id)!.push(ep);
+    if (dbEpg) {
+      for (const ep of dbEpg) {
+        if (!epgByChannel.has(ep.channel_id)) epgByChannel.set(ep.channel_id, []);
+        epgByChannel.get(ep.channel_id)!.push(ep);
+      }
     }
     return dbChannels
-      .filter((ch) => epgByChannel.has(ch.id))
+      .filter((ch) => !!ch.name?.trim() && !!ch.stream_url?.trim())
       .map((ch) => {
         const programs = epgByChannel.get(ch.id) ?? [];
         const formatTime = (iso: string) => {
