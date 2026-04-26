@@ -87,9 +87,85 @@ interface ControlItem {
   action: () => void;
 }
 
-// EPG/programi se vuku iz baze (tablica tv_programs). Trenutno tablica
-// nije popunjena — ostavljamo prazan niz dok se EPG ne ispuni u Supabaseu.
-const miniChannels: MiniChannel[] = [];
+const DAILY_SHOWS = [
+  {
+    title: "Jutarnji program",
+    start: "06:00",
+    end: "09:00",
+    thumb: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=300&q=70",
+  },
+  {
+    title: "Dobro jutro",
+    start: "09:00",
+    end: "10:00",
+    thumb: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=300&q=70",
+  },
+  {
+    title: "MasterChef",
+    start: "13:10",
+    end: "14:45",
+    thumb: "https://images.unsplash.com/photo-1504711434969-e33886168d6c?w=300&q=70",
+  },
+  {
+    title: "Dnevnik",
+    start: "18:10",
+    end: "18:30",
+    thumb: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=70",
+  },
+  {
+    title: "Rock Hronika",
+    start: "18:30",
+    end: "19:00",
+    thumb: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=300&q=70",
+  },
+];
+
+const DAY_NAMES_HR = ["Nedjelja", "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota"];
+
+const buildSchedule = (): MiniChannel[] => {
+  const now = new Date();
+  const result: MiniChannel[] = [];
+  let idCounter = 1;
+
+  for (let dayOffset = -7; dayOffset <= 1; dayOffset++) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + dayOffset);
+    date.setHours(0, 0, 0, 0);
+
+    const dayLabel =
+      dayOffset === 0 ? "Danas" : dayOffset === 1 ? "Sutra" : dayOffset === -1 ? "Jučer" : DAY_NAMES_HR[date.getDay()];
+
+    for (const show of DAILY_SHOWS) {
+      const [sh, sm] = show.start.split(":").map(Number);
+      const [eh, em] = show.end.split(":").map(Number);
+
+      const showStart = new Date(date);
+      showStart.setHours(sh, sm, 0, 0);
+
+      const showEnd = new Date(date);
+      if (eh < sh) showEnd.setDate(showEnd.getDate() + 1);
+      showEnd.setHours(eh, em, 0, 0);
+
+      if (showEnd < new Date(now.getTime() - 168 * 60 * 60 * 1000)) continue;
+
+      const isCurrent = showStart <= now && now < showEnd;
+
+      result.push({
+        id: `m${idCounter++}`,
+        title: show.title,
+        timeRange: `${show.start} - ${show.end}`,
+        day: dayLabel,
+        date: `${String(date.getDate()).padStart(2, "0")}.${String(date.getMonth() + 1).padStart(2, "0")}.`,
+        thumbnail: show.thumb,
+        ...(isCurrent ? { isCurrent: true } : {}),
+      });
+    }
+  }
+
+  return result;
+};
+
+const miniChannels: MiniChannel[] = buildSchedule();
 
 const sidebarChannels: SidebarChannel[] = [
   { id: "s1", num: 4, label: "federalna", sub: "ODIVIZIJA" },
