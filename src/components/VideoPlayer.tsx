@@ -1075,10 +1075,7 @@ const VideoPlayer = ({
               className="absolute inset-x-0 bottom-0 flex flex-col gap-0 pointer-events-none"
               style={{ zIndex: 40 }}
             >
-              <div
-                className="relative overflow-visible pointer-events-auto flex flex-col"
-                style={{ backgroundColor: "rgba(10,10,10,0.55)", border: "1px solid rgba(245,197,24,0.25)" }}
-              >
+              <div className="relative overflow-visible pointer-events-auto flex flex-col">
                 <div className="relative h-1.5 w-full bg-white/10 flex items-center">
                   <motion.div
                     className="absolute top-0 left-0 h-full"
@@ -1128,7 +1125,10 @@ const VideoPlayer = ({
                   </motion.div>
                 </div>
 
-                <div className="relative flex items-center pt-3 pb-3">
+                <div
+                  className="relative flex items-center pt-3 pb-3"
+                  style={{ backgroundColor: epgMode ? "rgba(10,10,10,0.46)" : "rgba(10,10,10,0.78)" }}
+                >
                   <div className="ml-4 flex-shrink-0">
                     <ChannelCard
                       ch={activeCh}
@@ -1228,7 +1228,10 @@ const VideoPlayer = ({
 
                 <div
                   className="w-full transition-all duration-500 overflow-visible"
-                  style={{ borderTop: "1px solid rgba(245,197,24,0.12)" }}
+                  style={{
+                    borderTop: "1px solid rgba(245,197,24,0.12)",
+                    backgroundColor: epgMode ? "transparent" : "rgba(10,10,10,0.62)",
+                  }}
                 >
                   {epgMode ? (
                     (() => {
