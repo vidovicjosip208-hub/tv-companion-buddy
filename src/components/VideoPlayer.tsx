@@ -491,90 +491,85 @@ const VideoPlayer = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const playerRef = useRef<Player | null>(null);
-  const [videoReady, setVideoReady] = useState(false);
+  const spinnerRef = useRef<HTMLDivElement>(null);
 
+  // HLS attach — runs only when streamUrl changes. No state writes here, so
+  // unrelated re-renders (timer, progress bar) never tear down the player.
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !streamUrl) return;
-    setVideoReady(false);
 
-    const hevcOk = supportsHEVC();
+    // Spinner is controlled directly via DOM events — detached from React state.
+    const showSpinner = () => {
+      if (spinnerRef.current) spinnerRef.current.style.opacity = "1";
+    };
+    const hideSpinner = () => {
+      if (spinnerRef.current) spinnerRef.current.style.opacity = "0";
+    };
 
-    // Initialize Video.js on the existing <video> element (UI + plugins).
-    const player = videojs(video, {
-      controls: false,
-      autoplay: true,
-      muted: true,
-      preload: "auto",
-      fluid: false,
-      html5: {
-        vhs: {
-          // Defer HLS handling to hls.js below; keep VHS off for native MSE control.
-          overrideNative: false,
-        },
-      },
-    });
-    playerRef.current = player;
-
-    const onPlaying = () => setVideoReady(true);
-    video.addEventListener("playing", onPlaying);
+    video.addEventListener("waiting", showSpinner);
+    video.addEventListener("stalled", showSpinner);
+    video.addEventListener("playing", hideSpinner);
+    video.addEventListener("canplay", hideSpinner);
 
     let hls: Hls | null = null;
 
-    const wireQualitySelector = (levels: { height?: number; bitrate: number }[]) => {
-      // Populate Video.js qualityLevels from hls.js levels so the
-      // videojs-hls-quality-selector plugin can render the SD/HD/4K menu.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const qlPlugin = (player as any).qualityLevels?.();
-      if (!qlPlugin) return;
-
-      levels.forEach((lvl, index) => {
-        qlPlugin.addQualityLevel({
-          id: String(index),
-          width: undefined,
-          height: lvl.height,
-          bitrate: lvl.bitrate,
-          enabled_(enabled?: boolean) {
-            if (typeof enabled === "boolean" && hls) {
-              hls.currentLevel = enabled ? index : -1;
-            }
-            return hls ? hls.currentLevel === index || hls.currentLevel === -1 : true;
-          },
-        });
-      });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (player as any).hlsQualitySelector?.({ displayCurrentQuality: true });
-    };
-
     if (Hls.isSupported()) {
       hls = new Hls({
-        enableWorker: true, // offload demuxing/parsing to a Web Worker (smooth 4K)
+        enableWorker: true,
         lowLatencyMode: true,
-        capLevelToPlayerSize: false, // allow manual 4K selection regardless of element size
+        backBufferLength: 60,
+        liveSyncDurationCount: 3,
+        liveMaxLatencyDurationCount: 10,
+        maxBufferLength: 30,
+        manifestLoadingMaxRetry: 10,
+        levelLoadingMaxRetry: 10,
       });
       hlsRef.current = hls;
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
 
-      hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
-        // Filter out HEVC variants if the device cannot decode them.
-        const usableLevels = data.levels.filter((lvl) => {
-          const codecs = (lvl.videoCodec || "").toLowerCase();
-          const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
-          return isHevc ? hevcOk : true;
-        });
-        wireQualitySelector(usableLevels);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.play().catch(() => {});
       });
+
+      // Auto-recovery — keep the picture alive on transient network/media errors.
+      hls.on(Hls.Events.ERROR, (_evt, data) => {
+        if (!data.fatal || !hls) return;
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          hls.startLoad();
+          return;
+        }
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          try {
+            hls.recoverMediaError();
+            return;
+          } catch {
+            /* fall through to destroy */
+          }
+        }
+        hls.destroy();
+        hlsRef.current = null;
+      });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Native HLS (Safari) — supports HEVC where the OS does.
+      // Native HLS (Safari / iOS) — hardware decoded.
       video.src = streamUrl;
       video.addEventListener("loadedmetadata", () => {
         video.play().catch(() => {});
       });
     }
+
+    return () => {
+      video.removeEventListener("waiting", showSpinner);
+      video.removeEventListener("stalled", showSpinner);
+      video.removeEventListener("playing", hideSpinner);
+      video.removeEventListener("canplay", hideSpinner);
+      if (hls) {
+        hls.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [streamUrl]);
 
     return () => {
       video.removeEventListener("playing", onPlaying);
