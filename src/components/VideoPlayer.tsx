@@ -538,7 +538,31 @@ const VideoPlayer = ({
     const onPlaying = () => {
       setVideoReady(true);
       hideSpinner();
+      // Unmute once playback has started (user already gestured by opening the channel)
+      try {
+        video.muted = false;
+        video.volume = 1;
+        playerRef.current?.muted(false);
+        playerRef.current?.volume(1);
+      } catch (e) {
+        // If browser blocks unmuted autoplay, stay muted; user can interact to enable sound.
+      }
     };
+    // Also try to unmute on first user interaction as a fallback
+    const enableSoundOnGesture = () => {
+      try {
+        video.muted = false;
+        video.volume = 1;
+        playerRef.current?.muted(false);
+        playerRef.current?.volume(1);
+      } catch {
+        /* noop */
+      }
+      window.removeEventListener("pointerdown", enableSoundOnGesture);
+      window.removeEventListener("keydown", enableSoundOnGesture);
+    };
+    window.addEventListener("pointerdown", enableSoundOnGesture);
+    window.addEventListener("keydown", enableSoundOnGesture);
     video.addEventListener("playing", onPlaying);
     video.addEventListener("waiting", showSpinner);
     video.addEventListener("stalled", showSpinner);
@@ -651,6 +675,8 @@ const VideoPlayer = ({
       video.removeEventListener("waiting", showSpinner);
       video.removeEventListener("stalled", showSpinner);
       video.removeEventListener("canplay", hideSpinner);
+      window.removeEventListener("pointerdown", enableSoundOnGesture);
+      window.removeEventListener("keydown", enableSoundOnGesture);
       if (hls) {
         hls.destroy();
         hlsRef.current = null;
