@@ -739,20 +739,18 @@ const VideoPlayer = ({
   const resetHideTimer = useCallback(() => {
     setShowHud(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
+    // Auto-hide only applies to compact HUD mode, not full EPG mode.
+    if (epgMode) return;
     hideTimer.current = setTimeout(() => {
       setShowHud(false);
-      setEpgMode(false);
     }, AUTO_HIDE_MS);
-  }, []);
+  }, [epgMode]);
 
   const openEpgMode = useCallback(() => {
+    // Full EPG mode stays visible until user explicitly returns to compact HUD.
     if (hideTimer.current) clearTimeout(hideTimer.current);
     setShowHud(true);
     setEpgMode(true);
-    hideTimer.current = setTimeout(() => {
-      setShowHud(false);
-      setEpgMode(false);
-    }, AUTO_HIDE_MS);
   }, []);
 
   const closeEpgMode = useCallback(() => {
