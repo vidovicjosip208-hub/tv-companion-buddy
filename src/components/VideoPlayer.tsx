@@ -1035,6 +1035,7 @@ const VideoPlayer = ({
               ref={sidebarRef}
               className="absolute flex flex-col overflow-y-auto pointer-events-auto"
               style={{
+                zIndex: 45,
                 bottom: SIDEBAR_BOTTOM,
                 left: 16,
                 width: CARD_W,
@@ -1072,6 +1073,7 @@ const VideoPlayer = ({
               exit={{ opacity: 0, y: 50 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="absolute inset-x-0 bottom-0 flex flex-col gap-0 pointer-events-none"
+              style={{ zIndex: 40 }}
             >
               <div
                 className="relative overflow-visible pointer-events-auto flex flex-col"
