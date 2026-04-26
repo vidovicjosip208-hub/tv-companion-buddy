@@ -755,8 +755,12 @@ const VideoPlayer = ({
 
   const closeEpgMode = useCallback(() => {
     setEpgMode(false);
-    resetHideTimer();
-  }, [resetHideTimer]);
+    setShowHud(true);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => {
+      setShowHud(false);
+    }, AUTO_HIDE_MS);
+  }, []);
 
   const openSidebar = useCallback(() => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
