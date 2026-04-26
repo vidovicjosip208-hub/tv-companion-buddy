@@ -571,18 +571,6 @@ const VideoPlayer = ({
     };
   }, [streamUrl]);
 
-    return () => {
-      video.removeEventListener("playing", onPlaying);
-      if (hls) {
-        hls.destroy();
-        hlsRef.current = null;
-      }
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
-      }
-    };
-  }, [streamUrl]);
 
   useEffect(() => {
     const video = videoRef.current;
