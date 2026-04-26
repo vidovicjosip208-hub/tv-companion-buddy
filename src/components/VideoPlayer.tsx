@@ -834,6 +834,7 @@ const VideoPlayer = ({
 
   useEffect(() => {
     if (isVisible) {
+      resetHideTimer();
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
     }
