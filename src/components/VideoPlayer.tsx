@@ -1257,7 +1257,7 @@ const VideoPlayer = ({
                       );
                     })()
                   ) : (
-                    <div className="flex gap-2 h-24 px-3 py-2">
+                    <div className="flex gap-2 h-24 px-3 py-2 overflow-hidden">
                       {miniChannels.slice(0, 5).map((ch) => (
                         <div
                           key={ch.id}
