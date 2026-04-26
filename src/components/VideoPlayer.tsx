@@ -177,7 +177,7 @@ const sidebarChannels: SidebarChannel[] = [
   { id: "s7", num: 10, label: "HRT 1", sub: "ODIVIZIJA" },
 ];
 
-const AUTO_HIDE_MS = 5000;
+const AUTO_HIDE_MS = 4500;
 const GOLD = "#F5C518";
 
 const isFutureShow = (timeRange: string, day: string): boolean => {
