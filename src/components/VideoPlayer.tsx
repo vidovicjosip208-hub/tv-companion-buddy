@@ -954,7 +954,7 @@ const VideoPlayer = ({
             <motion.div
               key="hud"
               initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: epgMode ? 0 : 65 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="absolute inset-x-0 bottom-0 flex flex-col gap-0 pointer-events-none"
