@@ -959,6 +959,7 @@ const VideoPlayer = ({
       channelInput,
       favoriteChannels,
       onSwitchChannel,
+      showHud,
     ],
   );
 
