@@ -494,9 +494,10 @@ const Index = () => {
   const channelIds = useMemo(() => dbChannels?.map((c) => c.id) ?? [], [dbChannels]);
   const { data: dbEpg } = useEPGData(channelIds.length > 0 ? channelIds : undefined);
 
-  // Build channel cards from DB data — show ONLY valid channels (name + stream_url)
+  // Build channel cards from DB data (fallback to hardcoded if DB empty)
   const liveChannelCards = useMemo(() => {
-    if (!dbChannels || dbChannels.length === 0) return [];
+    if (!dbChannels || dbChannels.length === 0) return defaultChannelCards;
+    // Group EPG by channel_id, find live/first program
     const epgByChannel = new Map<string, typeof dbEpg>();
     if (dbEpg) {
       for (const ep of dbEpg) {
@@ -504,40 +505,37 @@ const Index = () => {
         epgByChannel.get(ep.channel_id)!.push(ep);
       }
     }
-    return dbChannels
-      .filter((ch) => !!ch.name?.trim() && !!ch.stream_url?.trim())
-      .map((ch) => {
-        const programs = epgByChannel.get(ch.id) ?? [];
-        const liveProgram = programs.find((p) => p.is_live) ?? programs[0];
-        const formatTime = (iso: string) => {
-          const d = new Date(iso);
-          return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-        };
-        return {
-          title: liveProgram?.title ?? ch.name,
-          thumbnail: ch.thumbnail_url ?? ch.logo_url ?? "",
-          channelName: ch.name,
-          timeSlot: liveProgram
-            ? `${formatTime(liveProgram.start_time)} - ${formatTime(liveProgram.end_time)}`
-            : "",
-          channelNumber: String(ch.channel_number),
-          streamUrl: ch.stream_url ?? undefined,
-        };
-      });
+    return dbChannels.map((ch) => {
+      const programs = epgByChannel.get(ch.id) ?? [];
+      const liveProgram = programs.find((p) => p.is_live) ?? programs[0];
+      const formatTime = (iso: string) => {
+        const d = new Date(iso);
+        return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      };
+      return {
+        title: liveProgram?.title ?? ch.name,
+        thumbnail:
+          ch.thumbnail_url ?? `https://via.placeholder.com/400x225/1a1a2e/d4af37?text=${encodeURIComponent(ch.name)}`,
+        channelName: ch.name,
+        timeSlot: liveProgram
+          ? `${formatTime(liveProgram.start_time)} - ${formatTime(liveProgram.end_time)}`
+          : "00:00 - 00:00",
+        channelNumber: String(ch.channel_number),
+        streamUrl: ch.stream_url ?? undefined,
+      };
+    });
   }, [dbChannels, dbEpg]);
 
-  // Build EPG channels from DB data — only valid channels
+  // Build EPG channels from DB data (fallback to hardcoded)
   const liveEpgChannels: EPGChannel[] = useMemo(() => {
-    if (!dbChannels || dbChannels.length === 0) return [];
+    if (!dbChannels || dbChannels.length === 0 || !dbEpg) return epgChannels;
     const epgByChannel = new Map<string, typeof dbEpg>();
-    if (dbEpg) {
-      for (const ep of dbEpg) {
-        if (!epgByChannel.has(ep.channel_id)) epgByChannel.set(ep.channel_id, []);
-        epgByChannel.get(ep.channel_id)!.push(ep);
-      }
+    for (const ep of dbEpg) {
+      if (!epgByChannel.has(ep.channel_id)) epgByChannel.set(ep.channel_id, []);
+      epgByChannel.get(ep.channel_id)!.push(ep);
     }
     return dbChannels
-      .filter((ch) => !!ch.name?.trim() && !!ch.stream_url?.trim())
+      .filter((ch) => epgByChannel.has(ch.id))
       .map((ch) => {
         const programs = epgByChannel.get(ch.id) ?? [];
         const formatTime = (iso: string) => {
