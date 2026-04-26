@@ -739,20 +739,18 @@ const VideoPlayer = ({
   const resetHideTimer = useCallback(() => {
     setShowHud(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
+    // Auto-hide only applies to compact HUD mode, not full EPG mode.
+    if (epgMode) return;
     hideTimer.current = setTimeout(() => {
       setShowHud(false);
-      setEpgMode(false);
     }, AUTO_HIDE_MS);
-  }, []);
+  }, [epgMode]);
 
   const openEpgMode = useCallback(() => {
+    // Full EPG mode stays visible until user explicitly returns to compact HUD.
     if (hideTimer.current) clearTimeout(hideTimer.current);
     setShowHud(true);
     setEpgMode(true);
-    hideTimer.current = setTimeout(() => {
-      setShowHud(false);
-      setEpgMode(false);
-    }, AUTO_HIDE_MS);
   }, []);
 
   const closeEpgMode = useCallback(() => {
@@ -895,6 +893,15 @@ const VideoPlayer = ({
         return;
       }
 
+      // Ako je HUD trenutno skriven, prvi pritisak OK/strelice samo prikazuje
+      // kompaktnu navigacijsku traku (mod sa prve slike) — ne otvara EPG niti
+      // pokreće akcije gumba.
+      if (!showHud && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", " "].includes(e.key)) {
+        e.preventDefault();
+        resetHideTimer();
+        return;
+      }
+
       switch (e.key) {
         case "ArrowUp":
           e.preventDefault();
@@ -952,6 +959,7 @@ const VideoPlayer = ({
       channelInput,
       favoriteChannels,
       onSwitchChannel,
+      showHud,
     ],
   );
 
