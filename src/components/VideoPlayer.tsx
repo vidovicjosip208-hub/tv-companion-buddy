@@ -864,7 +864,7 @@ const VideoPlayer = ({
       style={{ backgroundColor: "#0d0d0d" }}
     >
       <div className="relative w-full h-full overflow-hidden">
-        {(!streamUrl || !videoReady) && (
+        {!streamUrl && (
           <img
             src={thumbnail}
             alt={showTitle}
@@ -873,13 +873,31 @@ const VideoPlayer = ({
           />
         )}
         {streamUrl && (
-          <video
-            ref={videoRef}
-            className="video-js vjs-default-skin absolute inset-0 w-full h-full object-cover"
-            style={{ zIndex: 1 }}
-            playsInline
-            muted
-          />
+          <>
+            <video
+              ref={videoRef}
+              className="absolute inset-0 w-full h-full object-cover bg-black"
+              style={{ zIndex: 1 }}
+              playsInline
+              // @ts-expect-error legacy iOS attribute
+              webkit-playsinline="true"
+              preload="auto"
+              crossOrigin="anonymous"
+              muted
+              autoPlay
+            />
+            {/* CSS-only spinner — toggled via DOM events, detached from React state */}
+            <div
+              ref={spinnerRef}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-200"
+              style={{ zIndex: 2, opacity: 1 }}
+            >
+              <div
+                className="rounded-full border-4 border-white/20 border-t-white animate-spin"
+                style={{ width: 56, height: 56 }}
+              />
+            </div>
+          </>
         )}
 
         <AnimatePresence>
