@@ -675,6 +675,8 @@ const VideoPlayer = ({
       video.removeEventListener("waiting", showSpinner);
       video.removeEventListener("stalled", showSpinner);
       video.removeEventListener("canplay", hideSpinner);
+      window.removeEventListener("pointerdown", enableSoundOnGesture);
+      window.removeEventListener("keydown", enableSoundOnGesture);
       if (hls) {
         hls.destroy();
         hlsRef.current = null;
