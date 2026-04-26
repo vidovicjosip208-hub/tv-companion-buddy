@@ -968,8 +968,7 @@ const VideoPlayer = ({
             className="video-js vjs-default-skin absolute inset-0 w-full h-full object-cover"
             style={{ zIndex: 1 }}
             playsInline
-            // @ts-expect-error iOS attribute
-            webkit-playsinline=""
+            {...({ "webkit-playsinline": "" } as Record<string, string>)}
             muted
             preload="auto"
             crossOrigin="anonymous"
