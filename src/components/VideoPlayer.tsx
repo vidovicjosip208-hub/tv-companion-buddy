@@ -853,6 +853,22 @@ const VideoPlayer = ({
     }
   }, [isVisible, handleKeyDown, resetHideTimer]);
 
+  // Pokaži cijelu navigacijsku traku (sidebar + HUD + EPG okvir) odmah pri
+  // otvaranju kanala, pa pokreni standardni auto-hide timer.
+  useEffect(() => {
+    if (!isVisible) return;
+    setShowHud(true);
+    setFocusedControl(-1); // -1 => sidebarOpen === true (lijevi panel s kanalima)
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => {
+      setShowHud(false);
+      setFocusedControl(1); // vrati fokus na play/pause kad se sakrije
+    }, AUTO_HIDE_MS);
+    return () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    };
+  }, [isVisible, streamUrl]);
+
   if (!isVisible) return null;
 
   const activeCh = sidebarChannels[sidebarOpen ? verticalIndex : sidebarFocus];
