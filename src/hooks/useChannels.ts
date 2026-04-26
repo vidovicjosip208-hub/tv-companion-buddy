@@ -24,11 +24,25 @@ export interface EPGProgram {
 
 export const useChannels = () => {
   return useQuery({
-    queryKey: ["channels"],
+    queryKey: ["tv_channels"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("channels").select("*").order("channel_number");
+      const { data, error } = await supabase
+        .from("tv_channels" as any)
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
       if (error) throw error;
-      return data as Channel[];
+      // Map tv_channels schema to the Channel shape used across the app
+      return (data ?? []).map((row: any, idx: number): Channel => ({
+        id: row.id,
+        name: row.name,
+        logo_url: row.logo_url ?? null,
+        stream_url: row.stream_url ?? null,
+        category: row.category ?? "",
+        channel_number: typeof row.sort_order === "number" ? row.sort_order : idx + 1,
+        abbreviation: row.name ? row.name.slice(0, 3).toUpperCase() : null,
+        thumbnail_url: row.logo_url ?? null,
+      }));
     },
   });
 };
