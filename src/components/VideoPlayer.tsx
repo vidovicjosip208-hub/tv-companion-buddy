@@ -739,13 +739,20 @@ const VideoPlayer = ({
   const resetHideTimer = useCallback(() => {
     setShowHud(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
-    if (!epgMode) hideTimer.current = setTimeout(() => setShowHud(false), AUTO_HIDE_MS);
-  }, [epgMode]);
+    hideTimer.current = setTimeout(() => {
+      setShowHud(false);
+      setEpgMode(false);
+    }, AUTO_HIDE_MS);
+  }, []);
 
   const openEpgMode = useCallback(() => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
     setShowHud(true);
     setEpgMode(true);
+    hideTimer.current = setTimeout(() => {
+      setShowHud(false);
+      setEpgMode(false);
+    }, AUTO_HIDE_MS);
   }, []);
 
   const closeEpgMode = useCallback(() => {
