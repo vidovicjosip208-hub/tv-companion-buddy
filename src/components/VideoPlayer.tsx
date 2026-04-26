@@ -893,6 +893,15 @@ const VideoPlayer = ({
         return;
       }
 
+      // Ako je HUD trenutno skriven, prvi pritisak OK/strelice samo prikazuje
+      // kompaktnu navigacijsku traku (mod sa prve slike) — ne otvara EPG niti
+      // pokreće akcije gumba.
+      if (!showHud && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", " "].includes(e.key)) {
+        e.preventDefault();
+        resetHideTimer();
+        return;
+      }
+
       switch (e.key) {
         case "ArrowUp":
           e.preventDefault();
