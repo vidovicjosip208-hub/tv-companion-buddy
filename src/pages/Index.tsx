@@ -629,28 +629,25 @@ const Index = () => {
   );
 
   const favoriteEpgChannels = useMemo(() => {
-    // Build lookup from all possible sources
-    const allByName = new Map<string, EPGChannel>();
-    for (const ch of liveEpgChannels) allByName.set(ch.name, ch);
-    for (const card of liveChannelCards) {
-      if (!allByName.has(card.channelName)) {
-        const [startTime, endTime] = card.timeSlot.split(" - ").map((s) => s.trim());
-        allByName.set(card.channelName, {
-          id: `auto-${card.channelName}`,
-          number: 0,
+    // Favoriti su samo reference na iste kartice kanala, zato ovdje namjerno
+    // uzimamo isti streamUrl/title/timeSlot iz liveChannelCards.
+    return favorites
+      .map((name, idx) => {
+        const card = liveChannelCards.find((c) => c.channelName === name);
+        if (!card) return null;
+        const epgChannel = liveEpgChannels.find((ch) => ch.name === card.channelName);
+        const [startTime = "00:00", endTime = "00:00"] = card.timeSlot.split(" - ").map((s) => s.trim());
+        return {
+          id: `favorite-${card.channelName}-${idx}`,
+          number: idx + 1,
           name: card.channelName,
           abbreviation: card.channelName.slice(0, 3).toUpperCase(),
+          category: epgChannel?.category,
+          streamUrl: card.streamUrl,
           programs: [{ title: card.title, startTime, endTime, date: "", isLive: true }],
-        });
-      }
-    }
-    // Return favorites in insertion order with sequential numbers (1, 2, 3...)
-    return favorites
-      .filter((name) => allByName.has(name))
-      .map((name, idx) => ({
-        ...allByName.get(name)!,
-        number: idx + 1,
-      }));
+        } satisfies EPGChannel;
+      })
+      .filter((channel): channel is EPGChannel => Boolean(channel));
   }, [favorites, liveEpgChannels, liveChannelCards]);
 
   // Build favorite channels list for VideoPlayer number switching
