@@ -1020,16 +1020,7 @@ const Index = () => {
           isFavorite={isFavorite(playerData?.channelName ?? "")}
           onToggleFavorite={() => toggleFavorite(playerData?.channelName ?? "")}
           favoriteChannels={playerFavoriteChannels}
-          onSwitchChannel={(newData) => {
-            const ch = liveEpgChannels.find((c) => c.name === newData.channelName);
-            const streamUrl = ch?.streamUrl;
-            console.log("[Index] Switching to favorite:", newData.channelName, "stream:", streamUrl);
-            if (!streamUrl) {
-              console.warn("[Index] No stream for favorite:", newData.channelName);
-              return;
-            }
-            setPlayerData({ ...newData, streamUrl });
-          }}
+          onSwitchChannel={(newData) => setPlayerData(newData)}
         />
       </div>
     );
