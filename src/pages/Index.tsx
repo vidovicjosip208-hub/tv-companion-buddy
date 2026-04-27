@@ -553,6 +553,7 @@ const Index = () => {
           number: ch.channel_number,
           name: ch.name,
           abbreviation: ch.abbreviation ?? ch.name.slice(0, 3).toUpperCase(),
+          logoUrl: ch.logo_url ?? null,
           category: ch.category,
           streamUrl: ch.stream_url ?? undefined,
           programs: programs.map((p) => ({
