@@ -57,6 +57,7 @@ const THUMBNAIL_COUNT = 7;
 const GOLD = "#F5C518";
 const LOADER_MIN_DURATION = 1200;
 const LOADER_MAX_DURATION = 5000;
+const ZERO_UI_VIDEO_TEST = true;
 
 const DUMMY_SUBTITLES = [
   { code: "off", label: "Isključeno" },
@@ -349,6 +350,12 @@ const FrozenHlsVideo = memo(
         playsInline
         preload="auto"
         className="relative z-10 w-full h-full object-contain bg-black"
+        style={{
+          willChange: "transform",
+          transform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+          contain: "strict",
+        }}
       />
     );
   },
@@ -854,6 +861,7 @@ const VideotekaPlayer = ({
   }, []);
 
   const skipActive = skipHovered || (focusedRow === 0 && focusedCol === 2);
+  const zeroUiActive = ZERO_UI_VIDEO_TEST && isPlaying;
 
   return (
     <div className="fixed inset-0 z-[100] bg-black font-sans overflow-hidden">
@@ -873,7 +881,7 @@ const VideotekaPlayer = ({
         />
       </div>
 
-      {streamError && (
+      {streamError && !zeroUiActive && (
         <div className="absolute inset-0 z-[150] flex items-center justify-center bg-black/85">
           <div className="flex flex-col items-center gap-4 text-center px-6 max-w-md">
             <p className="text-white text-lg">{streamError}</p>
@@ -888,21 +896,21 @@ const VideotekaPlayer = ({
       )}
 
       <AnimatePresence>
-        {!loaderDone && !streamError && <Loader key="loader" ready={videoReady} onDone={markVideoReady} />}
+        {!zeroUiActive && !loaderDone && !streamError && <Loader key="loader" ready={videoReady} onDone={markVideoReady} />}
       </AnimatePresence>
 
       <AnimatePresence>
-        {loaderDone && isVisible && (
+        {!zeroUiActive && loaderDone && isVisible && (
           <motion.div
             key="player-ui"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.6 } }}
-            className="absolute inset-0 flex flex-col z-20"
+            className="absolute inset-0 flex flex-col z-20 pointer-events-none"
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/70" />
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: "rgba(0,0,0,0.38)" }} />
 
-            <div className="relative flex flex-col h-full pt-14 pb-6">
+            <div className="relative flex flex-col h-full pt-14 pb-6 pointer-events-none">
               <div className="w-full max-w-5xl mx-auto flex flex-col h-full px-4">
                 {/* TOP AREA */}
                 <div className="flex-1 flex flex-col">
