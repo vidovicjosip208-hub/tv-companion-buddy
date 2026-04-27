@@ -70,6 +70,7 @@ const TVChannelCard = ({
   thumbnail,
   channelName,
   timeSlot,
+  logoUrl,
   isFocused = false,
   onClick,
   index = 0,
