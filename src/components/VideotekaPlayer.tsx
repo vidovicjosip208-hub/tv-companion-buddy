@@ -127,8 +127,23 @@ const FrozenHlsVideo = memo(
     const playInitial = useCallback(() => {
       const video = localVideoRef.current;
       if (!video) return;
-      video.muted = true;
-      video.play().catch(() => {});
+      // Try with sound first (Player navigation IS a user gesture).
+      video.muted = false;
+      video.volume = 1;
+      video.play().catch(() => {
+        // Autoplay blocked → fall back to muted, then attempt to unmute
+        // again as soon as playback actually starts.
+        video.muted = true;
+        video
+          .play()
+          .then(() => {
+            setTimeout(() => {
+              video.muted = false;
+              video.volume = 1;
+            }, 0);
+          })
+          .catch(() => {});
+      });
     }, []);
 
     useEffect(() => {
