@@ -792,8 +792,7 @@ const VideoPlayer = ({
         setShowHud(false);
         setEpgMode(false);
 
-        if (channelInputTimer.current) clearTimeout(channelInputTimer.current);
-        channelInputTimer.current = setTimeout(() => {
+        const commit = () => {
           const num = parseInt(newInput, 10);
           const favCh = favoriteChannels.find((c) => c.number === num);
           if (favCh && onSwitchChannel) {
@@ -811,7 +810,22 @@ const VideoPlayer = ({
           setShowHud(true);
           if (hideTimer.current) clearTimeout(hideTimer.current);
           hideTimer.current = setTimeout(() => setShowHud(false), 2500);
-        }, 2000);
+        };
+
+        if (channelInputTimer.current) clearTimeout(channelInputTimer.current);
+
+        // Auto-commit immediately if no other favorite has a number starting with this input
+        // (i.e. the input is already unique or no longer matches any prefix).
+        const hasLongerMatch = favoriteChannels.some((c) => {
+          const s = String(c.number);
+          return s.length > newInput.length && s.startsWith(newInput);
+        });
+        if (!hasLongerMatch) {
+          // Commit on next tick so UI shows the typed number briefly
+          channelInputTimer.current = setTimeout(commit, 250);
+        } else {
+          channelInputTimer.current = setTimeout(commit, 1500);
+        }
 
         return;
       }
