@@ -33,17 +33,6 @@ interface VideotekaPlayerProps {
   streamUrl?: string;
 }
 
-const supportsHEVC = (): boolean => {
-  if (typeof window === "undefined") return false;
-  const v = document.createElement("video");
-  const codecs = ['video/mp4; codecs="hvc1.1.6.L93.B0"', 'video/mp4; codecs="hev1.1.6.L93.B0"'];
-  if (codecs.some((c) => v.canPlayType(c) !== "")) return true;
-  if (typeof MediaSource !== "undefined" && MediaSource.isTypeSupported) {
-    return codecs.some((c) => MediaSource.isTypeSupported(c));
-  }
-  return false;
-};
-
 const CONTROL_OPTIONS = [
   { label: "Subtitle", hasIcon: false },
   { label: "Audio", icon: Volume2, hasIcon: true },
@@ -124,13 +113,6 @@ const FrozenHlsVideo = memo(
   }: FrozenHlsVideoProps) => {
     const localVideoRef = useRef<HTMLVideoElement | null>(null);
 
-    const playInitial = useCallback(() => {
-      const video = localVideoRef.current;
-      if (!video) return;
-      video.muted = true;
-      video.play().catch(() => {});
-    }, []);
-
     useEffect(() => {
       const video = localVideoRef.current;
       if (!video) return;
@@ -146,7 +128,6 @@ const FrozenHlsVideo = memo(
       }
 
       onError(null);
-      video.preload = "auto";
 
       if (hlsRef.current) {
         hlsRef.current.destroy();
@@ -154,156 +135,25 @@ const FrozenHlsVideo = memo(
       }
 
       const isNativeHls = video.canPlayType("application/vnd.apple.mpegurl") !== "";
-      const hasHEVC = supportsHEVC();
 
-      if (Hls.isSupported() && !isNativeHls) {
-        const hlsConfig = {
-          enableWorker: true,
-          forceVideoHWAcceleration: true,
-          progressive: true,
-          lowLatencyMode: false,
-          autoStartLoad: true,
-          maxBufferLength: 60,
-          maxMaxBufferLength: 120,
-          maxBufferSize: 300 * 1000 * 1000,
-          backBufferLength: 60,
-          startLevel: -1,
-          abrEwmaFastVoD: 4.0,
-          abrEwmaSlowVoD: 15.0,
-          abrBandWidthFactor: 0.9,
-          abrBandWidthUpFactor: 0.75,
-          manifestLoadingMaxRetry: 8,
-          levelLoadingMaxRetry: 8,
-          fragLoadingMaxRetry: 12,
-          fragLoadingRetryDelay: 1000,
-          levelLoadingRetryDelay: 1000,
-          fragLoadingTimeOut: 30000,
-          levelLoadingTimeOut: 20000,
-          manifestLoadingTimeOut: 20000,
-        } as ConstructorParameters<typeof Hls>[0] & { forceVideoHWAcceleration: boolean };
-        const hls = new Hls(hlsConfig);
-
+      if (isNativeHls) {
+        video.src = streamUrl;
+      } else if (Hls.isSupported()) {
+        const hls = new Hls({ maxBufferLength: 15 });
         hlsRef.current = hls;
         hls.loadSource(streamUrl);
         hls.attachMedia(video);
-
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          hls.startLoad();
-          playInitial();
-
-          if (!hasHEVC && hls.levels?.length) {
-            const supported = hls.levels
-              .map((lvl, idx) => ({ lvl, idx }))
-              .filter(({ lvl }) => {
-                const codec = (lvl.videoCodec ?? "").toLowerCase();
-                return !(codec.startsWith("hvc1") || codec.startsWith("hev1"));
-              });
-            if (supported.length && supported.length < hls.levels.length) {
-              hls.autoLevelCapping = supported[supported.length - 1].idx;
-            }
-          }
-        });
-
-        hls.on(Hls.Events.ERROR, (_evt, data) => {
-          if (!data.fatal) return;
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            hls.startLoad();
-            return;
-          }
-          if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-            try {
-              hls.recoverMediaError();
-              return;
-            } catch {
-              /* fallthrough */
-            }
-          }
-          onError("Reprodukcija nije uspjela.");
-        });
-      } else if (isNativeHls) {
-        video.src = streamUrl;
-        playInitial();
       } else {
         onError("Vaš preglednik ne podržava HLS reprodukciju.");
       }
 
-      const bypassTimer = setTimeout(() => {
-        onReady();
-        playInitial();
-      }, LOADER_MAX_DURATION);
-
       return () => {
-        clearTimeout(bypassTimer);
         if (hlsRef.current) {
           hlsRef.current.destroy();
           hlsRef.current = null;
         }
       };
-    }, [streamUrl, fetchingStream, fetchError, hlsRef, onError, onReady, playInitial]);
-
-    useEffect(() => {
-      const video = localVideoRef.current;
-      if (!video) return;
-
-      let lastTime = video.currentTime;
-      let stalledFor = 0;
-      let recoveryStage = 0;
-      let lastRecoveryAt = 0;
-
-      const STALL_MS = 3000;
-      const TICK_MS = 500;
-      const RECOVERY_COOLDOWN_MS = 8000;
-
-      const interval = window.setInterval(() => {
-        if (video.paused || video.ended || video.seeking) {
-          stalledFor = 0;
-          lastTime = video.currentTime;
-          return;
-        }
-
-        if (Math.abs(video.currentTime - lastTime) < 0.05) {
-          stalledFor += TICK_MS;
-        } else {
-          stalledFor = 0;
-          recoveryStage = 0;
-          lastTime = video.currentTime;
-          return;
-        }
-
-        if (stalledFor < STALL_MS) return;
-        const now = performance.now();
-        if (now - lastRecoveryAt < RECOVERY_COOLDOWN_MS) return;
-        lastRecoveryAt = now;
-
-        const hls = hlsRef.current;
-        try {
-          if (recoveryStage === 0) {
-            video.currentTime = video.currentTime + 0.1;
-            recoveryStage = 1;
-          } else if (recoveryStage === 1 && hls) {
-            hls.recoverMediaError();
-            recoveryStage = 2;
-          } else if (hls) {
-            const resumeAt = video.currentTime;
-            hls.detachMedia();
-            hls.attachMedia(video);
-            hls.once(Hls.Events.MEDIA_ATTACHED, () => {
-              try {
-                video.currentTime = resumeAt;
-                video.play().catch(() => {});
-              } catch {
-                /* noop */
-              }
-            });
-            recoveryStage = 0;
-          }
-        } catch {
-          /* noop */
-        }
-      }, TICK_MS);
-
-      return () => clearInterval(interval);
-    }, [hlsRef, streamUrl]);
+    }, [streamUrl, fetchingStream, fetchError, hlsRef, onError]);
 
     useEffect(() => {
       const video = localVideoRef.current;
@@ -317,11 +167,7 @@ const FrozenHlsVideo = memo(
       };
       const onCanPlay = () => onReady();
       const onTimeUpdate = () => onTimeSnapshot(Math.floor(video.currentTime));
-      const onPlay = () => {
-        video.muted = false;
-        video.volume = 1;
-        onPlayStateChange(true);
-      };
+      const onPlay = () => onPlayStateChange(true);
       const onPause = () => onPlayStateChange(false);
 
       video.addEventListener("loadedmetadata", onLoadedMeta);
@@ -347,7 +193,7 @@ const FrozenHlsVideo = memo(
         }}
         poster={thumbnail}
         playsInline
-        preload="auto"
+        controls
         className="relative z-10 w-full h-full object-contain bg-black"
       />
     );
