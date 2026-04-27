@@ -19,6 +19,7 @@ export interface EPGChannel {
   number: number;
   name: string;
   abbreviation: string;
+  logoUrl?: string | null;
   streamUrl?: string;
   category?: string;
   programs: EPGProgram[];
@@ -85,18 +86,30 @@ const ChannelItem = ({
     >
       <div
         className={cn(
-          "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
+          "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
           isFocused ? "bg-accent/20" : "bg-muted/40",
         )}
       >
-        <span
-          className={cn(
-            "text-sm font-bold tracking-wide transition-colors",
-            isFocused ? "text-accent" : "text-foreground/60",
-          )}
-        >
-          {channel.abbreviation}
-        </span>
+        {channel.logoUrl ? (
+          <img
+            src={channel.logoUrl}
+            alt={channel.name}
+            className="w-full h-full object-contain p-1"
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <span
+            className={cn(
+              "text-sm font-bold tracking-wide transition-colors",
+              isFocused ? "text-accent" : "text-foreground/60",
+            )}
+          >
+            {channel.abbreviation}
+          </span>
+        )}
       </div>
       <span
         className={cn(
@@ -250,8 +263,17 @@ const EPGGrid = ({
             className="flex flex-col"
           >
             <div className="flex items-center gap-3 px-5 pb-3 mb-1 border-b border-border/20">
-              <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center">
-                <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
+              <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center overflow-hidden">
+                {selectedChannel?.logoUrl ? (
+                  <img
+                    src={selectedChannel.logoUrl}
+                    alt={selectedChannel.name}
+                    className="w-full h-full object-contain p-1"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
+                )}
               </div>
               <div>
                 <h3 className="text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
@@ -289,8 +311,17 @@ const EPGGrid = ({
               className="rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-6 flex flex-col gap-4 overflow-y-auto scrollbar-hide h-[80%]"
             >
               <div className="flex justify-center">
-                <div className="w-20 h-12 rounded-md bg-accent/20 flex items-center justify-center">
-                  <span className="text-sm font-bold text-accent tracking-wider">{selectedChannel?.abbreviation}</span>
+                <div className="w-20 h-12 rounded-md bg-accent/20 flex items-center justify-center overflow-hidden">
+                  {selectedChannel?.logoUrl ? (
+                    <img
+                      src={selectedChannel.logoUrl}
+                      alt={selectedChannel.name}
+                      className="w-full h-full object-contain p-1.5"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span className="text-sm font-bold text-accent tracking-wider">{selectedChannel?.abbreviation}</span>
+                  )}
                 </div>
               </div>
 

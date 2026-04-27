@@ -20,6 +20,7 @@ interface ChannelCard {
   timeSlot: string;
   channelNumber: string;
   streamUrl?: string;
+  logoUrl?: string | null;
 }
 
 const defaultChannelCards: ChannelCard[] = [
@@ -522,6 +523,7 @@ const Index = () => {
           : "00:00 - 00:00",
         channelNumber: String(ch.channel_number),
         streamUrl: ch.stream_url ?? undefined,
+        logoUrl: ch.logo_url ?? null,
       };
     });
   }, [dbChannels, dbEpg]);
@@ -551,6 +553,7 @@ const Index = () => {
           number: ch.channel_number,
           name: ch.name,
           abbreviation: ch.abbreviation ?? ch.name.slice(0, 3).toUpperCase(),
+          logoUrl: ch.logo_url ?? null,
           category: ch.category,
           streamUrl: ch.stream_url ?? undefined,
           programs: programs.map((p) => ({
@@ -604,6 +607,7 @@ const Index = () => {
       thumbnail: card.thumbnail.replace("w=400", "w=1920"),
       channelName: card.channelName,
       streamUrl: card.streamUrl,
+      logoUrl: card.logoUrl,
     });
     setPlayerVisible(true);
   }, []);
@@ -622,6 +626,7 @@ const Index = () => {
           channelThumbnails[ch.name] ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80",
         channelName: ch.name,
         streamUrl: ch.streamUrl,
+        logoUrl: ch.logoUrl,
       });
       setPlayerVisible(true);
     },
@@ -642,6 +647,7 @@ const Index = () => {
           number: idx + 1,
           name: card.channelName,
           abbreviation: card.channelName.slice(0, 3).toUpperCase(),
+          logoUrl: card.logoUrl ?? epgChannel?.logoUrl ?? null,
           category: epgChannel?.category,
           streamUrl: card.streamUrl,
           programs: [{ title: card.title, startTime, endTime, date: "", isLive: true }],
@@ -665,6 +671,7 @@ const Index = () => {
           channelThumbnails[ch.name] ??
           "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80",
         streamUrl: card?.streamUrl ?? ch.streamUrl,
+        logoUrl: card?.logoUrl ?? ch.logoUrl ?? null,
       };
     });
   }, [favoriteEpgChannels, liveChannelCards]);
@@ -1230,6 +1237,7 @@ const Index = () => {
                       thumbnail={card.thumbnail}
                       channelName={card.channelName}
                       timeSlot={card.timeSlot}
+                      logoUrl={card.logoUrl}
                       index={i}
                       isFocused={focusZone === "cards" && cardIndex === i}
                       onClick={() => {

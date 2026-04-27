@@ -7,6 +7,7 @@ interface TVChannelCardProps {
   thumbnail: string;
   channelName: string;
   timeSlot: string;
+  logoUrl?: string | null;
   isFocused?: boolean;
   onClick?: () => void;
   index?: number;
@@ -69,6 +70,7 @@ const TVChannelCard = ({
   thumbnail,
   channelName,
   timeSlot,
+  logoUrl,
   isFocused = false,
   onClick,
   index = 0,
@@ -102,8 +104,20 @@ const TVChannelCard = ({
         </div>
       </div>
       <div className="p-3 flex items-center gap-3 bg-card/70">
-        <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-          <span className="text-[11px] font-bold text-foreground">{getChannelAbbr(channelName)}</span>
+        <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={channelName}
+              className="w-full h-full object-contain p-1"
+              loading="lazy"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+          ) : (
+            <span className="text-[11px] font-bold text-foreground">{getChannelAbbr(channelName)}</span>
+          )}
         </div>
         <div className="flex-1 text-left min-w-0">
           <h3 className="text-sm font-medium text-foreground truncate">{title}</h3>
