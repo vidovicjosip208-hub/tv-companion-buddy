@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { memo, useState, useEffect, useCallback, useMemo, useRef, type MutableRefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -90,6 +90,271 @@ const formatTime = (seconds: number) => {
   const s = seconds % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
+
+type FrozenVideoRefs = {
+  videoRef: MutableRefObject<HTMLVideoElement | null>;
+  hlsRef: MutableRefObject<Hls | null>;
+};
+
+interface FrozenHlsVideoProps extends FrozenVideoRefs {
+  streamUrl: string | null;
+  thumbnail: string;
+  fetchingStream: boolean;
+  fetchError: unknown;
+  onReady: () => void;
+  onError: (message: string | null) => void;
+  onDuration: (duration: number) => void;
+  onPlayStateChange: (playing: boolean) => void;
+  onTimeSnapshot: (time: number) => void;
+}
+
+const FrozenHlsVideo = memo(
+  ({
+    streamUrl,
+    thumbnail,
+    fetchingStream,
+    fetchError,
+    videoRef,
+    hlsRef,
+    onReady,
+    onError,
+    onDuration,
+    onPlayStateChange,
+    onTimeSnapshot,
+  }: FrozenHlsVideoProps) => {
+    const localVideoRef = useRef<HTMLVideoElement | null>(null);
+
+    const playInitial = useCallback(() => {
+      const video = localVideoRef.current;
+      if (!video) return;
+      video.muted = true;
+      video.play().catch(() => {});
+    }, []);
+
+    useEffect(() => {
+      const video = localVideoRef.current;
+      if (!video) return;
+      if (fetchingStream) return;
+
+      if (fetchError) {
+        onError("Greška pri dohvaćanju stream URL-a.");
+        return;
+      }
+      if (!streamUrl) {
+        onError("Stream URL nije dostupan.");
+        return;
+      }
+
+      onError(null);
+      video.preload = "auto";
+
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+
+      const isNativeHls = video.canPlayType("application/vnd.apple.mpegurl") !== "";
+      const hasHEVC = supportsHEVC();
+
+      if (Hls.isSupported() && !isNativeHls) {
+        const hlsConfig = {
+          enableWorker: true,
+          forceVideoHWAcceleration: true,
+          progressive: true,
+          lowLatencyMode: false,
+          autoStartLoad: true,
+          maxBufferLength: 60,
+          maxMaxBufferLength: 120,
+          maxBufferSize: 300 * 1000 * 1000,
+          backBufferLength: 60,
+          startLevel: -1,
+          abrEwmaFastVoD: 4.0,
+          abrEwmaSlowVoD: 15.0,
+          abrBandWidthFactor: 0.9,
+          abrBandWidthUpFactor: 0.75,
+          manifestLoadingMaxRetry: 8,
+          levelLoadingMaxRetry: 8,
+          fragLoadingMaxRetry: 12,
+          fragLoadingRetryDelay: 1000,
+          levelLoadingRetryDelay: 1000,
+          fragLoadingTimeOut: 30000,
+          levelLoadingTimeOut: 20000,
+          manifestLoadingTimeOut: 20000,
+        } as ConstructorParameters<typeof Hls>[0] & { forceVideoHWAcceleration: boolean };
+        const hls = new Hls(hlsConfig);
+
+        hlsRef.current = hls;
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          hls.startLoad();
+          playInitial();
+
+          if (!hasHEVC && hls.levels?.length) {
+            const supported = hls.levels
+              .map((lvl, idx) => ({ lvl, idx }))
+              .filter(({ lvl }) => {
+                const codec = (lvl.videoCodec ?? "").toLowerCase();
+                return !(codec.startsWith("hvc1") || codec.startsWith("hev1"));
+              });
+            if (supported.length && supported.length < hls.levels.length) {
+              hls.autoLevelCapping = supported[supported.length - 1].idx;
+            }
+          }
+        });
+
+        hls.on(Hls.Events.ERROR, (_evt, data) => {
+          if (!data.fatal) return;
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+            hls.startLoad();
+            return;
+          }
+          if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            try {
+              hls.recoverMediaError();
+              return;
+            } catch {
+              /* fallthrough */
+            }
+          }
+          onError("Reprodukcija nije uspjela.");
+        });
+      } else if (isNativeHls) {
+        video.src = streamUrl;
+        playInitial();
+      } else {
+        onError("Vaš preglednik ne podržava HLS reprodukciju.");
+      }
+
+      const bypassTimer = setTimeout(() => {
+        onReady();
+        playInitial();
+      }, LOADER_MAX_DURATION);
+
+      return () => {
+        clearTimeout(bypassTimer);
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+          hlsRef.current = null;
+        }
+      };
+    }, [streamUrl, fetchingStream, fetchError, hlsRef, onError, onReady, playInitial]);
+
+    useEffect(() => {
+      const video = localVideoRef.current;
+      if (!video) return;
+
+      let lastTime = video.currentTime;
+      let stalledFor = 0;
+      let recoveryStage = 0;
+      let lastRecoveryAt = 0;
+
+      const STALL_MS = 3000;
+      const TICK_MS = 500;
+      const RECOVERY_COOLDOWN_MS = 8000;
+
+      const interval = window.setInterval(() => {
+        if (video.paused || video.ended || video.seeking) {
+          stalledFor = 0;
+          lastTime = video.currentTime;
+          return;
+        }
+
+        if (Math.abs(video.currentTime - lastTime) < 0.05) {
+          stalledFor += TICK_MS;
+        } else {
+          stalledFor = 0;
+          recoveryStage = 0;
+          lastTime = video.currentTime;
+          return;
+        }
+
+        if (stalledFor < STALL_MS) return;
+        const now = performance.now();
+        if (now - lastRecoveryAt < RECOVERY_COOLDOWN_MS) return;
+        lastRecoveryAt = now;
+
+        const hls = hlsRef.current;
+        try {
+          if (recoveryStage === 0) {
+            video.currentTime = video.currentTime + 0.1;
+            recoveryStage = 1;
+          } else if (recoveryStage === 1 && hls) {
+            hls.recoverMediaError();
+            recoveryStage = 2;
+          } else if (hls) {
+            const resumeAt = video.currentTime;
+            hls.detachMedia();
+            hls.attachMedia(video);
+            hls.once(Hls.Events.MEDIA_ATTACHED, () => {
+              try {
+                video.currentTime = resumeAt;
+                video.play().catch(() => {});
+              } catch {
+                /* noop */
+              }
+            });
+            recoveryStage = 0;
+          }
+        } catch {
+          /* noop */
+        }
+      }, TICK_MS);
+
+      return () => clearInterval(interval);
+    }, [hlsRef, streamUrl]);
+
+    useEffect(() => {
+      const video = localVideoRef.current;
+      if (!video) return;
+
+      const onLoadedMeta = () => {
+        if (Number.isFinite(video.duration) && video.duration > 0) {
+          onDuration(Math.floor(video.duration));
+        }
+        onReady();
+      };
+      const onCanPlay = () => onReady();
+      const onTimeUpdate = () => onTimeSnapshot(Math.floor(video.currentTime));
+      const onPlay = () => {
+        video.muted = false;
+        video.volume = 1;
+        onPlayStateChange(true);
+      };
+      const onPause = () => onPlayStateChange(false);
+
+      video.addEventListener("loadedmetadata", onLoadedMeta);
+      video.addEventListener("canplay", onCanPlay);
+      video.addEventListener("timeupdate", onTimeUpdate);
+      video.addEventListener("play", onPlay);
+      video.addEventListener("pause", onPause);
+
+      return () => {
+        video.removeEventListener("loadedmetadata", onLoadedMeta);
+        video.removeEventListener("canplay", onCanPlay);
+        video.removeEventListener("timeupdate", onTimeUpdate);
+        video.removeEventListener("play", onPlay);
+        video.removeEventListener("pause", onPause);
+      };
+    }, [onDuration, onPlayStateChange, onReady, onTimeSnapshot]);
+
+    return (
+      <video
+        ref={(node) => {
+          localVideoRef.current = node;
+          videoRef.current = node;
+        }}
+        poster={thumbnail}
+        playsInline
+        preload="auto"
+        className="relative z-10 w-full h-full object-contain bg-black"
+      />
+    );
+  },
+);
+
+FrozenHlsVideo.displayName = "FrozenHlsVideo";
 
 // ── Loader ────────────────────────────────────────────────────────────────────
 
