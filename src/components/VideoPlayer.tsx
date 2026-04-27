@@ -61,6 +61,7 @@ export interface PlayerData {
   thumbnail?: string;
   channelName?: string;
   streamUrl?: string;
+  logoUrl?: string | null;
 }
 
 export interface FavoriteChannel {
@@ -70,6 +71,7 @@ export interface FavoriteChannel {
   timeRange: string;
   thumbnail: string;
   streamUrl?: string;
+  logoUrl?: string | null;
 }
 
 interface VideoPlayerProps {
