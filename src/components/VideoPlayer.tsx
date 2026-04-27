@@ -69,6 +69,7 @@ export interface FavoriteChannel {
   showTitle: string;
   timeRange: string;
   thumbnail: string;
+  streamUrl?: string;
 }
 
 interface VideoPlayerProps {
@@ -803,6 +804,7 @@ const VideoPlayer = ({
               timeRange: favCh.timeRange,
               thumbnail: favCh.thumbnail,
               channelName: favCh.channelName,
+              streamUrl: favCh.streamUrl,
             });
           }
           setChannelInput("");

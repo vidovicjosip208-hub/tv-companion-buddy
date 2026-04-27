@@ -667,6 +667,7 @@ const Index = () => {
           card?.thumbnail?.replace("w=400", "w=1920") ??
           channelThumbnails[ch.name] ??
           "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80",
+        streamUrl: card?.streamUrl ?? ch.streamUrl,
       };
     });
   }, [favoriteEpgChannels, liveChannelCards]);

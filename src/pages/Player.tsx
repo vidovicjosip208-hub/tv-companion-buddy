@@ -25,6 +25,7 @@ const Player = () => {
           showTitle: favName,
           timeRange: "00:00 - 00:00",
           thumbnail: ch?.thumbnail_url || ch?.logo_url || "",
+          streamUrl: ch?.stream_url ?? undefined,
         };
       }),
     [favorites, channels],
