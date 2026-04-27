@@ -523,6 +523,7 @@ const Index = () => {
           : "00:00 - 00:00",
         channelNumber: String(ch.channel_number),
         streamUrl: ch.stream_url ?? undefined,
+        logoUrl: ch.logo_url ?? null,
       };
     });
   }, [dbChannels, dbEpg]);
