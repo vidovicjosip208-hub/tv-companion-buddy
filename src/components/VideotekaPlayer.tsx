@@ -738,8 +738,8 @@ const VideotekaPlayer = ({
             if (focusedCol === 0) onClose();
             if (focusedCol === 1) {
               if (videoRef.current) videoRef.current.currentTime = 0;
-              setCurrentTime(0);
               currentTimeRef.current = 0;
+              updateProgressDom(0);
               startPlayback(800);
             }
             if (focusedCol === 2 && onNextEpisode) onNextEpisode();
@@ -996,16 +996,20 @@ const VideotekaPlayer = ({
 
                   {/* Progress bar */}
                   <div className="flex items-center gap-4 w-full">
-                    <span className="text-sm font-mono tabular-nums text-muted-foreground w-12">{elapsed}</span>
+                    <span ref={elapsedTextRef} className="text-sm font-mono tabular-nums text-muted-foreground w-12">
+                      {elapsed}
+                    </span>
                     <div className="flex-1 rounded-full relative bg-white/20" style={{ height: "3px" }}>
-                      <motion.div
+                      <div
+                        ref={progressFillRef}
                         className="h-full rounded-full"
-                        style={{ backgroundColor: GOLD }}
-                        animate={{ width: `${progress}%` }}
-                        transition={{ duration: 0 }}
+                        style={{ backgroundColor: GOLD, width: `${(displayTime / totalDuration) * 100}%` }}
                       />
                     </div>
-                    <div className="min-w-[50px] text-right text-sm font-mono tabular-nums text-muted-foreground">
+                    <div
+                      ref={remainingTextRef}
+                      className="min-w-[50px] text-right text-sm font-mono tabular-nums text-muted-foreground"
+                    >
                       {remaining}
                     </div>
                   </div>
