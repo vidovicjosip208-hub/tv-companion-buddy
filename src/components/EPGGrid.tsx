@@ -86,18 +86,30 @@ const ChannelItem = ({
     >
       <div
         className={cn(
-          "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
+          "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
           isFocused ? "bg-accent/20" : "bg-muted/40",
         )}
       >
-        <span
-          className={cn(
-            "text-sm font-bold tracking-wide transition-colors",
-            isFocused ? "text-accent" : "text-foreground/60",
-          )}
-        >
-          {channel.abbreviation}
-        </span>
+        {channel.logoUrl ? (
+          <img
+            src={channel.logoUrl}
+            alt={channel.name}
+            className="w-full h-full object-contain p-1"
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <span
+            className={cn(
+              "text-sm font-bold tracking-wide transition-colors",
+              isFocused ? "text-accent" : "text-foreground/60",
+            )}
+          >
+            {channel.abbreviation}
+          </span>
+        )}
       </div>
       <span
         className={cn(
