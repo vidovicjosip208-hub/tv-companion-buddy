@@ -1015,14 +1015,8 @@ const VideoPlayer = ({
       style={{ backgroundColor: "#0d0d0d" }}
     >
       <div className="relative w-full h-full overflow-hidden">
-        {(!streamUrl || !videoReady) && (
-          <img
-            src={thumbnail}
-            alt={showTitle}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ zIndex: 0 }}
-          />
-        )}
+        {/* Pure black backdrop while loading — no thumbnail, no HUD, just the spinner */}
+        {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
         {streamUrl && (
           <video
             ref={videoRef}
@@ -1051,7 +1045,7 @@ const VideoPlayer = ({
             borderTopColor: GOLD,
             borderRadius: "50%",
             animation: "vp-spin 0.9s linear infinite",
-            opacity: 0,
+            opacity: videoReady ? 0 : 1,
             transition: "opacity 0.15s linear",
             pointerEvents: "none",
             zIndex: 5,
@@ -1060,7 +1054,7 @@ const VideoPlayer = ({
         <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
 
         <AnimatePresence>
-          {showChannelOverlay && (
+          {videoReady && showChannelOverlay && (
             <ChannelNumberOverlay
               input={channelInput}
               channelLabel={foundFavChannel?.channelName}
@@ -1070,7 +1064,7 @@ const VideoPlayer = ({
         </AnimatePresence>
 
         <AnimatePresence>
-          {showHud && sidebarOpen && (
+          {videoReady && showHud && sidebarOpen && (
             <motion.div
               key="sidebar"
               initial={{ opacity: 0, x: -20 }}
@@ -1110,7 +1104,7 @@ const VideoPlayer = ({
         </AnimatePresence>
 
         <AnimatePresence>
-          {showHud && (
+          {videoReady && showHud && (
             <motion.div
               key="hud"
               initial={{ opacity: 0, y: 50 }}
