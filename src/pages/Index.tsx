@@ -645,6 +645,7 @@ const Index = () => {
           number: idx + 1,
           name: card.channelName,
           abbreviation: card.channelName.slice(0, 3).toUpperCase(),
+          logoUrl: card.logoUrl ?? epgChannel?.logoUrl ?? null,
           category: epgChannel?.category,
           streamUrl: card.streamUrl,
           programs: [{ title: card.title, startTime, endTime, date: "", isLive: true }],
