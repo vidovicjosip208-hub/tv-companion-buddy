@@ -1206,7 +1206,18 @@ const VideoPlayer = ({
                     />
                   </div>
 
-                  <div className="flex items-baseline gap-3 ml-5 min-w-0 flex-1">
+                  <div className="flex items-center gap-3 ml-5 min-w-0 flex-1">
+                    {data?.logoUrl ? (
+                      <img
+                        src={data.logoUrl}
+                        alt={data.channelName ?? "channel"}
+                        className="h-8 w-12 object-contain flex-shrink-0 rounded bg-white/5 p-0.5"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    ) : null}
                     <span className="text-sm font-mono flex-shrink-0" style={{ color: "rgba(255,255,255,0.5)" }}>
                       {timeRange}
                     </span>
