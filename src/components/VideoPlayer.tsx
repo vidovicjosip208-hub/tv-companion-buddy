@@ -1019,6 +1019,7 @@ const VideoPlayer = ({
         {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
         {streamUrl && (
           <video
+            key={streamUrl}
             ref={videoRef}
             className="video-js vjs-default-skin absolute inset-0 w-full h-full object-cover"
             style={{ zIndex: 1 }}
