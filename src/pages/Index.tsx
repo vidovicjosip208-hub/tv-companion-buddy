@@ -626,6 +626,7 @@ const Index = () => {
           channelThumbnails[ch.name] ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80",
         channelName: ch.name,
         streamUrl: ch.streamUrl,
+        logoUrl: ch.logoUrl,
       });
       setPlayerVisible(true);
     },
