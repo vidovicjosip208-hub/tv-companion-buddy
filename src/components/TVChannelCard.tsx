@@ -7,6 +7,7 @@ interface TVChannelCardProps {
   thumbnail: string;
   channelName: string;
   timeSlot: string;
+  logoUrl?: string | null;
   isFocused?: boolean;
   onClick?: () => void;
   index?: number;
