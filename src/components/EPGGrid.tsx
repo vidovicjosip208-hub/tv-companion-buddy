@@ -263,8 +263,17 @@ const EPGGrid = ({
             className="flex flex-col"
           >
             <div className="flex items-center gap-3 px-5 pb-3 mb-1 border-b border-border/20">
-              <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center">
-                <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
+              <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center overflow-hidden">
+                {selectedChannel?.logoUrl ? (
+                  <img
+                    src={selectedChannel.logoUrl}
+                    alt={selectedChannel.name}
+                    className="w-full h-full object-contain p-1"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
+                )}
               </div>
               <div>
                 <h3 className="text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
