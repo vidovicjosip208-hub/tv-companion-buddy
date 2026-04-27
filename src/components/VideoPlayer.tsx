@@ -1054,7 +1054,7 @@ const VideoPlayer = ({
         <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
 
         <AnimatePresence>
-          {showChannelOverlay && (
+          {videoReady && showChannelOverlay && (
             <ChannelNumberOverlay
               input={channelInput}
               channelLabel={foundFavChannel?.channelName}
@@ -1064,7 +1064,7 @@ const VideoPlayer = ({
         </AnimatePresence>
 
         <AnimatePresence>
-          {showHud && sidebarOpen && (
+          {videoReady && showHud && sidebarOpen && (
             <motion.div
               key="sidebar"
               initial={{ opacity: 0, x: -20 }}
