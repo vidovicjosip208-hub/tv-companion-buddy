@@ -607,6 +607,7 @@ const Index = () => {
       thumbnail: card.thumbnail.replace("w=400", "w=1920"),
       channelName: card.channelName,
       streamUrl: card.streamUrl,
+      logoUrl: card.logoUrl,
     });
     setPlayerVisible(true);
   }, []);
