@@ -272,7 +272,6 @@ const VideotekaPlayer = ({
     hideTimerRef.current = setTimeout(() => setIsVisible(false), 3000);
   }, [cancelHideTimer]);
 
-  // ── ZVUK: odmutiramo video čim browser dopusti ──
   const unmuteVideo = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -284,12 +283,10 @@ const VideotekaPlayer = ({
     (delay = 150) => {
       const video = videoRef.current;
       if (video) {
-        // Pokušaj s punim zvukom — ovo je uvijek reakcija na user interakciju
         video.muted = false;
         video.volume = 1;
         if (video.paused) {
           video.play().catch(() => {
-            // Browser blokira unmuted autoplay — fallback na muted
             video.muted = true;
             video.play().catch(() => {});
           });
@@ -341,8 +338,6 @@ const VideotekaPlayer = ({
     setLoaderDone(true);
   }, []);
 
-  // Inicijalni autoplay mora biti muted da prođe browser autoplay policy.
-  // Odmutiramo se u onPlay eventu čim video krene.
   const playInitial = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -350,7 +345,7 @@ const VideotekaPlayer = ({
     video.play().catch(() => {});
   }, []);
 
-  // ── HLS bootstrap ──
+  // ── HLS bootstrap — VOD konfiguracija s velikim bufferom ──
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -379,25 +374,43 @@ const VideotekaPlayer = ({
     if (Hls.isSupported() && !isNativeHls) {
       const hls = new Hls({
         enableWorker: true,
+
+        // ── VOD optimizacija: latencija nije bitna, buffer je sve ──
         lowLatencyMode: false,
         autoStartLoad: true,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
-        maxBufferSize: 60 * 1000 * 1000,
-        backBufferLength: 10,
+
+        // Veliki buffer — učita puno unaprijed da kratki padovi mreže
+        // ne uzrokuju zastajkivanje. Za film od 2h ovo je razumno.
+        maxBufferLength: 120, // 2 minute buffer
+        maxMaxBufferLength: 600, // maksimalno 10 minuta ako ima memorije
+        maxBufferSize: 300 * 1000 * 1000, // 300 MB
+
+        // Čuva zadnjih 60s za smooth backwards seek
+        backBufferLength: 60,
+
+        // Konzervativni start — hls.js sam odabire kvalitetu prema mreži
         startLevel: -1,
-        abrEwmaFastLive: 2.0,
-        abrEwmaSlowLive: 6.0,
-        abrEwmaFastVoD: 2.0,
-        abrEwmaSlowVoD: 6.0,
-        abrBandWidthFactor: 0.85,
-        abrBandWidthUpFactor: 0.65,
-        manifestLoadingMaxRetry: 6,
-        levelLoadingMaxRetry: 6,
-        fragLoadingMaxRetry: 8,
-        fragLoadingRetryDelay: 500,
-        levelLoadingRetryDelay: 500,
+
+        // Sporija ABR reakcija za VOD — ne mijenjaj kvalitetu prebrzo
+        // jer kratki padovi ne trebaju nužno smanjiti rezoluciju
+        abrEwmaFastVoD: 4.0,
+        abrEwmaSlowVoD: 15.0,
+        abrBandWidthFactor: 0.9,
+        abrBandWidthUpFactor: 0.75,
+
+        // Agresivniji retry — pokušaj više puta prije nego prikaže grešku
+        manifestLoadingMaxRetry: 8,
+        levelLoadingMaxRetry: 8,
+        fragLoadingMaxRetry: 12,
+        fragLoadingRetryDelay: 1000,
+        levelLoadingRetryDelay: 1000,
+
+        // Duži timeout za fragmente — Supabase može biti sporiji od CDNa
+        fragLoadingTimeOut: 30000,
+        levelLoadingTimeOut: 20000,
+        manifestLoadingTimeOut: 20000,
       });
+
       hlsRef.current = hls;
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
@@ -477,8 +490,6 @@ const VideotekaPlayer = ({
     };
     const onPlay = () => {
       setIsPlaying(true);
-      // Odmutiramo čim video krene — u ovom trenutku browser već zna
-      // da korisnik želi video, pa unmute ne uzrokuje AutoplayError
       unmuteVideo();
     };
     const onPause = () => setIsPlaying(false);
@@ -717,7 +728,6 @@ const VideotekaPlayer = ({
 
   return (
     <div className="fixed inset-0 z-[100] bg-black font-sans overflow-hidden">
-      {/* Video element — bez muted atributa u JSX, mutiramo samo programski za inicijalni autoplay */}
       <div className="absolute inset-0">
         <video
           ref={videoRef}
@@ -728,7 +738,6 @@ const VideotekaPlayer = ({
         />
       </div>
 
-      {/* Stream error overlay */}
       {streamError && (
         <div className="absolute inset-0 z-[150] flex items-center justify-center bg-black/85">
           <div className="flex flex-col items-center gap-4 text-center px-6 max-w-md">
