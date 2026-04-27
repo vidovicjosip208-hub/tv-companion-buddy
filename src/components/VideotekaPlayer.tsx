@@ -373,17 +373,21 @@ const VideotekaPlayer = ({
 
     if (Hls.isSupported() && !isNativeHls) {
       const hls = new Hls({
+        // Offload demuxing/parsing to a Web Worker — frees main thread,
+        // letting the browser dedicate more CPU to GPU-accelerated decoding.
         enableWorker: true,
+        // Progressive parsing pushes media to the decoder as soon as bytes
+        // arrive, smoothing playback on lower-end CPUs (HP laptops, iGPUs).
+        progressive: true,
 
         // ── VOD optimizacija: latencija nije bitna, buffer je sve ──
         lowLatencyMode: false,
         autoStartLoad: true,
 
-        // Veliki buffer — učita puno unaprijed da kratki padovi mreže
-        // ne uzrokuju zastajkivanje. Za film od 2h ovo je razumno.
-        maxBufferLength: 120, // 2 minute buffer
-        maxMaxBufferLength: 600, // maksimalno 10 minuta ako ima memorije
-        maxBufferSize: 300 * 1000 * 1000, // 300 MB
+        // Aggressive buffering targets per spec — survive network dips.
+        maxBufferLength: 60, // target 60s ahead
+        maxMaxBufferLength: 120, // hard cap 120s
+        maxBufferSize: 300 * 1000 * 1000, // 300 MB ceiling
 
         // Čuva zadnjih 60s za smooth backwards seek
         backBufferLength: 60,
