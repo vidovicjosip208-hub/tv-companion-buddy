@@ -568,6 +568,10 @@ const VideoPlayer = ({
     video.addEventListener("waiting", showSpinner);
     video.addEventListener("stalled", showSpinner);
     video.addEventListener("canplay", hideSpinner);
+      const loadingFallbackTimer = window.setTimeout(() => {
+        setVideoReady(true);
+        hideSpinner();
+      }, 7000);
 
     // Initialize Video.js on the existing <video> element (UI + plugins).
     const player = videojs(video, {
@@ -676,6 +680,7 @@ const VideoPlayer = ({
       video.removeEventListener("waiting", showSpinner);
       video.removeEventListener("stalled", showSpinner);
       video.removeEventListener("canplay", hideSpinner);
+      window.clearTimeout(loadingFallbackTimer);
       window.removeEventListener("pointerdown", enableSoundOnGesture);
       window.removeEventListener("keydown", enableSoundOnGesture);
       if (hls) {
