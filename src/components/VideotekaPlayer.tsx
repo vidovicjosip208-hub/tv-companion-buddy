@@ -352,7 +352,6 @@ const FrozenHlsVideo = memo(
         className="relative z-10 w-full h-full object-contain bg-black"
         style={{
           willChange: "transform",
-          transform: "translateZ(0)",
           backfaceVisibility: "hidden",
           contain: "strict",
         }}
@@ -919,10 +918,10 @@ const VideotekaPlayer = ({
                   >
                     <div className="flex items-center gap-6">
                       <ArrowLeft
-                        className={`w-8 h-8 transition-all ${focusedRow === 0 && focusedCol === 0 ? "text-white scale-110" : "text-muted-foreground"}`}
+                        className={`w-8 h-8 transition-colors ${focusedRow === 0 && focusedCol === 0 ? "text-white" : "text-muted-foreground"}`}
                       />
                       <div
-                        className={`relative flex items-center justify-center transition-all ${focusedRow === 0 && focusedCol === 1 ? "text-white scale-110" : "text-muted-foreground"}`}
+                        className={`relative flex items-center justify-center transition-colors ${focusedRow === 0 && focusedCol === 1 ? "text-white" : "text-muted-foreground"}`}
                       >
                         <RotateCcw className="w-10 h-10" />
                         <Play className="absolute w-3 h-3 fill-current ml-0.5" />
@@ -935,8 +934,7 @@ const VideotekaPlayer = ({
                         }}
                         style={{
                           color: skipActive ? "#ffffff" : "#71717a",
-                          transform: skipActive ? "scale(1.1)" : "scale(1)",
-                          transition: "color 0.15s ease, transform 0.15s ease",
+                          transition: "color 0.15s ease",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
