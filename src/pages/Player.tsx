@@ -26,9 +26,15 @@ const Player = () => {
           timeRange: "00:00 - 00:00",
           thumbnail: ch?.thumbnail_url || ch?.logo_url || "",
           streamUrl: ch?.stream_url ?? undefined,
+          logoUrl: ch?.logo_url ?? null,
         };
       }),
     [favorites, channels],
+  );
+
+  const currentChannel = useMemo(
+    () => channels.find((c) => c.name === channelName),
+    [channels, channelName],
   );
 
   const handleSwitchChannel = (next: PlayerData) => {
@@ -51,6 +57,7 @@ const Player = () => {
         thumbnail: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80",
         channelName,
         streamUrl,
+        logoUrl: currentChannel?.logo_url ?? null,
       }}
       isFavorite={isFavorite(channelName)}
       onToggleFavorite={() => toggleFavorite(channelName)}
