@@ -10,7 +10,6 @@ import VideotekaMovies from "./pages/VideotekaMovies.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Settings from "./pages/Settings.tsx";
 import Player from "./pages/Player.tsx";
-import HlsTest from "./pages/HlsTest.tsx";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +26,6 @@ const App = () => (
             <Route path="/videoteka/shows" element={<VideotekaShows />} />
             <Route path="/videoteka/movies" element={<VideotekaMovies />} />
             <Route path="/player" element={<Player />} />
-            <Route path="/hls-test" element={<HlsTest />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
