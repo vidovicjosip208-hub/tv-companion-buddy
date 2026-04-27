@@ -57,6 +57,7 @@ const THUMBNAIL_COUNT = 7;
 const GOLD = "#F5C518";
 const LOADER_MIN_DURATION = 1200;
 const LOADER_MAX_DURATION = 5000;
+const ZERO_UI_VIDEO_TEST = true;
 
 const DUMMY_SUBTITLES = [
   { code: "off", label: "Isključeno" },
@@ -349,6 +350,11 @@ const FrozenHlsVideo = memo(
         playsInline
         preload="auto"
         className="relative z-10 w-full h-full object-contain bg-black"
+        style={{
+          willChange: "transform",
+          backfaceVisibility: "hidden",
+          contain: "strict",
+        }}
       />
     );
   },
@@ -854,6 +860,7 @@ const VideotekaPlayer = ({
   }, []);
 
   const skipActive = skipHovered || (focusedRow === 0 && focusedCol === 2);
+  const zeroUiActive = ZERO_UI_VIDEO_TEST && isPlaying;
 
   return (
     <div className="fixed inset-0 z-[100] bg-black font-sans overflow-hidden">
@@ -873,7 +880,7 @@ const VideotekaPlayer = ({
         />
       </div>
 
-      {streamError && (
+      {streamError && !zeroUiActive && (
         <div className="absolute inset-0 z-[150] flex items-center justify-center bg-black/85">
           <div className="flex flex-col items-center gap-4 text-center px-6 max-w-md">
             <p className="text-white text-lg">{streamError}</p>
@@ -888,21 +895,21 @@ const VideotekaPlayer = ({
       )}
 
       <AnimatePresence>
-        {!loaderDone && !streamError && <Loader key="loader" ready={videoReady} onDone={markVideoReady} />}
+        {!zeroUiActive && !loaderDone && !streamError && <Loader key="loader" ready={videoReady} onDone={markVideoReady} />}
       </AnimatePresence>
 
       <AnimatePresence>
-        {loaderDone && isVisible && (
+        {!zeroUiActive && loaderDone && isVisible && (
           <motion.div
             key="player-ui"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.6 } }}
-            className="absolute inset-0 flex flex-col z-20"
+            className="absolute inset-0 flex flex-col z-20 pointer-events-none"
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/70" />
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: "rgba(0,0,0,0.38)" }} />
 
-            <div className="relative flex flex-col h-full pt-14 pb-6">
+            <div className="relative flex flex-col h-full pt-14 pb-6 pointer-events-none">
               <div className="w-full max-w-5xl mx-auto flex flex-col h-full px-4">
                 {/* TOP AREA */}
                 <div className="flex-1 flex flex-col">
@@ -911,10 +918,10 @@ const VideotekaPlayer = ({
                   >
                     <div className="flex items-center gap-6">
                       <ArrowLeft
-                        className={`w-8 h-8 transition-all ${focusedRow === 0 && focusedCol === 0 ? "text-white scale-110" : "text-muted-foreground"}`}
+                        className={`w-8 h-8 transition-colors ${focusedRow === 0 && focusedCol === 0 ? "text-white" : "text-muted-foreground"}`}
                       />
                       <div
-                        className={`relative flex items-center justify-center transition-all ${focusedRow === 0 && focusedCol === 1 ? "text-white scale-110" : "text-muted-foreground"}`}
+                        className={`relative flex items-center justify-center transition-colors ${focusedRow === 0 && focusedCol === 1 ? "text-white" : "text-muted-foreground"}`}
                       >
                         <RotateCcw className="w-10 h-10" />
                         <Play className="absolute w-3 h-3 fill-current ml-0.5" />
@@ -927,8 +934,7 @@ const VideotekaPlayer = ({
                         }}
                         style={{
                           color: skipActive ? "#ffffff" : "#71717a",
-                          transform: skipActive ? "scale(1.1)" : "scale(1)",
-                          transition: "color 0.15s ease, transform 0.15s ease",
+                          transition: "color 0.15s ease",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
@@ -991,7 +997,7 @@ const VideotekaPlayer = ({
                           {seekThumbnails.map((t, i) => (
                             <div
                               key={i}
-                              className={`relative overflow-hidden transition-all duration-200 ${i === 3 ? "w-48 h-28 z-10 scale-110 ring-1 ring-white" : "w-32 h-20 opacity-50"}`}
+                              className={`relative overflow-hidden transition-opacity duration-200 ${i === 3 ? "w-48 h-28 z-10 ring-1 ring-white" : "w-32 h-20 opacity-50"}`}
                             >
                               <img src={thumbnail} className="w-full h-full object-cover" alt="seek preview" />
                               {i === 3 && (
@@ -1032,7 +1038,8 @@ const VideotekaPlayer = ({
                       className="flex items-center justify-center w-[42px] h-[42px] transition-all duration-200 cursor-pointer"
                       style={{
                         color: GOLD,
-                        transform: focusedRow === 2 && focusedCol === 0 ? "scale(1.2)" : "scale(1)",
+                        outline: focusedRow === 2 && focusedCol === 0 ? `2px solid ${GOLD}` : "none",
+                        outlineOffset: "4px",
                       }}
                       onClick={() => seekVideo(currentTimeRef.current - 10)}
                     >
@@ -1049,7 +1056,6 @@ const VideotekaPlayer = ({
                         style={{
                           backgroundColor: GOLD,
                           color: "#0d0d0d",
-                          transform: focusedRow === 2 && focusedCol === 1 ? "scale(1.15)" : "scale(1)",
                           boxShadow:
                             focusedRow === 2 && focusedCol === 1 ? "0 0 20px 5px rgba(245,197,24,0.4)" : "none",
                         }}
@@ -1066,7 +1072,8 @@ const VideotekaPlayer = ({
                       className="flex items-center justify-center w-[42px] h-[42px] transition-all duration-200 cursor-pointer"
                       style={{
                         color: GOLD,
-                        transform: focusedRow === 2 && focusedCol === 2 ? "scale(1.2)" : "scale(1)",
+                        outline: focusedRow === 2 && focusedCol === 2 ? `2px solid ${GOLD}` : "none",
+                        outlineOffset: "4px",
                       }}
                       onClick={() => seekVideo(currentTimeRef.current + 10)}
                     >
@@ -1091,7 +1098,7 @@ const VideotekaPlayer = ({
                               if (opt.label === "Aa")
                                 openFontModal(DUMMY_FONTS.findIndex((f) => f.code === selectedFont));
                             }}
-                            className={`w-32 h-10 flex items-center justify-center rounded-xl border border-white/20 bg-muted/40 transition-all cursor-pointer ${isFocused ? "bg-white scale-105" : ""}`}
+                            className={`w-32 h-10 flex items-center justify-center rounded-xl border border-white/20 bg-muted/40 transition-colors cursor-pointer ${isFocused ? "bg-white" : ""}`}
                           >
                             <div
                               className={`flex items-center gap-2 font-bold transition-colors ${isFocused ? "text-black" : "text-white"} text-xs`}
@@ -1114,7 +1121,7 @@ const VideotekaPlayer = ({
 
       {/* ── Subtitle Modal ── */}
       <AnimatePresence>
-        {showSubtitleModal && (
+        {!zeroUiActive && showSubtitleModal && (
           <>
             <motion.div
               key="subtitle-backdrop"
@@ -1189,7 +1196,7 @@ const VideotekaPlayer = ({
 
       {/* ── Audio Modal ── */}
       <AnimatePresence>
-        {showAudioModal && (
+        {!zeroUiActive && showAudioModal && (
           <>
             <motion.div
               key="audio-backdrop"
@@ -1272,7 +1279,7 @@ const VideotekaPlayer = ({
 
       {/* ── Font Modal ── */}
       <AnimatePresence>
-        {showFontModal && (
+        {!zeroUiActive && showFontModal && (
           <>
             <motion.div
               key="font-backdrop"

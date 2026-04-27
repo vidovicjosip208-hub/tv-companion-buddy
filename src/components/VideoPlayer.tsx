@@ -2,11 +2,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
-import videojs from "video.js";
-import type Player from "video.js/dist/types/player";
-import "video.js/dist/video-js.css";
-import "videojs-contrib-quality-levels";
-import "videojs-hls-quality-selector";
 
 // Detect HEVC (H.265) decoding support — most 4K IPTV streams use HEVC.
 const supportsHEVC = (): boolean => {
@@ -179,6 +174,7 @@ const sidebarChannels: SidebarChannel[] = [
 
 const AUTO_HIDE_MS = 4500;
 const GOLD = "#F5C518";
+const ZERO_UI_VIDEO_TEST = true;
 
 const isFutureShow = (timeRange: string, day: string): boolean => {
   const now = new Date();
@@ -509,7 +505,6 @@ const VideoPlayer = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const playerRef = useRef<Player | null>(null);
   const spinnerRef = useRef<HTMLDivElement>(null);
   const [videoReady, setVideoReady] = useState(false);
 
@@ -542,8 +537,6 @@ const VideoPlayer = ({
       try {
         video.muted = false;
         video.volume = 1;
-        playerRef.current?.muted(false);
-        playerRef.current?.volume(1);
       } catch (e) {
         // If browser blocks unmuted autoplay, stay muted; user can interact to enable sound.
       }
@@ -553,8 +546,6 @@ const VideoPlayer = ({
       try {
         video.muted = false;
         video.volume = 1;
-        playerRef.current?.muted(false);
-        playerRef.current?.volume(1);
       } catch {
         /* noop */
       }
@@ -568,67 +559,39 @@ const VideoPlayer = ({
     video.addEventListener("stalled", showSpinner);
     video.addEventListener("canplay", hideSpinner);
 
-    // Initialize Video.js on the existing <video> element (UI + plugins).
-    const player = videojs(video, {
-      controls: false,
-      autoplay: true,
-      muted: true,
-      preload: "auto",
-      fluid: false,
-      html5: {
-        vhs: { overrideNative: false },
-      },
-    });
-    playerRef.current = player;
-
     let hls: Hls | null = null;
     let recoverAttempts = 0;
-
-    const wireQualitySelector = (levels: { height?: number; bitrate: number }[]) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const qlPlugin = (player as any).qualityLevels?.();
-      if (!qlPlugin) return;
-      levels.forEach((lvl, index) => {
-        qlPlugin.addQualityLevel({
-          id: String(index),
-          width: undefined,
-          height: lvl.height,
-          bitrate: lvl.bitrate,
-          enabled_(enabled?: boolean) {
-            if (typeof enabled === "boolean" && hls) {
-              hls.currentLevel = enabled ? index : -1;
-            }
-            return hls ? hls.currentLevel === index || hls.currentLevel === -1 : true;
-          },
-        });
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (player as any).hlsQualitySelector?.({ displayCurrentQuality: true });
-    };
 
     if (Hls.isSupported()) {
       hls = new Hls({
         enableWorker: true,
-        lowLatencyMode: true,
+        forceVideoHWAcceleration: true,
+        lowLatencyMode: false,
         backBufferLength: 60,
-        liveSyncDurationCount: 3,
-        liveMaxLatencyDurationCount: 10,
-        maxBufferLength: 30,
+        maxBufferLength: 60,
+        maxMaxBufferLength: 120,
+        maxBufferSize: 300 * 1000 * 1000,
         manifestLoadingMaxRetry: 10,
         levelLoadingMaxRetry: 10,
+        fragLoadingMaxRetry: 12,
+        fragLoadingTimeOut: 30000,
         capLevelToPlayerSize: false,
-      });
+      } as ConstructorParameters<typeof Hls>[0] & { forceVideoHWAcceleration: boolean });
       hlsRef.current = hls;
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
-        const usableLevels = data.levels.filter((lvl) => {
-          const codecs = (lvl.videoCodec || "").toLowerCase();
-          const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
-          return isHevc ? hevcOk : true;
-        });
-        wireQualitySelector(usableLevels);
+        const supportedLevels = data.levels
+          .map((lvl, index) => ({ lvl, index }))
+          .filter(({ lvl }) => {
+            const codecs = (lvl.videoCodec || "").toLowerCase();
+            const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
+            return isHevc ? hevcOk : true;
+          });
+        if (supportedLevels.length && supportedLevels.length < data.levels.length && hls) {
+          hls.autoLevelCapping = supportedLevels[supportedLevels.length - 1].index;
+        }
         video.play().catch(() => {});
       });
 
@@ -680,10 +643,6 @@ const VideoPlayer = ({
       if (hls) {
         hls.destroy();
         hlsRef.current = null;
-      }
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
       }
     };
   }, [streamUrl]);
@@ -1005,6 +964,7 @@ const VideoPlayer = ({
   const syncTransition = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 } as const;
   const inputNum = parseInt(channelInput, 10);
   const foundFavChannel = isNaN(inputNum) ? undefined : favoriteChannels.find((c) => c.number === inputNum);
+  const zeroUiActive = ZERO_UI_VIDEO_TEST && isPlaying;
 
   return (
     <motion.div
@@ -1015,7 +975,7 @@ const VideoPlayer = ({
       style={{ backgroundColor: "#0d0d0d" }}
     >
       <div className="relative w-full h-full overflow-hidden">
-        {(!streamUrl || !videoReady) && (
+        {!zeroUiActive && (!streamUrl || !videoReady) && (
           <img
             src={thumbnail}
             alt={showTitle}
@@ -1026,8 +986,13 @@ const VideoPlayer = ({
         {streamUrl && (
           <video
             ref={videoRef}
-            className="video-js vjs-default-skin absolute inset-0 w-full h-full object-cover"
-            style={{ zIndex: 1 }}
+            className="absolute inset-0 w-full h-full object-cover bg-black"
+            style={{
+              zIndex: 1,
+              willChange: "transform",
+              backfaceVisibility: "hidden",
+              contain: "strict",
+            }}
             playsInline
             {...({ "webkit-playsinline": "" } as Record<string, string>)}
             muted
@@ -1035,32 +1000,33 @@ const VideoPlayer = ({
             crossOrigin="anonymous"
           />
         )}
-        {/* CSS-only buffering spinner — toggled imperatively via native video events */}
-        <div
-          ref={spinnerRef}
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: 56,
-            height: 56,
-            marginTop: -28,
-            marginLeft: -28,
-            border: "4px solid rgba(255,255,255,0.18)",
-            borderTopColor: GOLD,
-            borderRadius: "50%",
-            animation: "vp-spin 0.9s linear infinite",
-            opacity: 0,
-            transition: "opacity 0.15s linear",
-            pointerEvents: "none",
-            zIndex: 5,
-          }}
-        />
-        <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
+        {/* CSS-only buffering spinner — removed during naked-video test playback */}
+        {!zeroUiActive && (
+          <div
+            ref={spinnerRef}
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              width: 56,
+              height: 56,
+              marginTop: -28,
+              marginLeft: -28,
+              border: "4px solid rgba(255,255,255,0.18)",
+              borderTopColor: GOLD,
+              borderRadius: "50%",
+              opacity: 0,
+              transition: "opacity 0.15s linear",
+              pointerEvents: "none",
+              zIndex: 5,
+            }}
+          />
+        )}
+        {!zeroUiActive && <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>}
 
         <AnimatePresence>
-          {showChannelOverlay && (
+          {!zeroUiActive && showChannelOverlay && (
             <ChannelNumberOverlay
               input={channelInput}
               channelLabel={foundFavChannel?.channelName}
@@ -1070,7 +1036,7 @@ const VideoPlayer = ({
         </AnimatePresence>
 
         <AnimatePresence>
-          {showHud && sidebarOpen && (
+          {!zeroUiActive && showHud && sidebarOpen && (
             <motion.div
               key="sidebar"
               initial={{ opacity: 0, x: -20 }}
@@ -1110,7 +1076,7 @@ const VideoPlayer = ({
         </AnimatePresence>
 
         <AnimatePresence>
-          {showHud && (
+          {!zeroUiActive && showHud && (
             <motion.div
               key="hud"
               initial={{ opacity: 0, y: 50 }}
@@ -1155,7 +1121,7 @@ const VideoPlayer = ({
                             width: "max-content",
                           }}
                         >
-                          <div className="p-1 bg-white/20 backdrop-blur-md rounded-lg border border-white/40 shadow-2xl">
+                          <div className="p-1 bg-black/80 rounded-lg border border-white/40 shadow-2xl">
                             <div className="w-56 aspect-video rounded overflow-hidden relative bg-black">
                               <img src={thumbnail} alt="preview" className="w-full h-full object-cover" />
                               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded text-[11px] font-bold text-white tabular-nums border border-white/10">
@@ -1222,7 +1188,6 @@ const VideoPlayer = ({
                               backgroundColor: isMain ? GOLD : isBtnFocused ? "rgba(245,197,24,0.15)" : "transparent",
                               color: isMain ? "#0d0d0d" : GOLD,
                               outline: isBtnFocused && !isMain ? "2px solid rgba(245,197,24,0.5)" : "none",
-                              transform: isBtnFocused ? "scale(1.12)" : "scale(1)",
                               boxShadow: isMain ? "0 0 18px 4px rgba(245,197,24,0.35)" : "none",
                             }}
                           >
@@ -1253,7 +1218,6 @@ const VideoPlayer = ({
                       border: "none",
                       cursor: "pointer",
                       padding: "4px 8px",
-                      transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
                     }}
                     onMouseDown={(e) => {
                       e.preventDefault();
