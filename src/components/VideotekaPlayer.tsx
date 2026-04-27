@@ -1121,7 +1121,7 @@ const VideotekaPlayer = ({
 
       {/* ── Subtitle Modal ── */}
       <AnimatePresence>
-        {showSubtitleModal && (
+        {!zeroUiActive && showSubtitleModal && (
           <>
             <motion.div
               key="subtitle-backdrop"
@@ -1196,7 +1196,7 @@ const VideotekaPlayer = ({
 
       {/* ── Audio Modal ── */}
       <AnimatePresence>
-        {showAudioModal && (
+        {!zeroUiActive && showAudioModal && (
           <>
             <motion.div
               key="audio-backdrop"
@@ -1279,7 +1279,7 @@ const VideotekaPlayer = ({
 
       {/* ── Font Modal ── */}
       <AnimatePresence>
-        {showFontModal && (
+        {!zeroUiActive && showFontModal && (
           <>
             <motion.div
               key="font-backdrop"
