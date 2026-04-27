@@ -490,6 +490,7 @@ const VideotekaPlayer = ({
   const audioFocusIdxRef = useRef(0);
   const fontFocusIdxRef = useRef(0);
   const currentTimeRef = useRef(0);
+  const isSeekingRef = useRef(false);
   const totalDurationRef = useRef(TOTAL_DURATION);
   const progressFillRef = useRef<HTMLDivElement | null>(null);
   const elapsedTextRef = useRef<HTMLSpanElement | null>(null);
@@ -617,10 +618,15 @@ const VideotekaPlayer = ({
   const handleTimeSnapshot = useCallback(
     (time: number) => {
       currentTimeRef.current = time;
-      if (!isSeeking) updateProgressDom(time);
+      if (!isSeekingRef.current) updateProgressDom(time);
     },
-    [isSeeking, updateProgressDom],
+    [updateProgressDom],
   );
+
+  useEffect(() => {
+    isSeekingRef.current = isSeeking;
+    updateProgressDom(isSeeking ? seekTime : currentTimeRef.current);
+  }, [isSeeking, seekTime, updateProgressDom]);
 
   const handlePlayStateChange = useCallback((playing: boolean) => {
     setIsPlaying(playing);
@@ -852,12 +858,18 @@ const VideotekaPlayer = ({
   return (
     <div className="fixed inset-0 z-[100] bg-black font-sans overflow-hidden">
       <div className="absolute inset-0">
-        <video
-          ref={videoRef}
-          poster={thumbnail}
-          playsInline
-          preload="auto"
-          className="relative z-10 w-full h-full object-contain bg-black"
+        <FrozenHlsVideo
+          streamUrl={streamUrl}
+          thumbnail={thumbnail}
+          fetchingStream={fetchingStream}
+          fetchError={fetchError}
+          videoRef={videoRef}
+          hlsRef={hlsRef}
+          onReady={markVideoReady}
+          onError={setStreamError}
+          onDuration={handleDuration}
+          onPlayStateChange={handlePlayStateChange}
+          onTimeSnapshot={handleTimeSnapshot}
         />
       </div>
 
