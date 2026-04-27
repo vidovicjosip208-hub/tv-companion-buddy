@@ -632,7 +632,7 @@ const Index = () => {
     // Favoriti su samo reference na iste kartice kanala, zato ovdje namjerno
     // uzimamo isti streamUrl/title/timeSlot iz liveChannelCards.
     return favorites
-      .map((name, idx) => {
+      .map((name, idx): EPGChannel | null => {
         const card = liveChannelCards.find((c) => c.channelName === name);
         if (!card) return null;
         const epgChannel = liveEpgChannels.find((ch) => ch.name === card.channelName);
@@ -645,7 +645,7 @@ const Index = () => {
           category: epgChannel?.category,
           streamUrl: card.streamUrl,
           programs: [{ title: card.title, startTime, endTime, date: "", isLive: true }],
-        } satisfies EPGChannel;
+        };
       })
       .filter((channel): channel is EPGChannel => Boolean(channel));
   }, [favorites, liveEpgChannels, liveChannelCards]);
