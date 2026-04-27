@@ -812,6 +812,7 @@ const VideoPlayer = ({
               thumbnail: favCh.thumbnail,
               channelName: favCh.channelName,
               streamUrl: favCh.streamUrl,
+              logoUrl: favCh.logoUrl,
             });
           }
           setChannelInput("");
