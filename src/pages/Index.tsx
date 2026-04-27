@@ -1234,6 +1234,7 @@ const Index = () => {
                       thumbnail={card.thumbnail}
                       channelName={card.channelName}
                       timeSlot={card.timeSlot}
+                      logoUrl={card.logoUrl}
                       index={i}
                       isFocused={focusZone === "cards" && cardIndex === i}
                       onClick={() => {
