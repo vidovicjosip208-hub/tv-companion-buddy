@@ -53,15 +53,37 @@ export interface EPGProgram {
 
 export const useChannels = () => {
   return useQuery({
-    queryKey: ["tv_channels"],
+    queryKey: ["tv_channels", "with_channel_logos"],
     queryFn: async (): Promise<Channel[]> => {
-      const { data, error } = await supabase
-        .from("tv_channels")
-        .select("id, name, logo_url, stream_url, category, language, country, is_active, sort_order")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-      if (error) throw error;
-      return ((data ?? []) as TvChannelRow[]).map(mapChannel);
+      const [channelsRes, logosRes] = await Promise.all([
+        supabase
+          .from("tv_channels")
+          .select("id, name, logo_url, stream_url, category, language, country, is_active, sort_order")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true }),
+        supabase.from("channel_logos").select("channel_name, logo_url"),
+      ]);
+      if (channelsRes.error) throw channelsRes.error;
+      if (logosRes.error) {
+        // eslint-disable-next-line no-console
+        console.warn("[channel_logos] failed to load, falling back to tv_channels.logo_url", logosRes.error);
+      }
+
+      const logoByName = new Map<string, string>();
+      const norm = (s: string) => s.trim().toLowerCase();
+      for (const row of (logosRes.data ?? []) as Array<{ channel_name: string | null; logo_url: string | null }>) {
+        if (row.channel_name && row.logo_url) {
+          logoByName.set(norm(row.channel_name), row.logo_url);
+        }
+      }
+
+      return ((channelsRes.data ?? []) as TvChannelRow[]).map((row) => {
+        const overrideLogo = logoByName.get(norm(row.name));
+        const merged: TvChannelRow = overrideLogo
+          ? { ...row, logo_url: overrideLogo }
+          : row;
+        return mapChannel(merged);
+      });
     },
   });
 };
