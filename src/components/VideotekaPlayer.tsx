@@ -127,22 +127,15 @@ const FrozenHlsVideo = memo(
     const playInitial = useCallback(() => {
       const video = localVideoRef.current;
       if (!video) return;
-      // Try with sound first (Player navigation IS a user gesture).
+      // Sound must always be ON. Player navigation is a user gesture, so
+      // unmuted autoplay is allowed by the browser.
       video.muted = false;
       video.volume = 1;
       video.play().catch(() => {
-        // Autoplay blocked → fall back to muted, then attempt to unmute
-        // again as soon as playback actually starts.
-        video.muted = true;
-        video
-          .play()
-          .then(() => {
-            setTimeout(() => {
-              video.muted = false;
-              video.volume = 1;
-            }, 0);
-          })
-          .catch(() => {});
+        // If playback fails for any reason, retry once — but never mute.
+        video.muted = false;
+        video.volume = 1;
+        video.play().catch(() => {});
       });
     }, []);
 
