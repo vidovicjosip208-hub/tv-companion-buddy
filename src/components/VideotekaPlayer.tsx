@@ -997,7 +997,7 @@ const VideotekaPlayer = ({
                           {seekThumbnails.map((t, i) => (
                             <div
                               key={i}
-                              className={`relative overflow-hidden transition-all duration-200 ${i === 3 ? "w-48 h-28 z-10 scale-110 ring-1 ring-white" : "w-32 h-20 opacity-50"}`}
+                              className={`relative overflow-hidden transition-opacity duration-200 ${i === 3 ? "w-48 h-28 z-10 ring-1 ring-white" : "w-32 h-20 opacity-50"}`}
                             >
                               <img src={thumbnail} className="w-full h-full object-cover" alt="seek preview" />
                               {i === 3 && (
@@ -1038,7 +1038,8 @@ const VideotekaPlayer = ({
                       className="flex items-center justify-center w-[42px] h-[42px] transition-all duration-200 cursor-pointer"
                       style={{
                         color: GOLD,
-                        transform: focusedRow === 2 && focusedCol === 0 ? "scale(1.2)" : "scale(1)",
+                        outline: focusedRow === 2 && focusedCol === 0 ? `2px solid ${GOLD}` : "none",
+                        outlineOffset: "4px",
                       }}
                       onClick={() => seekVideo(currentTimeRef.current - 10)}
                     >
@@ -1055,7 +1056,6 @@ const VideotekaPlayer = ({
                         style={{
                           backgroundColor: GOLD,
                           color: "#0d0d0d",
-                          transform: focusedRow === 2 && focusedCol === 1 ? "scale(1.15)" : "scale(1)",
                           boxShadow:
                             focusedRow === 2 && focusedCol === 1 ? "0 0 20px 5px rgba(245,197,24,0.4)" : "none",
                         }}
@@ -1072,7 +1072,8 @@ const VideotekaPlayer = ({
                       className="flex items-center justify-center w-[42px] h-[42px] transition-all duration-200 cursor-pointer"
                       style={{
                         color: GOLD,
-                        transform: focusedRow === 2 && focusedCol === 2 ? "scale(1.2)" : "scale(1)",
+                        outline: focusedRow === 2 && focusedCol === 2 ? `2px solid ${GOLD}` : "none",
+                        outlineOffset: "4px",
                       }}
                       onClick={() => seekVideo(currentTimeRef.current + 10)}
                     >
@@ -1097,7 +1098,7 @@ const VideotekaPlayer = ({
                               if (opt.label === "Aa")
                                 openFontModal(DUMMY_FONTS.findIndex((f) => f.code === selectedFont));
                             }}
-                            className={`w-32 h-10 flex items-center justify-center rounded-xl border border-white/20 bg-muted/40 transition-all cursor-pointer ${isFocused ? "bg-white scale-105" : ""}`}
+                            className={`w-32 h-10 flex items-center justify-center rounded-xl border border-white/20 bg-muted/40 transition-colors cursor-pointer ${isFocused ? "bg-white" : ""}`}
                           >
                             <div
                               className={`flex items-center gap-2 font-bold transition-colors ${isFocused ? "text-black" : "text-white"} text-xs`}
