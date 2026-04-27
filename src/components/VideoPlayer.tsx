@@ -1000,28 +1000,29 @@ const VideoPlayer = ({
             crossOrigin="anonymous"
           />
         )}
-        {/* CSS-only buffering spinner — toggled imperatively via native video events */}
-        <div
-          ref={spinnerRef}
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: 56,
-            height: 56,
-            marginTop: -28,
-            marginLeft: -28,
-            border: "4px solid rgba(255,255,255,0.18)",
-            borderTopColor: GOLD,
-            borderRadius: "50%",
-            animation: "vp-spin 0.9s linear infinite",
-            opacity: 0,
-            transition: "opacity 0.15s linear",
-            pointerEvents: "none",
-            zIndex: 5,
-          }}
-        />
+        {/* CSS-only buffering spinner — removed during naked-video test playback */}
+        {!zeroUiActive && (
+          <div
+            ref={spinnerRef}
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              width: 56,
+              height: 56,
+              marginTop: -28,
+              marginLeft: -28,
+              border: "4px solid rgba(255,255,255,0.18)",
+              borderTopColor: GOLD,
+              borderRadius: "50%",
+              opacity: 0,
+              transition: "opacity 0.15s linear",
+              pointerEvents: "none",
+              zIndex: 5,
+            }}
+          />
+        )}
         {!zeroUiActive && <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>}
 
         <AnimatePresence>
