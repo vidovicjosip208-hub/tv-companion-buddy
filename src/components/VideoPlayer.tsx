@@ -964,6 +964,7 @@ const VideoPlayer = ({
   const syncTransition = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 } as const;
   const inputNum = parseInt(channelInput, 10);
   const foundFavChannel = isNaN(inputNum) ? undefined : favoriteChannels.find((c) => c.number === inputNum);
+  const zeroUiActive = ZERO_UI_VIDEO_TEST && isPlaying;
 
   return (
     <motion.div
@@ -985,8 +986,14 @@ const VideoPlayer = ({
         {streamUrl && (
           <video
             ref={videoRef}
-            className="video-js vjs-default-skin absolute inset-0 w-full h-full object-cover"
-            style={{ zIndex: 1 }}
+            className="absolute inset-0 w-full h-full object-cover bg-black"
+            style={{
+              zIndex: 1,
+              willChange: "transform",
+              transform: "translateZ(0)",
+              backfaceVisibility: "hidden",
+              contain: "strict",
+            }}
             playsInline
             {...({ "webkit-playsinline": "" } as Record<string, string>)}
             muted
@@ -1016,10 +1023,10 @@ const VideoPlayer = ({
             zIndex: 5,
           }}
         />
-        <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
+        {!zeroUiActive && <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>}
 
         <AnimatePresence>
-          {showChannelOverlay && (
+          {!zeroUiActive && showChannelOverlay && (
             <ChannelNumberOverlay
               input={channelInput}
               channelLabel={foundFavChannel?.channelName}
@@ -1029,7 +1036,7 @@ const VideoPlayer = ({
         </AnimatePresence>
 
         <AnimatePresence>
-          {showHud && sidebarOpen && (
+          {!zeroUiActive && showHud && sidebarOpen && (
             <motion.div
               key="sidebar"
               initial={{ opacity: 0, x: -20 }}
@@ -1069,7 +1076,7 @@ const VideoPlayer = ({
         </AnimatePresence>
 
         <AnimatePresence>
-          {showHud && (
+          {!zeroUiActive && showHud && (
             <motion.div
               key="hud"
               initial={{ opacity: 0, y: 50 }}
