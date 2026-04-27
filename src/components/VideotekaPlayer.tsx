@@ -28,10 +28,10 @@ const VideotekaPlayer = ({ onClose, itemId, streamUrl: providedStreamUrl }: Vide
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
-  const { streamUrl: fetchedStreamUrl } = useMovieStream(itemId);
+  const { data: movieStream } = useMovieStream(itemId);
   const streamUrl =
     providedStreamUrl ||
-    fetchedStreamUrl ||
+    movieStream?.stream_url ||
     "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
 
   useEffect(() => {
