@@ -20,6 +20,7 @@ interface ChannelCard {
   timeSlot: string;
   channelNumber: string;
   streamUrl?: string;
+  logoUrl?: string | null;
 }
 
 const defaultChannelCards: ChannelCard[] = [
