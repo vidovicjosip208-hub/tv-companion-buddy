@@ -990,7 +990,6 @@ const VideoPlayer = ({
             style={{
               zIndex: 1,
               willChange: "transform",
-              transform: "translateZ(0)",
               backfaceVisibility: "hidden",
               contain: "strict",
             }}
@@ -1121,7 +1120,7 @@ const VideoPlayer = ({
                             width: "max-content",
                           }}
                         >
-                          <div className="p-1 bg-white/20 backdrop-blur-md rounded-lg border border-white/40 shadow-2xl">
+                          <div className="p-1 bg-black/80 rounded-lg border border-white/40 shadow-2xl">
                             <div className="w-56 aspect-video rounded overflow-hidden relative bg-black">
                               <img src={thumbnail} alt="preview" className="w-full h-full object-cover" />
                               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded text-[11px] font-bold text-white tabular-nums border border-white/10">
@@ -1188,7 +1187,6 @@ const VideoPlayer = ({
                               backgroundColor: isMain ? GOLD : isBtnFocused ? "rgba(245,197,24,0.15)" : "transparent",
                               color: isMain ? "#0d0d0d" : GOLD,
                               outline: isBtnFocused && !isMain ? "2px solid rgba(245,197,24,0.5)" : "none",
-                              transform: isBtnFocused ? "scale(1.12)" : "scale(1)",
                               boxShadow: isMain ? "0 0 18px 4px rgba(245,197,24,0.35)" : "none",
                             }}
                           >
@@ -1219,7 +1217,6 @@ const VideoPlayer = ({
                       border: "none",
                       cursor: "pointer",
                       padding: "4px 8px",
-                      transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
                     }}
                     onMouseDown={(e) => {
                       e.preventDefault();
