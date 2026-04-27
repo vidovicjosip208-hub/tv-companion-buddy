@@ -571,7 +571,9 @@ const VideotekaPlayer = ({
         video.volume = 1;
         if (video.paused) {
           video.play().catch(() => {
-            video.muted = true;
+            // Never mute on retry — sound must always be on.
+            video.muted = false;
+            video.volume = 1;
             video.play().catch(() => {});
           });
         }
