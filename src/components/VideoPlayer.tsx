@@ -1051,7 +1051,16 @@ const VideoPlayer = ({
             zIndex: 5,
           }}
         />
-        <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
+        <style>{`
+          @keyframes vp-spin { to { transform: rotate(360deg); } }
+          /* Hide video.js built-in spinner, big play button and control bar — we use our own gold spinner */
+          .video-js .vjs-loading-spinner,
+          .video-js .vjs-big-play-button,
+          .video-js .vjs-control-bar,
+          .video-js .vjs-text-track-display,
+          .video-js .vjs-error-display,
+          .video-js .vjs-modal-dialog { display: none !important; }
+        `}</style>
 
         <AnimatePresence>
           {videoReady && showChannelOverlay && (
