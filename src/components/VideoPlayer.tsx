@@ -975,7 +975,7 @@ const VideoPlayer = ({
       style={{ backgroundColor: "#0d0d0d" }}
     >
       <div className="relative w-full h-full overflow-hidden">
-        {(!streamUrl || !videoReady) && (
+        {!zeroUiActive && (!streamUrl || !videoReady) && (
           <img
             src={thumbnail}
             alt={showTitle}
