@@ -468,7 +468,6 @@ const VideotekaPlayer = ({
   const [videoDuration, setVideoDuration] = useState<number>(TOTAL_DURATION);
   const [focusedRow, setFocusedRow] = useState(2);
   const [focusedCol, setFocusedCol] = useState(1);
-  const [currentTime, setCurrentTime] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekTime, setSeekTime] = useState(0);
   const [skipHovered, setSkipHovered] = useState(false);
@@ -492,6 +491,17 @@ const VideotekaPlayer = ({
   const fontFocusIdxRef = useRef(0);
   const currentTimeRef = useRef(0);
   const totalDurationRef = useRef(TOTAL_DURATION);
+  const progressFillRef = useRef<HTMLDivElement | null>(null);
+  const elapsedTextRef = useRef<HTMLSpanElement | null>(null);
+  const remainingTextRef = useRef<HTMLDivElement | null>(null);
+
+  const updateProgressDom = useCallback((time: number, duration = totalDurationRef.current) => {
+    const safeDuration = duration > 0 ? duration : TOTAL_DURATION;
+    const clamped = Math.max(0, Math.min(time, safeDuration));
+    if (elapsedTextRef.current) elapsedTextRef.current.textContent = formatTime(clamped);
+    if (remainingTextRef.current) remainingTextRef.current.textContent = formatTime(Math.max(0, safeDuration - clamped));
+    if (progressFillRef.current) progressFillRef.current.style.width = `${(clamped / safeDuration) * 100}%`;
+  }, []);
 
   const openSubtitleModal = (idx: number) => {
     setSubtitleFocusIdx(idx);
