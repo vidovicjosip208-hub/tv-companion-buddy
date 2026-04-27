@@ -373,17 +373,21 @@ const VideotekaPlayer = ({
 
     if (Hls.isSupported() && !isNativeHls) {
       const hls = new Hls({
+        // Offload demuxing/parsing to a Web Worker — frees main thread,
+        // letting the browser dedicate more CPU to GPU-accelerated decoding.
         enableWorker: true,
+        // Progressive parsing pushes media to the decoder as soon as bytes
+        // arrive, smoothing playback on lower-end CPUs (HP laptops, iGPUs).
+        progressive: true,
 
         // ── VOD optimizacija: latencija nije bitna, buffer je sve ──
         lowLatencyMode: false,
         autoStartLoad: true,
 
-        // Veliki buffer — učita puno unaprijed da kratki padovi mreže
-        // ne uzrokuju zastajkivanje. Za film od 2h ovo je razumno.
-        maxBufferLength: 120, // 2 minute buffer
-        maxMaxBufferLength: 600, // maksimalno 10 minuta ako ima memorije
-        maxBufferSize: 300 * 1000 * 1000, // 300 MB
+        // Aggressive buffering targets per spec — survive network dips.
+        maxBufferLength: 60, // target 60s ahead
+        maxMaxBufferLength: 120, // hard cap 120s
+        maxBufferSize: 300 * 1000 * 1000, // 300 MB ceiling
 
         // Čuva zadnjih 60s za smooth backwards seek
         backBufferLength: 60,
@@ -468,6 +472,74 @@ const VideotekaPlayer = ({
       }
     };
   }, [streamUrl, fetchingStream, fetchError, markVideoReady, playInitial]);
+
+  // ── Stall watchdog: if playback stalls > 3s, attempt staged recovery ──
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let lastTime = video.currentTime;
+    let stalledFor = 0;
+    let recoveryStage = 0;
+    let lastRecoveryAt = 0;
+
+    const STALL_MS = 3000;
+    const TICK_MS = 500;
+    const RECOVERY_COOLDOWN_MS = 8000;
+
+    const interval = window.setInterval(() => {
+      if (video.paused || video.ended || video.seeking) {
+        stalledFor = 0;
+        lastTime = video.currentTime;
+        return;
+      }
+
+      if (Math.abs(video.currentTime - lastTime) < 0.05) {
+        stalledFor += TICK_MS;
+      } else {
+        stalledFor = 0;
+        recoveryStage = 0;
+        lastTime = video.currentTime;
+        return;
+      }
+
+      if (stalledFor < STALL_MS) return;
+      const now = performance.now();
+      if (now - lastRecoveryAt < RECOVERY_COOLDOWN_MS) return;
+      lastRecoveryAt = now;
+
+      const hls = hlsRef.current;
+      try {
+        if (recoveryStage === 0) {
+          // Stage 1: nudge past the stall point
+          video.currentTime = video.currentTime + 0.1;
+          recoveryStage = 1;
+        } else if (recoveryStage === 1 && hls) {
+          // Stage 2: HLS-level media error recovery
+          hls.recoverMediaError();
+          recoveryStage = 2;
+        } else if (hls && streamUrl) {
+          // Stage 3: full re-attach of the media element
+          const resumeAt = video.currentTime;
+          hls.detachMedia();
+          hls.attachMedia(video);
+          hls.once(Hls.Events.MEDIA_ATTACHED, () => {
+            try {
+              video.currentTime = resumeAt;
+              video.play().catch(() => {});
+            } catch {
+              /* noop */
+            }
+          });
+          recoveryStage = 0;
+        }
+      } catch {
+        /* noop */
+      }
+    }, TICK_MS);
+
+    return () => clearInterval(interval);
+  }, [streamUrl]);
 
   // Video event listeners
   useEffect(() => {
