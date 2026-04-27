@@ -1015,14 +1015,8 @@ const VideoPlayer = ({
       style={{ backgroundColor: "#0d0d0d" }}
     >
       <div className="relative w-full h-full overflow-hidden">
-        {(!streamUrl || !videoReady) && (
-          <img
-            src={thumbnail}
-            alt={showTitle}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ zIndex: 0 }}
-          />
-        )}
+        {/* Pure black backdrop while loading — no thumbnail, no HUD, just the spinner */}
+        {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
         {streamUrl && (
           <video
             ref={videoRef}
