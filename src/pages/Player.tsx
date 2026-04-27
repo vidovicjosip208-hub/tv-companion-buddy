@@ -32,10 +32,15 @@ const Player = () => {
 
   const handleSwitchChannel = (next: PlayerData) => {
     const ch = channels.find((c) => c.name === next.channelName);
+    console.log("[Player] Switching to favorite:", next.channelName, "found:", !!ch, "stream:", ch?.stream_url);
+    if (!ch?.stream_url) {
+      console.warn("[Player] No stream_url for favorite:", next.channelName, "(channels loaded:", channels.length, ")");
+      return;
+    }
     const params = new URLSearchParams();
-    if (next.channelName) params.set("channel", next.channelName);
-    if (ch?.stream_url) params.set("stream", ch.stream_url);
-    if (next.showTitle) params.set("title", next.showTitle);
+    params.set("channel", next.channelName);
+    params.set("stream", ch.stream_url);
+    params.set("title", next.showTitle || next.channelName);
     navigate(`/player?${params.toString()}`, { replace: true });
   };
 
