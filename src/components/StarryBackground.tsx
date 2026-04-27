@@ -10,6 +10,27 @@ const StarryBackground = () => {
     if (!ctx) return;
 
     let animationId: number;
+    let paused = false;
+
+    // Pause heavy canvas animation whenever a <video> is actively playing
+    // anywhere in the document. The starfield is invisible behind the player
+    // and would otherwise compete with the video decoder for CPU/GPU.
+    const checkVideoActive = () => {
+      const videos = document.querySelectorAll("video");
+      for (const v of Array.from(videos)) {
+        if (!v.paused && !v.ended && v.readyState > 2) return true;
+      }
+      return false;
+    };
+
+    const updatePauseState = () => {
+      paused = checkVideoActive();
+    };
+
+    const pollId = window.setInterval(updatePauseState, 1000);
+    document.addEventListener("play", updatePauseState, true);
+    document.addEventListener("pause", updatePauseState, true);
+    document.addEventListener("ended", updatePauseState, true);
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -218,6 +239,13 @@ const StarryBackground = () => {
     };
 
     const animate = () => {
+      if (paused) {
+        // Skip all drawing while a video is active. Keep the loop alive but
+        // cheap so we resume instantly when the video stops.
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
+
       time += 0.016;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -260,6 +288,10 @@ const StarryBackground = () => {
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", resize);
+      window.clearInterval(pollId);
+      document.removeEventListener("play", updatePauseState, true);
+      document.removeEventListener("pause", updatePauseState, true);
+      document.removeEventListener("ended", updatePauseState, true);
     };
   }, []);
 
