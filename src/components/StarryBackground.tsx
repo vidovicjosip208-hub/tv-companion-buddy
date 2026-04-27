@@ -239,6 +239,13 @@ const StarryBackground = () => {
     };
 
     const animate = () => {
+      if (paused) {
+        // Skip all drawing while a video is active. Keep the loop alive but
+        // cheap so we resume instantly when the video stops.
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
+
       time += 0.016;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -281,6 +288,10 @@ const StarryBackground = () => {
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", resize);
+      window.clearInterval(pollId);
+      document.removeEventListener("play", updatePauseState, true);
+      document.removeEventListener("pause", updatePauseState, true);
+      document.removeEventListener("ended", updatePauseState, true);
     };
   }, []);
 
