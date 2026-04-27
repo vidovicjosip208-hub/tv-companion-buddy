@@ -2,11 +2,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
-import videojs from "video.js";
-import type Player from "video.js/dist/types/player";
-import "video.js/dist/video-js.css";
-import "videojs-contrib-quality-levels";
-import "videojs-hls-quality-selector";
 
 // Detect HEVC (H.265) decoding support — most 4K IPTV streams use HEVC.
 const supportsHEVC = (): boolean => {
@@ -179,6 +174,7 @@ const sidebarChannels: SidebarChannel[] = [
 
 const AUTO_HIDE_MS = 4500;
 const GOLD = "#F5C518";
+const ZERO_UI_VIDEO_TEST = true;
 
 const isFutureShow = (timeRange: string, day: string): boolean => {
   const now = new Date();
@@ -509,7 +505,6 @@ const VideoPlayer = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const playerRef = useRef<Player | null>(null);
   const spinnerRef = useRef<HTMLDivElement>(null);
   const [videoReady, setVideoReady] = useState(false);
 
@@ -542,8 +537,6 @@ const VideoPlayer = ({
       try {
         video.muted = false;
         video.volume = 1;
-        playerRef.current?.muted(false);
-        playerRef.current?.volume(1);
       } catch (e) {
         // If browser blocks unmuted autoplay, stay muted; user can interact to enable sound.
       }
@@ -553,8 +546,6 @@ const VideoPlayer = ({
       try {
         video.muted = false;
         video.volume = 1;
-        playerRef.current?.muted(false);
-        playerRef.current?.volume(1);
       } catch {
         /* noop */
       }
@@ -568,67 +559,39 @@ const VideoPlayer = ({
     video.addEventListener("stalled", showSpinner);
     video.addEventListener("canplay", hideSpinner);
 
-    // Initialize Video.js on the existing <video> element (UI + plugins).
-    const player = videojs(video, {
-      controls: false,
-      autoplay: true,
-      muted: true,
-      preload: "auto",
-      fluid: false,
-      html5: {
-        vhs: { overrideNative: false },
-      },
-    });
-    playerRef.current = player;
-
     let hls: Hls | null = null;
     let recoverAttempts = 0;
-
-    const wireQualitySelector = (levels: { height?: number; bitrate: number }[]) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const qlPlugin = (player as any).qualityLevels?.();
-      if (!qlPlugin) return;
-      levels.forEach((lvl, index) => {
-        qlPlugin.addQualityLevel({
-          id: String(index),
-          width: undefined,
-          height: lvl.height,
-          bitrate: lvl.bitrate,
-          enabled_(enabled?: boolean) {
-            if (typeof enabled === "boolean" && hls) {
-              hls.currentLevel = enabled ? index : -1;
-            }
-            return hls ? hls.currentLevel === index || hls.currentLevel === -1 : true;
-          },
-        });
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (player as any).hlsQualitySelector?.({ displayCurrentQuality: true });
-    };
 
     if (Hls.isSupported()) {
       hls = new Hls({
         enableWorker: true,
-        lowLatencyMode: true,
+        forceVideoHWAcceleration: true,
+        lowLatencyMode: false,
         backBufferLength: 60,
-        liveSyncDurationCount: 3,
-        liveMaxLatencyDurationCount: 10,
-        maxBufferLength: 30,
+        maxBufferLength: 60,
+        maxMaxBufferLength: 120,
+        maxBufferSize: 300 * 1000 * 1000,
         manifestLoadingMaxRetry: 10,
         levelLoadingMaxRetry: 10,
+        fragLoadingMaxRetry: 12,
+        fragLoadingTimeOut: 30000,
         capLevelToPlayerSize: false,
-      });
+      } as ConstructorParameters<typeof Hls>[0] & { forceVideoHWAcceleration: boolean });
       hlsRef.current = hls;
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
-        const usableLevels = data.levels.filter((lvl) => {
-          const codecs = (lvl.videoCodec || "").toLowerCase();
-          const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
-          return isHevc ? hevcOk : true;
-        });
-        wireQualitySelector(usableLevels);
+        const supportedLevels = data.levels
+          .map((lvl, index) => ({ lvl, index }))
+          .filter(({ lvl }) => {
+            const codecs = (lvl.videoCodec || "").toLowerCase();
+            const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
+            return isHevc ? hevcOk : true;
+          });
+        if (supportedLevels.length && supportedLevels.length < data.levels.length && hls) {
+          hls.autoLevelCapping = supportedLevels[supportedLevels.length - 1].index;
+        }
         video.play().catch(() => {});
       });
 
@@ -680,10 +643,6 @@ const VideoPlayer = ({
       if (hls) {
         hls.destroy();
         hlsRef.current = null;
-      }
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
       }
     };
   }, [streamUrl]);
