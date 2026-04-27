@@ -19,6 +19,7 @@ export interface EPGChannel {
   number: number;
   name: string;
   abbreviation: string;
+  logoUrl?: string | null;
   streamUrl?: string;
   category?: string;
   programs: EPGProgram[];
