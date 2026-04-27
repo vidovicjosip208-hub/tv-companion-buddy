@@ -1104,7 +1104,7 @@ const VideoPlayer = ({
         </AnimatePresence>
 
         <AnimatePresence>
-          {showHud && (
+          {videoReady && showHud && (
             <motion.div
               key="hud"
               initial={{ opacity: 0, y: 50 }}
