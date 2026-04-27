@@ -473,6 +473,74 @@ const VideotekaPlayer = ({
     };
   }, [streamUrl, fetchingStream, fetchError, markVideoReady, playInitial]);
 
+  // ── Stall watchdog: if playback stalls > 3s, attempt staged recovery ──
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let lastTime = video.currentTime;
+    let stalledFor = 0;
+    let recoveryStage = 0;
+    let lastRecoveryAt = 0;
+
+    const STALL_MS = 3000;
+    const TICK_MS = 500;
+    const RECOVERY_COOLDOWN_MS = 8000;
+
+    const interval = window.setInterval(() => {
+      if (video.paused || video.ended || video.seeking) {
+        stalledFor = 0;
+        lastTime = video.currentTime;
+        return;
+      }
+
+      if (Math.abs(video.currentTime - lastTime) < 0.05) {
+        stalledFor += TICK_MS;
+      } else {
+        stalledFor = 0;
+        recoveryStage = 0;
+        lastTime = video.currentTime;
+        return;
+      }
+
+      if (stalledFor < STALL_MS) return;
+      const now = performance.now();
+      if (now - lastRecoveryAt < RECOVERY_COOLDOWN_MS) return;
+      lastRecoveryAt = now;
+
+      const hls = hlsRef.current;
+      try {
+        if (recoveryStage === 0) {
+          // Stage 1: nudge past the stall point
+          video.currentTime = video.currentTime + 0.1;
+          recoveryStage = 1;
+        } else if (recoveryStage === 1 && hls) {
+          // Stage 2: HLS-level media error recovery
+          hls.recoverMediaError();
+          recoveryStage = 2;
+        } else if (hls && streamUrl) {
+          // Stage 3: full re-attach of the media element
+          const resumeAt = video.currentTime;
+          hls.detachMedia();
+          hls.attachMedia(video);
+          hls.once(Hls.Events.MEDIA_ATTACHED, () => {
+            try {
+              video.currentTime = resumeAt;
+              video.play().catch(() => {});
+            } catch {
+              /* noop */
+            }
+          });
+          recoveryStage = 0;
+        }
+      } catch {
+        /* noop */
+      }
+    }, TICK_MS);
+
+    return () => clearInterval(interval);
+  }, [streamUrl]);
+
   // Video event listeners
   useEffect(() => {
     const video = videoRef.current;
