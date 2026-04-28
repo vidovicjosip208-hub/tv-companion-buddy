@@ -22,8 +22,7 @@ const Player = () => {
         return {
           number: idx + 1,
           channelName: favName,
-          // Koristimo ime kanala kao showTitle jer nemamo live EPG podatke
-          showTitle: ch?.current_show ?? favName,
+          showTitle: favName,
           timeRange: "00:00 - 00:00",
           thumbnail: ch?.thumbnail_url || ch?.logo_url || "",
           // stream_url se sprema direktno ovdje — ne tražimo ga ponovo u handleSwitchChannel
