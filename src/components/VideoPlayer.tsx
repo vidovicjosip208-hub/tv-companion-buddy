@@ -887,13 +887,11 @@ const VideoPlayer = ({
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
-            // FIX: kružna navigacija — wrapa na zadnji kad je na prvom
             setVerticalIndex((p) => (p - 1 + sidebarChannels.length) % sidebarChannels.length);
             resetHideTimer();
             return;
           case "ArrowDown":
             e.preventDefault();
-            // FIX: kružna navigacija — wrapa na prvi kad je na zadnjem
             setVerticalIndex((p) => (p + 1) % sidebarChannels.length);
             resetHideTimer();
             return;
@@ -1008,9 +1006,6 @@ const VideoPlayer = ({
 
   if (!isVisible) return null;
 
-  // FIX: activeCh uvijek koristi sidebarFocus (aktivni kanal),
-  // ne verticalIndex (kanal na koji se navigira u sidebaru).
-  // Ovo sprječava duplikat kartica dok je sidebar otvoren.
   const sidebarActiveCh = sidebarChannels[sidebarFocus];
   const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
   const activeCh: SidebarChannel = {
@@ -1201,24 +1196,49 @@ const VideoPlayer = ({
                   className="relative flex items-center pt-3 pb-3"
                   style={{ backgroundColor: epgMode ? "rgba(10,10,10,0.46)" : "rgba(10,10,10,0.78)" }}
                 >
-                  <div className="ml-4 flex-shrink-0">
-                    <ChannelCard
-                      ch={activeCh}
-                      isActive={true}
-                      isFocused={focusedControl === -1}
-                      width={CARD_W}
-                      showArrows
-                      logoUrl={data?.logoUrl ?? null}
-                      onClick={() => {
-                        if (sidebarOpen) {
-                          setSidebarFocus(verticalIndex);
-                          closeSidebar();
-                        } else {
-                          openSidebar();
-                        }
+                  {/* FIX: Kompaktni sidebar toggle gumb umjesto duplirane ChannelCard s strelicama */}
+                  <button
+                    className="ml-4 flex-shrink-0 flex flex-col items-center justify-center rounded"
+                    style={{
+                      width: 44,
+                      height: 44,
+                      backgroundColor: focusedControl === -1 ? `rgba(245,197,24,0.18)` : "rgba(255,255,255,0.06)",
+                      border: focusedControl === -1 ? `1.5px solid ${GOLD}` : "1px solid rgba(255,255,255,0.12)",
+                      cursor: "pointer",
+                      transition: "all 0.18s",
+                      outline: "none",
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      if (sidebarOpen) {
+                        setSidebarFocus(verticalIndex);
+                        closeSidebar();
+                      } else {
+                        openSidebar();
+                      }
+                    }}
+                  >
+                    <Tv
+                      style={{
+                        width: 18,
+                        height: 18,
+                        color: focusedControl === -1 ? GOLD : "rgba(255,255,255,0.6)",
+                        transition: "color 0.18s",
                       }}
                     />
-                  </div>
+                    <span
+                      style={{
+                        fontSize: 9,
+                        color: focusedControl === -1 ? GOLD : "rgba(255,255,255,0.4)",
+                        marginTop: 2,
+                        fontWeight: 600,
+                        letterSpacing: "0.05em",
+                        transition: "color 0.18s",
+                      }}
+                    >
+                      CH
+                    </span>
+                  </button>
 
                   <div className="flex items-center gap-3 ml-5 min-w-0 flex-1">
                     <span className="text-sm font-mono flex-shrink-0" style={{ color: "rgba(255,255,255,0.5)" }}>
