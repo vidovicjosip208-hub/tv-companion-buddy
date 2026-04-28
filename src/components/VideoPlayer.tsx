@@ -1201,24 +1201,7 @@ const VideoPlayer = ({
                   className="relative flex items-center pt-3 pb-3"
                   style={{ backgroundColor: epgMode ? "rgba(10,10,10,0.46)" : "rgba(10,10,10,0.78)" }}
                 >
-                  <div className="ml-4 flex-shrink-0">
-                    <ChannelCard
-                      ch={activeCh}
-                      isActive={true}
-                      isFocused={focusedControl === -1}
-                      width={CARD_W}
-                      showArrows
-                      logoUrl={data?.logoUrl ?? null}
-                      onClick={() => {
-                        if (sidebarOpen) {
-                          setSidebarFocus(verticalIndex);
-                          closeSidebar();
-                        } else {
-                          openSidebar();
-                        }
-                      }}
-                    />
-                  </div>
+                  {/* ChannelCard s showArrows uklonjena — više ne preklapa sidebar kartice */}
 
                   <div className="flex items-center gap-3 ml-5 min-w-0 flex-1">
                     <span className="text-sm font-mono flex-shrink-0" style={{ color: "rgba(255,255,255,0.5)" }}>
