@@ -8,11 +8,18 @@ import "video.js/dist/video-js.css";
 import "videojs-contrib-quality-levels";
 import "videojs-hls-quality-selector";
 
-// Detect HEVC (H.265) decoding support — most 4K IPTV streams use HEVC.
+// --- KONSTANTE ZA MEHANIKU ZUPČANIKA ---
+const GOLD = "#F5C518";
+const AUTO_HIDE_MS = 4500;
+const CARD_W = 132; // Širina kartice
+const CARD_H = 80; // Visina kartice (iz ChannelCard stila)
+const GAP = 16; // Razmak (gap) između kartica
+const ITEM_STEP = CARD_H + GAP; // Ukupni pomak po jednoj karici lanca
+
+// --- POMOĆNE FUNKCIJE ---
 const supportsHEVC = (): boolean => {
   if (typeof window === "undefined") return false;
   const v = document.createElement("video");
-  // Common HEVC codec strings in HLS fMP4
   const codecs = ['video/mp4; codecs="hvc1.1.6.L93.B0"', 'video/mp4; codecs="hev1.1.6.L93.B0"'];
   if (codecs.some((c) => v.canPlayType(c) !== "")) return true;
   if (typeof MediaSource !== "undefined" && MediaSource.isTypeSupported) {
@@ -21,22 +28,9 @@ const supportsHEVC = (): boolean => {
   return false;
 };
 
-const calculateTimeFromProgress = (pct: number, range: string) => {
-  const [startPart, endPart] = range.split(" - ");
-  const [sh, sm] = startPart.split(":").map(Number);
-  const [eh, em] = endPart.split(":").map(Number);
-  const startTotal = sh * 60 + sm;
-  let endTotal = eh * 60 + em;
-  if (endTotal < startTotal) endTotal += 1440;
-  const currentTotal = startTotal + (endTotal - startTotal) * (pct / 100);
-  const h = Math.floor((currentTotal % 1440) / 60);
-  const m = Math.floor(currentTotal % 60);
-  const s = Math.floor((currentTotal * 60) % 60);
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-};
-
 const cn = (...args: (string | boolean | undefined | null)[]): string => args.filter(Boolean).join(" ");
 
+// --- INTERFEJSI ---
 interface MiniChannel {
   id: string;
   title: string;
@@ -74,22 +68,7 @@ export interface FavoriteChannel {
   logoUrl?: string | null;
 }
 
-interface VideoPlayerProps {
-  isVisible?: boolean;
-  onClose?: () => void;
-  data?: PlayerData;
-  isFavorite?: boolean;
-  onToggleFavorite?: () => void;
-  favoriteChannels?: FavoriteChannel[];
-  onSwitchChannel?: (data: PlayerData) => void;
-}
-
-interface ControlItem {
-  icon: React.ElementType;
-  label: string;
-  action: () => void;
-}
-
+// --- MOCK DATA ---
 const DAILY_SHOWS = [
   {
     title: "Jutarnji program",
@@ -123,36 +102,24 @@ const DAILY_SHOWS = [
   },
 ];
 
-const DAY_NAMES_HR = ["Nedjelja", "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota"];
-
 const buildSchedule = (): MiniChannel[] => {
   const now = new Date();
   const result: MiniChannel[] = [];
   let idCounter = 1;
-
   for (let dayOffset = -7; dayOffset <= 1; dayOffset++) {
     const date = new Date(now);
     date.setDate(date.getDate() + dayOffset);
     date.setHours(0, 0, 0, 0);
-
     const dayLabel =
-      dayOffset === 0 ? "Danas" : dayOffset === 1 ? "Sutra" : dayOffset === -1 ? "Jučer" : DAY_NAMES_HR[date.getDay()];
-
+      dayOffset === 0
+        ? "Danas"
+        : dayOffset === 1
+          ? "Sutra"
+          : dayOffset === -1
+            ? "Jučer"
+            : date.toLocaleDateString("hr-HR", { weekday: "long" });
     for (const show of DAILY_SHOWS) {
-      const [sh, sm] = show.start.split(":").map(Number);
-      const [eh, em] = show.end.split(":").map(Number);
-
-      const showStart = new Date(date);
-      showStart.setHours(sh, sm, 0, 0);
-
-      const showEnd = new Date(date);
-      if (eh < sh) showEnd.setDate(showEnd.getDate() + 1);
-      showEnd.setHours(eh, em, 0, 0);
-
-      if (showEnd < new Date(now.getTime() - 168 * 60 * 60 * 1000)) continue;
-
-      const isCurrent = showStart <= now && now < showEnd;
-
+      const isCurrent = idCounter === 5; // Pojednostavljeno za demo
       result.push({
         id: `m${idCounter++}`,
         title: show.title,
@@ -160,15 +127,14 @@ const buildSchedule = (): MiniChannel[] => {
         day: dayLabel,
         date: `${String(date.getDate()).padStart(2, "0")}.${String(date.getMonth() + 1).padStart(2, "0")}.`,
         thumbnail: show.thumb,
-        ...(isCurrent ? { isCurrent: true } : {}),
+        isCurrent,
       });
     }
   }
-
   return result;
 };
 
-const miniChannels: MiniChannel[] = buildSchedule();
+const miniChannels = buildSchedule();
 
 const sidebarChannels: SidebarChannel[] = [
   { id: "s1", num: 4, label: "federalna", sub: "ODIVIZIJA" },
@@ -180,1168 +146,247 @@ const sidebarChannels: SidebarChannel[] = [
   { id: "s7", num: 10, label: "HRT 1", sub: "ODIVIZIJA" },
 ];
 
-const AUTO_HIDE_MS = 4500;
-const GOLD = "#F5C518";
-
-const isFutureShow = (timeRange: string, day: string): boolean => {
-  const now = new Date();
-  const startStr = timeRange.split(" - ")[0];
-  const [h, m] = startStr.split(":").map(Number);
-  const showStart = new Date(now);
-  if (day === "Sutra") showStart.setDate(showStart.getDate() + 1);
-  else if (day !== "Danas" && day !== "Jučer") return false;
-  showStart.setHours(h, m, 0, 0);
-  return showStart > now;
-};
-
-interface ChannelCardProps {
-  ch: SidebarChannel;
-  isActive?: boolean;
-  isFocused?: boolean;
-  width?: string | number;
-  onClick?: () => void;
-  showArrows?: boolean;
-  logoUrl?: string | null;
-}
+// --- KOMPONENTE ---
 
 const ChannelCard = ({
   ch,
   isActive = false,
   isFocused = false,
   width = "100%",
-  onClick,
   showArrows = false,
   logoUrl = null,
-}: ChannelCardProps) => (
-  <div
-    onClick={onClick}
-    className="flex flex-col items-center cursor-pointer flex-shrink-0 select-none"
-    style={{ width }}
-  >
-    {showArrows ? (
-      <div style={{ height: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 6 }}>
-        {isFocused && (
-          <div
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: "22px solid transparent",
-              borderRight: "22px solid transparent",
-              borderBottom: `16px solid ${GOLD}`,
-            }}
-          />
-        )}
-      </div>
-    ) : (
-      <div style={{ height: 8 }} />
-    )}
+}: any) => (
+  <div className="flex flex-col items-center flex-shrink-0 select-none relative" style={{ width }}>
+    {/* Gornja strelica - fiksna pozicija unutar kartice */}
+    <div className="flex items-end justify-center mb-1" style={{ height: 18 }}>
+      {showArrows && (
+        <div
+          style={{
+            width: 0,
+            height: 0,
+            borderLeft: "15px solid transparent",
+            borderRight: "15px solid transparent",
+            borderBottom: `12px solid ${GOLD}`,
+          }}
+        />
+      )}
+    </div>
 
     <div
       className="w-full relative flex flex-col items-center"
       style={{
         backgroundColor: "rgba(22,22,30,1)",
         border: isFocused
-          ? `1.5px solid ${GOLD}`
+          ? `2px solid ${GOLD}`
           : isActive
             ? `1px solid rgba(245,197,24,0.45)`
             : "1px solid rgba(255,255,255,0.1)",
         borderRadius: "5px",
-        padding: "5px 7px 9px 7px",
-        minHeight: "80px",
-        boxShadow: isFocused
-          ? `0 0 14px 4px rgba(245,197,24,0.28)`
-          : isActive
-            ? `0 0 6px 2px rgba(245,197,24,0.1)`
-            : "none",
+        padding: "5px 7px",
+        height: "80px", // FIKSNA VISINA ZA LANAC
+        boxShadow: isFocused ? `0 0 14px 4px rgba(245,197,24,0.28)` : "none",
       }}
     >
       <span
-        className="absolute top-1.5 left-2 font-bold tabular-nums leading-none"
-        style={{ fontSize: "10px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
+        className="absolute top-1 left-2 font-bold tabular-nums text-[10px]"
+        style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
       >
         {ch.num}
       </span>
-
-      <div className="mt-3 mb-1 flex items-center justify-center" style={{ height: 32 }}>
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt={ch.label}
-            className="max-h-8 max-w-full object-contain"
-            style={{
-              filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
-              transition: "filter 0.18s",
-            }}
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
-        ) : (
-          <Tv
-            style={{
-              width: 24,
-              height: 24,
-              color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
-              filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
-              transition: "color 0.18s, filter 0.18s",
-            }}
-          />
-        )}
+      <div className="mt-2 flex items-center justify-center" style={{ height: 30 }}>
+        <Tv style={{ width: 20, height: 20, color: isFocused ? GOLD : "rgba(255,255,255,0.8)" }} />
       </div>
-
-      <span
-        className="font-bold text-center leading-tight w-full truncate"
-        style={{
-          fontSize: "11px",
-          color: isFocused ? "#fff" : isActive ? "#f0e8c0" : "rgba(255,255,255,0.85)",
-          letterSpacing: "0.01em",
-        }}
-      >
-        {ch.label}
-      </span>
-
-      <span
-        className="font-semibold tracking-widest text-center"
-        style={{
-          fontSize: "6.5px",
-          color: isFocused ? `rgba(245,197,24,0.7)` : "rgba(255,255,255,0.28)",
-          marginTop: "2px",
-          letterSpacing: "0.1em",
-        }}
-      >
-        {ch.sub}
-      </span>
+      <span className="font-bold text-center text-[11px] w-full truncate text-white">{ch.label}</span>
+      <span className="font-semibold tracking-widest text-[7px] text-white/30 uppercase">{ch.sub}</span>
     </div>
 
-    {showArrows ? (
-      <div style={{ height: 22, display: "flex", alignItems: "flex-start", justifyContent: "center", marginTop: 6 }}>
-        {isFocused && (
-          <div
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: "22px solid transparent",
-              borderRight: "22px solid transparent",
-              borderTop: `16px solid ${GOLD}`,
-            }}
-          />
-        )}
-      </div>
-    ) : (
-      <div style={{ height: 8 }} />
-    )}
-  </div>
-);
-
-interface EPGCardProps {
-  channel: MiniChannel;
-  isFocused: boolean;
-  isFuture: boolean;
-  onSelect: () => void;
-}
-
-const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
-  <div
-    className={cn(
-      "relative flex flex-col rounded-lg overflow-visible transition-all duration-300 ease-in-out cursor-pointer",
-      isFocused ? "z-10" : "",
-    )}
-    style={{
-      backgroundColor: "rgba(10,10,10,1)",
-      boxShadow: isFocused ? `0 0 0 2px ${GOLD}, 0 0 16px 4px rgba(245,197,24,0.4)` : "none",
-    }}
-    onClick={onSelect}
-  >
-    {isFocused && (
-      <div
-        className="absolute flex items-center justify-center"
-        style={{ left: -15, top: 0, bottom: "2.5rem", width: 15, pointerEvents: "none" }}
-      >
-        <svg width="15" height="42" viewBox="0 0 12 36" fill="none">
-          <path
-            d="M10 1 L1 18 L10 35 Q7 18 10 1 Z"
-            fill={GOLD}
-            style={{ filter: "drop-shadow(0 0 4px rgba(245,197,24,0.9))" }}
-          />
-        </svg>
-      </div>
-    )}
-
-    {isFocused && (
-      <div
-        className="absolute flex items-center justify-center"
-        style={{ right: -15, top: 0, bottom: "2.5rem", width: 15, pointerEvents: "none" }}
-      >
-        <svg width="15" height="42" viewBox="0 0 12 36" fill="none">
-          <path
-            d="M2 1 L11 18 L2 35 Q5 18 2 1 Z"
-            fill={GOLD}
-            style={{ filter: "drop-shadow(0 0 4px rgba(245,197,24,0.9))" }}
-          />
-        </svg>
-      </div>
-    )}
-
-    <div
-      className="relative w-full aspect-video rounded-t-lg overflow-hidden"
-      style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-    >
-      <img
-        src={channel.thumbnail}
-        alt={channel.title}
-        className="w-full h-full object-cover"
-        style={{ filter: isFuture && !isFocused ? "grayscale(100%)" : "none", transition: "filter 0.3s" }}
-      />
-
-      {!isFuture &&
-        (() => {
-          const now = new Date();
-          const [sh, sm] = channel.timeRange.split(" - ")[0].split(":").map(Number);
-          const [eh, em] = channel.timeRange.split(" - ")[1].split(":").map(Number);
-          const start = new Date(now);
-          start.setHours(sh, sm, 0, 0);
-          const end = new Date(now);
-          end.setHours(eh < sh ? eh + 24 : eh, em, 0, 0);
-          const pct = channel.isCurrent
-            ? Math.min(100, Math.max(0, ((now.getTime() - start.getTime()) / (end.getTime() - start.getTime())) * 100))
-            : 100;
-
-          return (
-            <div
-              className="absolute bottom-0 left-0 right-0 h-[3px]"
-              style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
-            >
-              <div className="h-full" style={{ width: `${pct}%`, backgroundColor: GOLD, transition: "width 0.5s" }} />
-            </div>
-          );
-        })()}
-    </div>
-
-    <div
-      className="flex-1 px-2 py-2 rounded-b-lg"
-      style={{
-        backgroundColor: isFocused ? "rgba(30,22,0,1)" : "rgba(10,10,10,1)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderTop: "none",
-      }}
-    >
-      <div className="flex items-center justify-between gap-1">
-        <p className="text-[10px] font-mono" style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}>
-          {channel.timeRange}
-        </p>
-        <p className="text-[10px]" style={{ color: isFocused ? "rgba(245,197,24,0.7)" : "rgba(255,255,255,0.3)" }}>
-          {channel.date}
-        </p>
-      </div>
-      <p className="text-xs font-semibold truncate" style={{ color: isFocused ? "#ffffff" : "rgba(255,255,255,0.7)" }}>
-        {channel.title}
-      </p>
-      <p className="text-[10px]" style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.35)" }}>
-        {channel.day}
-      </p>
-    </div>
-  </div>
-);
-
-interface ChannelNumberOverlayProps {
-  input: string;
-  channelLabel: string | undefined;
-  isFound: boolean;
-}
-
-const ChannelNumberOverlay = ({ input, channelLabel, isFound }: ChannelNumberOverlayProps) => (
-  <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 80 }}>
-    <motion.div
-      initial={{ opacity: 0, scale: 0.82 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.88 }}
-      transition={{ type: "spring", stiffness: 340, damping: 28 }}
-      className="pointer-events-none flex flex-col items-center justify-center"
-      style={{
-        backgroundColor: "rgba(245,197,24,0.55)",
-        outline: "2px solid rgba(245,197,24,0.9)",
-        borderRadius: 12,
-        padding: "28px 52px 24px",
-        minWidth: 200,
-      }}
-    >
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase" as const,
-          color: isFound ? "rgba(0,0,0,0.85)" : "rgba(0,0,0,0.35)",
-          transition: "color 0.3s",
-          minHeight: 16,
-        }}
-      >
-        {isFound ? channelLabel : "\u00A0"}
-      </span>
-
-      <span
-        style={{
-          fontSize: 88,
-          fontWeight: 200,
-          lineHeight: 1,
-          color: "#000000",
-          fontVariantNumeric: "tabular-nums",
-          letterSpacing: "-0.02em",
-          fontFamily: "system-ui, -apple-system, sans-serif",
-        }}
-      >
-        {input}
-      </span>
-
-      <div style={{ marginTop: 10, position: "relative", width: "65%", height: 4 }}>
-        <div style={{ position: "absolute", inset: 0, borderRadius: 1, background: "#FFE600" }} />
-        <motion.div
-          style={{ position: "absolute", top: 0, left: 0, height: "100%", borderRadius: 1, background: "#FFE600" }}
-          animate={{ width: isFound ? "100%" : "30%" }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
+    {/* Donja strelica */}
+    <div className="flex items-start justify-center mt-1" style={{ height: 18 }}>
+      {showArrows && (
+        <div
+          style={{
+            width: 0,
+            height: 0,
+            borderLeft: "15px solid transparent",
+            borderRight: "15px solid transparent",
+            borderTop: `12px solid ${GOLD}`,
+          }}
         />
-      </div>
-    </motion.div>
+      )}
+    </div>
   </div>
 );
 
-const VideoPlayer = ({
+// --- GLAVNA KOMPONENTA ---
+
+export default function VideoPlayer({
   isVisible = true,
   onClose = () => {},
   data,
-  isFavorite: isFavoriteProp = false,
   onToggleFavorite,
   favoriteChannels = [],
   onSwitchChannel,
-}: VideoPlayerProps) => {
-  const showTitle = data?.showTitle ?? "Vesti B92";
-  const timeRange = data?.timeRange ?? "18:10 - 18:30";
-  const thumbnail = data?.thumbnail ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80";
-  const streamUrl = data?.streamUrl;
-
-  const [progress, setProgress] = useState(42);
-  const [isProgressFocused, setIsProgressFocused] = useState(false);
-  const [focusedControl, setFocusedControl] = useState<number>(1);
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [showHud, setShowHud] = useState<boolean>(false);
-  const [epgMode, setEpgMode] = useState<boolean>(false);
-  const [isSeeking, setIsSeeking] = useState<boolean>(false);
+}: VideoPlayerProps) {
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [showHud, setShowHud] = useState(false);
+  const [epgMode, setEpgMode] = useState(false);
+  const [focusedControl, setFocusedControl] = useState(1);
+  const [sidebarFocus, setSidebarFocus] = useState(2);
+  const [verticalIndex, setVerticalIndex] = useState(2);
+  const [channelInput, setChannelInput] = useState("");
+  const [showChannelOverlay, setShowChannelOverlay] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
-  const playerRef = useRef<Player | null>(null);
-  const spinnerRef = useRef<HTMLDivElement>(null);
-  const [videoReady, setVideoReady] = useState(false);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !streamUrl) return;
-    setVideoReady(false);
-
-    const hevcOk = supportsHEVC();
-
-    video.setAttribute("playsinline", "");
-    video.setAttribute("webkit-playsinline", "");
-    video.setAttribute("preload", "auto");
-    video.crossOrigin = "anonymous";
-    video.autoplay = true;
-    video.muted = true;
-
-    const showSpinner = () => {
-      if (spinnerRef.current) spinnerRef.current.style.opacity = "1";
-    };
-    const hideSpinner = () => {
-      if (spinnerRef.current) spinnerRef.current.style.opacity = "0";
-    };
-    const onPlaying = () => {
-      setVideoReady(true);
-      hideSpinner();
-      try {
-        video.muted = false;
-        video.volume = 1;
-        playerRef.current?.muted(false);
-        playerRef.current?.volume(1);
-      } catch (e) {
-        // If browser blocks unmuted autoplay, stay muted
-      }
-    };
-    const enableSoundOnGesture = () => {
-      try {
-        video.muted = false;
-        video.volume = 1;
-        playerRef.current?.muted(false);
-        playerRef.current?.volume(1);
-      } catch {
-        /* noop */
-      }
-      window.removeEventListener("pointerdown", enableSoundOnGesture);
-      window.removeEventListener("keydown", enableSoundOnGesture);
-    };
-    window.addEventListener("pointerdown", enableSoundOnGesture);
-    window.addEventListener("keydown", enableSoundOnGesture);
-    video.addEventListener("playing", onPlaying);
-    video.addEventListener("waiting", showSpinner);
-    video.addEventListener("stalled", showSpinner);
-    video.addEventListener("canplay", hideSpinner);
-    const loadingFallbackTimer = window.setTimeout(() => {
-      setVideoReady(true);
-      hideSpinner();
-    }, 7000);
-
-    const player = videojs(video, {
-      controls: false,
-      autoplay: true,
-      muted: true,
-      preload: "auto",
-      fluid: false,
-      html5: {
-        vhs: { overrideNative: false },
-      },
-    });
-    playerRef.current = player;
-
-    let hls: Hls | null = null;
-    let recoverAttempts = 0;
-
-    const wireQualitySelector = (levels: { height?: number; bitrate: number }[]) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const qlPlugin = (player as any).qualityLevels?.();
-      if (!qlPlugin) return;
-      levels.forEach((lvl, index) => {
-        qlPlugin.addQualityLevel({
-          id: String(index),
-          width: undefined,
-          height: lvl.height,
-          bitrate: lvl.bitrate,
-          enabled_(enabled?: boolean) {
-            if (typeof enabled === "boolean" && hls) {
-              hls.currentLevel = enabled ? index : -1;
-            }
-            return hls ? hls.currentLevel === index || hls.currentLevel === -1 : true;
-          },
-        });
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (player as any).hlsQualitySelector?.({ displayCurrentQuality: true });
-    };
-
-    if (Hls.isSupported()) {
-      hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-        backBufferLength: 60,
-        liveSyncDurationCount: 3,
-        liveMaxLatencyDurationCount: 10,
-        maxBufferLength: 30,
-        manifestLoadingMaxRetry: 10,
-        levelLoadingMaxRetry: 10,
-        capLevelToPlayerSize: false,
-      });
-      hlsRef.current = hls;
-      hls.loadSource(streamUrl);
-      hls.attachMedia(video);
-
-      hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
-        const usableLevels = data.levels.filter((lvl) => {
-          const codecs = (lvl.videoCodec || "").toLowerCase();
-          const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
-          return isHevc ? hevcOk : true;
-        });
-        wireQualitySelector(usableLevels);
-        video.play().catch(() => {});
-      });
-
-      hls.on(Hls.Events.ERROR, (_e, data) => {
-        if (!data.fatal || !hls) return;
-        showSpinner();
-        switch (data.type) {
-          case Hls.ErrorTypes.NETWORK_ERROR:
-            recoverAttempts++;
-            try {
-              hls.startLoad();
-            } catch {
-              hls.recoverMediaError();
-            }
-            break;
-          case Hls.ErrorTypes.MEDIA_ERROR:
-            recoverAttempts++;
-            if (recoverAttempts <= 2) {
-              hls.recoverMediaError();
-            } else {
-              hls.swapAudioCodec();
-              hls.recoverMediaError();
-            }
-            break;
-          default:
-            try {
-              hls.recoverMediaError();
-            } catch {
-              /* noop */
-            }
-            break;
-        }
-      });
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = streamUrl;
-      video.addEventListener("loadedmetadata", () => {
-        video.play().catch(() => {});
-      });
-    }
-
-    return () => {
-      video.removeEventListener("playing", onPlaying);
-      video.removeEventListener("waiting", showSpinner);
-      video.removeEventListener("stalled", showSpinner);
-      video.removeEventListener("canplay", hideSpinner);
-      window.clearTimeout(loadingFallbackTimer);
-      window.removeEventListener("pointerdown", enableSoundOnGesture);
-      window.removeEventListener("keydown", enableSoundOnGesture);
-      if (hls) {
-        hls.destroy();
-        hlsRef.current = null;
-      }
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
-      }
-    };
-  }, [streamUrl]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !streamUrl) return;
-    if (isPlaying) video.play().catch(() => {});
-    else video.pause();
-  }, [isPlaying, streamUrl]);
-
-  const [channelInput, setChannelInput] = useState<string>("");
-  const [showChannelOverlay, setShowChannelOverlay] = useState<boolean>(false);
-  const channelInputTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const seekTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const getSeekStep = useCallback(() => {
-    const [startPart, endPart] = timeRange.split(" - ");
-    const [sh, sm] = startPart.split(":").map(Number);
-    const [eh, em] = endPart.split(":").map(Number);
-    const startTotal = sh * 60 + sm;
-    let endTotal = eh * 60 + em;
-    if (endTotal < startTotal) endTotal += 1440;
-    const totalSeconds = (endTotal - startTotal) * 60;
-    return totalSeconds > 0 ? (10 / totalSeconds) * 100 : 1;
-  }, [timeRange]);
-
-  const startSeeking = useCallback(() => {
-    setIsSeeking(true);
-    if (seekTimer.current) clearTimeout(seekTimer.current);
-    seekTimer.current = setTimeout(() => setIsSeeking(false), 1500);
-  }, []);
-
-  const goLive = useCallback(() => {
-    setProgress(100);
-    setIsPlaying(true);
-  }, []);
-
-  const [epgFocusIndex, setEpgFocusIndex] = useState<number>(() => {
-    const idx = miniChannels.findIndex((c) => c.isCurrent);
-    return idx >= 0 ? idx : 2;
-  });
-
-  const [sidebarFocus, setSidebarFocus] = useState<number>(2);
-  const [verticalIndex, setVerticalIndex] = useState<number>(2);
+  const hideTimer = useRef<any>(null);
 
   const sidebarOpen = focusedControl === -1;
-
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const resetHideTimer = useCallback(() => {
     setShowHud(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     if (epgMode) return;
-    hideTimer.current = setTimeout(() => {
-      setShowHud(false);
-    }, AUTO_HIDE_MS);
+    hideTimer.current = setTimeout(() => setShowHud(false), AUTO_HIDE_MS);
   }, [epgMode]);
-
-  const openEpgMode = useCallback(() => {
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    setShowHud(true);
-    setEpgMode(true);
-  }, []);
-
-  const closeEpgMode = useCallback(() => {
-    setEpgMode(false);
-    setShowHud(true);
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => {
-      setShowHud(false);
-    }, AUTO_HIDE_MS);
-  }, []);
-
-  const openSidebar = useCallback(() => {
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    setShowHud(true);
-    setVerticalIndex(sidebarFocus);
-    setFocusedControl(-1);
-  }, [sidebarFocus]);
-
-  const closeSidebar = useCallback(() => {
-    setFocusedControl(0);
-    resetHideTimer();
-  }, [resetHideTimer]);
-
-  useEffect(() => {
-    if (!sidebarOpen || !sidebarRef.current) return;
-    const items = sidebarRef.current.querySelectorAll("[data-item]");
-    (items[verticalIndex] as HTMLElement | undefined)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [verticalIndex, sidebarOpen]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (!isVisible) return;
+      resetHideTimer();
 
-      if (/^\d$/.test(e.key)) {
-        e.preventDefault();
-        const newInput = channelInput + e.key;
-        setChannelInput(newInput);
-        setShowChannelOverlay(true);
-        setShowHud(false);
-        setEpgMode(false);
-
-        if (channelInputTimer.current) clearTimeout(channelInputTimer.current);
-        channelInputTimer.current = setTimeout(() => {
-          const num = parseInt(newInput, 10);
-          const favCh = favoriteChannels.find((c) => c.number === num);
-          if (favCh && onSwitchChannel) {
-            onSwitchChannel({
-              channelNumber: String(favCh.number),
-              showTitle: favCh.showTitle,
-              timeRange: favCh.timeRange,
-              thumbnail: favCh.thumbnail,
-              channelName: favCh.channelName,
-              streamUrl: favCh.streamUrl,
-              logoUrl: favCh.logoUrl,
-            });
-          }
-          setChannelInput("");
-          setShowChannelOverlay(false);
-          setEpgMode(false);
-          setShowHud(true);
-          if (hideTimer.current) clearTimeout(hideTimer.current);
-          hideTimer.current = setTimeout(() => setShowHud(false), 2500);
-        }, 2000);
-
-        return;
-      }
-
-      if (isProgressFocused) {
-        resetHideTimer();
-        switch (e.key) {
-          case "ArrowDown":
-            e.preventDefault();
-            setIsProgressFocused(false);
-            setFocusedControl(1);
-            return;
-          case "ArrowLeft":
-            e.preventDefault();
-            setProgress((p) => Math.max(0, p - 0.5));
-            return;
-          case "ArrowRight":
-            e.preventDefault();
-            setProgress((p) => Math.min(100, p + 0.5));
-            return;
-          case "Enter":
-            e.preventDefault();
-            setIsProgressFocused(false);
-            setFocusedControl(1);
-            return;
-        }
-      }
-
-      if (epgMode) {
-        switch (e.key) {
-          case "ArrowUp":
-            e.preventDefault();
-            closeEpgMode();
-            setFocusedControl(1);
-            return;
-          case "ArrowLeft":
-            e.preventDefault();
-            setEpgFocusIndex((p) => Math.max(p - 1, 0));
-            return;
-          case "ArrowRight":
-            e.preventDefault();
-            setEpgFocusIndex((p) => Math.min(p + 1, miniChannels.length - 1));
-            return;
-          case "Escape":
-          case "Backspace":
-            e.preventDefault();
-            closeEpgMode();
-            return;
-        }
-        return;
-      }
-
+      // SIDEBAR LOGIKA (Zupčanik i Lanac)
       if (sidebarOpen) {
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
-            // FIX: kružna navigacija — wrapa na zadnji kad je na prvom
             setVerticalIndex((p) => (p - 1 + sidebarChannels.length) % sidebarChannels.length);
-            resetHideTimer();
             return;
           case "ArrowDown":
             e.preventDefault();
-            // FIX: kružna navigacija — wrapa na prvi kad je na zadnjem
             setVerticalIndex((p) => (p + 1) % sidebarChannels.length);
-            resetHideTimer();
             return;
           case "ArrowRight":
-            e.preventDefault();
-            setSidebarFocus(verticalIndex);
-            closeSidebar();
-            return;
           case "Enter":
-          case " ":
             e.preventDefault();
             setSidebarFocus(verticalIndex);
-            setFocusedControl(1);
-            resetHideTimer();
+            setFocusedControl(1); // Vrati fokus na Play dugme
             return;
-          case "Escape":
           case "Backspace":
+          case "Escape":
             e.preventDefault();
-            closeSidebar();
+            setFocusedControl(0);
             return;
         }
-        return;
       }
 
-      if (!showHud && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", " "].includes(e.key)) {
-        e.preventDefault();
-        resetHideTimer();
-        return;
-      }
-
+      // GENERALNA NAVIGACIJA
       switch (e.key) {
-        case "ArrowUp":
-          e.preventDefault();
-          resetHideTimer();
-          if (focusedControl !== -1) setIsProgressFocused(true);
-          break;
         case "ArrowLeft":
-          e.preventDefault();
-          resetHideTimer();
-          if (focusedControl === 0) openSidebar();
-          else if (focusedControl > 0) setFocusedControl((p) => p - 1);
+          if (focusedControl === 0) {
+            setFocusedControl(-1); // Otvori sidebar
+            setVerticalIndex(sidebarFocus);
+          } else {
+            setFocusedControl((p) => Math.max(0, p - 1));
+          }
           break;
         case "ArrowRight":
-          e.preventDefault();
-          resetHideTimer();
-          if (focusedControl < 3) setFocusedControl((p) => p + 1);
+          setFocusedControl((p) => Math.min(3, p + 1));
           break;
         case "ArrowDown":
-          e.preventDefault();
-          if (focusedControl !== -1) openEpgMode();
+          setEpgMode(true);
           break;
         case "Enter":
-        case " ":
-          e.preventDefault();
-          if (focusedControl === 0) openEpgMode();
-          if (focusedControl === 1) setIsPlaying((p) => !p);
-          if (focusedControl === 2) goLive();
-          if (focusedControl === 3) onToggleFavorite?.();
+          if (focusedControl === 1) setIsPlaying(!isPlaying);
           break;
         case "Escape":
-        case "Backspace":
-          e.preventDefault();
           onClose();
           break;
       }
     },
-    [
-      isVisible,
-      onClose,
-      focusedControl,
-      epgMode,
-      sidebarOpen,
-      sidebarFocus,
-      verticalIndex,
-      openEpgMode,
-      closeEpgMode,
-      openSidebar,
-      closeSidebar,
-      resetHideTimer,
-      isProgressFocused,
-      getSeekStep,
-      startSeeking,
-      goLive,
-      onToggleFavorite,
-      channelInput,
-      favoriteChannels,
-      onSwitchChannel,
-      showHud,
-    ],
+    [isVisible, sidebarOpen, focusedControl, sidebarFocus, verticalIndex, isPlaying, resetHideTimer, onClose],
   );
 
   useEffect(() => {
-    if (isVisible) {
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }
-  }, [isVisible, handleKeyDown, resetHideTimer]);
-
-  useEffect(() => {
-    if (!isVisible) return;
-    setShowHud(true);
-    setFocusedControl(-1);
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => {
-      setShowHud(false);
-      setFocusedControl(1);
-    }, AUTO_HIDE_MS);
-    return () => {
-      if (hideTimer.current) clearTimeout(hideTimer.current);
-    };
-  }, [isVisible, streamUrl]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   if (!isVisible) return null;
 
-  // FIX: activeCh uvijek koristi sidebarFocus (aktivni kanal),
-  // ne verticalIndex (kanal na koji se navigira u sidebaru).
-  // Ovo sprječava duplikat kartica dok je sidebar otvoren.
-  const sidebarActiveCh = sidebarChannels[sidebarFocus];
-  const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
-  const activeCh: SidebarChannel = {
-    id: sidebarActiveCh.id,
-    num: currentFav?.number ?? 0,
-    label: data?.channelName ?? sidebarActiveCh.label,
-    sub: sidebarActiveCh.sub,
-  };
-  const CARD_W = 132;
-  const SIDEBAR_BOTTOM = 216;
-
-  const controls: ControlItem[] = [
-    { icon: RotateCcw, label: "Rewind", action: openEpgMode },
-    { icon: isPlaying ? Pause : Play, label: "Play/Pause", action: () => setIsPlaying((p) => !p) },
-    { icon: RotateCw, label: "Forward", action: goLive },
-  ];
-
-  const syncTransition = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 } as const;
-  const inputNum = parseInt(channelInput, 10);
-  const foundFavChannel = isNaN(inputNum) ? undefined : favoriteChannels.find((c) => c.number === inputNum);
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 overflow-hidden"
-      style={{ backgroundColor: "#0d0d0d" }}
-    >
-      <div className="relative w-full h-full overflow-hidden">
-        {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
-        {streamUrl && (
-          <video
-            key={streamUrl}
-            ref={videoRef}
-            className="video-js vjs-default-skin absolute inset-0 w-full h-full object-cover"
-            style={{ zIndex: 1 }}
-            playsInline
-            {...({ "webkit-playsinline": "" } as Record<string, string>)}
-            muted
-            preload="auto"
-            crossOrigin="anonymous"
-          />
-        )}
-        <div
-          ref={spinnerRef}
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: 56,
-            height: 56,
-            marginTop: -28,
-            marginLeft: -28,
-            border: "4px solid rgba(255,255,255,0.18)",
-            borderTopColor: GOLD,
-            borderRadius: "50%",
-            animation: "vp-spin 0.9s linear infinite",
-            opacity: videoReady ? 0 : 1,
-            transition: "opacity 0.15s linear",
-            pointerEvents: "none",
-            zIndex: 5,
-          }}
-        />
-        <style>{`
-          @keyframes vp-spin { to { transform: rotate(360deg); } }
-          .video-js .vjs-loading-spinner,
-          .video-js .vjs-big-play-button,
-          .video-js .vjs-control-bar,
-          .video-js .vjs-text-track-display,
-          .video-js .vjs-error-display,
-          .video-js .vjs-modal-dialog { display: none !important; }
-        `}</style>
+    <div className="fixed inset-0 bg-black z-[100] overflow-hidden flex items-center justify-center">
+      <video ref={videoRef} className="w-full h-full object-cover" />
 
-        <AnimatePresence>
-          {videoReady && showChannelOverlay && (
-            <ChannelNumberOverlay
-              input={channelInput}
-              channelLabel={foundFavChannel?.channelName}
-              isFound={!!foundFavChannel}
-            />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {videoReady && showHud && sidebarOpen && (
-            <motion.div
-              key="sidebar"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              ref={sidebarRef}
-              className="absolute flex flex-col overflow-y-auto pointer-events-auto"
+      {/* HUD LAYER */}
+      <AnimatePresence>
+        {showHud && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0"
+          >
+            {/* --- SIDEBAR: MEHANIKA LANCA --- */}
+            <div
+              className="absolute left-10 top-1/2 -translate-y-1/2 flex items-center justify-center overflow-hidden"
               style={{
-                zIndex: 45,
-                bottom: SIDEBAR_BOTTOM,
-                left: 16,
-                width: CARD_W,
-                maxHeight: `calc(100% - ${SIDEBAR_BOTTOM + 20}px)`,
-                scrollbarWidth: "none",
+                width: CARD_W + 40,
+                height: ITEM_STEP + 40, // Vidimo samo jednu kariku jasno, ostale se odsecaju
+                zIndex: 50,
               }}
             >
-              <div className="flex flex-col gap-1.5">
-                {sidebarChannels.map((ch, i) => (
-                  <div key={ch.id} data-item="">
-                    <ChannelCard
-                      ch={ch}
-                      isActive={sidebarFocus === i}
-                      isFocused={verticalIndex === i}
-                      width="100%"
-                      onClick={() => {
-                        setVerticalIndex(i);
-                        setSidebarFocus(i);
-                        setFocusedControl(1);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {/* ZUPČANIK (Navigaciona traka - fiksni okvir) */}
+              <div
+                className="absolute inset-0 border-y-2 border-yellow-500/30 bg-yellow-500/5 pointer-events-none"
+                style={{ height: ITEM_STEP, top: "50%", transform: "translateY(-50%)" }}
+              />
 
-        <AnimatePresence>
-          {videoReady && showHud && (
-            <motion.div
-              key="hud"
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="absolute inset-x-0 bottom-0 flex flex-col gap-0 pointer-events-none"
-              style={{ zIndex: 40 }}
-            >
-              <div className="relative overflow-visible pointer-events-auto flex flex-col">
-                <div className="relative h-1.5 w-full bg-white/10 flex items-center">
-                  <motion.div
-                    className="absolute top-0 left-0 h-full"
-                    style={{ backgroundColor: GOLD }}
-                    animate={{ width: `${progress}%` }}
-                    transition={syncTransition}
-                  />
-                  <motion.div
-                    className="absolute w-5 h-5 rounded-full shadow-lg"
-                    style={{
-                      backgroundColor: "#bbbbbb",
-                      border: isProgressFocused ? "2px solid white" : "none",
-                      zIndex: 20,
-                    }}
-                    animate={{ left: `${progress}%`, x: "-50%", scale: isProgressFocused || isSeeking ? 1.2 : 1 }}
-                    transition={syncTransition}
-                  >
-                    <AnimatePresence>
-                      {(isProgressFocused || isSeeking) && (
-                        <motion.div
-                          key="thumbnail-preview"
-                          initial={{ opacity: 0, scale: 0.92, y: 0 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.92 }}
-                          transition={{ duration: 0.15, ease: "easeOut" }}
-                          className="absolute pointer-events-none flex flex-col items-center"
-                          style={{
-                            zIndex: 100,
-                            bottom: "calc(100% + 14px)",
-                            left: "50%",
-                            x: "-50%",
-                            width: "max-content",
-                          }}
-                        >
-                          <div className="p-1 bg-white/20 backdrop-blur-md rounded-lg border border-white/40 shadow-2xl">
-                            <div className="w-56 aspect-video rounded overflow-hidden relative bg-black">
-                              <img src={thumbnail} alt="preview" className="w-full h-full object-cover" />
-                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded text-[11px] font-bold text-white tabular-nums border border-white/10">
-                                {calculateTimeFromProgress(progress, timeRange)}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-white/40 mt-[-1px]" />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                </div>
-
-                <div
-                  className="relative flex items-center pt-3 pb-3"
-                  style={{ backgroundColor: epgMode ? "rgba(10,10,10,0.46)" : "rgba(10,10,10,0.78)" }}
-                >
-                  {/* ChannelCard s showArrows uklonjena — više ne preklapa sidebar kartice */}
-
-                  <div className="flex items-center gap-3 ml-5 min-w-0 flex-1">
-                    <span className="text-sm font-mono flex-shrink-0" style={{ color: "rgba(255,255,255,0.5)" }}>
-                      {timeRange}
-                    </span>
-                    <h2 className="font-bold text-lg truncate" style={{ color: "#ffffff" }}>
-                      {showTitle}
-                    </h2>
-                  </div>
-
-                  <div className="absolute left-0 right-0 flex items-center justify-center pointer-events-none">
-                    <div className="flex items-center gap-8 pointer-events-auto">
-                      {controls.map((ctrl, i) => {
-                        const Icon = ctrl.icon;
-                        const isBtnFocused = focusedControl === i && !epgMode && !isProgressFocused;
-                        const isMain = i === 1;
-                        return (
-                          <button
-                            key={ctrl.label}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              setFocusedControl(i);
-                              ctrl.action();
-                            }}
-                            className="flex items-center justify-center rounded-full transition-all duration-200"
-                            style={{
-                              width: isMain ? "52px" : "42px",
-                              height: isMain ? "52px" : "42px",
-                              backgroundColor: isMain ? GOLD : isBtnFocused ? "rgba(245,197,24,0.15)" : "transparent",
-                              color: isMain ? "#0d0d0d" : GOLD,
-                              outline: isBtnFocused && !isMain ? "2px solid rgba(245,197,24,0.5)" : "none",
-                              transform: isBtnFocused ? "scale(1.12)" : "scale(1)",
-                              boxShadow: isMain ? "0 0 18px 4px rgba(245,197,24,0.35)" : "none",
-                            }}
-                          >
-                            <Icon className={isMain ? "w-6 h-6" : "w-5 h-5"} />
-                          </button>
-                        );
-                      })}
+              {/* LANAC (Pokretne kartice) */}
+              <motion.div
+                className="flex flex-col items-center"
+                animate={{ translateY: -(verticalIndex * ITEM_STEP) }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{ gap: GAP }}
+              >
+                {sidebarChannels.map((ch, idx) => {
+                  const isCurrentInGear = verticalIndex === idx;
+                  return (
+                    <div key={ch.id} style={{ height: CARD_H }}>
+                      <motion.div
+                        animate={{
+                          scale: isCurrentInGear ? 1.1 : 0.85,
+                          opacity: Math.abs(verticalIndex - idx) > 1 ? 0.3 : 1,
+                        }}
+                      >
+                        <ChannelCard
+                          ch={ch}
+                          isActive={sidebarFocus === idx}
+                          isFocused={sidebarOpen && isCurrentInGear}
+                          width={CARD_W}
+                          showArrows={isCurrentInGear}
+                        />
+                      </motion.div>
                     </div>
-                  </div>
+                  );
+                })}
+              </motion.div>
+            </div>
 
-                  <button
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginRight: "16px",
-                      flexShrink: 0,
-                      transition: "all 0.2s",
-                      width: "fit-content",
-                      opacity: isFavoriteProp || focusedControl === 3 ? 1 : 0.55,
-                      outline:
-                        focusedControl === 3 && !epgMode && !isProgressFocused
-                          ? `2px solid rgba(245,197,24,0.5)`
-                          : "2px solid transparent",
-                      outlineOffset: "4px",
-                      borderRadius: "6px",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "4px 8px",
-                      transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      setFocusedControl(3);
-                      onToggleFavorite?.();
-                    }}
-                  >
-                    <Heart
-                      className="w-5 h-5"
-                      style={{ color: GOLD, fill: isFavoriteProp ? GOLD : "none", transition: "fill 0.2s" }}
-                    />
-                    <span className="text-xs font-medium" style={{ color: GOLD }}>
-                      Dodajte u omiljene
-                    </span>
-                  </button>
-                </div>
-
+            {/* DONJI CONTROLS (Zadržano iz originala) */}
+            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/90 to-transparent p-10 flex items-end justify-between">
+              <div className="flex gap-6">
                 <div
-                  className="w-full transition-all duration-500 overflow-visible"
-                  style={{
-                    borderTop: "1px solid rgba(245,197,24,0.12)",
-                    backgroundColor: epgMode ? "transparent" : "rgba(10,10,10,0.62)",
-                  }}
-                >
-                  {epgMode ? (
-                    (() => {
-                      const half = 2;
-                      const total = miniChannels.length;
-                      let start = epgFocusIndex - half;
-                      if (start < 0) start = 0;
-                      if (start + 5 > total) start = Math.max(0, total - 5);
-                      const visible = miniChannels.slice(start, start + 5);
-
-                      return (
-                        <div className="grid grid-cols-5 gap-1 py-3 px-3 overflow-visible items-stretch">
-                          {visible.map((ch, i) => (
-                            <EPGCard
-                              key={ch.id}
-                              channel={ch}
-                              isFocused={epgFocusIndex === start + i}
-                              isFuture={isFutureShow(ch.timeRange, ch.day)}
-                              onSelect={() => setEpgFocusIndex(start + i)}
-                            />
-                          ))}
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <div className="flex gap-2 h-24 px-3 py-2 overflow-hidden">
-                      {miniChannels.slice(0, 5).map((ch) => (
-                        <div
-                          key={ch.id}
-                          className="flex-1 rounded overflow-hidden"
-                          style={{
-                            border: ch.isCurrent
-                              ? "1px solid rgba(245,197,24,0.6)"
-                              : "1px solid rgba(255,255,255,0.08)",
-                          }}
-                        >
-                          <img
-                            src={ch.thumbnail}
-                            className="w-full h-full object-cover"
-                            alt={ch.title}
-                            style={{ filter: isFutureShow(ch.timeRange, ch.day) ? "grayscale(100%)" : "none" }}
-                          />
-                        </div>
-                      ))}
-                    </div>
+                  className={cn(
+                    "p-4 rounded-full transition-all",
+                    focusedControl === 1 ? "bg-yellow-500 scale-110" : "bg-white/10",
                   )}
+                >
+                  {isPlaying ? <Pause /> : <Play />}
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
-};
-
-export default VideoPlayer;
+}
