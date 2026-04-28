@@ -201,6 +201,7 @@ interface ChannelCardProps {
   width?: string | number;
   onClick?: () => void;
   showArrows?: boolean;
+  logoUrl?: string | null;
 }
 
 const ChannelCard = ({
@@ -210,6 +211,7 @@ const ChannelCard = ({
   width = "100%",
   onClick,
   showArrows = false,
+  logoUrl = null,
 }: ChannelCardProps) => (
   <div
     onClick={onClick}
@@ -260,16 +262,31 @@ const ChannelCard = ({
         {ch.num}
       </span>
 
-      <div className="mt-4 mb-1 flex items-center justify-center">
-        <Tv
-          style={{
-            width: 24,
-            height: 24,
-            color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
-            filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
-            transition: "color 0.18s, filter 0.18s",
-          }}
-        />
+      <div className="mt-3 mb-1 flex items-center justify-center" style={{ height: 32 }}>
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt={ch.label}
+            className="max-h-8 max-w-full object-contain"
+            style={{
+              filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
+              transition: "filter 0.18s",
+            }}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <Tv
+            style={{
+              width: 24,
+              height: 24,
+              color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
+              filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
+              transition: "color 0.18s, filter 0.18s",
+            }}
+          />
+        )}
       </div>
 
       <span
@@ -1195,6 +1212,7 @@ const VideoPlayer = ({
                       isFocused={focusedControl === -1}
                       width={CARD_W}
                       showArrows
+                      logoUrl={data?.logoUrl ?? null}
                       onClick={() => {
                         if (sidebarOpen) {
                           setSidebarFocus(verticalIndex);
@@ -1207,17 +1225,6 @@ const VideoPlayer = ({
                   </div>
 
                   <div className="flex items-center gap-3 ml-5 min-w-0 flex-1">
-                    {data?.logoUrl ? (
-                      <img
-                        src={data.logoUrl}
-                        alt={data.channelName ?? "channel"}
-                        className="h-8 w-12 object-contain flex-shrink-0 rounded bg-white/5 p-0.5"
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                    ) : null}
                     <span className="text-sm font-mono flex-shrink-0" style={{ color: "rgba(255,255,255,0.5)" }}>
                       {timeRange}
                     </span>
