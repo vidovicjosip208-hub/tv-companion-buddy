@@ -540,7 +540,6 @@ const VideoPlayer = ({
 
     const hevcOk = supportsHEVC();
 
-    // ---- Hardware-accelerated playback attributes (set imperatively so React never re-renders the <video>) ----
     video.setAttribute("playsinline", "");
     video.setAttribute("webkit-playsinline", "");
     video.setAttribute("preload", "auto");
@@ -548,7 +547,6 @@ const VideoPlayer = ({
     video.autoplay = true;
     video.muted = true;
 
-    // ---- CSS-only spinner controlled by native events (zero React state) ----
     const showSpinner = () => {
       if (spinnerRef.current) spinnerRef.current.style.opacity = "1";
     };
@@ -558,17 +556,15 @@ const VideoPlayer = ({
     const onPlaying = () => {
       setVideoReady(true);
       hideSpinner();
-      // Unmute once playback has started (user already gestured by opening the channel)
       try {
         video.muted = false;
         video.volume = 1;
         playerRef.current?.muted(false);
         playerRef.current?.volume(1);
       } catch (e) {
-        // If browser blocks unmuted autoplay, stay muted; user can interact to enable sound.
+        // If browser blocks unmuted autoplay, stay muted
       }
     };
-    // Also try to unmute on first user interaction as a fallback
     const enableSoundOnGesture = () => {
       try {
         video.muted = false;
@@ -587,12 +583,11 @@ const VideoPlayer = ({
     video.addEventListener("waiting", showSpinner);
     video.addEventListener("stalled", showSpinner);
     video.addEventListener("canplay", hideSpinner);
-      const loadingFallbackTimer = window.setTimeout(() => {
-        setVideoReady(true);
-        hideSpinner();
-      }, 7000);
+    const loadingFallbackTimer = window.setTimeout(() => {
+      setVideoReady(true);
+      hideSpinner();
+    }, 7000);
 
-    // Initialize Video.js on the existing <video> element (UI + plugins).
     const player = videojs(video, {
       controls: false,
       autoplay: true,
@@ -656,7 +651,6 @@ const VideoPlayer = ({
         video.play().catch(() => {});
       });
 
-      // ---- Auto error recovery: never let the screen freeze ----
       hls.on(Hls.Events.ERROR, (_e, data) => {
         if (!data.fatal || !hls) return;
         showSpinner();
@@ -764,7 +758,6 @@ const VideoPlayer = ({
   const resetHideTimer = useCallback(() => {
     setShowHud(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
-    // Auto-hide only applies to compact HUD mode, not full EPG mode.
     if (epgMode) return;
     hideTimer.current = setTimeout(() => {
       setShowHud(false);
@@ -772,7 +765,6 @@ const VideoPlayer = ({
   }, [epgMode]);
 
   const openEpgMode = useCallback(() => {
-    // Full EPG mode stays visible until user explicitly returns to compact HUD.
     if (hideTimer.current) clearTimeout(hideTimer.current);
     setShowHud(true);
     setEpgMode(true);
@@ -895,12 +887,14 @@ const VideoPlayer = ({
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
-            setVerticalIndex((p) => Math.max(p - 1, 0));
+            // FIX: kružna navigacija — wrapa na zadnji kad je na prvom
+            setVerticalIndex((p) => (p - 1 + sidebarChannels.length) % sidebarChannels.length);
             resetHideTimer();
             return;
           case "ArrowDown":
             e.preventDefault();
-            setVerticalIndex((p) => Math.min(p + 1, sidebarChannels.length - 1));
+            // FIX: kružna navigacija — wrapa na prvi kad je na zadnjem
+            setVerticalIndex((p) => (p + 1) % sidebarChannels.length);
             resetHideTimer();
             return;
           case "ArrowRight":
@@ -924,9 +918,6 @@ const VideoPlayer = ({
         return;
       }
 
-      // Ako je HUD trenutno skriven, prvi pritisak OK/strelice samo prikazuje
-      // kompaktnu navigacijsku traku (mod sa prve slike) — ne otvara EPG niti
-      // pokreće akcije gumba.
       if (!showHud && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", " "].includes(e.key)) {
         e.preventDefault();
         resetHideTimer();
@@ -1001,16 +992,14 @@ const VideoPlayer = ({
     }
   }, [isVisible, handleKeyDown, resetHideTimer]);
 
-  // Pokaži cijelu navigacijsku traku (sidebar + HUD + EPG okvir) odmah pri
-  // otvaranju kanala, pa pokreni standardni auto-hide timer.
   useEffect(() => {
     if (!isVisible) return;
     setShowHud(true);
-    setFocusedControl(-1); // -1 => sidebarOpen === true (lijevi panel s kanalima)
+    setFocusedControl(-1);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => {
       setShowHud(false);
-      setFocusedControl(1); // vrati fokus na play/pause kad se sakrije
+      setFocusedControl(1);
     }, AUTO_HIDE_MS);
     return () => {
       if (hideTimer.current) clearTimeout(hideTimer.current);
@@ -1019,7 +1008,10 @@ const VideoPlayer = ({
 
   if (!isVisible) return null;
 
-  const sidebarActiveCh = sidebarChannels[sidebarOpen ? verticalIndex : sidebarFocus];
+  // FIX: activeCh uvijek koristi sidebarFocus (aktivni kanal),
+  // ne verticalIndex (kanal na koji se navigira u sidebaru).
+  // Ovo sprječava duplikat kartica dok je sidebar otvoren.
+  const sidebarActiveCh = sidebarChannels[sidebarFocus];
   const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
   const activeCh: SidebarChannel = {
     id: sidebarActiveCh.id,
@@ -1049,7 +1041,6 @@ const VideoPlayer = ({
       style={{ backgroundColor: "#0d0d0d" }}
     >
       <div className="relative w-full h-full overflow-hidden">
-        {/* Pure black backdrop while loading — no thumbnail, no HUD, just the spinner */}
         {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
         {streamUrl && (
           <video
@@ -1064,7 +1055,6 @@ const VideoPlayer = ({
             crossOrigin="anonymous"
           />
         )}
-        {/* CSS-only buffering spinner — toggled imperatively via native video events */}
         <div
           ref={spinnerRef}
           aria-hidden
@@ -1088,7 +1078,6 @@ const VideoPlayer = ({
         />
         <style>{`
           @keyframes vp-spin { to { transform: rotate(360deg); } }
-          /* Hide video.js built-in spinner, big play button and control bar — we use our own gold spinner */
           .video-js .vjs-loading-spinner,
           .video-js .vjs-big-play-button,
           .video-js .vjs-control-bar,
