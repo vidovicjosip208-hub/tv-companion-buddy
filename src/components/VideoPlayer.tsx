@@ -1019,7 +1019,14 @@ const VideoPlayer = ({
 
   if (!isVisible) return null;
 
-  const activeCh = sidebarChannels[sidebarOpen ? verticalIndex : sidebarFocus];
+  const sidebarActiveCh = sidebarChannels[sidebarOpen ? verticalIndex : sidebarFocus];
+  const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
+  const activeCh: SidebarChannel = {
+    id: sidebarActiveCh.id,
+    num: currentFav?.number ?? 0,
+    label: data?.channelName ?? sidebarActiveCh.label,
+    sub: sidebarActiveCh.sub,
+  };
   const CARD_W = 132;
   const SIDEBAR_BOTTOM = 216;
 
