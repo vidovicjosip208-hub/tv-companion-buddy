@@ -800,9 +800,15 @@ const VideoPlayer = ({
   const openSidebar = useCallback(() => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
     setShowHud(true);
-    setVerticalIndex(sidebarFocus);
+    // Nađi poziciju trenutnog kanala u sidebarChannels po imenu
+    const currentIdx = sidebarChannels.findIndex(
+      (ch) => ch.label.toLowerCase() === (data?.channelName ?? "").toLowerCase(),
+    );
+    const startIdx = currentIdx >= 0 ? currentIdx : sidebarFocus;
+    setVerticalIndex(startIdx);
+    setSidebarFocus(startIdx);
     setFocusedControl(-1);
-  }, [sidebarFocus]);
+  }, [sidebarFocus, data?.channelName]);
 
   const closeSidebar = useCallback(() => {
     setFocusedControl(0);
@@ -1025,14 +1031,14 @@ const VideoPlayer = ({
   // Kružni prozor: SIDEBAR_VISIBLE kartica sa fokusiranom uvijek u sredini
   const circularWindow = getCircularWindow(verticalIndex, sidebarChannels.length, SIDEBAR_VISIBLE);
 
-  // Kad je sidebar otvoren, HUD kartica prikazuje kanal na koji je fokus (verticalIndex)
-  // Kad je sidebar zatvoren, prikazuje trenutni kanal iz data
+  // Kad je sidebar otvoren, HUD kartica pokazuje verticalIndex kanal (mijenja se gore/dolje)
+  // Kad je sidebar zatvoren, pokazuje trenutni kanal iz data
   const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
   const focusedSidebarCh = sidebarChannels[verticalIndex];
   const hudChannel: SidebarChannel = sidebarOpen
     ? {
         id: focusedSidebarCh.id,
-        num: verticalIndex + 1,
+        num: focusedSidebarCh.num,
         label: focusedSidebarCh.label,
         sub: focusedSidebarCh.sub,
       }
