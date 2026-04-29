@@ -1036,7 +1036,12 @@ const VideoPlayer = ({
   };
 
   const CARD_W = 132;
-  const SIDEBAR_BOTTOM = 216;
+  // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
+  // Fokusirana kartica (s trokutićima, visina ~142px) je najniža u sidebaru
+  // pa sidebar container treba početi dovoljno visoko da fokusirana ne ulazi u HUD.
+  // 216 = visina HUD-a bez trokutića fokusirane kartice koji vire dolje.
+  // Dodajemo 22px za donji trokutić fokusirane kartice koji inače viri u HUD.
+  const SIDEBAR_BOTTOM = 238;
 
   const controls: ControlItem[] = [
     { icon: RotateCcw, label: "Rewind", action: openEpgMode },
@@ -1121,7 +1126,7 @@ const VideoPlayer = ({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute flex flex-col-reverse pointer-events-auto"
+              className="absolute flex flex-col pointer-events-auto"
               style={{
                 zIndex: 45,
                 left: 16,
@@ -1130,7 +1135,10 @@ const VideoPlayer = ({
                 gap: 6,
               }}
             >
-              {circularWindow.map((chIdx, windowPos) => {
+              {/* Obrnuti redoslijed: windowPos 4 (fokusirana) renderira se prva = vizualno najniža.
+                  windowPos 0 renderira se zadnja = vizualno najviša. */}
+              {[...circularWindow].reverse().map((chIdx, reversedPos) => {
+                const windowPos = SIDEBAR_VISIBLE - 1 - reversedPos;
                 const ch = sidebarChannels[chIdx];
                 const isFocused = windowPos === SIDEBAR_HALF;
                 const isActive = chIdx === sidebarFocus;
