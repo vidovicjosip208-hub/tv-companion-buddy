@@ -1041,7 +1041,7 @@ const VideoPlayer = ({
   // pa sidebar container treba početi dovoljno visoko da fokusirana ne ulazi u HUD.
   // 216 = visina HUD-a bez trokutića fokusirane kartice koji vire dolje.
   // Dodajemo 22px za donji trokutić fokusirane kartice koji inače viri u HUD.
-  const SIDEBAR_BOTTOM = 228;
+  const SIDEBAR_BOTTOM = 328;
 
   const controls: ControlItem[] = [
     { icon: RotateCcw, label: "Rewind", action: openEpgMode },
