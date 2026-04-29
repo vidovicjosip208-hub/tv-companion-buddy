@@ -1025,15 +1025,23 @@ const VideoPlayer = ({
   // Kružni prozor: SIDEBAR_VISIBLE kartica sa fokusiranom uvijek u sredini
   const circularWindow = getCircularWindow(verticalIndex, sidebarChannels.length, SIDEBAR_VISIBLE);
 
-  // Za HUD traku — podatke za trenutni kanal
+  // Kad je sidebar otvoren, HUD kartica prikazuje kanal na koji je fokus (verticalIndex)
+  // Kad je sidebar zatvoren, prikazuje trenutni kanal iz data
   const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
-  // Sintetički SidebarChannel za HUD prikaz (bez duplicate kartice — prikazuje se samo u HUD traci, ne i u sidebaru)
-  const hudChannel: SidebarChannel = {
-    id: "hud",
-    num: currentFav?.number ?? 0,
-    label: data?.channelName ?? "",
-    sub: "ODIVIZIJA",
-  };
+  const focusedSidebarCh = sidebarChannels[verticalIndex];
+  const hudChannel: SidebarChannel = sidebarOpen
+    ? {
+        id: focusedSidebarCh.id,
+        num: verticalIndex + 1,
+        label: focusedSidebarCh.label,
+        sub: focusedSidebarCh.sub,
+      }
+    : {
+        id: "hud",
+        num: currentFav?.number ?? 0,
+        label: data?.channelName ?? "",
+        sub: "ODIVIZIJA",
+      };
 
   const CARD_W = 132;
   // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
@@ -1243,7 +1251,7 @@ const VideoPlayer = ({
                       isFocused={sidebarOpen}
                       width={CARD_W}
                       showArrows
-                      logoUrl={data?.logoUrl ?? null}
+                      logoUrl={sidebarOpen ? null : (data?.logoUrl ?? null)}
                       onClick={openSidebar}
                     />
                   </div>
