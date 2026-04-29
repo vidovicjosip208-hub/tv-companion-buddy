@@ -1041,7 +1041,7 @@ const VideoPlayer = ({
   // pa sidebar container treba početi dovoljno visoko da fokusirana ne ulazi u HUD.
   // 216 = visina HUD-a bez trokutića fokusirane kartice koji vire dolje.
   // Dodajemo 22px za donji trokutić fokusirane kartice koji inače viri u HUD.
-  const SIDEBAR_BOTTOM = 238;
+  const SIDEBAR_BOTTOM = 216;
 
   const controls: ControlItem[] = [
     { icon: RotateCcw, label: "Rewind", action: openEpgMode },
@@ -1117,7 +1117,7 @@ const VideoPlayer = ({
           )}
         </AnimatePresence>
 
-        {/* ── SIDEBAR — flex stupac koji raste prema gore od HUD trake ── */}
+        {/* ── SIDEBAR — 4 kartice iznad HUD trake, fokusirana ostaje u HUD traci ── */}
         <AnimatePresence>
           {videoReady && showHud && sidebarOpen && (
             <motion.div
@@ -1135,29 +1135,34 @@ const VideoPlayer = ({
                 gap: 6,
               }}
             >
-              {/* Obrnuti redoslijed: windowPos 4 (fokusirana) renderira se prva = vizualno najniža.
-                  windowPos 0 renderira se zadnja = vizualno najviša. */}
-              {[...circularWindow].reverse().map((chIdx, reversedPos) => {
-                const windowPos = SIDEBAR_VISIBLE - 1 - reversedPos;
-                const ch = sidebarChannels[chIdx];
-                const isFocused = windowPos === SIDEBAR_HALF;
-                const isActive = chIdx === sidebarFocus;
-                return (
-                  <ChannelCard
-                    key={`${ch.id}-${windowPos}`}
-                    ch={ch}
-                    isActive={isActive}
-                    isFocused={isFocused}
-                    width="100%"
-                    showArrows={isFocused}
-                    onClick={() => {
-                      setVerticalIndex(chIdx);
-                      setSidebarFocus(chIdx);
-                      setFocusedControl(1);
-                    }}
-                  />
-                );
-              })}
+              {/* Prikazujemo sve kartice iz circularWindow OSIM fokusirane (SIDEBAR_HALF).
+                  Fokusirana je već prikazana u HUD traci.
+                  Redoslijed: windowPos 0 gore, windowPos SIDEBAR_HALF-1 i SIDEBAR_HALF+1..4 dolje. */}
+              {[...circularWindow]
+                .reverse()
+                .filter((_, reversedPos) => {
+                  const windowPos = SIDEBAR_VISIBLE - 1 - reversedPos;
+                  return windowPos !== SIDEBAR_HALF;
+                })
+                .map((chIdx, i) => {
+                  const ch = sidebarChannels[chIdx];
+                  const isActive = chIdx === sidebarFocus;
+                  return (
+                    <ChannelCard
+                      key={`${ch.id}-${i}`}
+                      ch={ch}
+                      isActive={isActive}
+                      isFocused={false}
+                      width="100%"
+                      showArrows={false}
+                      onClick={() => {
+                        setVerticalIndex(chIdx);
+                        setSidebarFocus(chIdx);
+                        setFocusedControl(1);
+                      }}
+                    />
+                  );
+                })}
             </motion.div>
           )}
         </AnimatePresence>
@@ -1230,22 +1235,18 @@ const VideoPlayer = ({
                   className="relative flex items-center pt-3 pb-3"
                   style={{ backgroundColor: epgMode ? "rgba(10,10,10,0.46)" : "rgba(10,10,10,0.78)" }}
                 >
-                  {/* HUD kartica — renderira se SAMO kad je sidebar zatvoren */}
-                  {!sidebarOpen ? (
-                    <div className="ml-4 flex-shrink-0" style={{ width: CARD_W }}>
-                      <ChannelCard
-                        ch={hudChannel}
-                        isActive={true}
-                        isFocused={false}
-                        width={CARD_W}
-                        showArrows
-                        logoUrl={data?.logoUrl ?? null}
-                        onClick={openSidebar}
-                      />
-                    </div>
-                  ) : (
-                    <div className="ml-4 flex-shrink-0" style={{ width: CARD_W }} />
-                  )}
+                  {/* HUD kartica — uvijek vidljiva, fokusirana kad je sidebarOpen */}
+                  <div className="ml-4 flex-shrink-0" style={{ width: CARD_W }}>
+                    <ChannelCard
+                      ch={hudChannel}
+                      isActive={true}
+                      isFocused={sidebarOpen}
+                      width={CARD_W}
+                      showArrows
+                      logoUrl={data?.logoUrl ?? null}
+                      onClick={openSidebar}
+                    />
+                  </div>
 
                   <div className="flex items-center gap-3 ml-5 min-w-0 flex-1">
                     <span className="text-sm font-mono flex-shrink-0" style={{ color: "rgba(255,255,255,0.5)" }}>
