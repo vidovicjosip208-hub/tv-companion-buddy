@@ -820,7 +820,8 @@ const VideoPlayer = ({
       favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
     );
     setVerticalIndex(currentIdx);
-    setSidebarFocus((currentIdx + 1) % Math.max(favoriteChannels.length, 1));
+    // -1 = HUD kartica je fokusirana (trokutići); 4 kartice iznad su preview bez fokusa.
+    setSidebarFocus(-1);
     setFocusedControl(-1);
   }, [favoriteChannels, data?.channelName]);
 
