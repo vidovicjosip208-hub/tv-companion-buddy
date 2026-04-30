@@ -918,17 +918,27 @@ const VideoPlayer = ({
 
       if (sidebarOpen) {
         const favTotal = Math.max(favoriteChannels.length, 1);
+        const currentIdx = Math.max(
+          0,
+          favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
+        );
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
-            // Skrol gore = sve kartice se pomiču dolje = preview ide na sljedeći broj
-            setSidebarFocus((p) => (p + 1) % favTotal);
+            // Prvi skrol gore: fokus napušta HUD i ulazi u prvu karticu iznad progress bara.
+            // Daljnji skrol gore: rotira slot (kartice se pomiču dolje, preview ide na sljedeći broj).
+            setSidebarFocus((p) => (p === -1 ? (currentIdx + 1) % favTotal : (p + 1) % favTotal));
             resetHideTimer();
             return;
           case "ArrowDown":
             e.preventDefault();
-            // Skrol dolje = sve kartice se pomiču gore = preview ide na prethodni broj
-            setSidebarFocus((p) => (((p - 1) % favTotal) + favTotal) % favTotal);
+            // Skrol dolje iz prve kartice iznad HUD-a vraća fokus u HUD.
+            // Inače rotira slot u suprotnom smjeru.
+            setSidebarFocus((p) => {
+              if (p === -1) return -1;
+              if (p === (currentIdx + 1) % favTotal) return -1;
+              return (((p - 1) % favTotal) + favTotal) % favTotal;
+            });
             resetHideTimer();
             return;
           case "ArrowRight":
@@ -938,6 +948,11 @@ const VideoPlayer = ({
           case "Enter":
           case " ": {
             e.preventDefault();
+            // Enter na HUD kartici (sidebarFocus === -1) ne mijenja kanal — već ga gledamo.
+            if (sidebarFocus === -1) {
+              closeSidebar();
+              return;
+            }
             const favCh = favoriteChannels[sidebarFocus];
             if (favCh && onSwitchChannel && favCh.channelName !== data?.channelName) {
               onSwitchChannel({
