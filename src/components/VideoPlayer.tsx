@@ -1198,7 +1198,7 @@ const VideoPlayer = ({
                   const ch = favAsSidebarChannels[chIdx];
                   if (!ch) return null;
                   const favCh = favoriteChannels[chIdx];
-                  const isActive = chIdx === sidebarFocus;
+                  const isActive = sidebarFocus !== -1 && chIdx === sidebarFocus;
                   return (
                     <motion.div
                       key={`slot-${chIdx}`}
