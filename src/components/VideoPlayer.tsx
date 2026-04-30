@@ -1067,12 +1067,13 @@ const VideoPlayer = ({
   // Anchor za slot — uvijek oko trenutno emitiranog kanala. sidebarFocus pomiče
   // prozor iznad njega (offset), tako da rotacija djeluje kao slot dok HUD stoji.
   const currentIdx = Math.max(0, favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName));
-  const anchorIdx = currentIdx;
 
-  // Prikazujemo 4 kanala iznad (preview) kartice redoslijedom:
-  // najbliži HUD-u = anchorIdx+1, najdalji = anchorIdx+4
+  // Slot prozor: 4 kartice iznad HUD-a. sidebarFocus je indeks kartice
+  // koja je TIK iznad HUD-a (najbliža); rastemo prema gore za +1, +2, +3.
+  // Renderiramo odozgo prema dolje: [focus+3, focus+2, focus+1, focus].
   const total = Math.max(favAsSidebarChannels.length, 1);
-  const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((anchorIdx + 4 - i) % total) + total) % total);
+  const bottomIdx = sidebarOpen ? sidebarFocus : (currentIdx + 1) % total;
+  const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((bottomIdx + (3 - i)) % total) + total) % total);
 
   const CARD_W = 132;
   // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
