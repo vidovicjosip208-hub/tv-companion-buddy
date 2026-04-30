@@ -778,13 +778,10 @@ const VideoPlayer = ({
       favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
     ),
   );
-  // sidebarFocus = indeks favorita koji je TIK iznad HUD-a (najbliža kartica u slotu).
-  // Inicijalno postavljamo na sljedeći kanal nakon trenutnog.
-  const [sidebarFocus, setSidebarFocus] = useState<number>(() => {
-    const idx = favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName);
-    const tot = Math.max(favoriteChannels.length, 1);
-    return ((Math.max(0, idx) + 1) % tot);
-  });
+  // sidebarFocus = indeks favorita koji je TIK iznad HUD-a (kartica u stvarnom fokusu u slotu).
+  // -1 znači da slot još nije "engaged" — HUD kartica drži fokus (trokutiće), a 4 kartice
+  // iznad progress bara su preview bez fokusa. Prvi ArrowUp prebacuje fokus u slot.
+  const [sidebarFocus, setSidebarFocus] = useState<number>(-1);
 
   const sidebarOpen = focusedControl === -1;
 
