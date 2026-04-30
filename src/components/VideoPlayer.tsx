@@ -918,43 +918,16 @@ const VideoPlayer = ({
       }
 
       if (sidebarOpen) {
+        const favTotal = Math.max(favoriteChannels.length, 1);
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
-            {
-              const nextIdx = (((currentIdx - 1) % total) + total) % total;
-              const favCh = favoriteChannels[nextIdx];
-              if (favCh && onSwitchChannel) {
-                onSwitchChannel({
-                  channelNumber: String(favCh.number),
-                  showTitle: favCh.showTitle,
-                  timeRange: favCh.timeRange,
-                  thumbnail: favCh.thumbnail,
-                  channelName: favCh.channelName,
-                  streamUrl: favCh.streamUrl,
-                  logoUrl: favCh.logoUrl,
-                });
-              }
-            }
+            setSidebarFocus((p) => (((p - 1) % favTotal) + favTotal) % favTotal);
             resetHideTimer();
             return;
           case "ArrowDown":
             e.preventDefault();
-            {
-              const nextIdx = (currentIdx + 1) % total;
-              const favCh = favoriteChannels[nextIdx];
-              if (favCh && onSwitchChannel) {
-                onSwitchChannel({
-                  channelNumber: String(favCh.number),
-                  showTitle: favCh.showTitle,
-                  timeRange: favCh.timeRange,
-                  thumbnail: favCh.thumbnail,
-                  channelName: favCh.channelName,
-                  streamUrl: favCh.streamUrl,
-                  logoUrl: favCh.logoUrl,
-                });
-              }
-            }
+            setSidebarFocus((p) => (p + 1) % favTotal);
             resetHideTimer();
             return;
           case "ArrowRight":
@@ -962,10 +935,23 @@ const VideoPlayer = ({
             closeSidebar();
             return;
           case "Enter":
-          case " ":
+          case " ": {
             e.preventDefault();
+            const favCh = favoriteChannels[sidebarFocus];
+            if (favCh && onSwitchChannel && favCh.channelName !== data?.channelName) {
+              onSwitchChannel({
+                channelNumber: String(favCh.number),
+                showTitle: favCh.showTitle,
+                timeRange: favCh.timeRange,
+                thumbnail: favCh.thumbnail,
+                channelName: favCh.channelName,
+                streamUrl: favCh.streamUrl,
+                logoUrl: favCh.logoUrl,
+              });
+            }
             closeSidebar();
             return;
+          }
           case "Escape":
           case "Backspace":
             e.preventDefault();
