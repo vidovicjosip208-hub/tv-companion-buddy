@@ -1310,7 +1310,7 @@ const VideoPlayer = ({
                     <ChannelCard
                       ch={hudChannel}
                       isActive={true}
-                      isFocused={false}
+                      isFocused={sidebarOpen && sidebarFocus === -1}
                       width={CARD_W}
                       showArrows
                       logoUrl={hudLogoUrl}
