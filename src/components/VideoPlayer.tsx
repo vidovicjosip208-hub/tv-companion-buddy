@@ -1051,27 +1051,28 @@ const VideoPlayer = ({
 
   if (!isVisible) return null;
 
-  // HUD kartica — UVIJEK trenutni kanal iz data
+  // HUD kartica — kad je sidebar otvoren, prikazuje "preview" fokusiranog favorita
+  // (rotira se Up/Down). Tek na Enter se učitava njegov stream. Inače prikazuje trenutni kanal.
   const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
+  const previewFav = sidebarOpen ? favoriteChannels[sidebarFocus] : undefined;
   const hudChannel: SidebarChannel = {
     id: "hud",
-    num: currentFav?.number ?? 0,
-    label: data?.channelName ?? "",
+    num: previewFav?.number ?? currentFav?.number ?? 0,
+    label: previewFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
   };
-  const hudLogoUrl = data?.logoUrl ?? null;
+  const hudLogoUrl = previewFav?.logoUrl ?? data?.logoUrl ?? null;
 
-  // currentIdx = pozicija trenutnog kanala u listi omiljenih (0-based)
-  const currentIdx = Math.max(
-    0,
-    favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
-  );
+  // Anchor za slot — kad je sidebar otvoren, vrti se oko sidebarFocus;
+  // inače oko trenutno emitiranog kanala.
+  const anchorIdx = sidebarOpen
+    ? sidebarFocus
+    : Math.max(0, favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName));
 
-  // Prikazujemo 4 kanala iznad trenutnog redoslijedom broja:
-  // najbliži HUD-u = currentIdx+1, najdalji = currentIdx+4
-  // Stack od vrha prema dnu: [+4, +3, +2, +1]
+  // Prikazujemo 4 kanala iznad (preview) kartice redoslijedom:
+  // najbliži HUD-u = anchorIdx+1, najdalji = anchorIdx+4
   const total = Math.max(favAsSidebarChannels.length, 1);
-  const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((currentIdx + 4 - i) % total) + total) % total);
+  const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((anchorIdx + 4 - i) % total) + total) % total);
 
   const CARD_W = 132;
   // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
