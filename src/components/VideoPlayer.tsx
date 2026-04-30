@@ -1086,7 +1086,8 @@ const VideoPlayer = ({
   // koja je TIK iznad HUD-a (najbliža); rastemo prema gore za +1, +2, +3.
   // Renderiramo odozgo prema dolje: [focus+3, focus+2, focus+1, focus].
   const total = Math.max(favAsSidebarChannels.length, 1);
-  const bottomIdx = sidebarOpen ? sidebarFocus : (currentIdx + 1) % total;
+  // Kad je sidebarFocus === -1 (HUD drži fokus), bottomIdx je default — prva sljedeća kartica.
+  const bottomIdx = sidebarOpen && sidebarFocus !== -1 ? sidebarFocus : (currentIdx + 1) % total;
   const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((bottomIdx + (3 - i)) % total) + total) % total);
 
   const CARD_W = 132;
