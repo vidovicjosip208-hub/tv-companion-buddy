@@ -778,12 +778,13 @@ const VideoPlayer = ({
       favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
     ),
   );
-  const [sidebarFocus, setSidebarFocus] = useState<number>(() =>
-    Math.max(
-      0,
-      favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
-    ),
-  );
+  // sidebarFocus = indeks favorita koji je TIK iznad HUD-a (najbliža kartica u slotu).
+  // Inicijalno postavljamo na sljedeći kanal nakon trenutnog.
+  const [sidebarFocus, setSidebarFocus] = useState<number>(() => {
+    const idx = favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName);
+    const tot = Math.max(favoriteChannels.length, 1);
+    return ((Math.max(0, idx) + 1) % tot);
+  });
 
   const sidebarOpen = focusedControl === -1;
 
