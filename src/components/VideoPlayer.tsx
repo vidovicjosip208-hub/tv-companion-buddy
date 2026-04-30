@@ -535,19 +535,13 @@ const VideoPlayer = ({
   const thumbnail = data?.thumbnail ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80";
   const streamUrl = data?.streamUrl;
 
-  // Konvertiramo favoriteChannels u SidebarChannel format za prikaz
+  // favAsSidebarChannels — favoriteChannels konvertirani u SidebarChannel format
   const favAsSidebarChannels: SidebarChannel[] = favoriteChannels.map((fc) => ({
     id: `fav-${fc.number}`,
     num: fc.number,
     label: fc.channelName,
     sub: "ODIVIZIJA",
   }));
-
-  // Početni verticalIndex — pozicija trenutnog kanala u listi omiljenih
-  const initialIdx = Math.max(
-    0,
-    favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
-  );
 
   const [progress, setProgress] = useState(42);
   const [isProgressFocused, setIsProgressFocused] = useState(false);
@@ -777,9 +771,19 @@ const VideoPlayer = ({
     return idx >= 0 ? idx : 2;
   });
 
-  // verticalIndex je kružni indeks u favAsSidebarChannels
-  const [verticalIndex, setVerticalIndex] = useState<number>(initialIdx);
-  const [sidebarFocus, setSidebarFocus] = useState<number>(initialIdx);
+  // verticalIndex — pozicija u favAsSidebarChannels, inicijalizira se na trenutni kanal
+  const [verticalIndex, setVerticalIndex] = useState<number>(() =>
+    Math.max(
+      0,
+      favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
+    ),
+  );
+  const [sidebarFocus, setSidebarFocus] = useState<number>(() =>
+    Math.max(
+      0,
+      favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
+    ),
+  );
 
   const sidebarOpen = focusedControl === -1;
 
@@ -1057,7 +1061,7 @@ const VideoPlayer = ({
   // Kružni prozor: SIDEBAR_VISIBLE kartica sa fokusiranom uvijek u sredini
   const circularWindow = getCircularWindow(verticalIndex, Math.max(favAsSidebarChannels.length, 1), SIDEBAR_VISIBLE);
 
-  // HUD kartica UVIJEK pokazuje trenutni kanal iz data — ne mijenja se navigacijom
+  // HUD kartica — UVIJEK trenutni kanal iz data, nikad se ne mijenja navigacijom
   const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
   const hudChannel: SidebarChannel = {
     id: "hud",
@@ -1072,7 +1076,7 @@ const VideoPlayer = ({
   // pa sidebar container treba početi dovoljno visoko da fokusirana ne ulazi u HUD.
   // 216 = visina HUD-a bez trokutića fokusirane kartice koji vire dolje.
   // Dodajemo 22px za donji trokutić fokusirane kartice koji inače viri u HUD.
-  const SIDEBAR_BOTTOM = 110; // slot najniža kartica sjedi u HUD control rowu
+  const SIDEBAR_BOTTOM = 216; // visina cijelog HUD-a — kartice rastu iznad
 
   const controls: ControlItem[] = [
     { icon: RotateCcw, label: "Rewind", action: openEpgMode },
