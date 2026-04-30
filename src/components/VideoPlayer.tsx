@@ -921,44 +921,51 @@ const VideoPlayer = ({
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
-            // Kružna navigacija gore
-            setVerticalIndex(
-              (p) =>
-                (((p - 1) % favAsSidebarChannels.length) + favAsSidebarChannels.length) % favAsSidebarChannels.length,
-            );
+            {
+              const nextIdx = (((currentIdx - 1) % total) + total) % total;
+              const favCh = favoriteChannels[nextIdx];
+              if (favCh && onSwitchChannel) {
+                onSwitchChannel({
+                  channelNumber: String(favCh.number),
+                  showTitle: favCh.showTitle,
+                  timeRange: favCh.timeRange,
+                  thumbnail: favCh.thumbnail,
+                  channelName: favCh.channelName,
+                  streamUrl: favCh.streamUrl,
+                  logoUrl: favCh.logoUrl,
+                });
+              }
+            }
             resetHideTimer();
             return;
           case "ArrowDown":
             e.preventDefault();
-            // Kružna navigacija dolje
-            setVerticalIndex((p) => (p + 1) % favAsSidebarChannels.length);
+            {
+              const nextIdx = (currentIdx + 1) % total;
+              const favCh = favoriteChannels[nextIdx];
+              if (favCh && onSwitchChannel) {
+                onSwitchChannel({
+                  channelNumber: String(favCh.number),
+                  showTitle: favCh.showTitle,
+                  timeRange: favCh.timeRange,
+                  thumbnail: favCh.thumbnail,
+                  channelName: favCh.channelName,
+                  streamUrl: favCh.streamUrl,
+                  logoUrl: favCh.logoUrl,
+                });
+              }
+            }
             resetHideTimer();
             return;
           case "ArrowRight":
             e.preventDefault();
-            setSidebarFocus(verticalIndex);
             closeSidebar();
             return;
           case "Enter":
-          case " ": {
+          case " ":
             e.preventDefault();
-            const favCh = favoriteChannels[verticalIndex];
-            if (favCh && onSwitchChannel) {
-              onSwitchChannel({
-                channelNumber: String(favCh.number),
-                showTitle: favCh.showTitle,
-                timeRange: favCh.timeRange,
-                thumbnail: favCh.thumbnail,
-                channelName: favCh.channelName,
-                streamUrl: favCh.streamUrl,
-                logoUrl: favCh.logoUrl,
-              });
-            }
-            setSidebarFocus(verticalIndex);
-            setFocusedControl(1);
-            resetHideTimer();
+            closeSidebar();
             return;
-          }
           case "Escape":
           case "Backspace":
             e.preventDefault();
@@ -1058,30 +1065,27 @@ const VideoPlayer = ({
 
   if (!isVisible) return null;
 
-  // Prikazujemo 4 kanala iznad trenutnog (verticalIndex) u rastućem redoslijedu brojeva.
-  // Stack odozgo prema dolje: [idx+4, idx+3, idx+2, idx+1] → HUD: [idx]
-  const total = Math.max(favAsSidebarChannels.length, 1);
-  const aboveWindow: number[] = Array.from(
-    { length: 4 },
-    (_, i) => (((verticalIndex + i + 1) % total) + total) % total,
-  ).reverse(); // obrnuto da je idx+1 najbliži HUD-u
-
-  // HUD kartica prati verticalIndex — to je trenutno fokusirani kanal u slotu.
-  // Kad je sidebar zatvoren, pokazuje trenutni kanal iz data.
-  // Kad je sidebar otvoren, pokazuje kanal na koji je fokus (mijenja se navigacijom).
+  // HUD kartica — UVIJEK trenutni kanal iz data
   const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
-  const focusedFavCh = favAsSidebarChannels[verticalIndex];
-  const focusedFavorite = favoriteChannels[verticalIndex];
-  const hudChannel: SidebarChannel =
-    sidebarOpen && focusedFavCh
-      ? focusedFavCh
-      : {
-          id: "hud",
-          num: currentFav?.number ?? 0,
-          label: data?.channelName ?? "",
-          sub: "ODIVIZIJA",
-        };
-  const hudLogoUrl = sidebarOpen ? (focusedFavorite?.logoUrl ?? null) : (data?.logoUrl ?? null);
+  const hudChannel: SidebarChannel = {
+    id: "hud",
+    num: currentFav?.number ?? 0,
+    label: data?.channelName ?? "",
+    sub: "ODIVIZIJA",
+  };
+  const hudLogoUrl = data?.logoUrl ?? null;
+
+  // currentIdx = pozicija trenutnog kanala u listi omiljenih (0-based)
+  const currentIdx = Math.max(
+    0,
+    favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
+  );
+
+  // Prikazujemo 4 kanala iznad trenutnog redoslijedom broja:
+  // najbliži HUD-u = currentIdx+1, najdalji = currentIdx+4
+  // Stack od vrha prema dnu: [+4, +3, +2, +1]
+  const total = Math.max(favAsSidebarChannels.length, 1);
+  const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((currentIdx + 4 - i) % total) + total) % total);
 
   const CARD_W = 132;
   // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
