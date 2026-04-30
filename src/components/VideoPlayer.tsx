@@ -922,12 +922,14 @@ const VideoPlayer = ({
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
-            setSidebarFocus((p) => (((p - 1) % favTotal) + favTotal) % favTotal);
+            // Skrol gore = sve kartice se pomiču dolje = preview ide na sljedeći broj
+            setSidebarFocus((p) => (p + 1) % favTotal);
             resetHideTimer();
             return;
           case "ArrowDown":
             e.preventDefault();
-            setSidebarFocus((p) => (p + 1) % favTotal);
+            // Skrol dolje = sve kartice se pomiču gore = preview ide na prethodni broj
+            setSidebarFocus((p) => (((p - 1) % favTotal) + favTotal) % favTotal);
             resetHideTimer();
             return;
           case "ArrowRight":
