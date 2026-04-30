@@ -925,19 +925,19 @@ const VideoPlayer = ({
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
-            // Prvi skrol gore: fokus napušta HUD i ulazi u prvu karticu iznad progress bara.
-            // Daljnji skrol gore: rotira slot (kartice se pomiču dolje, preview ide na sljedeći broj).
-            setSidebarFocus((p) => (p === -1 ? (currentIdx + 1) % favTotal : (p + 1) % favTotal));
+            // HUD kartica je uvijek fokus. Skrol gore = HUD prikazuje sljedeći kanal u nizu.
+            setSidebarFocus((p) => {
+              const cur = p === -1 ? currentIdx : p;
+              return (cur + 1) % favTotal;
+            });
             resetHideTimer();
             return;
           case "ArrowDown":
             e.preventDefault();
-            // Skrol dolje iz prve kartice iznad HUD-a vraća fokus u HUD.
-            // Inače rotira slot u suprotnom smjeru.
+            // Skrol dolje = HUD prikazuje prethodni kanal u nizu.
             setSidebarFocus((p) => {
-              if (p === -1) return -1;
-              if (p === (currentIdx + 1) % favTotal) return -1;
-              return (((p - 1) % favTotal) + favTotal) % favTotal;
+              const cur = p === -1 ? currentIdx : p;
+              return (((cur - 1) % favTotal) + favTotal) % favTotal;
             });
             resetHideTimer();
             return;
@@ -948,12 +948,9 @@ const VideoPlayer = ({
           case "Enter":
           case " ": {
             e.preventDefault();
-            // Enter na HUD kartici (sidebarFocus === -1) ne mijenja kanal — već ga gledamo.
-            if (sidebarFocus === -1) {
-              closeSidebar();
-              return;
-            }
-            const favCh = favoriteChannels[sidebarFocus];
+            // Enter učitava stream kanala koji je trenutno u HUD-u.
+            const hudIdxLocal = sidebarFocus === -1 ? currentIdx : sidebarFocus;
+            const favCh = favoriteChannels[hudIdxLocal];
             if (favCh && onSwitchChannel && favCh.channelName !== data?.channelName) {
               onSwitchChannel({
                 channelNumber: String(favCh.number),
