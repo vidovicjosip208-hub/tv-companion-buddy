@@ -1191,12 +1191,12 @@ const VideoPlayer = ({
               }}
             >
               <AnimatePresence mode="popLayout" initial={false}>
-                {/* 4 kartice iznad HUD-a; najniža kartica je stvarni fokus i Enter bira njen URL */}
+                {/* 4 kartice iznad HUD-a — uvijek samo preview, nikad u fokusu. Fokus drži HUD. */}
                 {aboveWindow.map((chIdx, i) => {
                   const ch = favAsSidebarChannels[chIdx];
                   if (!ch) return null;
                   const favCh = favoriteChannels[chIdx];
-                  const isActive = sidebarFocus !== -1 && chIdx === sidebarFocus;
+                  const isActive = false;
                   return (
                     <motion.div
                       key={`slot-${chIdx}`}
