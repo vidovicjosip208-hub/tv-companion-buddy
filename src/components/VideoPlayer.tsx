@@ -1067,28 +1067,29 @@ const VideoPlayer = ({
 
   if (!isVisible) return null;
 
-  // HUD kartica je FIKSIRANA na trenutno reproducirani kanal. Slot iznad rotira
-  // kroz preview kandidate; Enter komitira preview u HUD (učitava stream).
-  const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
+  // HUD kartica je UVIJEK fokus zona. Skrolanjem se mijenja koji se kanal prikazuje
+  // u HUD-u (preview), a 4 kartice iznad progress bara su sljedeći kandidati u nizu.
+  // Enter učitava stream kanala koji je trenutno u HUD-u.
+  const currentIdx = Math.max(0, favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName));
+  const total = Math.max(favoriteChannels.length, 1);
+
+  // hudIdx — koji se kanal prikazuje u HUD kartici. Default = trenutno reproducirani.
+  // Kad korisnik skrola, hudIdx se mijenja iako stream ostaje isti dok ne pritisne Enter.
+  const hudIdx = sidebarOpen && sidebarFocus !== -1 ? sidebarFocus : currentIdx;
+  const hudFav = favoriteChannels[hudIdx];
+  const hudIsCurrent = hudIdx === currentIdx;
+
   const hudChannel: SidebarChannel = {
     id: "hud",
-    num: currentFav?.number ?? 0,
-    label: data?.channelName ?? "",
+    num: hudFav?.number ?? 0,
+    label: hudFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
   };
-  const hudLogoUrl = data?.logoUrl ?? null;
+  const hudLogoUrl = hudFav?.logoUrl ?? (hudIsCurrent ? data?.logoUrl ?? null : null);
 
-  // Anchor za slot — uvijek oko trenutno emitiranog kanala. sidebarFocus pomiče
-  // prozor iznad njega (offset), tako da rotacija djeluje kao slot dok HUD stoji.
-  const currentIdx = Math.max(0, favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName));
-
-  // Slot prozor: 4 kartice iznad HUD-a. sidebarFocus je indeks kartice
-  // koja je TIK iznad HUD-a (najbliža); rastemo prema gore za +1, +2, +3.
-  // Renderiramo odozgo prema dolje: [focus+3, focus+2, focus+1, focus].
-  const total = Math.max(favAsSidebarChannels.length, 1);
-  // Kad je sidebarFocus === -1 (HUD drži fokus), bottomIdx je default — prva sljedeća kartica.
-  const bottomIdx = sidebarOpen && sidebarFocus !== -1 ? sidebarFocus : (currentIdx + 1) % total;
-  const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((bottomIdx + (3 - i)) % total) + total) % total);
+  // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
+  // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
+  const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((hudIdx + (4 - i)) % total) + total) % total);
 
   const CARD_W = 132;
   // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
