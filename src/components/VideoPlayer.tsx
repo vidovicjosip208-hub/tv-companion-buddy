@@ -823,7 +823,7 @@ const VideoPlayer = ({
       favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
     );
     setVerticalIndex(currentIdx);
-    setSidebarFocus(currentIdx);
+    setSidebarFocus((currentIdx + 1) % Math.max(favoriteChannels.length, 1));
     setFocusedControl(-1);
   }, [favoriteChannels, data?.channelName]);
 
@@ -1179,7 +1179,7 @@ const VideoPlayer = ({
               }}
             >
               <AnimatePresence mode="popLayout" initial={false}>
-                {/* 4 kartice iznad HUD-a, redoslijedom: idx+4 gore, idx+1 dolje */}
+                {/* 4 kartice iznad HUD-a; najniža kartica je stvarni fokus i Enter bira njen URL */}
                 {aboveWindow.map((chIdx, i) => {
                   const ch = favAsSidebarChannels[chIdx];
                   if (!ch) return null;
@@ -1197,9 +1197,9 @@ const VideoPlayer = ({
                       <ChannelCard
                         ch={ch}
                         isActive={isActive}
-                        isFocused={false}
+                        isFocused={isActive}
                         width="100%"
-                        showArrows={false}
+                        showArrows={isActive}
                         logoUrl={favCh?.logoUrl ?? null}
                         onClick={() => {
                           if (favCh && onSwitchChannel) {
@@ -1296,7 +1296,7 @@ const VideoPlayer = ({
                     <ChannelCard
                       ch={hudChannel}
                       isActive={true}
-                      isFocused={sidebarOpen}
+                      isFocused={false}
                       width={CARD_W}
                       showArrows
                       logoUrl={hudLogoUrl}
