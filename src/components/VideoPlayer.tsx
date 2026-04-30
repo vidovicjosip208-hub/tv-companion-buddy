@@ -925,19 +925,19 @@ const VideoPlayer = ({
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
-            // Prvi skrol gore: fokus napušta HUD i ulazi u prvu karticu iznad progress bara.
-            // Daljnji skrol gore: rotira slot (kartice se pomiču dolje, preview ide na sljedeći broj).
-            setSidebarFocus((p) => (p === -1 ? (currentIdx + 1) % favTotal : (p + 1) % favTotal));
+            // HUD kartica je uvijek fokus. Skrol gore = HUD prikazuje sljedeći kanal u nizu.
+            setSidebarFocus((p) => {
+              const cur = p === -1 ? currentIdx : p;
+              return (cur + 1) % favTotal;
+            });
             resetHideTimer();
             return;
           case "ArrowDown":
             e.preventDefault();
-            // Skrol dolje iz prve kartice iznad HUD-a vraća fokus u HUD.
-            // Inače rotira slot u suprotnom smjeru.
+            // Skrol dolje = HUD prikazuje prethodni kanal u nizu.
             setSidebarFocus((p) => {
-              if (p === -1) return -1;
-              if (p === (currentIdx + 1) % favTotal) return -1;
-              return (((p - 1) % favTotal) + favTotal) % favTotal;
+              const cur = p === -1 ? currentIdx : p;
+              return (((cur - 1) % favTotal) + favTotal) % favTotal;
             });
             resetHideTimer();
             return;
@@ -948,12 +948,9 @@ const VideoPlayer = ({
           case "Enter":
           case " ": {
             e.preventDefault();
-            // Enter na HUD kartici (sidebarFocus === -1) ne mijenja kanal — već ga gledamo.
-            if (sidebarFocus === -1) {
-              closeSidebar();
-              return;
-            }
-            const favCh = favoriteChannels[sidebarFocus];
+            // Enter učitava stream kanala koji je trenutno u HUD-u.
+            const hudIdxLocal = sidebarFocus === -1 ? currentIdx : sidebarFocus;
+            const favCh = favoriteChannels[hudIdxLocal];
             if (favCh && onSwitchChannel && favCh.channelName !== data?.channelName) {
               onSwitchChannel({
                 channelNumber: String(favCh.number),
@@ -1067,28 +1064,29 @@ const VideoPlayer = ({
 
   if (!isVisible) return null;
 
-  // HUD kartica je FIKSIRANA na trenutno reproducirani kanal. Slot iznad rotira
-  // kroz preview kandidate; Enter komitira preview u HUD (učitava stream).
-  const currentFav = favoriteChannels.find((c) => c.channelName === data?.channelName);
+  // HUD kartica je UVIJEK fokus zona. Skrolanjem se mijenja koji se kanal prikazuje
+  // u HUD-u (preview), a 4 kartice iznad progress bara su sljedeći kandidati u nizu.
+  // Enter učitava stream kanala koji je trenutno u HUD-u.
+  const currentIdx = Math.max(0, favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName));
+  const total = Math.max(favoriteChannels.length, 1);
+
+  // hudIdx — koji se kanal prikazuje u HUD kartici. Default = trenutno reproducirani.
+  // Kad korisnik skrola, hudIdx se mijenja iako stream ostaje isti dok ne pritisne Enter.
+  const hudIdx = sidebarOpen && sidebarFocus !== -1 ? sidebarFocus : currentIdx;
+  const hudFav = favoriteChannels[hudIdx];
+  const hudIsCurrent = hudIdx === currentIdx;
+
   const hudChannel: SidebarChannel = {
     id: "hud",
-    num: currentFav?.number ?? 0,
-    label: data?.channelName ?? "",
+    num: hudFav?.number ?? 0,
+    label: hudFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
   };
-  const hudLogoUrl = data?.logoUrl ?? null;
+  const hudLogoUrl = hudFav?.logoUrl ?? (hudIsCurrent ? data?.logoUrl ?? null : null);
 
-  // Anchor za slot — uvijek oko trenutno emitiranog kanala. sidebarFocus pomiče
-  // prozor iznad njega (offset), tako da rotacija djeluje kao slot dok HUD stoji.
-  const currentIdx = Math.max(0, favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName));
-
-  // Slot prozor: 4 kartice iznad HUD-a. sidebarFocus je indeks kartice
-  // koja je TIK iznad HUD-a (najbliža); rastemo prema gore za +1, +2, +3.
-  // Renderiramo odozgo prema dolje: [focus+3, focus+2, focus+1, focus].
-  const total = Math.max(favAsSidebarChannels.length, 1);
-  // Kad je sidebarFocus === -1 (HUD drži fokus), bottomIdx je default — prva sljedeća kartica.
-  const bottomIdx = sidebarOpen && sidebarFocus !== -1 ? sidebarFocus : (currentIdx + 1) % total;
-  const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((bottomIdx + (3 - i)) % total) + total) % total);
+  // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
+  // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
+  const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((hudIdx + (4 - i)) % total) + total) % total);
 
   const CARD_W = 132;
   // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
@@ -1193,12 +1191,12 @@ const VideoPlayer = ({
               }}
             >
               <AnimatePresence mode="popLayout" initial={false}>
-                {/* 4 kartice iznad HUD-a; najniža kartica je stvarni fokus i Enter bira njen URL */}
+                {/* 4 kartice iznad HUD-a — uvijek samo preview, nikad u fokusu. Fokus drži HUD. */}
                 {aboveWindow.map((chIdx, i) => {
                   const ch = favAsSidebarChannels[chIdx];
                   if (!ch) return null;
                   const favCh = favoriteChannels[chIdx];
-                  const isActive = sidebarFocus !== -1 && chIdx === sidebarFocus;
+                  const isActive = false;
                   return (
                     <motion.div
                       key={`slot-${chIdx}`}
@@ -1310,7 +1308,7 @@ const VideoPlayer = ({
                     <ChannelCard
                       ch={hudChannel}
                       isActive={true}
-                      isFocused={sidebarOpen && sidebarFocus === -1}
+                      isFocused={sidebarOpen}
                       width={CARD_W}
                       showArrows
                       logoUrl={hudLogoUrl}
