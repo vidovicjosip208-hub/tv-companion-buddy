@@ -536,35 +536,49 @@ const Index = () => {
       if (!epgByChannel.has(ep.channel_id)) epgByChannel.set(ep.channel_id, []);
       epgByChannel.get(ep.channel_id)!.push(ep);
     }
-    return dbChannels
-      .filter((ch) => epgByChannel.has(ch.id))
-      .map((ch) => {
-        const programs = epgByChannel.get(ch.id) ?? [];
-        const formatTime = (iso: string) => {
-          const d = new Date(iso);
-          return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-        };
-        const formatDate = (iso: string) => {
-          const d = new Date(iso);
-          return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.`;
-        };
-        return {
-          id: ch.id,
-          number: ch.channel_number,
-          name: ch.name,
-          abbreviation: ch.abbreviation ?? ch.name.slice(0, 3).toUpperCase(),
-          logoUrl: ch.logo_url ?? null,
-          category: ch.category,
-          streamUrl: ch.stream_url ?? undefined,
-          programs: programs.map((p) => ({
+    const formatTime = (iso: string) => {
+      const d = new Date(iso);
+      return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    };
+    const formatDate = (iso: string) => {
+      const d = new Date(iso);
+      return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.`;
+    };
+    const today = new Date();
+    const todayStr = `${String(today.getDate()).padStart(2, "0")}.${String(today.getMonth() + 1).padStart(2, "0")}.`;
+
+    // Sve kanale iz tv_channels prikazujemo, čak i ako nemaju EPG zapisa.
+    // Bez EPG-a generiramo placeholder "live" program iz imena kanala.
+    return dbChannels.map((ch) => {
+      const programs = epgByChannel.get(ch.id) ?? [];
+      const mappedPrograms = programs.length
+        ? programs.map((p) => ({
             title: p.title,
             startTime: formatTime(p.start_time),
             endTime: formatTime(p.end_time),
             date: formatDate(p.start_time),
             isLive: p.is_live ?? false,
-          })),
-        };
-      });
+          }))
+        : [
+            {
+              title: ch.name,
+              startTime: "00:00",
+              endTime: "00:00",
+              date: todayStr,
+              isLive: true,
+            },
+          ];
+      return {
+        id: ch.id,
+        number: ch.channel_number,
+        name: ch.name,
+        abbreviation: ch.abbreviation ?? ch.name.slice(0, 3).toUpperCase(),
+        logoUrl: ch.logo_url ?? null,
+        category: ch.category,
+        streamUrl: ch.stream_url ?? undefined,
+        programs: mappedPrograms,
+      };
+    });
   }, [dbChannels, dbEpg]);
 
   // Recalculate grid constants based on live data
