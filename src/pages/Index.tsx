@@ -626,27 +626,6 @@ const Index = () => {
     setPlayerVisible(true);
   }, []);
 
-  const openPlayerFromEPG = useCallback(
-    (channelIdx: number) => {
-      const channelList = showFavorites ? liveEpgChannels.filter((ch) => isFavorite(ch.name)) : liveEpgChannels;
-      const ch = channelList[channelIdx];
-      if (!ch) return;
-      const liveProgram = ch.programs.find((p) => p.isLive) ?? ch.programs[0];
-      setPlayerData({
-        channelNumber: String(ch.number),
-        showTitle: liveProgram?.title ?? ch.name,
-        timeRange: liveProgram ? `${liveProgram.startTime} - ${liveProgram.endTime}` : "",
-        thumbnail:
-          channelThumbnails[ch.name] ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80",
-        channelName: ch.name,
-        streamUrl: ch.streamUrl,
-        logoUrl: ch.logoUrl,
-      });
-      setPlayerVisible(true);
-    },
-    [showFavorites, isFavorite, liveEpgChannels],
-  );
-
   const favoriteEpgChannels = useMemo(() => {
     // Favoriti su samo reference na iste kartice kanala, zato ovdje namjerno
     // uzimamo isti streamUrl/title/timeSlot iz liveChannelCards.
@@ -700,6 +679,26 @@ const Index = () => {
   }, [liveEpgChannels, selectedCategoryId]);
 
   const activeEpgChannels = showRadio ? radioStations : showFavorites ? favoriteEpgChannels : filteredEpgChannels;
+
+  const openPlayerFromEPG = useCallback(
+    (channelIdx: number) => {
+      const ch = activeEpgChannels[channelIdx];
+      if (!ch) return;
+      const liveProgram = ch.programs.find((p) => p.isLive) ?? ch.programs[0];
+      setPlayerData({
+        channelNumber: String(ch.number),
+        showTitle: liveProgram?.title ?? ch.name,
+        timeRange: liveProgram ? `${liveProgram.startTime} - ${liveProgram.endTime}` : "",
+        thumbnail:
+          channelThumbnails[ch.name] ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80",
+        channelName: ch.name,
+        streamUrl: ch.streamUrl,
+        logoUrl: ch.logoUrl,
+      });
+      setPlayerVisible(true);
+    },
+    [activeEpgChannels],
+  );
 
   const showEPG =
     (showCategories &&
