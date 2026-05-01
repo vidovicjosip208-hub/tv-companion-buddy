@@ -1107,7 +1107,7 @@ const VideoPlayer = ({
 
   const syncTransition = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 } as const;
   const inputNum = parseInt(channelInput, 10);
-  const foundFavChannel = isNaN(inputNum) ? undefined : favoriteChannels.find((c) => c.number === inputNum);
+  const foundFavChannel = isNaN(inputNum) ? undefined : channelLookup.find((c) => c.number === inputNum);
 
   return (
     <motion.div
