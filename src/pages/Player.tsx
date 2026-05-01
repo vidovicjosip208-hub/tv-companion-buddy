@@ -35,6 +35,22 @@ const Player = () => {
 
   const currentChannel = useMemo(() => channels.find((c) => c.name === channelName), [channels, channelName]);
 
+  // Svi kanali iz baze za numeričku navigaciju (broj na daljinskom = channel_number iz baze,
+  // ne indeks u listi omiljenih).
+  const allPlayerChannels: FavoriteChannel[] = useMemo(
+    () =>
+      channels.map((ch) => ({
+        number: ch.channel_number,
+        channelName: ch.name,
+        showTitle: ch.name,
+        timeRange: "00:00 - 00:00",
+        thumbnail: ch.thumbnail_url || ch.logo_url || "",
+        streamUrl: ch.stream_url ?? undefined,
+        logoUrl: ch.logo_url ?? null,
+      })),
+    [channels],
+  );
+
   // FIX: Koristimo next.streamUrl direktno iz PlayerData objekta koji je već
   // izgradjen iz favoriteChannels — izbjegavamo dvostruki channels.find()
   // koji može failati ako su imena kanala nekonzistentna ili channels još nije učitan.
@@ -76,6 +92,7 @@ const Player = () => {
       isFavorite={isFavorite(channelName)}
       onToggleFavorite={() => toggleFavorite(channelName)}
       favoriteChannels={favoriteChannels}
+      allChannels={allPlayerChannels}
       onSwitchChannel={handleSwitchChannel}
     />
   );
