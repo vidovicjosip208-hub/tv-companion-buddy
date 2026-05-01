@@ -1039,6 +1039,7 @@ const VideoPlayer = ({
       onToggleFavorite,
       channelInput,
       favoriteChannels,
+      channelLookup,
       onSwitchChannel,
       showHud,
     ],
