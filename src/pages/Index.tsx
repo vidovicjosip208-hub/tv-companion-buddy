@@ -1051,6 +1051,7 @@ const Index = () => {
           isFavorite={isFavorite(playerData?.channelName ?? "")}
           onToggleFavorite={() => toggleFavorite(playerData?.channelName ?? "")}
           favoriteChannels={playerFavoriteChannels}
+          allChannels={allPlayerChannels}
           onSwitchChannel={(newData) => setPlayerData(newData)}
         />
       </div>
