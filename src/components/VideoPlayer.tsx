@@ -80,6 +80,7 @@ interface VideoPlayerProps {
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
   favoriteChannels?: FavoriteChannel[];
+  allChannels?: FavoriteChannel[];
   onSwitchChannel?: (data: PlayerData) => void;
 }
 
