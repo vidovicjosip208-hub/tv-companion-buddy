@@ -1071,7 +1071,10 @@ const VideoPlayer = ({
   // HUD kartica je UVIJEK fokus zona. Skrolanjem se mijenja koji se kanal prikazuje
   // u HUD-u (preview), a 4 kartice iznad progress bara su sljedeći kandidati u nizu.
   // Enter učitava stream kanala koji je trenutno u HUD-u.
-  const currentIdx = Math.max(0, favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName));
+  const currentIdx = Math.max(
+    0,
+    favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
+  );
   const total = Math.max(favoriteChannels.length, 1);
 
   // hudIdx — koji se kanal prikazuje u HUD kartici. Default = trenutno reproducirani.
@@ -1086,7 +1089,7 @@ const VideoPlayer = ({
     label: hudFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
   };
-  const hudLogoUrl = hudFav?.logoUrl ?? (hudIsCurrent ? data?.logoUrl ?? null : null);
+  const hudLogoUrl = hudFav?.logoUrl ?? (hudIsCurrent ? (data?.logoUrl ?? null) : null);
 
   // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
   // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
@@ -1187,7 +1190,7 @@ const VideoPlayer = ({
               style={{
                 zIndex: 45,
                 left: 16,
-                bottom: SIDEBAR_BOTTOM,
+                bottom: SIDEBAR_BOTTOM + 16, // ← IZMJENA: +16px razmaka iznad progress bara
                 width: CARD_W,
                 display: "flex",
                 flexDirection: "column",
