@@ -848,7 +848,7 @@ const VideoPlayer = ({
         if (channelInputTimer.current) clearTimeout(channelInputTimer.current);
         channelInputTimer.current = setTimeout(() => {
           const num = parseInt(newInput, 10);
-          const favCh = favoriteChannels.find((c) => c.number === num);
+          const favCh = channelLookup.find((c) => c.number === num);
           if (favCh && onSwitchChannel) {
             onSwitchChannel({
               channelNumber: String(favCh.number),
