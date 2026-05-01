@@ -80,6 +80,7 @@ interface VideoPlayerProps {
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
   favoriteChannels?: FavoriteChannel[];
+  allChannels?: FavoriteChannel[];
   onSwitchChannel?: (data: PlayerData) => void;
 }
 
@@ -528,8 +529,10 @@ const VideoPlayer = ({
   isFavorite: isFavoriteProp = false,
   onToggleFavorite,
   favoriteChannels = [],
+  allChannels,
   onSwitchChannel,
 }: VideoPlayerProps) => {
+  const channelLookup = allChannels && allChannels.length > 0 ? allChannels : favoriteChannels;
   const showTitle = data?.showTitle ?? "Vesti B92";
   const timeRange = data?.timeRange ?? "18:10 - 18:30";
   const thumbnail = data?.thumbnail ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80";
@@ -845,7 +848,7 @@ const VideoPlayer = ({
         if (channelInputTimer.current) clearTimeout(channelInputTimer.current);
         channelInputTimer.current = setTimeout(() => {
           const num = parseInt(newInput, 10);
-          const favCh = favoriteChannels.find((c) => c.number === num);
+          const favCh = channelLookup.find((c) => c.number === num);
           if (favCh && onSwitchChannel) {
             onSwitchChannel({
               channelNumber: String(favCh.number),
@@ -1036,6 +1039,7 @@ const VideoPlayer = ({
       onToggleFavorite,
       channelInput,
       favoriteChannels,
+      channelLookup,
       onSwitchChannel,
       showHud,
     ],
@@ -1104,7 +1108,7 @@ const VideoPlayer = ({
 
   const syncTransition = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 } as const;
   const inputNum = parseInt(channelInput, 10);
-  const foundFavChannel = isNaN(inputNum) ? undefined : favoriteChannels.find((c) => c.number === inputNum);
+  const foundFavChannel = isNaN(inputNum) ? undefined : channelLookup.find((c) => c.number === inputNum);
 
   return (
     <motion.div

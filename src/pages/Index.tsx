@@ -669,6 +669,19 @@ const Index = () => {
     });
   }, [favoriteEpgChannels, liveChannelCards]);
 
+  // Svi kanali iz baze za number-based prebacivanje u VideoPlayeru
+  const allPlayerChannels: FavoriteChannel[] = useMemo(() => {
+    return liveChannelCards.map((card) => ({
+      number: parseInt(card.channelNumber, 10),
+      channelName: card.channelName,
+      showTitle: card.title,
+      timeRange: card.timeSlot,
+      thumbnail: card.thumbnail.replace("w=400", "w=1920"),
+      streamUrl: card.streamUrl,
+      logoUrl: card.logoUrl ?? null,
+    }));
+  }, [liveChannelCards]);
+
   const selectedCategoryId = showCategories ? tvCategories[categoryIndex]?.id : null;
 
   const filteredEpgChannels = useMemo(() => {
@@ -1038,6 +1051,7 @@ const Index = () => {
           isFavorite={isFavorite(playerData?.channelName ?? "")}
           onToggleFavorite={() => toggleFavorite(playerData?.channelName ?? "")}
           favoriteChannels={playerFavoriteChannels}
+          allChannels={allPlayerChannels}
           onSwitchChannel={(newData) => setPlayerData(newData)}
         />
       </div>
