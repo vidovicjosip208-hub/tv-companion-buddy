@@ -529,8 +529,10 @@ const VideoPlayer = ({
   isFavorite: isFavoriteProp = false,
   onToggleFavorite,
   favoriteChannels = [],
+  allChannels,
   onSwitchChannel,
 }: VideoPlayerProps) => {
+  const channelLookup = allChannels && allChannels.length > 0 ? allChannels : favoriteChannels;
   const showTitle = data?.showTitle ?? "Vesti B92";
   const timeRange = data?.timeRange ?? "18:10 - 18:30";
   const thumbnail = data?.thumbnail ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80";
