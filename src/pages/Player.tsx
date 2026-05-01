@@ -92,6 +92,7 @@ const Player = () => {
       isFavorite={isFavorite(channelName)}
       onToggleFavorite={() => toggleFavorite(channelName)}
       favoriteChannels={favoriteChannels}
+      allChannels={allPlayerChannels}
       onSwitchChannel={handleSwitchChannel}
     />
   );
