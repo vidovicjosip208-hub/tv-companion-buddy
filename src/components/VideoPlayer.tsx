@@ -728,19 +728,6 @@ const VideoPlayer = ({
         hlsRef.current = null;
       }
       if (playerRef.current) {
-        // FIX: video.js dispose() uklanja <video> iz DOM-a, pa sljedeći
-        // efekt dobije null videoRef i prikazuje crni ekran kad korisnik
-        // prebaci kanal. Detachamo video element iz video.js wrappera
-        // PRIJE dispose-a tako da DOM <video> ostane živ.
-        try {
-          const playerEl = playerRef.current.el() as HTMLElement | null;
-          const parent = playerEl?.parentNode;
-          if (playerEl && parent && video.parentNode === playerEl) {
-            parent.insertBefore(video, playerEl);
-          }
-        } catch {
-          /* noop */
-        }
         playerRef.current.dispose();
         playerRef.current = null;
       }
@@ -968,13 +955,16 @@ const VideoPlayer = ({
             const hudIdxLocal = sidebarFocus === -1 ? currentIdx : sidebarFocus;
             const favCh = favoriteChannels[hudIdxLocal];
             if (favCh && onSwitchChannel && favCh.channelName !== data?.channelName) {
+              // Fallback: ako favCh.streamUrl nije dostupan, traži u channelLookup
+              const resolvedStreamUrl =
+                favCh.streamUrl ?? channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
               onSwitchChannel({
                 channelNumber: String(favCh.number),
                 showTitle: favCh.showTitle,
                 timeRange: favCh.timeRange,
                 thumbnail: favCh.thumbnail,
                 channelName: favCh.channelName,
-                streamUrl: favCh.streamUrl,
+                streamUrl: resolvedStreamUrl,
                 logoUrl: favCh.logoUrl,
               });
             }
@@ -1235,13 +1225,17 @@ const VideoPlayer = ({
                         logoUrl={favCh?.logoUrl ?? null}
                         onClick={() => {
                           if (favCh && onSwitchChannel) {
+                            // Fallback: ako favCh.streamUrl nije dostupan, traži u channelLookup
+                            const resolvedStreamUrl =
+                              favCh.streamUrl ??
+                              channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
                             onSwitchChannel({
                               channelNumber: String(favCh.number),
                               showTitle: favCh.showTitle,
                               timeRange: favCh.timeRange,
                               thumbnail: favCh.thumbnail,
                               channelName: favCh.channelName,
-                              streamUrl: favCh.streamUrl,
+                              streamUrl: resolvedStreamUrl,
                               logoUrl: favCh.logoUrl,
                             });
                           }
