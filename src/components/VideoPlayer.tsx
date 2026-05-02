@@ -560,12 +560,10 @@ const VideoPlayer = ({
   const spinnerRef = useRef<HTMLDivElement>(null);
   const [videoReady, setVideoReady] = useState(false);
 
+  // ── EFFECT 1: Inicijalizacija videojs — pokreće se SAMO jednom (prazna dep. lista) ──
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !streamUrl) return;
-    setVideoReady(false);
-
-    const hevcOk = supportsHEVC();
+    if (!video) return;
 
     video.setAttribute("playsinline", "");
     video.setAttribute("webkit-playsinline", "");
@@ -573,6 +571,54 @@ const VideoPlayer = ({
     video.crossOrigin = "anonymous";
     video.autoplay = true;
     video.muted = true;
+
+    const player = videojs(video, {
+      controls: false,
+      autoplay: true,
+      muted: true,
+      preload: "auto",
+      fluid: false,
+      html5: { vhs: { overrideNative: false } },
+    });
+    playerRef.current = player;
+
+    const enableSoundOnGesture = () => {
+      try {
+        video.muted = false;
+        video.volume = 1;
+        playerRef.current?.muted(false);
+        playerRef.current?.volume(1);
+      } catch {
+        /* noop */
+      }
+      window.removeEventListener("pointerdown", enableSoundOnGesture);
+      window.removeEventListener("keydown", enableSoundOnGesture);
+    };
+    window.addEventListener("pointerdown", enableSoundOnGesture);
+    window.addEventListener("keydown", enableSoundOnGesture);
+
+    return () => {
+      window.removeEventListener("pointerdown", enableSoundOnGesture);
+      window.removeEventListener("keydown", enableSoundOnGesture);
+      // Dispose videojs samo pri unmount komponente (ne pri promjeni streama)
+      if (playerRef.current) {
+        try {
+          playerRef.current.dispose();
+        } catch {
+          /* noop */
+        }
+        playerRef.current = null;
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── EFFECT 2: Učitavanje HLS sourcea — pokreće se svaki put kad se streamUrl mijenja ──
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !streamUrl) return;
+    setVideoReady(false);
+
+    const hevcOk = supportsHEVC();
 
     const showSpinner = () => {
       if (spinnerRef.current) spinnerRef.current.style.opacity = "1";
@@ -588,24 +634,11 @@ const VideoPlayer = ({
         video.volume = 1;
         playerRef.current?.muted(false);
         playerRef.current?.volume(1);
-      } catch (e) {
-        // stay muted if browser blocks
-      }
-    };
-    const enableSoundOnGesture = () => {
-      try {
-        video.muted = false;
-        video.volume = 1;
-        playerRef.current?.muted(false);
-        playerRef.current?.volume(1);
       } catch {
-        /* noop */
+        /* stay muted if browser blocks */
       }
-      window.removeEventListener("pointerdown", enableSoundOnGesture);
-      window.removeEventListener("keydown", enableSoundOnGesture);
     };
-    window.addEventListener("pointerdown", enableSoundOnGesture);
-    window.addEventListener("keydown", enableSoundOnGesture);
+
     video.addEventListener("playing", onPlaying);
     video.addEventListener("waiting", showSpinner);
     video.addEventListener("stalled", showSpinner);
@@ -615,24 +648,18 @@ const VideoPlayer = ({
       hideSpinner();
     }, 7000);
 
-    const player = videojs(video, {
-      controls: false,
-      autoplay: true,
-      muted: true,
-      preload: "auto",
-      fluid: false,
-      html5: {
-        vhs: { overrideNative: false },
-      },
-    });
-    playerRef.current = player;
+    // Uništi stari HLS prije nego učitamo novi source
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
 
     let hls: Hls | null = null;
     let recoverAttempts = 0;
 
     const wireQualitySelector = (levels: { height?: number; bitrate: number }[]) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const qlPlugin = (player as any).qualityLevels?.();
+      const qlPlugin = (playerRef.current as any)?.qualityLevels?.();
       if (!qlPlugin) return;
       levels.forEach((lvl, index) => {
         qlPlugin.addQualityLevel({
@@ -649,7 +676,7 @@ const VideoPlayer = ({
         });
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (player as any).hlsQualitySelector?.({ displayCurrentQuality: true });
+      (playerRef.current as any)?.hlsQualitySelector?.({ displayCurrentQuality: true });
     };
 
     if (Hls.isSupported()) {
@@ -721,25 +748,10 @@ const VideoPlayer = ({
       video.removeEventListener("stalled", showSpinner);
       video.removeEventListener("canplay", hideSpinner);
       window.clearTimeout(loadingFallbackTimer);
-      window.removeEventListener("pointerdown", enableSoundOnGesture);
-      window.removeEventListener("keydown", enableSoundOnGesture);
+      // Uništi samo HLS, ne i videojs player
       if (hls) {
         hls.destroy();
         hlsRef.current = null;
-      }
-      if (playerRef.current) {
-        // Dispose samo ako video element još postoji u DOM-u.
-        // Ako je React već uklonio element (zbog key={streamUrl} promjene),
-        // dispose() baca NotFoundError: removeChild is not a child of this node.
-        try {
-          const vjsEl = playerRef.current.el();
-          if (vjsEl && document.body.contains(vjsEl)) {
-            playerRef.current.dispose();
-          }
-        } catch {
-          /* noop — element je već uklonjen iz DOM-a */
-        }
-        playerRef.current = null;
       }
     };
   }, [streamUrl]);
@@ -1138,7 +1150,6 @@ const VideoPlayer = ({
         {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
         {streamUrl && (
           <video
-            key={streamUrl}
             ref={videoRef}
             className="video-js vjs-default-skin absolute inset-0 w-full h-full object-cover"
             style={{ zIndex: 1 }}
