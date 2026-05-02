@@ -1221,6 +1221,12 @@ const VideoPlayer = ({
                         showArrows={isActive}
                         logoUrl={favCh?.logoUrl ?? null}
                         onClick={() => {
+                          console.log("[VideoPlayer] above-card click", {
+                            chIdx,
+                            channelName: favCh?.channelName,
+                            streamUrl: favCh?.streamUrl,
+                            number: favCh?.number,
+                          });
                           if (favCh && onSwitchChannel) {
                             onSwitchChannel({
                               channelNumber: String(favCh.number),
