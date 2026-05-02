@@ -475,6 +475,10 @@ const ChannelNumberOverlay = ({ input, channelLabel, isFound }: ChannelNumberOve
           color: isFound ? "rgba(0,0,0,0.9)" : "rgba(0,0,0,0.35)",
           transition: "color 0.3s",
           minHeight: 16,
+          textAlign: "center",
+          lineHeight: 1.2,
+          maxWidth: 180,
+          wordBreak: "break-word" as const,
         }}
       >
         {isFound ? channelLabel : "\u00A0"}
