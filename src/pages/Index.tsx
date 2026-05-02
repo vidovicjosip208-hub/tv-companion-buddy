@@ -303,11 +303,6 @@ const CAMERAS_INDEX = 5;
 const SETTINGS_INDEX = 6;
 const PROFILE_INDEX = 7;
 
-// Grid layout: gridAutoFlow="column", rows=2
-// Raspored indeksa:
-//   col:  0    1    2    3  ...
-// row 0: [0]  [2]  [4]  [6] ...
-// row 1: [1]  [3]  [5]  [7] ...
 const CARDS_ROWS = 2;
 
 type FocusZone = "sidebar" | "categories" | "filters" | "epg" | "epgPrograms" | "cards" | "cameras" | "radio";
@@ -342,7 +337,7 @@ const liveCameras: CameraItem[] = [
   {
     id: "cam4",
     name: "Beograd - Kalemegdan",
-    location: "Beograd",
+    location: "Beoград",
     thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
   },
   {
@@ -490,15 +485,12 @@ const Index = () => {
   const [playerVisible, setPlayerVisible] = useState(false);
   const [playerData, setPlayerData] = useState<PlayerData | undefined>();
 
-  // Fetch channels and EPG from Supabase
   const { data: dbChannels } = useChannels();
   const channelIds = useMemo(() => dbChannels?.map((c) => c.id) ?? [], [dbChannels]);
   const { data: dbEpg } = useEPGData(channelIds.length > 0 ? channelIds : undefined);
 
-  // Build channel cards from DB data (fallback to hardcoded if DB empty)
   const liveChannelCards = useMemo(() => {
     if (!dbChannels || dbChannels.length === 0) return defaultChannelCards;
-    // Group EPG by channel_id, find live/first program
     const epgByChannel = new Map<string, typeof dbEpg>();
     if (dbEpg) {
       for (const ep of dbEpg) {
@@ -528,7 +520,6 @@ const Index = () => {
     });
   }, [dbChannels, dbEpg]);
 
-  // Build EPG channels from DB data (fallback to hardcoded)
   const liveEpgChannels: EPGChannel[] = useMemo(() => {
     if (!dbChannels || dbChannels.length === 0 || !dbEpg) return epgChannels;
     const epgByChannel = new Map<string, typeof dbEpg>();
@@ -547,8 +538,6 @@ const Index = () => {
     const today = new Date();
     const todayStr = `${String(today.getDate()).padStart(2, "0")}.${String(today.getMonth() + 1).padStart(2, "0")}.`;
 
-    // Sve kanale iz tv_channels prikazujemo, čak i ako nemaju EPG zapisa.
-    // Bez EPG-a generiramo placeholder "live" program iz imena kanala.
     return dbChannels.map((ch) => {
       const programs = epgByChannel.get(ch.id) ?? [];
       const mappedPrograms = programs.length
@@ -581,7 +570,6 @@ const Index = () => {
     });
   }, [dbChannels, dbEpg]);
 
-  // Recalculate grid constants based on live data
   const LIVE_CARDS_COUNT = liveChannelCards.length;
   const LIVE_CARDS_COLS = Math.ceil(LIVE_CARDS_COUNT / CARDS_ROWS);
 
@@ -627,8 +615,6 @@ const Index = () => {
   }, []);
 
   const favoriteEpgChannels = useMemo(() => {
-    // Favoriti su samo reference na iste kartice kanala, zato ovdje namjerno
-    // uzimamo isti streamUrl/title/timeSlot iz liveChannelCards.
     return favorites
       .map((name, idx): EPGChannel | null => {
         const card = liveChannelCards.find((c) => c.channelName === name);
@@ -649,7 +635,6 @@ const Index = () => {
       .filter((channel): channel is EPGChannel => Boolean(channel));
   }, [favorites, liveEpgChannels, liveChannelCards]);
 
-  // Build favorite channels list for VideoPlayer number switching
   const playerFavoriteChannels: FavoriteChannel[] = useMemo(() => {
     return favoriteEpgChannels.map((ch) => {
       const card = liveChannelCards.find((c) => c.channelName === ch.name);
@@ -669,7 +654,6 @@ const Index = () => {
     });
   }, [favoriteEpgChannels, liveChannelCards]);
 
-  // Svi kanali iz baze za number-based prebacivanje u VideoPlayeru
   const allPlayerChannels: FavoriteChannel[] = useMemo(() => {
     return liveChannelCards.map((card) => ({
       number: parseInt(card.channelNumber, 10),
@@ -681,6 +665,31 @@ const Index = () => {
       logoUrl: card.logoUrl ?? null,
     }));
   }, [liveChannelCards]);
+
+  // ─── KLJUČNA IZMJENA ────────────────────────────────────────────────────────
+  // onSwitchChannel sada koristi isti mehanizam kao i pokretanje iz kartice:
+  // 1. streamUrl iz PlayerData objekta (već proslijeđen iz VideoPlayer)
+  // 2. Fallback lookup u allPlayerChannels po channelName
+  // Na taj način kartice u VideoPlayer sidebaru koriste isti URL kao i kartice
+  // na glavnom ekranu (liveChannelCards → allPlayerChannels → stream_url iz baze).
+  const handleSwitchChannel = useCallback(
+    (next: PlayerData) => {
+      const resolvedStreamUrl =
+        next.streamUrl ?? allPlayerChannels.find((c) => c.channelName === next.channelName)?.streamUrl;
+
+      if (!resolvedStreamUrl) {
+        console.warn("[Index] handleSwitchChannel: stream_url nije pronađen za", next.channelName);
+        return;
+      }
+
+      setPlayerData({
+        ...next,
+        streamUrl: resolvedStreamUrl,
+      });
+    },
+    [allPlayerChannels],
+  );
+  // ────────────────────────────────────────────────────────────────────────────
 
   const selectedCategoryId = showCategories ? tvCategories[categoryIndex]?.id : null;
 
@@ -980,7 +989,6 @@ const Index = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  // Reset EPG index when category changes
   useEffect(() => {
     setEpgIndex(0);
     setProgramIndex(0);
@@ -1018,18 +1026,10 @@ const Index = () => {
   }, [sidebarIndex, focusZone]);
 
   useEffect(() => {
-    if (!isTvKanaliActive) {
-      setShowCategories(false);
-    }
-    if (!isRadioActive) {
-      setShowRadio(false);
-    }
-    if (!isFavoritesActive) {
-      setShowFavorites(false);
-    }
-    if (!isCamerasActive) {
-      setShowCameras(false);
-    }
+    if (!isTvKanaliActive) setShowCategories(false);
+    if (!isRadioActive) setShowRadio(false);
+    if (!isFavoritesActive) setShowFavorites(false);
+    if (!isCamerasActive) setShowCameras(false);
   }, [isTvKanaliActive, isRadioActive, isFavoritesActive, isCamerasActive]);
 
   if (showProfile) {
@@ -1052,7 +1052,7 @@ const Index = () => {
           onToggleFavorite={() => toggleFavorite(playerData?.channelName ?? "")}
           favoriteChannels={playerFavoriteChannels}
           allChannels={allPlayerChannels}
-          onSwitchChannel={(newData) => setPlayerData(newData)}
+          onSwitchChannel={handleSwitchChannel}
         />
       </div>
     );
