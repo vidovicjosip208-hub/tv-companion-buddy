@@ -728,6 +728,19 @@ const VideoPlayer = ({
         hlsRef.current = null;
       }
       if (playerRef.current) {
+        // FIX: video.js dispose() uklanja <video> iz DOM-a, pa sljedeći
+        // efekt dobije null videoRef i prikazuje crni ekran kad korisnik
+        // prebaci kanal. Detachamo video element iz video.js wrappera
+        // PRIJE dispose-a tako da DOM <video> ostane živ.
+        try {
+          const playerEl = playerRef.current.el() as HTMLElement | null;
+          const parent = playerEl?.parentNode;
+          if (playerEl && parent && video.parentNode === playerEl) {
+            parent.insertBefore(video, playerEl);
+          }
+        } catch {
+          /* noop */
+        }
         playerRef.current.dispose();
         playerRef.current = null;
       }
@@ -1221,12 +1234,6 @@ const VideoPlayer = ({
                         showArrows={isActive}
                         logoUrl={favCh?.logoUrl ?? null}
                         onClick={() => {
-                          console.log("[VideoPlayer] above-card click", {
-                            chIdx,
-                            channelName: favCh?.channelName,
-                            streamUrl: favCh?.streamUrl,
-                            number: favCh?.number,
-                          });
                           if (favCh && onSwitchChannel) {
                             onSwitchChannel({
                               channelNumber: String(favCh.number),
