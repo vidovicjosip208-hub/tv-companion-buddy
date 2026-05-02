@@ -800,12 +800,13 @@ const VideoPlayer = ({
         if (channelInputTimer.current) clearTimeout(channelInputTimer.current);
         channelInputTimer.current = setTimeout(() => {
           const num = parseInt(newInput, 10);
-          const favCh = channelLookup.find((c) => c.number === num);
+          // Numerički unos traži po poziciji u listi omiljenih (1-based),
+          // jer korisnik tipka "3" misleći na 3. omiljeni kanal — ne na channel_number iz baze.
+          const favCh = favoriteChannels.find((c) => c.number === num);
           if (favCh && onSwitchChannel) {
             // Fallback: ako favCh.streamUrl nije dostupan, traži u allChannels po imenu
             const resolvedStreamUrl =
-              favCh.streamUrl ??
-              (allChannels ?? favoriteChannels).find((c) => c.channelName === favCh.channelName)?.streamUrl;
+              favCh.streamUrl ?? (allChannels ?? []).find((c) => c.channelName === favCh.channelName)?.streamUrl;
             onSwitchChannel({
               channelNumber: String(favCh.number),
               showTitle: favCh.showTitle,
@@ -1070,7 +1071,7 @@ const VideoPlayer = ({
 
   const syncTransition = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 } as const;
   const inputNum = parseInt(channelInput, 10);
-  const foundFavChannel = isNaN(inputNum) ? undefined : channelLookup.find((c) => c.number === inputNum);
+  const foundFavChannel = isNaN(inputNum) ? undefined : favoriteChannels.find((c) => c.number === inputNum);
 
   return (
     <motion.div
