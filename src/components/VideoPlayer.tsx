@@ -468,7 +468,7 @@ const ChannelNumberOverlay = ({ input, channelLabel, isFound }: ChannelNumberOve
     >
       <span
         style={{
-          fontSize: 13,
+          fontSize: 17,
           fontWeight: 900,
           letterSpacing: "0.18em",
           textTransform: "uppercase" as const,
