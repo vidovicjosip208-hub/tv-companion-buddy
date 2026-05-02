@@ -25,7 +25,6 @@ const Player = () => {
           showTitle: favName,
           timeRange: "00:00 - 00:00",
           thumbnail: ch?.thumbnail_url || ch?.logo_url || "",
-          // stream_url se sprema direktno ovdje — ne tražimo ga ponovo u handleSwitchChannel
           streamUrl: ch?.stream_url ?? undefined,
           logoUrl: ch?.logo_url ?? null,
         };
@@ -35,8 +34,7 @@ const Player = () => {
 
   const currentChannel = useMemo(() => channels.find((c) => c.name === channelName), [channels, channelName]);
 
-  // Svi kanali iz baze za numeričku navigaciju (broj na daljinskom = channel_number iz baze,
-  // ne indeks u listi omiljenih).
+  // Svi kanali iz baze za numeričku navigaciju
   const allPlayerChannels: FavoriteChannel[] = useMemo(
     () =>
       channels.map((ch) => ({
@@ -51,16 +49,22 @@ const Player = () => {
     [channels],
   );
 
-  // FIX: Koristimo next.streamUrl direktno iz PlayerData objekta koji je već
-  // izgradjen iz favoriteChannels — izbjegavamo dvostruki channels.find()
-  // koji može failati ako su imena kanala nekonzistentna ili channels još nije učitan.
   const handleSwitchChannel = (next: PlayerData) => {
-    const stream = next.streamUrl ?? channels.find((c) => c.name === next.channelName)?.stream_url;
+    // 1. Pokušaj koristiti streamUrl iz PlayerData objekta (proslijeđen iz VideoPlayer)
+    let stream = next.streamUrl;
 
+    // 2. Ako nije dostupan, traži direktno u channels listi iz baze po imenu kanala
+    if (!stream && next.channelName) {
+      stream = channels.find((c) => c.name === next.channelName)?.stream_url;
+    }
+
+    // 3. Ako i dalje nije pronađen, logiramo i ne izvršavamo switch
     if (!stream) {
       console.warn(
-        "[Player] handleSwitchChannel: stream_url nije pronađen za kanal",
+        "[Player] handleSwitchChannel: stream_url nije pronađen za kanal:",
         next.channelName,
+        "— channels učitani:",
+        channels.length,
         "— channel switch se neće izvršiti.",
       );
       return;
@@ -70,7 +74,6 @@ const Player = () => {
     if (next.channelName) params.set("channel", next.channelName);
     params.set("stream", stream);
     if (next.showTitle) params.set("title", next.showTitle);
-
     navigate(`/player?${params.toString()}`, { replace: true });
   };
 
@@ -79,7 +82,6 @@ const Player = () => {
       isVisible={true}
       onClose={() => navigate(-1)}
       data={{
-        // channelNumber se izračunava iz favoriteChannels, ne hardkodira se
         channelNumber: String(favoriteChannels.find((c) => c.channelName === channelName)?.number ?? 0),
         showTitle,
         timeRange: "15:50 - 17:00",
