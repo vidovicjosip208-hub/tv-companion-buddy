@@ -728,7 +728,17 @@ const VideoPlayer = ({
         hlsRef.current = null;
       }
       if (playerRef.current) {
-        playerRef.current.dispose();
+        // Dispose samo ako video element još postoji u DOM-u.
+        // Ako je React već uklonio element (zbog key={streamUrl} promjene),
+        // dispose() baca NotFoundError: removeChild is not a child of this node.
+        try {
+          const vjsEl = playerRef.current.el();
+          if (vjsEl && document.body.contains(vjsEl)) {
+            playerRef.current.dispose();
+          }
+        } catch {
+          /* noop — element je već uklonjen iz DOM-a */
+        }
         playerRef.current = null;
       }
     };
