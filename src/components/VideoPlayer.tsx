@@ -1190,7 +1190,7 @@ const VideoPlayer = ({
               style={{
                 zIndex: 45,
                 left: 16,
-                bottom: SIDEBAR_BOTTOM + 32, // ← IZMJENA: +32px razmaka iznad progress bara
+                bottom: SIDEBAR_BOTTOM + 48, // ← IZMJENA: +48px razmaka iznad progress bara
                 width: CARD_W,
                 display: "flex",
                 flexDirection: "column",
