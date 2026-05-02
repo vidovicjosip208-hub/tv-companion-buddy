@@ -802,13 +802,17 @@ const VideoPlayer = ({
           const num = parseInt(newInput, 10);
           const favCh = channelLookup.find((c) => c.number === num);
           if (favCh && onSwitchChannel) {
+            // Fallback: ako favCh.streamUrl nije dostupan, traži u allChannels po imenu
+            const resolvedStreamUrl =
+              favCh.streamUrl ??
+              (allChannels ?? favoriteChannels).find((c) => c.channelName === favCh.channelName)?.streamUrl;
             onSwitchChannel({
               channelNumber: String(favCh.number),
               showTitle: favCh.showTitle,
               timeRange: favCh.timeRange,
               thumbnail: favCh.thumbnail,
               channelName: favCh.channelName,
-              streamUrl: favCh.streamUrl,
+              streamUrl: resolvedStreamUrl,
               logoUrl: favCh.logoUrl,
             });
           }
@@ -1081,7 +1085,7 @@ const VideoPlayer = ({
         {streamUrl && (
           <video
             ref={videoRef}
-            className="video-js vjs-default-skin absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
             style={{ zIndex: 1 }}
             playsInline
             {...({ "webkit-playsinline": "" } as Record<string, string>)}
@@ -1111,15 +1115,7 @@ const VideoPlayer = ({
             zIndex: 5,
           }}
         />
-        <style>{`
-          @keyframes vp-spin { to { transform: rotate(360deg); } }
-          .video-js .vjs-loading-spinner,
-          .video-js .vjs-big-play-button,
-          .video-js .vjs-control-bar,
-          .video-js .vjs-text-track-display,
-          .video-js .vjs-error-display,
-          .video-js .vjs-modal-dialog { display: none !important; }
-        `}</style>
+        <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
 
         <AnimatePresence>
           {videoReady && showChannelOverlay && (
