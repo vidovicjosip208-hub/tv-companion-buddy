@@ -1,12 +1,7 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
-import videojs from "video.js";
-import type Player from "video.js/dist/types/player";
-import "video.js/dist/video-js.css";
-import "videojs-contrib-quality-levels";
-import "videojs-hls-quality-selector";
 
 // Detect HEVC (H.265) decoding support — most 4K IPTV streams use HEVC.
 const supportsHEVC = (): boolean => {
@@ -556,68 +551,14 @@ const VideoPlayer = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const playerRef = useRef<Player | null>(null);
   const spinnerRef = useRef<HTMLDivElement>(null);
   const [videoReady, setVideoReady] = useState(false);
 
-  // ── EFFECT 1: Inicijalizacija videojs — pokreće se SAMO jednom (prazna dep. lista) ──
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.setAttribute("playsinline", "");
-    video.setAttribute("webkit-playsinline", "");
-    video.setAttribute("preload", "auto");
-    video.crossOrigin = "anonymous";
-    video.autoplay = true;
-    video.muted = true;
-
-    const player = videojs(video, {
-      controls: false,
-      autoplay: true,
-      muted: true,
-      preload: "auto",
-      fluid: false,
-      html5: { vhs: { overrideNative: false } },
-    });
-    playerRef.current = player;
-
-    const enableSoundOnGesture = () => {
-      try {
-        video.muted = false;
-        video.volume = 1;
-        playerRef.current?.muted(false);
-        playerRef.current?.volume(1);
-      } catch {
-        /* noop */
-      }
-      window.removeEventListener("pointerdown", enableSoundOnGesture);
-      window.removeEventListener("keydown", enableSoundOnGesture);
-    };
-    window.addEventListener("pointerdown", enableSoundOnGesture);
-    window.addEventListener("keydown", enableSoundOnGesture);
-
-    return () => {
-      window.removeEventListener("pointerdown", enableSoundOnGesture);
-      window.removeEventListener("keydown", enableSoundOnGesture);
-      // Dispose videojs samo pri unmount komponente (ne pri promjeni streama)
-      if (playerRef.current) {
-        try {
-          playerRef.current.dispose();
-        } catch {
-          /* noop */
-        }
-        playerRef.current = null;
-      }
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── EFFECT 2: Učitavanje HLS sourcea — pokreće se svaki put kad se streamUrl mijenja ──
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !streamUrl) return;
-    setVideoReady(false);
 
+    setVideoReady(false);
     const hevcOk = supportsHEVC();
 
     const showSpinner = () => {
@@ -626,61 +567,48 @@ const VideoPlayer = ({
     const hideSpinner = () => {
       if (spinnerRef.current) spinnerRef.current.style.opacity = "0";
     };
+
     const onPlaying = () => {
       setVideoReady(true);
       hideSpinner();
       try {
         video.muted = false;
         video.volume = 1;
-        playerRef.current?.muted(false);
-        playerRef.current?.volume(1);
       } catch {
-        /* stay muted if browser blocks */
+        /* noop */
       }
+    };
+    const enableSoundOnGesture = () => {
+      try {
+        video.muted = false;
+        video.volume = 1;
+      } catch {
+        /* noop */
+      }
+      window.removeEventListener("pointerdown", enableSoundOnGesture);
+      window.removeEventListener("keydown", enableSoundOnGesture);
     };
 
     video.addEventListener("playing", onPlaying);
     video.addEventListener("waiting", showSpinner);
     video.addEventListener("stalled", showSpinner);
     video.addEventListener("canplay", hideSpinner);
+    window.addEventListener("pointerdown", enableSoundOnGesture);
+    window.addEventListener("keydown", enableSoundOnGesture);
+
     const loadingFallbackTimer = window.setTimeout(() => {
       setVideoReady(true);
       hideSpinner();
     }, 7000);
 
-    // Uništi stari HLS prije nego učitamo novi source
+    // Uništi stari HLS prije učitavanja novog sourcea
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
 
-    let hls: Hls | null = null;
-    let recoverAttempts = 0;
-
-    const wireQualitySelector = (levels: { height?: number; bitrate: number }[]) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const qlPlugin = (playerRef.current as any)?.qualityLevels?.();
-      if (!qlPlugin) return;
-      levels.forEach((lvl, index) => {
-        qlPlugin.addQualityLevel({
-          id: String(index),
-          width: undefined,
-          height: lvl.height,
-          bitrate: lvl.bitrate,
-          enabled_(enabled?: boolean) {
-            if (typeof enabled === "boolean" && hls) {
-              hls.currentLevel = enabled ? index : -1;
-            }
-            return hls ? hls.currentLevel === index || hls.currentLevel === -1 : true;
-          },
-        });
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (playerRef.current as any)?.hlsQualitySelector?.({ displayCurrentQuality: true });
-    };
-
     if (Hls.isSupported()) {
-      hls = new Hls({
+      const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
         backBufferLength: 60,
@@ -696,17 +624,19 @@ const VideoPlayer = ({
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
-        const usableLevels = data.levels.filter((lvl) => {
+        // Filtriraj HEVC levelove ako browser ne podržava
+        const hasUsable = data.levels.some((lvl) => {
           const codecs = (lvl.videoCodec || "").toLowerCase();
           const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
           return isHevc ? hevcOk : true;
         });
-        wireQualitySelector(usableLevels);
-        video.play().catch(() => {});
+        if (hasUsable) video.play().catch(() => {});
+        else video.play().catch(() => {});
       });
 
+      let recoverAttempts = 0;
       hls.on(Hls.Events.ERROR, (_e, data) => {
-        if (!data.fatal || !hls) return;
+        if (!data.fatal) return;
         showSpinner();
         switch (data.type) {
           case Hls.ErrorTypes.NETWORK_ERROR:
@@ -719,9 +649,8 @@ const VideoPlayer = ({
             break;
           case Hls.ErrorTypes.MEDIA_ERROR:
             recoverAttempts++;
-            if (recoverAttempts <= 2) {
-              hls.recoverMediaError();
-            } else {
+            if (recoverAttempts <= 2) hls.recoverMediaError();
+            else {
               hls.swapAudioCodec();
               hls.recoverMediaError();
             }
@@ -732,10 +661,10 @@ const VideoPlayer = ({
             } catch {
               /* noop */
             }
-            break;
         }
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      // Safari native HLS
       video.src = streamUrl;
       video.addEventListener("loadedmetadata", () => {
         video.play().catch(() => {});
@@ -747,10 +676,11 @@ const VideoPlayer = ({
       video.removeEventListener("waiting", showSpinner);
       video.removeEventListener("stalled", showSpinner);
       video.removeEventListener("canplay", hideSpinner);
+      window.removeEventListener("pointerdown", enableSoundOnGesture);
+      window.removeEventListener("keydown", enableSoundOnGesture);
       window.clearTimeout(loadingFallbackTimer);
-      // Uništi samo HLS, ne i videojs player
-      if (hls) {
-        hls.destroy();
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
         hlsRef.current = null;
       }
     };
