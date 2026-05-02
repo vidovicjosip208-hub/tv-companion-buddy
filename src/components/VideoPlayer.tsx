@@ -468,11 +468,11 @@ const ChannelNumberOverlay = ({ input, channelLabel, isFound }: ChannelNumberOve
     >
       <span
         style={{
-          fontSize: 11,
-          fontWeight: 600,
+          fontSize: 13,
+          fontWeight: 900,
           letterSpacing: "0.18em",
           textTransform: "uppercase" as const,
-          color: isFound ? "rgba(0,0,0,0.85)" : "rgba(0,0,0,0.35)",
+          color: isFound ? "rgba(0,0,0,0.9)" : "rgba(0,0,0,0.35)",
           transition: "color 0.3s",
           minHeight: 16,
         }}
