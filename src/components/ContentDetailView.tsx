@@ -23,7 +23,6 @@ const VISIBLE_COUNT = 4;
 const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetailViewProps) => {
   const [showEpisodes, setShowEpisodes] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
-  // Počinjemo na Resume (idx 0)
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [scrollOffset, setScrollOffset] = useState(0);
 
@@ -46,12 +45,10 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
 
             if (nextMainIndex === -1) return currentOffset;
 
-            // Gore: simetrično logici dolje
             if (direction === -1 && nextMainIndex <= currentOffset && currentOffset > 0) {
               return Math.max(0, currentOffset - 1);
             }
 
-            // Dolje: scroll kad fokus ulazi na donji peek i još ima gumba ispod
             if (
               direction === 1 &&
               nextMainIndex >= currentOffset + VISIBLE_COUNT - 1 &&
@@ -95,7 +92,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
   const f = (id: ButtonId) => ALL_BUTTONS[focusedIndex] === id;
 
   const isMovie = !details.episodes;
-  const hasProgress = false; // TODO: hook up to real watch progress
+  const hasProgress = false;
   const showPlaySeries = !isMovie && !hasProgress;
 
   const getButtonContent = (id: ButtonId, isFocused: boolean) => {
@@ -105,20 +102,20 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
         <button
           key={id}
           onClick={() => setShowPlayer(true)}
-          className={`flex items-center gap-3 rounded-lg px-10 py-4 w-fit min-w-[360px] transition-all duration-300 group ${
+          className={`flex items-center gap-3 rounded-lg px-4 sm:px-10 py-3 sm:py-4 w-full sm:w-fit sm:min-w-[360px] transition-all duration-300 group ${
             isFocused ? "bg-white/20 border border-white/60 ring-2 ring-white/80" : "hover:bg-muted/20"
           }`}
         >
           <Play
-            className={`w-6 h-6 transition-colors ${isFocused ? "text-foreground fill-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+            className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isFocused ? "text-foreground fill-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           />
           <span
-            className={`font-medium text-base transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+            className={`font-medium text-sm sm:text-base transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           >
             {showPlay ? (isMovie ? "Play" : "Play S1: Ep. 1") : isMovie ? "Resume" : "Resume S1: Ep. 1"}
           </span>
           {!showPlay && (
-            <div className="ml-auto w-20 h-1 bg-muted-foreground/30 rounded-full overflow-hidden">
+            <div className="ml-auto w-16 sm:w-20 h-1 bg-muted-foreground/30 rounded-full overflow-hidden">
               <div className="w-[40%] h-full bg-[#FFBE00] rounded-full" />
             </div>
           )}
@@ -130,7 +127,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
       playFromBeginning: {
         icon: (
           <RotateCcw
-            className={`w-6 h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+            className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           />
         ),
         label: "Play From Beginning",
@@ -139,7 +136,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
       episodesAndMore: {
         icon: (
           <Layers
-            className={`w-6 h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+            className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           />
         ),
         label: isMovie ? "Trailers & More" : "Episodes & More",
@@ -148,7 +145,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
       audioSubtitles: {
         icon: (
           <Captions
-            className={`w-6 h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+            className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           />
         ),
         label: "Audio & Subtitles",
@@ -156,7 +153,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
       addToMyList: {
         icon: (
           <Plus
-            className={`w-6 h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+            className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           />
         ),
         label: "Add To My List",
@@ -170,13 +167,13 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
       <button
         key={id}
         onClick={btn.onClick}
-        className={`flex items-center gap-3 px-10 py-4 min-w-[360px] rounded-lg transition-all duration-300 group ${
+        className={`flex items-center gap-3 px-4 sm:px-10 py-3 sm:py-4 w-full sm:w-fit sm:min-w-[360px] rounded-lg transition-all duration-300 group ${
           isFocused ? "bg-white/20 ring-2 ring-white/80" : "hover:bg-muted/20"
         }`}
       >
         {btn.icon}
         <span
-          className={`font-medium text-base transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+          className={`font-medium text-sm sm:text-base transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
         >
           {btn.label}
         </span>
@@ -200,15 +197,15 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center px-12 w-full h-full text-center pb-[280px]">
+      <div className="relative z-10 flex flex-col items-center justify-center px-4 sm:px-8 lg:px-12 w-full h-full text-center pb-[120px] sm:pb-[200px] lg:pb-[280px]">
         {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="mb-4 -mt-52"
+          className="mb-4 -mt-10 sm:-mt-28 lg:-mt-52"
         >
-          <img src={logo} alt="Max Ovizija" className="h-[280px] w-auto" />
+          <img src={logo} alt="Max Ovizija" className="h-[100px] sm:h-[180px] lg:h-[280px] w-auto" />
         </motion.div>
 
         {/* Title */}
@@ -216,7 +213,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-6xl font-black text-foreground tracking-tight mb-5 -mt-24"
+          className="text-3xl sm:text-5xl lg:text-6xl font-black text-foreground tracking-tight mb-5 -mt-6 sm:-mt-12 lg:-mt-24"
         >
           {details.title}
         </motion.h1>
@@ -226,7 +223,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex items-center gap-3 text-base mb-5 flex-wrap justify-center"
+          className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base mb-5 flex-wrap justify-center"
         >
           <span className="text-foreground">{details.year}</span>
           <span className="text-muted-foreground">•</span>
@@ -253,19 +250,22 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="text-muted-foreground text-lg leading-relaxed mb-10 line-clamp-5 max-w-[700px]"
+          className="text-muted-foreground text-sm sm:text-base lg:text-lg leading-relaxed mb-10 line-clamp-3 sm:line-clamp-4 lg:line-clamp-5 max-w-[90vw] sm:max-w-[600px] lg:max-w-[700px]"
         >
           {details.description}
         </motion.p>
 
-        {/* Action buttons — podignuti više prema gore */}
+        {/* Action buttons */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="absolute bottom-32 left-0 right-0 flex flex-col items-center gap-3"
+          className="absolute bottom-16 sm:bottom-24 lg:bottom-32 left-0 right-0 flex flex-col items-center gap-3 px-4 sm:px-0"
         >
-          <div className="flex flex-col items-center gap-3" style={{ minHeight: `${VISIBLE_COUNT * 60}px` }}>
+          <div
+            className="flex flex-col items-center gap-2 sm:gap-3 w-full sm:w-auto"
+            style={{ minHeight: `${VISIBLE_COUNT * 56}px` }}
+          >
             <AnimatePresence mode="popLayout">
               {MAIN_BUTTONS.map((id, idx) => {
                 const visibleStart = scrollOffset;
@@ -292,6 +292,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
                     }}
                     exit={{ opacity: 0, y: isPeekTop ? -20 : 20 }}
                     transition={{ duration: 0.25 }}
+                    className="w-full sm:w-auto"
                   >
                     {getButtonContent(id, f(id))}
                   </motion.div>
@@ -301,28 +302,28 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
           </div>
         </motion.div>
 
-        {/* Thumbs — ostaju na dnu */}
-        <div className="absolute bottom-8 left-0 right-0 flex items-center justify-center gap-2">
+        {/* Thumbs */}
+        <div className="absolute bottom-6 sm:bottom-8 left-0 right-0 flex items-center justify-center gap-2">
           <button
-            className={`flex items-center justify-center w-11 h-11 rounded-full border transition-all ${
+            className={`flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full border transition-all ${
               f("thumbsUp")
                 ? "bg-white border-white"
                 : "border-muted-foreground/30 hover:bg-muted/30 hover:border-muted-foreground/50"
             }`}
           >
             <ThumbsUp
-              className={`w-5 h-5 transition-colors ${f("thumbsUp") ? "text-black" : "text-muted-foreground"}`}
+              className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${f("thumbsUp") ? "text-black" : "text-muted-foreground"}`}
             />
           </button>
           <button
-            className={`flex items-center justify-center w-11 h-11 rounded-full border transition-all ${
+            className={`flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full border transition-all ${
               f("thumbsDown")
                 ? "bg-white border-white"
                 : "border-muted-foreground/30 hover:bg-muted/30 hover:border-muted-foreground/50"
             }`}
           >
             <ThumbsDown
-              className={`w-5 h-5 transition-colors ${f("thumbsDown") ? "text-black" : "text-muted-foreground"}`}
+              className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${f("thumbsDown") ? "text-black" : "text-muted-foreground"}`}
             />
           </button>
         </div>
