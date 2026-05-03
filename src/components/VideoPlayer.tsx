@@ -546,7 +546,7 @@ const VideoPlayer = ({
   }));
 
   const [progress, setProgress] = useState(42);
-  const [aspectRatioMode, setAspectRatioMode] = useState<"original" | "fill" | "4:3" | "16:9">("original");
+  const [aspectRatioMode, setAspectRatioMode] = useState<"original" | "fill" | "4:3" | "16:9">("16:9");
   const cycleAspectRatio = () => {
     setAspectRatioMode((p) => {
       if (p === "original") return "fill";
@@ -1136,10 +1136,9 @@ const VideoPlayer = ({
                   objectFit: "fill" as const,
                 }),
                 ...(aspectRatioMode === "16:9" && {
-                  width: "auto",
+                  width: "100%",
                   height: "100%",
-                  aspectRatio: "16/9",
-                  objectFit: "fill" as const,
+                  objectFit: "cover" as const,
                 }),
               }}
             />
