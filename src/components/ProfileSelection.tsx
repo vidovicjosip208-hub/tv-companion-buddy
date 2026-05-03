@@ -86,11 +86,11 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
             <span className="text-xl sm:text-2xl font-bold text-accent">ovizija</span>
           </div>
         </div>
-        <span className="text-xs font-semibold tracking-widest text-accent uppercase">Videoteka</span>
+        <span className="text-xs font-semibold tracking-widest text-accent uppercase">{t("profile.brand")}</span>
       </div>
 
       {/* Title */}
-      <h1 className="text-lg sm:text-2xl font-light text-muted-foreground">Choose an account</h1>
+      <h1 className="text-lg sm:text-2xl font-light text-muted-foreground">{t("profile.choose")}</h1>
 
       {/* Profile cards */}
       <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
