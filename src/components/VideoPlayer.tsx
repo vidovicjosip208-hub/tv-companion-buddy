@@ -546,6 +546,10 @@ const VideoPlayer = ({
   }));
 
   const [progress, setProgress] = useState(42);
+  const [aspectRatioMode, setAspectRatioMode] = useState<"cover" | "contain" | "fill">("cover");
+  const cycleAspectRatio = () => {
+    setAspectRatioMode((p) => (p === "cover" ? "contain" : p === "contain" ? "fill" : "cover"));
+  };
   const [isProgressFocused, setIsProgressFocused] = useState(false);
   const [focusedControl, setFocusedControl] = useState<number>(1);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -1110,9 +1114,9 @@ const VideoPlayer = ({
                 transform: "translate(-50%, -50%)",
                 minWidth: "100%",
                 minHeight: "100%",
-                width: "auto",
-                height: "auto",
-                objectFit: "cover",
+                width: aspectRatioMode === "fill" ? "100%" : "auto",
+                height: aspectRatioMode === "fill" ? "100%" : "auto",
+                objectFit: aspectRatioMode,
               }}
             />
           </div>
@@ -1344,42 +1348,127 @@ const VideoPlayer = ({
                     </div>
                   </div>
 
-                  <button
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginRight: "16px",
-                      flexShrink: 0,
-                      transition: "all 0.2s",
-                      width: "fit-content",
-                      opacity: isFavoriteProp || focusedControl === 3 ? 1 : 0.55,
-                      outline:
-                        focusedControl === 3 && !epgMode && !isProgressFocused
-                          ? `2px solid rgba(245,197,24,0.5)`
-                          : "2px solid transparent",
-                      outlineOffset: "4px",
-                      borderRadius: "6px",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "4px 8px",
-                      transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      setFocusedControl(3);
-                      onToggleFavorite?.();
-                    }}
-                  >
-                    <Heart
-                      className="w-5 h-5"
-                      style={{ color: GOLD, fill: isFavoriteProp ? GOLD : "none", transition: "fill 0.2s" }}
-                    />
-                    <span className="text-xs font-medium" style={{ color: GOLD }}>
-                      Dodajte u omiljene
-                    </span>
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 8, flexShrink: 0 }}>
+                    {/* Aspect Ratio gumb */}
+                    <button
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        cycleAspectRatio();
+                      }}
+                      title={`Aspect ratio: ${aspectRatioMode}`}
+                      style={{
+                        display: "inline-flex",
+                        flexDirection: "column" as const,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 2,
+                        padding: "4px 10px",
+                        background: "none",
+                        border: `1.5px solid rgba(245,197,24,0.4)`,
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        opacity: 0.8,
+                      }}
+                    >
+                      <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
+                        {aspectRatioMode === "cover" && (
+                          <>
+                            <rect
+                              x="1"
+                              y="1"
+                              width="20"
+                              height="12"
+                              rx="1.5"
+                              stroke={GOLD}
+                              strokeWidth="1.5"
+                              fill="none"
+                            />
+                            <rect x="4" y="3" width="14" height="8" rx="0.5" fill={GOLD} opacity="0.5" />
+                          </>
+                        )}
+                        {aspectRatioMode === "contain" && (
+                          <>
+                            <rect
+                              x="1"
+                              y="1"
+                              width="20"
+                              height="12"
+                              rx="1.5"
+                              stroke={GOLD}
+                              strokeWidth="1.5"
+                              fill="none"
+                            />
+                            <rect x="6" y="1" width="10" height="12" rx="0.5" fill={GOLD} opacity="0.5" />
+                          </>
+                        )}
+                        {aspectRatioMode === "fill" && (
+                          <>
+                            <rect
+                              x="1"
+                              y="1"
+                              width="20"
+                              height="12"
+                              rx="1.5"
+                              stroke={GOLD}
+                              strokeWidth="1.5"
+                              fill={GOLD}
+                              fillOpacity="0.5"
+                            />
+                          </>
+                        )}
+                      </svg>
+                      <span
+                        style={{
+                          fontSize: 8,
+                          fontWeight: 700,
+                          color: GOLD,
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase" as const,
+                        }}
+                      >
+                        {aspectRatioMode === "cover" ? "Crop" : aspectRatioMode === "contain" ? "Fit" : "Fill"}
+                      </span>
+                    </button>
+
+                    {/* Dodajte u omiljene */}
+                    <button
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        marginRight: "16px",
+                        flexShrink: 0,
+                        transition: "all 0.2s",
+                        width: "fit-content",
+                        opacity: isFavoriteProp || focusedControl === 3 ? 1 : 0.55,
+                        outline:
+                          focusedControl === 3 && !epgMode && !isProgressFocused
+                            ? `2px solid rgba(245,197,24,0.5)`
+                            : "2px solid transparent",
+                        outlineOffset: "4px",
+                        borderRadius: "6px",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "4px 8px",
+                        transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setFocusedControl(3);
+                        onToggleFavorite?.();
+                      }}
+                    >
+                      <Heart
+                        className="w-5 h-5"
+                        style={{ color: GOLD, fill: isFavoriteProp ? GOLD : "none", transition: "fill 0.2s" }}
+                      />
+                      <span className="text-xs font-medium" style={{ color: GOLD }}>
+                        Dodajte u omiljene
+                      </span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* EPG / mini strip */}
