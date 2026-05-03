@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { User, Settings } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface ProfileSelectionProps {
@@ -12,6 +13,7 @@ const profiles = [{ id: "1", name: "Nomo", color: "bg-primary" }];
 type FocusArea = "profiles" | "manage";
 
 const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
+  const { t } = useTranslation();
   const [focusArea, setFocusArea] = useState<FocusArea>("profiles");
   const [focusedIndex, setFocusedIndex] = useState(0);
 
