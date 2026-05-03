@@ -547,6 +547,20 @@ const VideoPlayer = ({
 
   const [progress, setProgress] = useState(42);
   const [aspectRatioMode, setAspectRatioMode] = useState<"original" | "fill" | "4:3" | "16:9">("16:9");
+  const [videoNativeAR, setVideoNativeAR] = useState<number | null>(null);
+
+  // Detektiramo native aspect ratio streama čim metadata bude dostupna
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const onMeta = () => {
+      if (video.videoWidth && video.videoHeight) {
+        setVideoNativeAR(video.videoWidth / video.videoHeight);
+      }
+    };
+    video.addEventListener("loadedmetadata", onMeta);
+    return () => video.removeEventListener("loadedmetadata", onMeta);
+  }, [streamUrl]);
   const cycleAspectRatio = () => {
     setAspectRatioMode((p) => {
       if (p === "original") return "fill";
@@ -1112,35 +1126,37 @@ const VideoPlayer = ({
               muted
               preload="auto"
               crossOrigin="anonymous"
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                ...(aspectRatioMode === "original" && {
-                  width: "auto",
-                  height: "auto",
-                  maxWidth: "100%",
-                  maxHeight: "100%",
+              style={(() => {
+                const base = {
+                  position: "absolute" as const,
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                };
+                if (aspectRatioMode === "fill") {
+                  return { ...base, width: "100%", height: "100%", objectFit: "fill" as const };
+                }
+                if (aspectRatioMode === "4:3") {
+                  return {
+                    ...base,
+                    width: "auto",
+                    height: "100%",
+                    aspectRatio: "4/3",
+                    objectFit: "fill" as const,
+                    maxWidth: "100%",
+                  };
+                }
+                // Za "16:9" i "original" — koristimo contain da nikad ne odrežemo sliku.
+                // Ako je stream širi od ekrana → fit by width; ako je viši → fit by height.
+                // object-fit: contain to radi automatski.
+                return {
+                  ...base,
+                  width: "100%",
+                  height: "100%",
                   objectFit: "contain" as const,
-                }),
-                ...(aspectRatioMode === "fill" && {
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "fill" as const,
-                }),
-                ...(aspectRatioMode === "4:3" && {
-                  width: "auto",
-                  height: "100%",
-                  aspectRatio: "4/3",
-                  objectFit: "fill" as const,
-                }),
-                ...(aspectRatioMode === "16:9" && {
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover" as const,
-                }),
-              }}
+                  backgroundColor: "transparent",
+                };
+              })()}
             />
           </div>
         )}
@@ -1165,10 +1181,7 @@ const VideoPlayer = ({
             zIndex: 5,
           }}
         />
-        <style>{`
-          @keyframes vp-spin { to { transform: rotate(360deg); } }
-          video { aspect-ratio: unset !important; }
-        `}</style>
+        <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
 
         <AnimatePresence>
           {videoReady && showChannelOverlay && (
