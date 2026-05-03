@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { User, UserPlus, Settings } from "lucide-react";
+import { User, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,6 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
   const [focusArea, setFocusArea] = useState<FocusArea>("profiles");
   const [focusedIndex, setFocusedIndex] = useState(0);
 
-  // profiles + add account button
   const totalItems = profiles.length + 1;
 
   const handleKeyDown = useCallback(
@@ -53,7 +52,6 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
         case "Enter":
           e.preventDefault();
           if (focusArea === "profiles" && focusedIndex < profiles.length) {
-            // Select profile - for now just go back
             onBack();
           }
           break;
@@ -73,29 +71,29 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      className="h-screen w-screen bg-transparent relative z-10 flex flex-col items-center justify-center gap-8"
+      className="h-screen w-screen bg-transparent relative z-10 flex flex-col items-center justify-center gap-6 sm:gap-8 px-4"
     >
       {/* Logo area */}
-      <div className="flex flex-col items-center gap-2 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-7 h-7 text-accent-foreground fill-current">
+      <div className="flex flex-col items-center gap-2 mb-2 sm:mb-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-accent flex items-center justify-center">
+            <svg viewBox="0 0 24 24" className="w-6 h-6 sm:w-7 sm:h-7 text-accent-foreground fill-current">
               <polygon points="9.5,7.5 16,12 9.5,16.5" />
             </svg>
           </div>
           <div>
-            <span className="text-2xl font-bold text-foreground">MAX</span>
-            <span className="text-2xl font-bold text-accent">ovizija</span>
+            <span className="text-xl sm:text-2xl font-bold text-foreground">MAX</span>
+            <span className="text-xl sm:text-2xl font-bold text-accent">ovizija</span>
           </div>
         </div>
         <span className="text-xs font-semibold tracking-widest text-accent uppercase">Videoteka</span>
       </div>
 
       {/* Title */}
-      <h1 className="text-2xl font-light text-muted-foreground">Choose an account</h1>
+      <h1 className="text-lg sm:text-2xl font-light text-muted-foreground">Choose an account</h1>
 
       {/* Profile cards */}
-      <div className="flex gap-6">
+      <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
         {profiles.map((profile, index) => {
           const isFocused = focusArea === "profiles" && focusedIndex === index;
           return (
@@ -107,16 +105,21 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
                 setFocusedIndex(index);
               }}
               className={cn(
-                "w-44 h-48 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-200 border-2 overflow-hidden",
+                "w-32 h-36 sm:w-44 sm:h-48 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-200 border-2 overflow-hidden",
                 isFocused
                   ? "bg-primary border-primary ring-2 ring-primary/60 shadow-lg shadow-primary/30"
                   : "bg-muted/30 border-border/40 hover:border-border",
               )}
             >
-              <User className={cn("w-16 h-16", isFocused ? "text-primary-foreground" : "text-muted-foreground")} />
+              <User
+                className={cn(
+                  "w-10 h-10 sm:w-16 sm:h-16",
+                  isFocused ? "text-primary-foreground" : "text-muted-foreground",
+                )}
+              />
               <span
                 className={cn(
-                  "text-base font-medium px-4 py-1.5 rounded-md w-full text-center",
+                  "text-sm sm:text-base font-medium px-4 py-1.5 rounded-md w-full text-center",
                   isFocused ? "bg-primary-foreground/10 text-primary-foreground" : "text-muted-foreground",
                 )}
               >
@@ -138,17 +141,17 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
                 setFocusedIndex(addIndex);
               }}
               className={cn(
-                "w-44 h-48 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-200 border-2 overflow-hidden",
+                "w-32 h-36 sm:w-44 sm:h-48 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-200 border-2 overflow-hidden",
                 isFocused
                   ? "bg-muted border-border ring-2 ring-accent/40"
                   : "bg-muted/20 border-border/30 hover:border-border/60",
               )}
             >
               <div className="flex items-center">
-                <User className="w-14 h-14 text-muted-foreground" />
-                <span className="text-2xl font-bold text-muted-foreground -ml-1">+</span>
+                <User className="w-10 h-10 sm:w-14 sm:h-14 text-muted-foreground" />
+                <span className="text-xl sm:text-2xl font-bold text-muted-foreground -ml-1">+</span>
               </div>
-              <span className="text-sm text-muted-foreground">+ Add account</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">+ Add account</span>
             </motion.button>
           );
         })()}
@@ -159,14 +162,14 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
         whileHover={{ scale: 1.02 }}
         onClick={() => setFocusArea("manage")}
         className={cn(
-          "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200 mt-8",
+          "flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full transition-all duration-200 mt-4 sm:mt-8",
           focusArea === "manage"
             ? "bg-muted border border-border ring-2 ring-accent/40"
             : "bg-muted/40 border border-border/30 hover:bg-muted/60",
         )}
       >
-        <Settings className="w-5 h-5 text-muted-foreground" />
-        <span className="text-sm font-medium text-foreground">Manage accounts</span>
+        <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+        <span className="text-xs sm:text-sm font-medium text-foreground">Manage accounts</span>
       </motion.button>
     </motion.div>
   );
