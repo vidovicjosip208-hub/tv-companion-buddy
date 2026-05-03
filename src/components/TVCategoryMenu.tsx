@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { FileText, Baby, Film, Trophy, PartyPopper, MonitorPlay, MapPin, Globe, Youtube } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export interface CategoryItem {
   id: string;
@@ -8,26 +9,27 @@ export interface CategoryItem {
   icon: React.ReactNode;
 }
 
-export const tvCategories: CategoryItem[] = [
-  { id: "documentary", label: "Dokumentarni", icon: <FileText className="w-6 h-6" /> },
-  { id: "kids", label: "Dečiji", icon: <Baby className="w-6 h-6" /> },
-  { id: "film", label: "Filmski", icon: <Film className="w-6 h-6" /> },
-  { id: "sports", label: "Sportski", icon: <Trophy className="w-6 h-6" /> },
-  { id: "entertainment", label: "Zabavni", icon: <PartyPopper className="w-6 h-6" /> },
-  { id: "4k", label: "4K/UHD", icon: <MonitorPlay className="w-6 h-6" /> },
-  { id: "local", label: "Lokalni Kanali", icon: <MapPin className="w-6 h-6" /> },
-  { id: "international", label: "Međunarodni FTA", icon: <Globe className="w-6 h-6" /> },
+const categoryDefs: { id: string; icon: React.ReactNode }[] = [
+  { id: "documentary", icon: <FileText className="w-6 h-6" /> },
+  { id: "kids", icon: <Baby className="w-6 h-6" /> },
+  { id: "film", icon: <Film className="w-6 h-6" /> },
+  { id: "sports", icon: <Trophy className="w-6 h-6" /> },
+  { id: "entertainment", icon: <PartyPopper className="w-6 h-6" /> },
+  { id: "4k", icon: <MonitorPlay className="w-6 h-6" /> },
+  { id: "local", icon: <MapPin className="w-6 h-6" /> },
+  { id: "international", icon: <Globe className="w-6 h-6" /> },
   {
     id: "adult",
-    label: "Kanali za odrasle",
     icon: (
       <span className="w-6 h-6 flex items-center justify-center font-bold text-xs rounded-full border-2 border-white text-white">
         18+
       </span>
     ),
   },
-  { id: "youtube", label: "YouTube", icon: <Youtube className="w-6 h-6" /> },
+  { id: "youtube", icon: <Youtube className="w-6 h-6" /> },
 ];
+
+export const tvCategories: CategoryItem[] = categoryDefs.map((c) => ({ ...c, label: c.id }));
 
 interface TVCategoryMenuProps {
   isVisible: boolean;
@@ -36,6 +38,7 @@ interface TVCategoryMenuProps {
 }
 
 const TVCategoryMenu = ({ isVisible, focusedIndex, onItemClick }: TVCategoryMenuProps) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ width: 0, opacity: 0 }}
@@ -61,7 +64,7 @@ const TVCategoryMenu = ({ isVisible, focusedIndex, onItemClick }: TVCategoryMenu
                 )}
               >
                 <span className="flex-shrink-0 [&>svg]:w-5 [&>svg]:h-5">{item.icon}</span>
-                <span className="text-sm whitespace-nowrap">{item.label}</span>
+                <span className="text-sm whitespace-nowrap">{t(`tvCategories.${item.id}`)}</span>
               </motion.button>
             );
           })}

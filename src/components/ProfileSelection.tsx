@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { User, Settings } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface ProfileSelectionProps {
@@ -12,6 +13,7 @@ const profiles = [{ id: "1", name: "Nomo", color: "bg-primary" }];
 type FocusArea = "profiles" | "manage";
 
 const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
+  const { t } = useTranslation();
   const [focusArea, setFocusArea] = useState<FocusArea>("profiles");
   const [focusedIndex, setFocusedIndex] = useState(0);
 
@@ -86,11 +88,11 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
             <span className="text-xl sm:text-2xl font-bold text-accent">ovizija</span>
           </div>
         </div>
-        <span className="text-xs font-semibold tracking-widest text-accent uppercase">Videoteka</span>
+        <span className="text-xs font-semibold tracking-widest text-accent uppercase">{t("profile.brand")}</span>
       </div>
 
       {/* Title */}
-      <h1 className="text-lg sm:text-2xl font-light text-muted-foreground">Choose an account</h1>
+      <h1 className="text-lg sm:text-2xl font-light text-muted-foreground">{t("profile.choose")}</h1>
 
       {/* Profile cards */}
       <div className="flex flex-wrap justify-center gap-4 sm:gap-6">

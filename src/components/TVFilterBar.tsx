@@ -1,12 +1,13 @@
 import { cn } from "@/lib/utils";
-
-const filters = ["Uživo", "TV Raspored"];
+import { useTranslation } from "react-i18next";
 
 interface TVFilterBarProps {
   focusedFilter: number;
 }
 
 const TVFilterBar = ({ focusedFilter }: TVFilterBarProps) => {
+  const { t } = useTranslation();
+  const filters = [t("tvFilters.live"), t("tvFilters.schedule")];
   return (
     <div className="flex gap-3 mb-6 mt-2">
       {filters.map((filter, index) => (

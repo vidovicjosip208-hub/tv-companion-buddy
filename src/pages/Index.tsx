@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import TVSidebar from "@/components/TVSidebar";
 import TVHeader from "@/components/TVHeader";
@@ -466,6 +467,7 @@ const CATEGORY_TO_DB_MAP: Record<string, string[]> = {
 
 const Index = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { favorites, toggleFavorite, isFavorite, favoriteNumber } = useFavorites();
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -1177,7 +1179,7 @@ const Index = () => {
                 transition={{ duration: 0.3 }}
                 className="flex-1 flex flex-col overflow-hidden"
               >
-                <h2 className="text-lg font-semibold text-foreground mb-4 px-1">Kamere uživo</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4 px-1">{t("home.camerasLive")}</h2>
                 <div className="grid grid-cols-4 gap-3 px-1">
                   {liveCameras.map((cam, i) => {
                     const isFocused = focusZone === "cameras" && cameraIndex === i;
@@ -1198,7 +1200,7 @@ const Index = () => {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                           <div className="absolute top-2 left-2 flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            <span className="text-xs font-medium text-foreground">UŽIVO</span>
+                            <span className="text-xs font-medium text-foreground">{t("home.liveLabel")}</span>
                           </div>
                           <div className="absolute bottom-2 left-2 right-2">
                             <p className="text-sm font-semibold text-foreground truncate">{cam.name}</p>
@@ -1219,8 +1221,8 @@ const Index = () => {
                 transition={{ duration: 0.3 }}
                 className="flex-1 flex flex-col overflow-hidden"
               >
-                {showFavorites && <h2 className="text-lg font-semibold text-foreground mb-2 px-1">Omiljeni kanali</h2>}
-                {showRadio && <h2 className="text-lg font-semibold text-foreground mb-2 px-1">Radio stanice</h2>}
+                {showFavorites && <h2 className="text-lg font-semibold text-foreground mb-2 px-1">{t("home.favoriteChannels")}</h2>}
+                {showRadio && <h2 className="text-lg font-semibold text-foreground mb-2 px-1">{t("home.radioStations")}</h2>}
                 {activeEpgChannels.length > 0 ? (
                   <EPGGrid
                     channels={activeEpgChannels}
