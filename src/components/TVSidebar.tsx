@@ -1,21 +1,22 @@
 import { Home, Tv, Radio, Heart, Film, Cctv, Sparkles, User, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 interface SidebarItem {
   id: string;
-  label: string;
+  labelKey: string;
   icon: React.ReactNode;
 }
 
 const sidebarItems: SidebarItem[] = [
-  { id: "home", label: "Početna", icon: <Home className="w-6 h-6" /> },
-  { id: "tv", label: "TV Kanali", icon: <Tv className="w-6 h-6" /> },
-  { id: "radio", label: "Radio stanice", icon: <Radio className="w-6 h-6" /> },
-  { id: "favorites", label: "Omiljeni", icon: <Heart className="w-6 h-6" /> },
-  { id: "movies", label: "Videoteka", icon: <Film className="w-6 h-6" /> },
-  { id: "news", label: "Kamere uživo", icon: <Cctv className="w-6 h-6" /> },
-  { id: "settings", label: "Podešavanja", icon: <Settings className="w-6 h-6" /> },
+  { id: "home", labelKey: "sidebar.home", icon: <Home className="w-6 h-6" /> },
+  { id: "tv", labelKey: "sidebar.tv", icon: <Tv className="w-6 h-6" /> },
+  { id: "radio", labelKey: "sidebar.radio", icon: <Radio className="w-6 h-6" /> },
+  { id: "favorites", labelKey: "sidebar.favorites", icon: <Heart className="w-6 h-6" /> },
+  { id: "movies", labelKey: "sidebar.videoteka", icon: <Film className="w-6 h-6" /> },
+  { id: "news", labelKey: "sidebar.cameras", icon: <Cctv className="w-6 h-6" /> },
+  { id: "settings", labelKey: "sidebar.settings", icon: <Settings className="w-6 h-6" /> },
 ];
 
 const PROFILE_INDEX = sidebarItems.length; // index 6
@@ -29,6 +30,7 @@ interface TVSidebarProps {
 }
 
 const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onItemHover }: TVSidebarProps) => {
+  const { t } = useTranslation();
   const showLabels = isExpanded && !isMini;
   const sidebarWidth = isMini ? 72 : isExpanded ? 240 : 80;
 
@@ -88,7 +90,7 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
                   transition={{ delay: 0.1 }}
                   className="font-medium text-base whitespace-nowrap"
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </motion.span>
               )}
             </motion.button>
@@ -120,7 +122,7 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
               transition={{ delay: 0.1 }}
               className="font-medium text-base whitespace-nowrap"
             >
-              Profil
+              {t("sidebar.profile")}
             </motion.span>
           )}
         </motion.button>
