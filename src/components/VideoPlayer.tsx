@@ -546,9 +546,14 @@ const VideoPlayer = ({
   }));
 
   const [progress, setProgress] = useState(42);
-  const [aspectRatioMode, setAspectRatioMode] = useState<"cover" | "contain" | "fill">("cover");
+  const [aspectRatioMode, setAspectRatioMode] = useState<"original" | "fill" | "4:3" | "16:9">("original");
   const cycleAspectRatio = () => {
-    setAspectRatioMode((p) => (p === "cover" ? "contain" : p === "contain" ? "fill" : "cover"));
+    setAspectRatioMode((p) => {
+      if (p === "original") return "fill";
+      if (p === "fill") return "4:3";
+      if (p === "4:3") return "16:9";
+      return "original";
+    });
   };
   const [isProgressFocused, setIsProgressFocused] = useState(false);
   const [focusedControl, setFocusedControl] = useState<number>(1);
@@ -1112,11 +1117,30 @@ const VideoPlayer = ({
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
-                minWidth: "100%",
-                minHeight: "100%",
-                width: aspectRatioMode === "fill" ? "100%" : "auto",
-                height: aspectRatioMode === "fill" ? "100%" : "auto",
-                objectFit: aspectRatioMode,
+                ...(aspectRatioMode === "original" && {
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  objectFit: "contain" as const,
+                }),
+                ...(aspectRatioMode === "fill" && {
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "fill" as const,
+                }),
+                ...(aspectRatioMode === "4:3" && {
+                  width: "auto",
+                  height: "100%",
+                  aspectRatio: "4/3",
+                  objectFit: "fill" as const,
+                }),
+                ...(aspectRatioMode === "16:9" && {
+                  width: "auto",
+                  height: "100%",
+                  aspectRatio: "16/9",
+                  objectFit: "fill" as const,
+                }),
               }}
             />
           </div>
@@ -1372,7 +1396,7 @@ const VideoPlayer = ({
                       }}
                     >
                       <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
-                        {aspectRatioMode === "cover" && (
+                        {aspectRatioMode === "original" && (
                           <>
                             <rect
                               x="1"
@@ -1384,25 +1408,48 @@ const VideoPlayer = ({
                               strokeWidth="1.5"
                               fill="none"
                             />
-                            <rect x="4" y="3" width="14" height="8" rx="0.5" fill={GOLD} opacity="0.5" />
-                          </>
-                        )}
-                        {aspectRatioMode === "contain" && (
-                          <>
                             <rect
-                              x="1"
-                              y="1"
-                              width="20"
-                              height="12"
-                              rx="1.5"
+                              x="5"
+                              y="3"
+                              width="12"
+                              height="8"
+                              rx="0.5"
                               stroke={GOLD}
-                              strokeWidth="1.5"
+                              strokeWidth="1"
                               fill="none"
+                              strokeDasharray="2 1"
                             />
-                            <rect x="6" y="1" width="10" height="12" rx="0.5" fill={GOLD} opacity="0.5" />
                           </>
                         )}
                         {aspectRatioMode === "fill" && (
+                          <rect
+                            x="1"
+                            y="1"
+                            width="20"
+                            height="12"
+                            rx="1.5"
+                            stroke={GOLD}
+                            strokeWidth="1.5"
+                            fill={GOLD}
+                            fillOpacity="0.4"
+                          />
+                        )}
+                        {aspectRatioMode === "4:3" && (
+                          <>
+                            <rect
+                              x="1"
+                              y="1"
+                              width="20"
+                              height="12"
+                              rx="1.5"
+                              stroke={GOLD}
+                              strokeWidth="1.5"
+                              fill="none"
+                            />
+                            <rect x="3" y="1" width="16" height="12" rx="0.5" fill={GOLD} fillOpacity="0.4" />
+                          </>
+                        )}
+                        {aspectRatioMode === "16:9" && (
                           <>
                             <rect
                               x="1"
@@ -1413,8 +1460,10 @@ const VideoPlayer = ({
                               stroke={GOLD}
                               strokeWidth="1.5"
                               fill={GOLD}
-                              fillOpacity="0.5"
+                              fillOpacity="0.4"
                             />
+                            <line x1="1" y1="3.5" x2="21" y2="3.5" stroke={GOLD} strokeWidth="0.5" opacity="0.5" />
+                            <line x1="1" y1="10.5" x2="21" y2="10.5" stroke={GOLD} strokeWidth="0.5" opacity="0.5" />
                           </>
                         )}
                       </svg>
@@ -1427,7 +1476,11 @@ const VideoPlayer = ({
                           textTransform: "uppercase" as const,
                         }}
                       >
-                        {aspectRatioMode === "cover" ? "Crop" : aspectRatioMode === "contain" ? "Fit" : "Fill"}
+                        {aspectRatioMode === "original"
+                          ? "Original"
+                          : aspectRatioMode === "fill"
+                            ? "Fill"
+                            : aspectRatioMode}
                       </span>
                     </button>
 
