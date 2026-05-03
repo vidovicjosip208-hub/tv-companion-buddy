@@ -22,12 +22,6 @@ interface ContentRowProps {
 }
 
 const GAP = 16;
-const LEFT_PAD = 48;
-const DEFAULT_W = 280;
-const EXPANDED_W = 650;
-const PORTRAIT_DEFAULT_W = 140;
-const PORTRAIT_EXPANDED_W = 300;
-const CARD_H = 350;
 
 const ContentRow = ({
   title,
@@ -43,24 +37,43 @@ const ContentRow = ({
 }: ContentRowProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  const defaultW = portrait ? PORTRAIT_DEFAULT_W : DEFAULT_W;
-  const expandedW = portrait ? PORTRAIT_EXPANDED_W : EXPANDED_W;
+  const getResponsiveValues = () => {
+    if (typeof window === "undefined") {
+      return {
+        defaultW: portrait ? 140 : 280,
+        expandedW: portrait ? 300 : 650,
+        cardH: 350,
+        leftPad: 48,
+      };
+    }
+    const vw = window.innerWidth;
+    return {
+      defaultW: portrait ? Math.min(140, vw * 0.28) : Math.min(280, vw * 0.4),
+      expandedW: portrait ? Math.min(300, vw * 0.55) : Math.min(650, vw * 0.75),
+      cardH: Math.min(350, vw * 0.45),
+      leftPad: Math.min(48, vw * 0.05),
+    };
+  };
+
+  const { defaultW, expandedW, cardH, leftPad } = getResponsiveValues();
 
   const translateX = uniform
-    ? `${LEFT_PAD}px`
+    ? `${leftPad}px`
     : focusedIndex === 0
-      ? `${LEFT_PAD}px`
-      : `calc(${LEFT_PAD}px - ${focusedIndex} * ${defaultW + GAP}px)`;
+      ? `${leftPad}px`
+      : `calc(${leftPad}px - ${focusedIndex} * ${defaultW + GAP}px)`;
 
   return (
     <div className={cn("relative z-10 mb-2", peek && "opacity-60")}>
-      <h2 className="text-accent font-bold text-xl mb-4 px-12">
+      <h2 className="text-accent font-bold text-base sm:text-xl mb-4 px-4 sm:px-12">
         {title}
-        {titleHighlight && <span className="text-accent italic ml-2 font-normal text-base">{titleHighlight}</span>}
+        {titleHighlight && (
+          <span className="text-accent italic ml-2 font-normal text-sm sm:text-base">{titleHighlight}</span>
+        )}
       </h2>
       <div className={cn("overflow-hidden", peek && "max-h-[100px]")}>
         <div
-          className={cn("flex transition-transform duration-500 ease-out", peek && "px-12")}
+          className={cn("flex transition-transform duration-500 ease-out", peek && "px-4 sm:px-12")}
           style={
             peek
               ? {
@@ -97,7 +110,7 @@ const ContentRow = ({
                       }
                     : {
                         width: isExpanded ? expandedW : defaultW,
-                        height: portrait ? undefined : CARD_H,
+                        height: portrait ? undefined : cardH,
                         aspectRatio: portrait ? "2/3" : undefined,
                         flexGrow: 0,
                         borderBottom: "none",
@@ -106,7 +119,6 @@ const ContentRow = ({
               >
                 <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                {/* Progress bar - shown when item has progress (Continue Watching) or focused indicator */}
                 {!peek && (item.progress !== undefined || (isFocused && showIndicator)) && (
                   <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-muted/50">
                     <div
@@ -119,7 +131,7 @@ const ContentRow = ({
                   <h3
                     className={cn(
                       "font-black text-foreground tracking-tight drop-shadow-lg transition-all duration-500",
-                      isExpanded ? "text-xl" : "text-sm",
+                      isExpanded ? "text-base sm:text-xl" : "text-xs sm:text-sm",
                     )}
                   >
                     {item.title}
