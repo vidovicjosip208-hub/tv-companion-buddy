@@ -13,42 +13,47 @@ const TVHeader = () => {
 
   const hours = time.getHours().toString().padStart(2, "0");
   const minutes = time.getMinutes().toString().padStart(2, "0");
-  const dateStr = `${time.getDate().toString().padStart(2, "0")}.${(time.getMonth() + 1).toString().padStart(2, "0")}. ${["Ned", "Pon", "Uto", "Sri", "Čet", "Pet", "Sub"][time.getDay()]}`;
+  const dateStr = `${time.getDate().toString().padStart(2, "0")}.${(time.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}. ${["Ned", "Pon", "Uto", "Sri", "Čet", "Pet", "Sub"][time.getDay()]}`;
 
   return (
     <motion.header
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className="flex items-center justify-between px-8 py-4"
+      className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4"
     >
       {/* Logo */}
       <div className="flex items-center">
-        <img src={logo} alt="Max Ovizija" className="h-28 w-auto -mt-5" />
+        <img src={logo} alt="Max Ovizija" className="h-16 sm:h-20 lg:h-28 w-auto -mt-2 sm:-mt-3 lg:-mt-5" />
       </div>
 
       {/* Center - Subscription Notice */}
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full border border-accent/40 flex items-center justify-center">
-          <Clock className="w-4 h-4 text-accent" />
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border border-accent/40 flex items-center justify-center">
+          <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
         </div>
-        <span className="text-accent font-medium text-sm">Vaša pretplata ističe za 30 dan/a</span>
+        <span className="text-accent font-medium text-xs sm:text-sm hidden sm:block">
+          Vaša pretplata ističe za 30 dan/a
+        </span>
+        <span className="text-accent font-medium text-xs sm:hidden">30 dan/a</span>
       </div>
 
       {/* Right - Time & Weather */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-3 sm:gap-6">
         <div className="text-right">
-          <div className="text-foreground font-bold text-2xl leading-none">
+          <div className="text-foreground font-bold text-lg sm:text-xl lg:text-2xl leading-none">
             {hours}:{minutes}
           </div>
-          <div className="text-muted-foreground text-xs">{dateStr}</div>
+          <div className="text-muted-foreground text-[10px] sm:text-xs">{dateStr}</div>
         </div>
-        <div className="w-px h-8 bg-border" />
-        <div className="flex items-center gap-2">
-          <CloudRain className="w-5 h-5 text-muted-foreground" />
+        <div className="w-px h-6 sm:h-8 bg-border" />
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <CloudRain className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
           <div className="text-right">
-            <div className="text-foreground font-semibold text-sm">12°C</div>
-            <div className="text-muted-foreground text-xs">Belgrade</div>
+            <div className="text-foreground font-semibold text-xs sm:text-sm">12°C</div>
+            <div className="text-muted-foreground text-[10px] sm:text-xs">Belgrade</div>
           </div>
         </div>
       </div>
