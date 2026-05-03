@@ -1,6 +1,7 @@
 import { Home, Search } from "lucide-react";
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-videoteka-logo.png";
 
@@ -8,7 +9,13 @@ export interface VideotekaHeaderHandle {
   focus: (index?: number) => void;
 }
 
-const navTabs = [{ label: "Home" }, { label: "Shows" }, { label: "Movies" }, { label: "My List" }];
+// Tab IDs are stable; labels are translated at render time
+const navTabs = [
+  { id: "Home", labelKey: "videoteka.home" },
+  { id: "Shows", labelKey: "videoteka.shows" },
+  { id: "Movies", labelKey: "videoteka.movies" },
+  { id: "My List", labelKey: "videoteka.myList" },
+];
 
 interface VideotekaHeaderProps {
   activeTab?: string;
