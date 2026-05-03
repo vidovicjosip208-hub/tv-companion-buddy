@@ -9,7 +9,6 @@ export interface VideotekaHeaderHandle {
   focus: (index?: number) => void;
 }
 
-// Tab IDs are stable; labels are translated at render time
 const navTabs = [
   { id: "Home", labelKey: "videoteka.home" },
   { id: "Shows", labelKey: "videoteka.shows" },
@@ -49,7 +48,6 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       },
     }));
 
-    // 0 = Home, 1 = Home tab, 2 = Shows, 3 = Movies, 4 = Search
     const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
     const totalButtons = 1 + navTabs.length + 1;
 
@@ -128,15 +126,15 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
     }, [focusedIndex, searchOpen, totalButtons]);
 
     return (
-      <header className="relative z-10 px-12 -mt-[65px] pb-0">
+      <header className="relative z-10 px-4 sm:px-8 lg:px-12 -mt-[30px] sm:-mt-[50px] lg:-mt-[65px] pb-0">
         <div className="flex items-center">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Max Ovizija" className="h-[221px] w-auto" />
+            <img src={logo} alt="Max Ovizija" className="h-[120px] sm:h-[170px] lg:h-[221px] w-auto" />
           </div>
 
           {/* Navigation */}
-          <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+          <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
             {/* Home button — index 0 */}
             <button
               ref={(el) => (buttonRefs.current[0] = el)}
@@ -144,16 +142,21 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
               onFocus={() => handleButtonFocus(0)}
               onBlur={handleButtonBlur}
               className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
+                "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
                 focusedIndex === 0
                   ? "bg-white border-white/20 scale-105"
                   : "border-white/20 bg-muted/40 hover:opacity-90",
               )}
             >
-              <Home className={cn("w-[18px] h-[18px]", focusedIndex === 0 ? "text-black" : "text-white")} />
+              <Home
+                className={cn(
+                  "w-[14px] h-[14px] sm:w-[18px] sm:h-[18px]",
+                  focusedIndex === 0 ? "text-black" : "text-white",
+                )}
+              />
             </button>
 
-            {/* Nav tabs — indeksi 1, 2, 3 */}
+            {/* Nav tabs — indeksi 1, 2, 3, 4 */}
             {navTabs.map((tab, i) => {
               const index = i + 1;
               const isFocused = focusedIndex === index;
@@ -165,7 +168,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
                   onFocus={() => handleButtonFocus(index)}
                   onBlur={handleButtonBlur}
                   className={cn(
-                    "px-[18px] py-[7px] rounded-xl text-[15px] font-bold transition-all outline-none border",
+                    "px-[10px] sm:px-[18px] py-[5px] sm:py-[7px] rounded-xl text-[12px] sm:text-[15px] font-bold transition-all outline-none border",
                     isFocused
                       ? "bg-white border-white/20 text-black scale-105"
                       : activeTab === tab.id
@@ -179,7 +182,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
             })}
           </nav>
 
-          {/* Search — index 4 */}
+          {/* Search — index 5 */}
           <div className="ml-auto flex items-center gap-2">
             {searchOpen && (
               <input
@@ -187,7 +190,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("videoteka.search")}
-                className="bg-white/10 border border-white/20 rounded-xl px-3 py-[7px] text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 w-48 transition-all"
+                className="bg-white/10 border border-white/20 rounded-xl px-3 py-[5px] sm:py-[7px] text-xs sm:text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 w-32 sm:w-48 transition-all"
               />
             )}
             <button
@@ -199,13 +202,18 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
               onFocus={() => handleButtonFocus(4)}
               onBlur={handleButtonBlur}
               className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
+                "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
                 focusedIndex === 4
                   ? "bg-white border-white/20 scale-105"
                   : "border-white/20 bg-muted/40 text-white/60 hover:text-white",
               )}
             >
-              <Search className={cn("w-[18px] h-[18px]", focusedIndex === 4 ? "text-black" : "text-white")} />
+              <Search
+                className={cn(
+                  "w-[14px] h-[14px] sm:w-[18px] sm:h-[18px]",
+                  focusedIndex === 4 ? "text-black" : "text-white",
+                )}
+              />
             </button>
           </div>
         </div>
