@@ -1088,16 +1088,34 @@ const VideoPlayer = ({
       <div className="relative w-full h-full overflow-hidden">
         {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
         {streamUrl && (
-          <video
-            ref={videoRef}
-            className="absolute inset-0 w-full h-full"
-            style={{ zIndex: 1, objectFit: "cover", objectPosition: "center" }}
-            playsInline
-            {...({ "webkit-playsinline": "" } as Record<string, string>)}
-            muted
-            preload="auto"
-            crossOrigin="anonymous"
-          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 1,
+              overflow: "hidden",
+            }}
+          >
+            <video
+              ref={videoRef}
+              playsInline
+              {...({ "webkit-playsinline": "" } as Record<string, string>)}
+              muted
+              preload="auto"
+              crossOrigin="anonymous"
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                minWidth: "100%",
+                minHeight: "100%",
+                width: "auto",
+                height: "auto",
+                objectFit: "cover",
+              }}
+            />
+          </div>
         )}
         <div
           ref={spinnerRef}
@@ -1120,7 +1138,10 @@ const VideoPlayer = ({
             zIndex: 5,
           }}
         />
-        <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
+        <style>{`
+          @keyframes vp-spin { to { transform: rotate(360deg); } }
+          video { aspect-ratio: unset !important; }
+        `}</style>
 
         <AnimatePresence>
           {videoReady && showChannelOverlay && (
