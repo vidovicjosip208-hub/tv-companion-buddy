@@ -27,6 +27,7 @@ interface VideotekaHeaderProps {
 const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
   ({ activeTab, onSearchOpen, onFocusChange, onTabChange }, ref) => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -158,21 +159,21 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
               const isFocused = focusedIndex === index;
               return (
                 <button
-                  key={tab.label}
+                  key={tab.id}
                   ref={(el) => (buttonRefs.current[index] = el)}
-                  onClick={() => onTabChange?.(tab.label)}
+                  onClick={() => onTabChange?.(tab.id)}
                   onFocus={() => handleButtonFocus(index)}
                   onBlur={handleButtonBlur}
                   className={cn(
                     "px-[18px] py-[7px] rounded-xl text-[15px] font-bold transition-all outline-none border",
                     isFocused
                       ? "bg-white border-white/20 text-black scale-105"
-                      : activeTab === tab.label
+                      : activeTab === tab.id
                         ? "border-white/20 bg-muted/40 text-white"
                         : "border-white/20 bg-muted/40 text-white/60 hover:text-white",
                   )}
                 >
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </button>
               );
             })}
@@ -185,7 +186,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..."
+                placeholder={t("videoteka.search")}
                 className="bg-white/10 border border-white/20 rounded-xl px-3 py-[7px] text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 w-48 transition-all"
               />
             )}
