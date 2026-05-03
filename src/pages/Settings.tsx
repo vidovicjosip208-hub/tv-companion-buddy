@@ -14,12 +14,30 @@ const VISIBLE_COUNT = 4;
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+
+  const menuItems = [
+    { icon: ShieldCheck, label: t("settings.parental"), key: "parental" },
+    { icon: Wifi, label: t("settings.internet"), key: "internet" },
+    { icon: Monitor, label: t("settings.device"), key: "device" },
+    { icon: Languages, label: t("settings.language"), key: "language" },
+  ];
+
+  const initialLangIdx = Math.max(
+    0,
+    languages.findIndex((l) => l.code === i18n.language) ,
+  );
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [view, setView] = useState<"menu" | "language">("menu");
-  const [langFocused, setLangFocused] = useState(0);
-  const [selectedLang, setSelectedLang] = useState(0);
+  const [langFocused, setLangFocused] = useState(initialLangIdx);
+  const [selectedLang, setSelectedLang] = useState(initialLangIdx);
   const [scrollStart, setScrollStart] = useState(0);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const applyLang = (idx: number) => {
+    setSelectedLang(idx);
+    i18n.changeLanguage(languages[idx].code);
+  };
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -51,7 +69,7 @@ const Settings = () => {
             break;
           case "Enter":
             e.preventDefault();
-            setSelectedLang(langFocused);
+            applyLang(langFocused);
             break;
         }
         return;
@@ -73,7 +91,7 @@ const Settings = () => {
           break;
         case "Enter":
           e.preventDefault();
-          if (menuItems[focusedIndex].label === "Language") {
+          if (menuItems[focusedIndex].key === "language") {
             setView("language");
             setLangFocused(selectedLang);
             setScrollStart(Math.max(0, Math.min(selectedLang, languages.length - VISIBLE_COUNT)));
@@ -95,12 +113,10 @@ const Settings = () => {
       {/* Left side - Welcome */}
       <div className="relative z-10 flex-1 flex flex-col justify-start pt-24 px-16">
         <h1 className="text-4xl font-light text-foreground mb-3">
-          {view === "language" ? "Jezik" : "Podešavanja"}
+          {view === "language" ? t("settings.languageTitle") : t("settings.title")}
         </h1>
         <p className="text-muted-foreground text-base leading-relaxed max-w-sm">
-          {view === "language"
-            ? "Odaberite željeni jezik sučelja."
-            : "Pritisnite opciju za upravljanje postavkama vašeg uređaja."}
+          {view === "language" ? t("settings.languageSubtitle") : t("settings.subtitle")}
         </p>
         <img
           src={settingsGearbox}
@@ -119,10 +135,10 @@ const Settings = () => {
               const isFocused = focusedIndex === index;
               return (
                 <button
-                  key={item.label}
+                  key={item.key}
                   onClick={() => {
                     setFocusedIndex(index);
-                    if (item.label === "Language") {
+                    if (item.key === "language") {
                       setView("language");
                       setLangFocused(selectedLang);
                       setScrollStart(Math.max(0, Math.min(selectedLang, languages.length - VISIBLE_COUNT)));
@@ -155,11 +171,11 @@ const Settings = () => {
                 const isSelected = selectedLang === index;
                 return (
                   <button
-                    key={lang}
+                    key={lang.code}
                     ref={(el) => (itemRefs.current[index] = el)}
                     onClick={() => {
                       setLangFocused(index);
-                      setSelectedLang(index);
+                      applyLang(index);
                     }}
                     className={cn(
                       "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
@@ -174,7 +190,7 @@ const Settings = () => {
                         isSelected ? "text-accent opacity-100" : "opacity-0",
                       )}
                     />
-                    <span className={cn("flex-1 text-[15px]", isFocused && "font-medium")}>{lang}</span>
+                    <span className={cn("flex-1 text-[15px]", isFocused && "font-medium")}>{lang.label}</span>
                   </button>
                 );
               })}
