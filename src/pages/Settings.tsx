@@ -2,35 +2,13 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShieldCheck, Wifi, Monitor, Languages, ChevronRight, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import StarryBackground from "@/components/StarryBackground";
 import { cn } from "@/lib/utils";
 import settingsGearbox from "@/assets/settings-gearbox.png";
+import { LANGUAGE_OPTIONS } from "@/i18n";
 
-const menuItems = [
-  { icon: ShieldCheck, label: "Parental Controls" },
-  { icon: Wifi, label: "Internet Settings" },
-  { icon: Monitor, label: "Device Controls" },
-  { icon: Languages, label: "Language" },
-];
-
-const languages = [
-  "Hrvatski",
-  "English",
-  "Deutsch",
-  "Français",
-  "Español",
-  "Italiano",
-  "Português",
-  "Nederlands",
-  "Polski",
-  "Čeština",
-  "Slovenščina",
-  "Srpski",
-  "Bosanski",
-  "Magyar",
-  "Русский",
-  "Türkçe",
-];
+const languages = LANGUAGE_OPTIONS;
 
 const VISIBLE_COUNT = 4;
 
