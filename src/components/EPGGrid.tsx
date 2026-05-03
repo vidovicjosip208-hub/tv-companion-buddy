@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play } from "lucide-react";
-import { useMemo, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 export interface EPGProgram {
   title: string;
