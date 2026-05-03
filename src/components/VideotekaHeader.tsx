@@ -39,7 +39,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
           onFocusChange?.(true);
           setTimeout(() => buttonRefs.current[clamped]?.focus(), 0);
         } else {
-          const activeIndex = navTabs.findIndex((t) => t.label === activeTab);
+          const activeIndex = navTabs.findIndex((t) => t.id === activeTab);
           const idx = activeIndex >= 0 ? activeIndex + 1 : 1;
           setFocusedIndex(idx);
           onFocusChange?.(true);
@@ -59,7 +59,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       buttonRefs.current[clamped]?.focus();
 
       if (clamped >= 1 && clamped <= navTabs.length) {
-        onTabChange?.(navTabs[clamped - 1].label);
+        onTabChange?.(navTabs[clamped - 1].id);
       }
     };
 
@@ -68,7 +68,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       onFocusChange?.(true, index);
 
       if (index >= 1 && index <= navTabs.length) {
-        onTabChange?.(navTabs[index - 1].label);
+        onTabChange?.(navTabs[index - 1].id);
       }
     };
 
