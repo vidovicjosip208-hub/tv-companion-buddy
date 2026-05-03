@@ -1090,8 +1090,8 @@ const VideoPlayer = ({
         {streamUrl && (
           <video
             ref={videoRef}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ zIndex: 1 }}
+            className="absolute inset-0 w-full h-full"
+            style={{ zIndex: 1, objectFit: "cover", objectPosition: "center" }}
             playsInline
             {...({ "webkit-playsinline": "" } as Record<string, string>)}
             muted
