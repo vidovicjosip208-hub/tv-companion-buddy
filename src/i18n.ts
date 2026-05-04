@@ -14,6 +14,9 @@ type Bundle = {
   videotekaDetail: Record<string, string>;
   videotekaSearch: Record<string, string>;
   videotekaEpisodes: Record<string, string>;
+  header: Record<string, string>;
+  epg: Record<string, string>;
+  weekdays: Record<string, string>;
 };
 
 const hr: Bundle = {
