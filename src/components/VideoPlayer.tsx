@@ -289,18 +289,6 @@ const ChannelCard = ({
           />
         )}
       </div>
-
-      <span
-        className="font-semibold tracking-widest text-center"
-        style={{
-          fontSize: "6.5px",
-          color: isFocused ? `rgba(245,197,24,0.7)` : "rgba(255,255,255,0.28)",
-          marginTop: "2px",
-          letterSpacing: "0.1em",
-        }}
-      >
-        {ch.sub}
-      </span>
     </div>
 
     {showArrows ? (
