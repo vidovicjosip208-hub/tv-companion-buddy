@@ -668,12 +668,6 @@ const Index = () => {
     }));
   }, [liveChannelCards]);
 
-  // ─── KLJUČNA IZMJENA ────────────────────────────────────────────────────────
-  // onSwitchChannel sada koristi isti mehanizam kao i pokretanje iz kartice:
-  // 1. streamUrl iz PlayerData objekta (već proslijeđen iz VideoPlayer)
-  // 2. Fallback lookup u allPlayerChannels po channelName
-  // Na taj način kartice u VideoPlayer sidebaru koriste isti URL kao i kartice
-  // na glavnom ekranu (liveChannelCards → allPlayerChannels → stream_url iz baze).
   const handleSwitchChannel = useCallback(
     (next: PlayerData) => {
       const resolvedStreamUrl =
@@ -691,7 +685,6 @@ const Index = () => {
     },
     [allPlayerChannels],
   );
-  // ────────────────────────────────────────────────────────────────────────────
 
   const selectedCategoryId = showCategories ? tvCategories[categoryIndex]?.id : null;
 
@@ -735,6 +728,7 @@ const Index = () => {
         focusZone === "epg" ||
         focusZone === "epgPrograms" ||
         focusZone === "filters"));
+
   const isTvKanaliActive = sidebarIndex === TV_KANALI_INDEX;
   const isRadioActive = sidebarIndex === RADIO_INDEX;
   const isFavoritesActive = sidebarIndex === FAVORITES_INDEX;
@@ -1168,7 +1162,7 @@ const Index = () => {
       <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
         <TVHeader />
 
-        <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden relative min-w-0">
+        <div className="flex-1 flex flex-col px-2 sm:px-4 pb-2 sm:pb-4 overflow-hidden relative min-w-0">
           <AnimatePresence mode="wait">
             {showCameras ? (
               <motion.div
@@ -1179,8 +1173,10 @@ const Index = () => {
                 transition={{ duration: 0.3 }}
                 className="flex-1 flex flex-col overflow-hidden"
               >
-                <h2 className="text-lg font-semibold text-foreground mb-4 px-1">{t("home.camerasLive")}</h2>
-                <div className="grid grid-cols-4 gap-3 px-1">
+                <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4 px-1">
+                  {t("home.camerasLive")}
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 px-1">
                   {liveCameras.map((cam, i) => {
                     const isFocused = focusZone === "cameras" && cameraIndex === i;
                     return (
@@ -1198,13 +1194,15 @@ const Index = () => {
                         <div className="aspect-video relative">
                           <img src={cam.thumbnail} alt={cam.name} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                          <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            <span className="text-xs font-medium text-foreground">{t("home.liveLabel")}</span>
+                          <div className="absolute top-2 left-2 flex items-center gap-1 sm:gap-1.5">
+                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500 animate-pulse" />
+                            <span className="text-[10px] sm:text-xs font-medium text-foreground">
+                              {t("home.liveLabel")}
+                            </span>
                           </div>
                           <div className="absolute bottom-2 left-2 right-2">
-                            <p className="text-sm font-semibold text-foreground truncate">{cam.name}</p>
-                            <p className="text-xs text-muted-foreground">{cam.location}</p>
+                            <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{cam.name}</p>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">{cam.location}</p>
                           </div>
                         </div>
                       </motion.div>
@@ -1221,8 +1219,16 @@ const Index = () => {
                 transition={{ duration: 0.3 }}
                 className="flex-1 flex flex-col overflow-hidden"
               >
-                {showFavorites && <h2 className="text-lg font-semibold text-foreground mb-2 px-1">{t("home.favoriteChannels")}</h2>}
-                {showRadio && <h2 className="text-lg font-semibold text-foreground mb-2 px-1">{t("home.radioStations")}</h2>}
+                {showFavorites && (
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground mb-2 px-1">
+                    {t("home.favoriteChannels")}
+                  </h2>
+                )}
+                {showRadio && (
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground mb-2 px-1">
+                    {t("home.radioStations")}
+                  </h2>
+                )}
                 {activeEpgChannels.length > 0 ? (
                   <EPGGrid
                     channels={activeEpgChannels}
@@ -1237,8 +1243,8 @@ const Index = () => {
                     }}
                   />
                 ) : (
-                  <div className="flex-1 flex items-center justify-center">
-                    <p className="text-muted-foreground text-sm">
+                  <div className="flex-1 flex items-center justify-center px-4 text-center">
+                    <p className="text-muted-foreground text-xs sm:text-sm">
                       Nemate omiljenih kanala. Dodajte kanale u omiljene putem Video playera.
                     </p>
                   </div>
@@ -1251,7 +1257,7 @@ const Index = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-w-0 w-full px-2 py-2"
+                className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-w-0 w-full px-1 sm:px-2 py-2"
               >
                 <TVContentRow
                   title="Uživo"
