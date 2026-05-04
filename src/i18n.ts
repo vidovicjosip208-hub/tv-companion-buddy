@@ -14,6 +14,9 @@ type Bundle = {
   videotekaDetail: Record<string, string>;
   videotekaSearch: Record<string, string>;
   videotekaEpisodes: Record<string, string>;
+  header: Record<string, string>;
+  epg: Record<string, string>;
+  weekdays: Record<string, string>;
 };
 
 const hr: Bundle = {
@@ -52,6 +55,9 @@ const hr: Bundle = {
   },
   videotekaSearch: { placeholder: "Pretraži...", results: "rezultata", noResults: "Nema rezultata." },
   videotekaEpisodes: {},
+  header: { subscriptionExpiring: "Vaša pretplata ističe za 30 dan/a", subscriptionShort: "30 dan/a", location: "Beograd" },
+  epg: { live: "Uživo", schedule: "TV Raspored" },
+  weekdays: { sun: "Ned", mon: "Pon", tue: "Uto", wed: "Sri", thu: "Čet", fri: "Pet", sat: "Sub" },
 };
 
 const en: Bundle = {
@@ -66,6 +72,9 @@ const en: Bundle = {
   videotekaDetail: { loadingContent: "Loading content…", noContent: "No content in the library.", play: "Play", playEp: "Play S1: Ep. 1", resume: "Resume", resumeEp: "Resume S1: Ep. 1", playFromBeginning: "Play From Beginning", trailersAndMore: "Trailers & More", episodesAndMore: "Episodes & More", audioSubtitles: "Audio & Subtitles", addToMyList: "Add To My List", season: "Season", oneSeason: "1 Season", episodes: "episodes", videos: "videos", trailersUnavailable: "Trailers are currently unavailable." },
   videotekaSearch: { placeholder: "Search...", results: "results", noResults: "No results found" },
   videotekaEpisodes: {},
+  header: { subscriptionExpiring: "Your subscription expires in 30 days", subscriptionShort: "30 days", location: "Belgrade" },
+  epg: { live: "Live", schedule: "TV Schedule" },
+  weekdays: { sun: "Sun", mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat" },
 };
 
 const de: Bundle = {
@@ -80,6 +89,9 @@ const de: Bundle = {
   videotekaDetail: { loadingContent: "Inhalte werden geladen…", noContent: "Keine Inhalte in der Videothek.", play: "Abspielen", playEp: "Abspielen S1: F. 1", resume: "Fortsetzen", resumeEp: "Fortsetzen S1: F. 1", playFromBeginning: "Von Anfang abspielen", trailersAndMore: "Trailer & mehr", episodesAndMore: "Folgen & mehr", audioSubtitles: "Audio & Untertitel", addToMyList: "Zu meiner Liste", season: "Staffel", oneSeason: "1 Staffel", episodes: "Folgen", videos: "Videos", trailersUnavailable: "Trailer sind derzeit nicht verfügbar." },
   videotekaSearch: { placeholder: "Suchen...", results: "Ergebnisse", noResults: "Keine Ergebnisse gefunden" },
   videotekaEpisodes: {},
+  header: { subscriptionExpiring: "Ihr Abonnement läuft in 30 Tagen ab", subscriptionShort: "30 Tage", location: "Belgrad" },
+  epg: { live: "Live", schedule: "TV-Programm" },
+  weekdays: { sun: "So", mon: "Mo", tue: "Di", wed: "Mi", thu: "Do", fri: "Fr", sat: "Sa" },
 };
 
 const fr: Bundle = {
@@ -94,6 +106,9 @@ const fr: Bundle = {
   videotekaDetail: { loadingContent: "Chargement du contenu…", noContent: "Aucun contenu dans la vidéothèque.", play: "Lecture", playEp: "Lecture S1: Ép. 1", resume: "Reprendre", resumeEp: "Reprendre S1: Ép. 1", playFromBeginning: "Lire depuis le début", trailersAndMore: "Bandes-annonces et plus", episodesAndMore: "Épisodes et plus", audioSubtitles: "Audio et sous-titres", addToMyList: "Ajouter à ma liste", season: "Saison", oneSeason: "1 Saison", episodes: "épisodes", videos: "vidéos", trailersUnavailable: "Les bandes-annonces ne sont pas disponibles." },
   videotekaSearch: { placeholder: "Rechercher...", results: "résultats", noResults: "Aucun résultat" },
   videotekaEpisodes: {},
+  header: { subscriptionExpiring: "Votre abonnement expire dans 30 jours", subscriptionShort: "30 jours", location: "Belgrade" },
+  epg: { live: "En direct", schedule: "Programme TV" },
+  weekdays: { sun: "Dim", mon: "Lun", tue: "Mar", wed: "Mer", thu: "Jeu", fri: "Ven", sat: "Sam" },
 };
 
 const es: Bundle = {
@@ -108,6 +123,9 @@ const es: Bundle = {
   videotekaDetail: { loadingContent: "Cargando contenido…", noContent: "No hay contenido en la videoteca.", play: "Reproducir", playEp: "Reproducir T1: Ep. 1", resume: "Continuar", resumeEp: "Continuar T1: Ep. 1", playFromBeginning: "Reproducir desde el inicio", trailersAndMore: "Tráilers y más", episodesAndMore: "Episodios y más", audioSubtitles: "Audio y subtítulos", addToMyList: "Añadir a mi lista", season: "Temporada", oneSeason: "1 Temporada", episodes: "episodios", videos: "vídeos", trailersUnavailable: "Los tráilers no están disponibles." },
   videotekaSearch: { placeholder: "Buscar...", results: "resultados", noResults: "Sin resultados" },
   videotekaEpisodes: {},
+  header: { subscriptionExpiring: "Su suscripción caduca en 30 días", subscriptionShort: "30 días", location: "Belgrado" },
+  epg: { live: "En vivo", schedule: "Programación" },
+  weekdays: { sun: "Dom", mon: "Lun", tue: "Mar", wed: "Mié", thu: "Jue", fri: "Vie", sat: "Sáb" },
 };
 
 const it: Bundle = {
@@ -122,6 +140,9 @@ const it: Bundle = {
   videotekaDetail: { loadingContent: "Caricamento contenuti…", noContent: "Nessun contenuto in videoteca.", play: "Riproduci", playEp: "Riproduci S1: Ep. 1", resume: "Riprendi", resumeEp: "Riprendi S1: Ep. 1", playFromBeginning: "Riproduci dall'inizio", trailersAndMore: "Trailer e altro", episodesAndMore: "Episodi e altro", audioSubtitles: "Audio e sottotitoli", addToMyList: "Aggiungi alla mia lista", season: "Stagione", oneSeason: "1 Stagione", episodes: "episodi", videos: "video", trailersUnavailable: "I trailer non sono attualmente disponibili." },
   videotekaSearch: { placeholder: "Cerca...", results: "risultati", noResults: "Nessun risultato" },
   videotekaEpisodes: {},
+  header: { subscriptionExpiring: "Il tuo abbonamento scade tra 30 giorni", subscriptionShort: "30 giorni", location: "Belgrado" },
+  epg: { live: "Live", schedule: "Palinsesto" },
+  weekdays: { sun: "Dom", mon: "Lun", tue: "Mar", wed: "Mer", thu: "Gio", fri: "Ven", sat: "Sab" },
 };
 
 const resources = {

@@ -1,9 +1,11 @@
 import { Clock, CloudRain } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import logo from "@/assets/max-ovizija-logo.png";
 import { motion } from "framer-motion";
 
 const TVHeader = () => {
+  const { t } = useTranslation();
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -13,9 +15,10 @@ const TVHeader = () => {
 
   const hours = time.getHours().toString().padStart(2, "0");
   const minutes = time.getMinutes().toString().padStart(2, "0");
+  const weekdayKeys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const dateStr = `${time.getDate().toString().padStart(2, "0")}.${(time.getMonth() + 1)
     .toString()
-    .padStart(2, "0")}. ${["Ned", "Pon", "Uto", "Sri", "Čet", "Pet", "Sub"][time.getDay()]}`;
+    .padStart(2, "0")}. ${t(`weekdays.${weekdayKeys[time.getDay()]}`)}`;
 
   return (
     <motion.header
@@ -35,9 +38,9 @@ const TVHeader = () => {
           <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
         </div>
         <span className="text-accent font-medium text-xs sm:text-sm hidden sm:block">
-          Vaša pretplata ističe za 30 dan/a
+          {t("header.subscriptionExpiring")}
         </span>
-        <span className="text-accent font-medium text-xs sm:hidden">30 dan/a</span>
+        <span className="text-accent font-medium text-xs sm:hidden">{t("header.subscriptionShort")}</span>
       </div>
 
       {/* Right - Time & Weather */}
@@ -53,7 +56,7 @@ const TVHeader = () => {
           <CloudRain className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
           <div className="text-right">
             <div className="text-foreground font-semibold text-xs sm:text-sm">12°C</div>
-            <div className="text-muted-foreground text-[10px] sm:text-xs">Belgrade</div>
+            <div className="text-muted-foreground text-[10px] sm:text-xs">{t("header.location")}</div>
           </div>
         </div>
       </div>

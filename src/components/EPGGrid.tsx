@@ -1,6 +1,7 @@
 import { useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export interface EPGProgram {
@@ -213,6 +214,7 @@ const EPGGrid = ({
   isProgramFocused = false,
   onChannelClick,
 }: EPGGridProps) => {
+  const { t } = useTranslation();
   const selectedChannel = isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
 
   const selectedProgram = useMemo(() => {
@@ -237,7 +239,7 @@ const EPGGrid = ({
     >
       {/* Left Column — Channel List */}
       <div className="w-full lg:w-[21%] flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2">
-        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-4 pb-2">Uživo</h2>
+        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-4 pb-2">{t("epg.live")}</h2>
         {channels.map((channel, index) => (
           <ChannelItem
             key={channel.id}
@@ -254,7 +256,7 @@ const EPGGrid = ({
 
       {/* Middle Column — Program Guide */}
       <div className="w-full lg:w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2">
-        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-5 pb-2">TV Raspored</h2>
+        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-5 pb-2">{t("epg.schedule")}</h2>
         <AnimatePresence mode="wait">
           <motion.div
             key={selectedChannel?.id}
