@@ -10,6 +10,10 @@ type Bundle = {
   tvFilters: Record<string, string>;
   videoteka: Record<string, string>;
   profile: Record<string, string>;
+  videotekaRows: Record<string, string>;
+  videotekaDetail: Record<string, string>;
+  videotekaSearch: Record<string, string>;
+  videotekaEpisodes: Record<string, string>;
 };
 
 const hr: Bundle = {
@@ -31,6 +35,23 @@ const hr: Bundle = {
   tvFilters: { live: "Uživo", schedule: "TV Raspored" },
   videoteka: { home: "Početna", shows: "Serije", movies: "Filmovi", myList: "Moja lista", search: "Pretraži..." },
   profile: { choose: "Odaberite profil", brand: "Videoteka" },
+  videotekaRows: {
+    loading: "Učitavanje", newIn: "Novo u", inLibrary: "Videoteci",
+    allMovies: "Svi", moviesHl: "Filmovi", allShows: "Sve", showsHl: "Serije",
+    myList: "Moja", myListHl: "lista", content: "Sadržaj", movies: "Filmovi", shows: "Serije", other: "Ostalo", allCat: "Sve",
+  },
+  videotekaDetail: {
+    loadingContent: "Učitavanje sadržaja…", noContent: "Nema sadržaja u Videoteci.",
+    play: "Reproduciraj", playEp: "Reproduciraj S1: Ep. 1",
+    resume: "Nastavi gledati", resumeEp: "Nastavi S1: Ep. 1",
+    playFromBeginning: "Reproduciraj od početka",
+    trailersAndMore: "Traileri i više", episodesAndMore: "Epizode i više",
+    audioSubtitles: "Zvuk i titlovi", addToMyList: "Dodaj na moju listu",
+    season: "Sezona", oneSeason: "1 Sezona", episodes: "epizoda", videos: "videa",
+    trailersUnavailable: "Traileri trenutno nisu dostupni.",
+  },
+  videotekaSearch: { placeholder: "Pretraži...", results: "rezultata", noResults: "Nema rezultata." },
+  videotekaEpisodes: {},
 };
 
 const en: Bundle = {
@@ -41,6 +62,10 @@ const en: Bundle = {
   tvFilters: { live: "Live", schedule: "TV Schedule" },
   videoteka: { home: "Home", shows: "Shows", movies: "Movies", myList: "My List", search: "Search..." },
   profile: { choose: "Choose an account", brand: "Library" },
+  videotekaRows: { loading: "Loading", newIn: "New in", inLibrary: "Library", allMovies: "All", moviesHl: "Movies", allShows: "All", showsHl: "Shows", myList: "My", myListHl: "List", content: "Content", movies: "Movies", shows: "Shows", other: "Other", allCat: "All" },
+  videotekaDetail: { loadingContent: "Loading content…", noContent: "No content in the library.", play: "Play", playEp: "Play S1: Ep. 1", resume: "Resume", resumeEp: "Resume S1: Ep. 1", playFromBeginning: "Play From Beginning", trailersAndMore: "Trailers & More", episodesAndMore: "Episodes & More", audioSubtitles: "Audio & Subtitles", addToMyList: "Add To My List", season: "Season", oneSeason: "1 Season", episodes: "episodes", videos: "videos", trailersUnavailable: "Trailers are currently unavailable." },
+  videotekaSearch: { placeholder: "Search...", results: "results", noResults: "No results found" },
+  videotekaEpisodes: {},
 };
 
 const de: Bundle = {
@@ -51,6 +76,10 @@ const de: Bundle = {
   tvFilters: { live: "Live", schedule: "TV-Programm" },
   videoteka: { home: "Start", shows: "Serien", movies: "Filme", myList: "Meine Liste", search: "Suchen..." },
   profile: { choose: "Konto auswählen", brand: "Videothek" },
+  videotekaRows: { loading: "Wird geladen", newIn: "Neu in der", inLibrary: "Videothek", allMovies: "Alle", moviesHl: "Filme", allShows: "Alle", showsHl: "Serien", myList: "Meine", myListHl: "Liste", content: "Inhalte", movies: "Filme", shows: "Serien", other: "Andere", allCat: "Alle" },
+  videotekaDetail: { loadingContent: "Inhalte werden geladen…", noContent: "Keine Inhalte in der Videothek.", play: "Abspielen", playEp: "Abspielen S1: F. 1", resume: "Fortsetzen", resumeEp: "Fortsetzen S1: F. 1", playFromBeginning: "Von Anfang abspielen", trailersAndMore: "Trailer & mehr", episodesAndMore: "Folgen & mehr", audioSubtitles: "Audio & Untertitel", addToMyList: "Zu meiner Liste", season: "Staffel", oneSeason: "1 Staffel", episodes: "Folgen", videos: "Videos", trailersUnavailable: "Trailer sind derzeit nicht verfügbar." },
+  videotekaSearch: { placeholder: "Suchen...", results: "Ergebnisse", noResults: "Keine Ergebnisse gefunden" },
+  videotekaEpisodes: {},
 };
 
 const fr: Bundle = {
@@ -61,6 +90,10 @@ const fr: Bundle = {
   tvFilters: { live: "En direct", schedule: "Programme TV" },
   videoteka: { home: "Accueil", shows: "Séries", movies: "Films", myList: "Ma liste", search: "Rechercher..." },
   profile: { choose: "Choisir un compte", brand: "Vidéothèque" },
+  videotekaRows: { loading: "Chargement", newIn: "Nouveau dans la", inLibrary: "Vidéothèque", allMovies: "Tous les", moviesHl: "Films", allShows: "Toutes les", showsHl: "Séries", myList: "Ma", myListHl: "liste", content: "Contenu", movies: "Films", shows: "Séries", other: "Autre", allCat: "Tous" },
+  videotekaDetail: { loadingContent: "Chargement du contenu…", noContent: "Aucun contenu dans la vidéothèque.", play: "Lecture", playEp: "Lecture S1: Ép. 1", resume: "Reprendre", resumeEp: "Reprendre S1: Ép. 1", playFromBeginning: "Lire depuis le début", trailersAndMore: "Bandes-annonces et plus", episodesAndMore: "Épisodes et plus", audioSubtitles: "Audio et sous-titres", addToMyList: "Ajouter à ma liste", season: "Saison", oneSeason: "1 Saison", episodes: "épisodes", videos: "vidéos", trailersUnavailable: "Les bandes-annonces ne sont pas disponibles." },
+  videotekaSearch: { placeholder: "Rechercher...", results: "résultats", noResults: "Aucun résultat" },
+  videotekaEpisodes: {},
 };
 
 const es: Bundle = {
@@ -71,6 +104,10 @@ const es: Bundle = {
   tvFilters: { live: "En vivo", schedule: "Programación" },
   videoteka: { home: "Inicio", shows: "Series", movies: "Películas", myList: "Mi lista", search: "Buscar..." },
   profile: { choose: "Elegir una cuenta", brand: "Videoteca" },
+  videotekaRows: { loading: "Cargando", newIn: "Nuevo en la", inLibrary: "Videoteca", allMovies: "Todas las", moviesHl: "Películas", allShows: "Todas las", showsHl: "Series", myList: "Mi", myListHl: "lista", content: "Contenido", movies: "Películas", shows: "Series", other: "Otro", allCat: "Todo" },
+  videotekaDetail: { loadingContent: "Cargando contenido…", noContent: "No hay contenido en la videoteca.", play: "Reproducir", playEp: "Reproducir T1: Ep. 1", resume: "Continuar", resumeEp: "Continuar T1: Ep. 1", playFromBeginning: "Reproducir desde el inicio", trailersAndMore: "Tráilers y más", episodesAndMore: "Episodios y más", audioSubtitles: "Audio y subtítulos", addToMyList: "Añadir a mi lista", season: "Temporada", oneSeason: "1 Temporada", episodes: "episodios", videos: "vídeos", trailersUnavailable: "Los tráilers no están disponibles." },
+  videotekaSearch: { placeholder: "Buscar...", results: "resultados", noResults: "Sin resultados" },
+  videotekaEpisodes: {},
 };
 
 const it: Bundle = {
@@ -81,6 +118,10 @@ const it: Bundle = {
   tvFilters: { live: "Live", schedule: "Palinsesto" },
   videoteka: { home: "Home", shows: "Serie", movies: "Film", myList: "La mia lista", search: "Cerca..." },
   profile: { choose: "Scegli un account", brand: "Videoteca" },
+  videotekaRows: { loading: "Caricamento", newIn: "Novità in", inLibrary: "Videoteca", allMovies: "Tutti i", moviesHl: "Film", allShows: "Tutte le", showsHl: "Serie", myList: "La mia", myListHl: "lista", content: "Contenuti", movies: "Film", shows: "Serie", other: "Altro", allCat: "Tutto" },
+  videotekaDetail: { loadingContent: "Caricamento contenuti…", noContent: "Nessun contenuto in videoteca.", play: "Riproduci", playEp: "Riproduci S1: Ep. 1", resume: "Riprendi", resumeEp: "Riprendi S1: Ep. 1", playFromBeginning: "Riproduci dall'inizio", trailersAndMore: "Trailer e altro", episodesAndMore: "Episodi e altro", audioSubtitles: "Audio e sottotitoli", addToMyList: "Aggiungi alla mia lista", season: "Stagione", oneSeason: "1 Stagione", episodes: "episodi", videos: "video", trailersUnavailable: "I trailer non sono attualmente disponibili." },
+  videotekaSearch: { placeholder: "Cerca...", results: "risultati", noResults: "Nessun risultato" },
+  videotekaEpisodes: {},
 };
 
 const resources = {
