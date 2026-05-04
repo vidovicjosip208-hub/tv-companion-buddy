@@ -35,6 +35,23 @@ const hr: Bundle = {
   tvFilters: { live: "Uživo", schedule: "TV Raspored" },
   videoteka: { home: "Početna", shows: "Serije", movies: "Filmovi", myList: "Moja lista", search: "Pretraži..." },
   profile: { choose: "Odaberite profil", brand: "Videoteka" },
+  videotekaRows: {
+    loading: "Učitavanje", newIn: "Novo u", inLibrary: "Videoteci",
+    allMovies: "Svi", moviesHl: "Filmovi", allShows: "Sve", showsHl: "Serije",
+    myList: "Moja", myListHl: "lista", content: "Sadržaj", movies: "Filmovi", shows: "Serije", other: "Ostalo", allCat: "Sve",
+  },
+  videotekaDetail: {
+    loadingContent: "Učitavanje sadržaja…", noContent: "Nema sadržaja u Videoteci.",
+    play: "Reproduciraj", playEp: "Reproduciraj S1: Ep. 1",
+    resume: "Nastavi gledati", resumeEp: "Nastavi S1: Ep. 1",
+    playFromBeginning: "Reproduciraj od početka",
+    trailersAndMore: "Traileri i više", episodesAndMore: "Epizode i više",
+    audioSubtitles: "Zvuk i titlovi", addToMyList: "Dodaj na moju listu",
+    season: "Sezona", oneSeason: "1 Sezona", episodes: "epizoda", videos: "videa",
+    trailersUnavailable: "Traileri trenutno nisu dostupni.",
+  },
+  videotekaSearch: { placeholder: "Pretraži...", results: "rezultata", noResults: "Nema rezultata." },
+  videotekaEpisodes: {},
 };
 
 const en: Bundle = {
