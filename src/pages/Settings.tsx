@@ -25,7 +25,7 @@ const Settings = () => {
 
   const initialLangIdx = Math.max(
     0,
-    languages.findIndex((l) => l.code === i18n.language) ,
+    languages.findIndex((l) => l.code === i18n.language),
   );
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [view, setView] = useState<"menu" | "language">("menu");
@@ -108,14 +108,19 @@ const Settings = () => {
   }, [handleKeyDown]);
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-screen flex relative overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="h-screen flex flex-col lg:flex-row relative overflow-hidden"
+    >
       <StarryBackground />
+
       {/* Left side - Welcome */}
-      <div className="relative z-10 flex-1 flex flex-col justify-start pt-24 px-16">
-        <h1 className="text-4xl font-light text-foreground mb-3">
+      <div className="relative z-10 flex-1 flex flex-col justify-start pt-10 sm:pt-16 lg:pt-24 px-6 sm:px-10 lg:px-16">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-light text-foreground mb-3">
           {view === "language" ? t("settings.languageTitle") : t("settings.title")}
         </h1>
-        <p className="text-muted-foreground text-base leading-relaxed max-w-sm">
+        <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-sm">
           {view === "language" ? t("settings.languageSubtitle") : t("settings.subtitle")}
         </p>
         <img
@@ -123,11 +128,12 @@ const Settings = () => {
           alt="Settings gearbox"
           width={320}
           height={320}
-          className="mt-[-120px] w-[600px] h-[585px] object-fill"
+          className="mt-[-60px] sm:mt-[-90px] lg:mt-[-120px] w-[300px] sm:w-[450px] lg:w-[600px] h-auto object-fill hidden sm:block"
         />
       </div>
+
       {/* Right side */}
-      <div className="relative z-10 flex-1 flex flex-col justify-center pr-16 pl-8">
+      <div className="relative z-10 flex-1 flex flex-col justify-center px-6 sm:px-10 lg:pr-16 lg:pl-8">
         {view === "menu" ? (
           <div className="flex flex-col gap-1">
             {menuItems.map((item, index) => {
@@ -145,16 +151,24 @@ const Settings = () => {
                     }
                   }}
                   className={cn(
-                    "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left group",
+                    "flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-3.5 rounded-lg transition-all text-left group",
                     isFocused
                       ? "bg-white/10 text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-white/5",
                   )}
                 >
-                  <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
-                  <span className={cn("flex-1 text-[15px]", isFocused && "font-medium")}>{item.label}</span>
+                  <Icon
+                    className={cn(
+                      "w-4 h-4 sm:w-5 sm:h-5 shrink-0",
+                      isFocused ? "text-accent" : "text-muted-foreground",
+                    )}
+                  />
+                  <span className={cn("flex-1 text-sm sm:text-[15px]", isFocused && "font-medium")}>{item.label}</span>
                   <ChevronRight
-                    className={cn("w-4 h-4 shrink-0 transition-opacity", isFocused ? "opacity-100" : "opacity-40")}
+                    className={cn(
+                      "w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-opacity",
+                      isFocused ? "opacity-100" : "opacity-40",
+                    )}
                   />
                 </button>
               );
@@ -178,7 +192,7 @@ const Settings = () => {
                       applyLang(index);
                     }}
                     className={cn(
-                      "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
+                      "flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-3.5 rounded-lg transition-all text-left h-[52px]",
                       isFocused
                         ? "bg-white/10 text-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-white/5",
@@ -186,11 +200,13 @@ const Settings = () => {
                   >
                     <Check
                       className={cn(
-                        "w-5 h-5 shrink-0",
+                        "w-4 h-4 sm:w-5 sm:h-5 shrink-0",
                         isSelected ? "text-accent opacity-100" : "opacity-0",
                       )}
                     />
-                    <span className={cn("flex-1 text-[15px]", isFocused && "font-medium")}>{lang.label}</span>
+                    <span className={cn("flex-1 text-sm sm:text-[15px]", isFocused && "font-medium")}>
+                      {lang.label}
+                    </span>
                   </button>
                 );
               })}
