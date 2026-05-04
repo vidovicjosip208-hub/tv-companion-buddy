@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
 
+// Detect HEVC (H.265) decoding support — most 4K IPTV streams use HEVC.
 const supportsHEVC = (): boolean => {
   if (typeof window === "undefined") return false;
   const v = document.createElement("video");
@@ -177,6 +178,10 @@ const sidebarChannels: SidebarChannel[] = [
 const AUTO_HIDE_MS = 4500;
 const GOLD = "#F5C518";
 
+// Broj kartica vidljivih u sidebaru istovremeno (uvijek neparan da je fokusirana u sredini)
+const SIDEBAR_VISIBLE = 5;
+const SIDEBAR_HALF = Math.floor(SIDEBAR_VISIBLE / 2);
+
 const isFutureShow = (timeRange: string, day: string): boolean => {
   const now = new Date();
   const startStr = timeRange.split(" - ")[0];
@@ -186,17 +191,6 @@ const isFutureShow = (timeRange: string, day: string): boolean => {
   else if (day !== "Danas" && day !== "Jučer") return false;
   showStart.setHours(h, m, 0, 0);
   return showStart > now;
-};
-
-// Responsive card width
-const getCardWidth = () => {
-  if (typeof window === "undefined") return 132;
-  return Math.min(132, window.innerWidth * 0.18);
-};
-
-const getSidebarBottom = () => {
-  if (typeof window === "undefined") return 216;
-  return window.innerWidth < 640 ? 180 : 216;
 };
 
 interface ChannelCardProps {
@@ -253,8 +247,8 @@ const ChannelCard = ({
             ? `1px solid rgba(245,197,24,0.45)`
             : "1px solid rgba(255,255,255,0.1)",
         borderRadius: "5px",
-        padding: "4px 6px 8px 6px",
-        minHeight: "70px",
+        padding: "5px 7px 9px 7px",
+        minHeight: "80px",
         boxShadow: isFocused
           ? `0 0 14px 4px rgba(245,197,24,0.28)`
           : isActive
@@ -264,17 +258,17 @@ const ChannelCard = ({
     >
       <span
         className="absolute top-1.5 left-2 font-bold tabular-nums leading-none"
-        style={{ fontSize: "9px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
+        style={{ fontSize: "10px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
       >
         {overrideNum ?? ch.num}
       </span>
 
-      <div className="mt-3 mb-1 flex items-center justify-center" style={{ height: 28 }}>
+      <div className="mt-3 mb-1 flex items-center justify-center" style={{ height: 32 }}>
         {logoUrl ? (
           <img
             src={logoUrl}
             alt={ch.label}
-            className="max-h-7 max-w-full object-contain"
+            className="max-h-8 max-w-full object-contain"
             style={{
               filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
               transition: "filter 0.18s",
@@ -286,8 +280,8 @@ const ChannelCard = ({
         ) : (
           <Tv
             style={{
-              width: 20,
-              height: 20,
+              width: 24,
+              height: 24,
               color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
               filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
               transition: "color 0.18s, filter 0.18s",
@@ -299,7 +293,7 @@ const ChannelCard = ({
       <span
         className="font-bold text-center leading-tight w-full truncate"
         style={{
-          fontSize: "10px",
+          fontSize: "11px",
           color: isFocused ? "#fff" : isActive ? "#f0e8c0" : "rgba(255,255,255,0.85)",
           letterSpacing: "0.01em",
         }}
@@ -310,7 +304,7 @@ const ChannelCard = ({
       <span
         className="font-semibold tracking-widest text-center"
         style={{
-          fontSize: "6px",
+          fontSize: "6.5px",
           color: isFocused ? `rgba(245,197,24,0.7)` : "rgba(255,255,255,0.28)",
           marginTop: "2px",
           letterSpacing: "0.1em",
@@ -425,7 +419,7 @@ const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
     </div>
 
     <div
-      className="flex-1 px-1.5 sm:px-2 py-1.5 sm:py-2 rounded-b-lg"
+      className="flex-1 px-2 py-2 rounded-b-lg"
       style={{
         backgroundColor: isFocused ? "rgba(30,22,0,1)" : "rgba(10,10,10,1)",
         border: "1px solid rgba(255,255,255,0.08)",
@@ -433,26 +427,17 @@ const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
       }}
     >
       <div className="flex items-center justify-between gap-1">
-        <p
-          className="text-[9px] sm:text-[10px] font-mono"
-          style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
-        >
+        <p className="text-[10px] font-mono" style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}>
           {channel.timeRange}
         </p>
-        <p
-          className="text-[9px] sm:text-[10px]"
-          style={{ color: isFocused ? "rgba(245,197,24,0.7)" : "rgba(255,255,255,0.3)" }}
-        >
+        <p className="text-[10px]" style={{ color: isFocused ? "rgba(245,197,24,0.7)" : "rgba(255,255,255,0.3)" }}>
           {channel.date}
         </p>
       </div>
-      <p
-        className="text-[10px] sm:text-xs font-semibold truncate"
-        style={{ color: isFocused ? "#ffffff" : "rgba(255,255,255,0.7)" }}
-      >
+      <p className="text-xs font-semibold truncate" style={{ color: isFocused ? "#ffffff" : "rgba(255,255,255,0.7)" }}>
         {channel.title}
       </p>
-      <p className="text-[9px] sm:text-[10px]" style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.35)" }}>
+      <p className="text-[10px]" style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.35)" }}>
         {channel.day}
       </p>
     </div>
@@ -477,22 +462,22 @@ const ChannelNumberOverlay = ({ input, channelLabel, isFound }: ChannelNumberOve
         backgroundColor: "rgba(245,197,24,0.55)",
         outline: "2px solid rgba(245,197,24,0.9)",
         borderRadius: 12,
-        padding: "20px 36px 18px",
-        minWidth: 140,
+        padding: "28px 52px 24px",
+        minWidth: 200,
       }}
     >
       <span
         style={{
-          fontSize: 14,
+          fontSize: 17,
           fontWeight: 900,
           letterSpacing: "0.18em",
           textTransform: "uppercase" as const,
           color: isFound ? "rgba(0,0,0,0.9)" : "rgba(0,0,0,0.35)",
           transition: "color 0.3s",
-          minHeight: 14,
+          minHeight: 16,
           textAlign: "center",
           lineHeight: 1.2,
-          maxWidth: 160,
+          maxWidth: 180,
           wordBreak: "break-word" as const,
         }}
       >
@@ -501,7 +486,7 @@ const ChannelNumberOverlay = ({ input, channelLabel, isFound }: ChannelNumberOve
 
       <span
         style={{
-          fontSize: 64,
+          fontSize: 88,
           fontWeight: 200,
           lineHeight: 1,
           color: "#000000",
@@ -513,7 +498,7 @@ const ChannelNumberOverlay = ({ input, channelLabel, isFound }: ChannelNumberOve
         {input}
       </span>
 
-      <div style={{ marginTop: 8, position: "relative", width: "65%", height: 4 }}>
+      <div style={{ marginTop: 10, position: "relative", width: "65%", height: 4 }}>
         <div style={{ position: "absolute", inset: 0, borderRadius: 1, background: "#FFE600" }} />
         <motion.div
           style={{ position: "absolute", top: 0, left: 0, height: "100%", borderRadius: 1, background: "#FFE600" }}
@@ -524,6 +509,17 @@ const ChannelNumberOverlay = ({ input, channelLabel, isFound }: ChannelNumberOve
     </motion.div>
   </div>
 );
+
+// Pomoćna funkcija: vraća listu indeksa koji su vidljivi u kružnom sidebaru
+// sa fokusiranom karticom uvijek u sredini
+const getCircularWindow = (focusedIdx: number, total: number, windowSize: number): number[] => {
+  const half = Math.floor(windowSize / 2);
+  const result: number[] = [];
+  for (let i = -half; i <= half; i++) {
+    result.push((((focusedIdx + i) % total) + total) % total);
+  }
+  return result;
+};
 
 const VideoPlayer = ({
   isVisible = true,
@@ -541,9 +537,7 @@ const VideoPlayer = ({
   const thumbnail = data?.thumbnail ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80";
   const streamUrl = data?.streamUrl;
 
-  const CARD_W = getCardWidth();
-  const SIDEBAR_BOTTOM = getSidebarBottom();
-
+  // favAsSidebarChannels — favoriteChannels konvertirani u SidebarChannel format
   const favAsSidebarChannels: SidebarChannel[] = favoriteChannels.map((fc) => ({
     id: `fav-${fc.number}`,
     num: fc.number,
@@ -555,11 +549,7 @@ const VideoPlayer = ({
   const [aspectRatioMode, setAspectRatioMode] = useState<"original" | "fill" | "4:3" | "16:9">("16:9");
   const [videoNativeAR, setVideoNativeAR] = useState<number | null>(null);
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
-  const spinnerRef = useRef<HTMLDivElement>(null);
-  const [videoReady, setVideoReady] = useState(false);
-
+  // Detektiramo native aspect ratio streama čim metadata bude dostupna
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -571,7 +561,6 @@ const VideoPlayer = ({
     video.addEventListener("loadedmetadata", onMeta);
     return () => video.removeEventListener("loadedmetadata", onMeta);
   }, [streamUrl]);
-
   const cycleAspectRatio = () => {
     setAspectRatioMode((p) => {
       if (p === "original") return "fill";
@@ -580,13 +569,17 @@ const VideoPlayer = ({
       return "original";
     });
   };
-
   const [isProgressFocused, setIsProgressFocused] = useState(false);
   const [focusedControl, setFocusedControl] = useState<number>(1);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [showHud, setShowHud] = useState<boolean>(false);
   const [epgMode, setEpgMode] = useState<boolean>(false);
   const [isSeeking, setIsSeeking] = useState<boolean>(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+  const spinnerRef = useRef<HTMLDivElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -635,6 +628,7 @@ const VideoPlayer = ({
       hideSpinner();
     }, 7000);
 
+    // Uništi stari HLS prije učitavanja novog sourcea
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -657,6 +651,7 @@ const VideoPlayer = ({
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
+        // Filtriraj HEVC levelove ako browser ne podržava
         const hasUsable = data.levels.some((lvl) => {
           const codecs = (lvl.videoCodec || "").toLowerCase();
           const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
@@ -696,6 +691,7 @@ const VideoPlayer = ({
         }
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      // Safari native HLS
       video.src = streamUrl;
       video.addEventListener("loadedmetadata", () => {
         video.play().catch(() => {});
@@ -727,6 +723,7 @@ const VideoPlayer = ({
   const [channelInput, setChannelInput] = useState<string>("");
   const [showChannelOverlay, setShowChannelOverlay] = useState<boolean>(false);
   const channelInputTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const seekTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const getSeekStep = useCallback(() => {
@@ -756,14 +753,18 @@ const VideoPlayer = ({
     return idx >= 0 ? idx : 2;
   });
 
+  // verticalIndex — pozicija u favAsSidebarChannels, inicijalizira se na trenutni kanal
   const [verticalIndex, setVerticalIndex] = useState<number>(() =>
     Math.max(
       0,
       favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
     ),
   );
-
+  // sidebarFocus = indeks favorita koji je TIK iznad HUD-a (kartica u stvarnom fokusu u slotu).
+  // -1 znači da slot još nije "engaged" — HUD kartica drži fokus (trokutiće), a 4 kartice
+  // iznad progress bara su preview bez fokusa. Prvi ArrowUp prebacuje fokus u slot.
   const [sidebarFocus, setSidebarFocus] = useState<number>(-1);
+
   const sidebarOpen = focusedControl === -1;
 
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -801,6 +802,7 @@ const VideoPlayer = ({
       favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
     );
     setVerticalIndex(currentIdx);
+    // -1 = HUD kartica je fokusirana (trokutići); 4 kartice iznad su preview bez fokusa.
     setSidebarFocus(-1);
     setFocusedControl(-1);
   }, [favoriteChannels, data?.channelName]);
@@ -825,8 +827,11 @@ const VideoPlayer = ({
         if (channelInputTimer.current) clearTimeout(channelInputTimer.current);
         channelInputTimer.current = setTimeout(() => {
           const num = parseInt(newInput, 10);
+          // Numerički unos traži po poziciji u listi omiljenih (1-based),
+          // jer korisnik tipka "3" misleći na 3. omiljeni kanal — ne na channel_number iz baze.
           const favCh = favoriteChannels.find((c) => c.number === num);
           if (favCh && onSwitchChannel) {
+            // Fallback: ako favCh.streamUrl nije dostupan, traži u allChannels po imenu
             const resolvedStreamUrl =
               favCh.streamUrl ?? (allChannels ?? []).find((c) => c.channelName === favCh.channelName)?.streamUrl;
             onSwitchChannel({
@@ -907,6 +912,7 @@ const VideoPlayer = ({
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
+            // HUD kartica je uvijek fokus. Skrol gore = HUD prikazuje sljedeći kanal u nizu.
             setSidebarFocus((p) => {
               const cur = p === -1 ? currentIdx : p;
               return (cur + 1) % favTotal;
@@ -915,6 +921,7 @@ const VideoPlayer = ({
             return;
           case "ArrowDown":
             e.preventDefault();
+            // Skrol dolje = HUD prikazuje prethodni kanal u nizu.
             setSidebarFocus((p) => {
               const cur = p === -1 ? currentIdx : p;
               return (((cur - 1) % favTotal) + favTotal) % favTotal;
@@ -928,9 +935,11 @@ const VideoPlayer = ({
           case "Enter":
           case " ": {
             e.preventDefault();
+            // Enter učitava stream kanala koji je trenutno u HUD-u.
             const hudIdxLocal = sidebarFocus === -1 ? currentIdx : sidebarFocus;
             const favCh = favoriteChannels[hudIdxLocal];
             if (favCh && onSwitchChannel && favCh.channelName !== data?.channelName) {
+              // Fallback: ako favCh.streamUrl nije dostupan, traži u channelLookup
               const resolvedStreamUrl =
                 favCh.streamUrl ?? channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
               onSwitchChannel({
@@ -1046,12 +1055,17 @@ const VideoPlayer = ({
 
   if (!isVisible) return null;
 
+  // HUD kartica je UVIJEK fokus zona. Skrolanjem se mijenja koji se kanal prikazuje
+  // u HUD-u (preview), a 4 kartice iznad progress bara su sljedeći kandidati u nizu.
+  // Enter učitava stream kanala koji je trenutno u HUD-u.
   const currentIdx = Math.max(
     0,
     favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
   );
   const total = Math.max(favoriteChannels.length, 1);
 
+  // hudIdx — koji se kanal prikazuje u HUD kartici. Default = trenutno reproducirani.
+  // Kad korisnik skrola, hudIdx se mijenja iako stream ostaje isti dok ne pritisne Enter.
   const hudIdx = sidebarOpen && sidebarFocus !== -1 ? sidebarFocus : currentIdx;
   const hudFav = favoriteChannels[hudIdx];
   const hudIsCurrent = hudIdx === currentIdx;
@@ -1064,17 +1078,27 @@ const VideoPlayer = ({
   };
   const hudLogoUrl = hudFav?.logoUrl ?? (hudIsCurrent ? (data?.logoUrl ?? null) : null);
 
+  // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
+  // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
   const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((hudIdx + (4 - i)) % total) + total) % total);
 
-  const syncTransition = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 } as const;
-  const inputNum = parseInt(channelInput, 10);
-  const foundFavChannel = isNaN(inputNum) ? undefined : favoriteChannels.find((c) => c.number === inputNum);
+  const CARD_W = 132;
+  // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
+  // Fokusirana kartica (s trokutićima, visina ~142px) je najniža u sidebaru
+  // pa sidebar container treba početi dovoljno visoko da fokusirana ne ulazi u HUD.
+  // 216 = visina HUD-a bez trokutića fokusirane kartice koji vire dolje.
+  // Dodajemo 22px za donji trokutić fokusirane kartice koji inače viri u HUD.
+  const SIDEBAR_BOTTOM = 216; // visina cijelog HUD-a — kartice rastu iznad
 
   const controls: ControlItem[] = [
     { icon: RotateCcw, label: "Rewind", action: openEpgMode },
     { icon: isPlaying ? Pause : Play, label: "Play/Pause", action: () => setIsPlaying((p) => !p) },
     { icon: RotateCw, label: "Forward", action: goLive },
   ];
+
+  const syncTransition = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 } as const;
+  const inputNum = parseInt(channelInput, 10);
+  const foundFavChannel = isNaN(inputNum) ? undefined : favoriteChannels.find((c) => c.number === inputNum);
 
   return (
     <motion.div
@@ -1087,7 +1111,14 @@ const VideoPlayer = ({
       <div className="relative w-full h-full overflow-hidden">
         {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
         {streamUrl && (
-          <div style={{ position: "absolute", inset: 0, zIndex: 1, overflow: "hidden" }}>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 1,
+              overflow: "hidden",
+            }}
+          >
             <video
               ref={videoRef}
               playsInline
@@ -1115,6 +1146,9 @@ const VideoPlayer = ({
                     maxWidth: "100%",
                   };
                 }
+                // Za "16:9" i "original" — koristimo contain da nikad ne odrežemo sliku.
+                // Ako je stream širi od ekrana → fit by width; ako je viši → fit by height.
+                // object-fit: contain to radi automatski.
                 return {
                   ...base,
                   width: "100%",
@@ -1126,7 +1160,6 @@ const VideoPlayer = ({
             />
           </div>
         )}
-
         <div
           ref={spinnerRef}
           aria-hidden
@@ -1134,10 +1167,10 @@ const VideoPlayer = ({
             position: "absolute",
             top: "50%",
             left: "50%",
-            width: 48,
-            height: 48,
-            marginTop: -24,
-            marginLeft: -24,
+            width: 56,
+            height: 56,
+            marginTop: -28,
+            marginLeft: -28,
             border: "4px solid rgba(255,255,255,0.18)",
             borderTopColor: GOLD,
             borderRadius: "50%",
@@ -1160,7 +1193,7 @@ const VideoPlayer = ({
           )}
         </AnimatePresence>
 
-        {/* Slot — kartice iznad HUD-a */}
+        {/* ── SLOT — 4 kartice iznad HUD trake koje se vrte navigacijom ── */}
         <AnimatePresence initial={false}>
           {videoReady && showHud && sidebarOpen && (
             <motion.div
@@ -1172,61 +1205,57 @@ const VideoPlayer = ({
               className="absolute pointer-events-auto"
               style={{
                 zIndex: 45,
-                left: 12,
-                bottom: SIDEBAR_BOTTOM + 70,
+                left: 16,
+                bottom: SIDEBAR_BOTTOM + 70, // ← IZMJENA: +70px razmaka iznad progress bara
                 width: CARD_W,
                 display: "flex",
                 flexDirection: "column",
-                gap: 5,
+                gap: 6,
               }}
             >
-              <AnimatePresence mode="popLayout" initial={false}>
-                {aboveWindow.map((chIdx) => {
-                  const ch = favAsSidebarChannels[chIdx];
-                  if (!ch) return null;
-                  const favCh = favoriteChannels[chIdx];
-                  return (
-                    <motion.div
-                      key={`slot-${chIdx}`}
-                      layout
-                      initial={{ y: -80, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: 80, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 350, damping: 35 }}
-                    >
-                      <ChannelCard
-                        ch={ch}
-                        isActive={false}
-                        isFocused={false}
-                        width="100%"
-                        showArrows={false}
-                        logoUrl={favCh?.logoUrl ?? null}
-                        onClick={() => {
-                          if (favCh && onSwitchChannel) {
-                            const resolvedStreamUrl =
-                              favCh.streamUrl ??
-                              channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
-                            onSwitchChannel({
-                              channelNumber: String(favCh.number),
-                              showTitle: favCh.showTitle,
-                              timeRange: favCh.timeRange,
-                              thumbnail: favCh.thumbnail,
-                              channelName: favCh.channelName,
-                              streamUrl: resolvedStreamUrl,
-                              logoUrl: favCh.logoUrl,
-                            });
-                          }
-                        }}
-                      />
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+              {aboveWindow.map((chIdx) => {
+                const ch = favAsSidebarChannels[chIdx];
+                if (!ch) return null;
+                const favCh = favoriteChannels[chIdx];
+                return (
+                  <motion.div
+                    key={`slot-${chIdx}`}
+                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, y: -10 }}
+                    transition={{ type: "spring", stiffness: 350, damping: 35 }}
+                  >
+                    <ChannelCard
+                      ch={ch}
+                      isActive={false}
+                      isFocused={false}
+                      width="100%"
+                      showArrows={false}
+                      logoUrl={favCh?.logoUrl ?? null}
+                      onClick={() => {
+                        if (favCh && onSwitchChannel) {
+                          const resolvedStreamUrl =
+                            favCh.streamUrl ??
+                            channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
+                          onSwitchChannel({
+                            channelNumber: String(favCh.number),
+                            showTitle: favCh.showTitle,
+                            timeRange: favCh.timeRange,
+                            thumbnail: favCh.thumbnail,
+                            channelName: favCh.channelName,
+                            streamUrl: resolvedStreamUrl,
+                            logoUrl: favCh.logoUrl,
+                          });
+                        }
+                      }}
+                    />
+                  </motion.div>
+                );
+              })}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* HUD */}
+        {/* ── HUD ── */}
         <AnimatePresence>
           {videoReady && showHud && (
             <motion.div
@@ -1248,7 +1277,7 @@ const VideoPlayer = ({
                     transition={syncTransition}
                   />
                   <motion.div
-                    className="absolute w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-lg"
+                    className="absolute w-5 h-5 rounded-full shadow-lg"
                     style={{
                       backgroundColor: "#bbbbbb",
                       border: isProgressFocused ? "2px solid white" : "none",
@@ -1275,9 +1304,9 @@ const VideoPlayer = ({
                           }}
                         >
                           <div className="p-1 bg-white/20 backdrop-blur-md rounded-lg border border-white/40 shadow-2xl">
-                            <div className="w-36 sm:w-56 aspect-video rounded overflow-hidden relative bg-black">
+                            <div className="w-56 aspect-video rounded overflow-hidden relative bg-black">
                               <img src={thumbnail} alt="preview" className="w-full h-full object-cover" />
-                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold text-white tabular-nums border border-white/10">
+                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded text-[11px] font-bold text-white tabular-nums border border-white/10">
                                 {calculateTimeFromProgress(progress, timeRange)}
                               </div>
                             </div>
@@ -1291,11 +1320,11 @@ const VideoPlayer = ({
 
                 {/* HUD control row */}
                 <div
-                  className="relative flex items-center pt-2 sm:pt-3 pb-2 sm:pb-3"
+                  className="relative flex items-center pt-3 pb-3"
                   style={{ backgroundColor: epgMode ? "rgba(10,10,10,0.46)" : "rgba(10,10,10,0.78)" }}
                 >
-                  {/* HUD kartica */}
-                  <div className="ml-2 sm:ml-4 flex-shrink-0" style={{ width: CARD_W }}>
+                  {/* HUD kartica — uvijek vidljiva, fokusirana kad je sidebar otvoren */}
+                  <div className="ml-4 flex-shrink-0" style={{ width: CARD_W }}>
                     <ChannelCard
                       ch={hudChannel}
                       isActive={true}
@@ -1307,20 +1336,17 @@ const VideoPlayer = ({
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 sm:gap-3 ml-2 sm:ml-5 min-w-0 flex-1">
-                    <span
-                      className="text-xs sm:text-sm font-mono flex-shrink-0"
-                      style={{ color: "rgba(255,255,255,0.5)" }}
-                    >
+                  <div className="flex items-center gap-3 ml-5 min-w-0 flex-1">
+                    <span className="text-sm font-mono flex-shrink-0" style={{ color: "rgba(255,255,255,0.5)" }}>
                       {timeRange}
                     </span>
-                    <h2 className="font-bold text-sm sm:text-lg truncate" style={{ color: "#ffffff" }}>
+                    <h2 className="font-bold text-lg truncate" style={{ color: "#ffffff" }}>
                       {showTitle}
                     </h2>
                   </div>
 
                   <div className="absolute left-0 right-0 flex items-center justify-center pointer-events-none">
-                    <div className="flex items-center gap-4 sm:gap-8 pointer-events-auto">
+                    <div className="flex items-center gap-8 pointer-events-auto">
                       {controls.map((ctrl, i) => {
                         const Icon = ctrl.icon;
                         const isBtnFocused = focusedControl === i && !epgMode && !isProgressFocused;
@@ -1335,8 +1361,8 @@ const VideoPlayer = ({
                             }}
                             className="flex items-center justify-center rounded-full transition-all duration-200"
                             style={{
-                              width: isMain ? "44px" : "36px",
-                              height: isMain ? "44px" : "36px",
+                              width: isMain ? "52px" : "42px",
+                              height: isMain ? "52px" : "42px",
                               backgroundColor: isMain ? GOLD : isBtnFocused ? "rgba(245,197,24,0.15)" : "transparent",
                               color: isMain ? "#0d0d0d" : GOLD,
                               outline: isBtnFocused && !isMain ? "2px solid rgba(245,197,24,0.5)" : "none",
@@ -1344,22 +1370,14 @@ const VideoPlayer = ({
                               boxShadow: isMain ? "0 0 18px 4px rgba(245,197,24,0.35)" : "none",
                             }}
                           >
-                            <Icon className={isMain ? "w-5 h-5 sm:w-6 sm:h-6" : "w-4 h-4 sm:w-5 sm:h-5"} />
+                            <Icon className={isMain ? "w-6 h-6" : "w-5 h-5"} />
                           </button>
                         );
                       })}
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      marginRight: 6,
-                      flexShrink: 0,
-                    }}
-                  >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 8, flexShrink: 0 }}>
                     {/* Aspect Ratio gumb */}
                     <button
                       onMouseDown={(e) => {
@@ -1373,7 +1391,7 @@ const VideoPlayer = ({
                         alignItems: "center",
                         justifyContent: "center",
                         gap: 2,
-                        padding: "3px 8px",
+                        padding: "4px 10px",
                         background: "none",
                         border: `1.5px solid rgba(245,197,24,0.4)`,
                         borderRadius: 6,
@@ -1382,7 +1400,7 @@ const VideoPlayer = ({
                         opacity: 0.8,
                       }}
                     >
-                      <svg width="18" height="12" viewBox="0 0 22 14" fill="none">
+                      <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
                         {aspectRatioMode === "original" && (
                           <>
                             <rect
@@ -1456,7 +1474,7 @@ const VideoPlayer = ({
                       </svg>
                       <span
                         style={{
-                          fontSize: 7,
+                          fontSize: 8,
                           fontWeight: 700,
                           color: GOLD,
                           letterSpacing: "0.08em",
@@ -1476,8 +1494,8 @@ const VideoPlayer = ({
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: "6px",
-                        marginRight: "8px",
+                        gap: "8px",
+                        marginRight: "16px",
                         flexShrink: 0,
                         transition: "all 0.2s",
                         width: "fit-content",
@@ -1491,7 +1509,7 @@ const VideoPlayer = ({
                         background: "none",
                         border: "none",
                         cursor: "pointer",
-                        padding: "3px 6px",
+                        padding: "4px 8px",
                         transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
                       }}
                       onMouseDown={(e) => {
@@ -1501,14 +1519,10 @@ const VideoPlayer = ({
                       }}
                     >
                       <Heart
-                        className="w-4 h-4 sm:w-5 sm:h-5"
-                        style={{
-                          color: GOLD,
-                          fill: isFavoriteProp ? GOLD : "none",
-                          transition: "fill 0.2s",
-                        }}
+                        className="w-5 h-5"
+                        style={{ color: GOLD, fill: isFavoriteProp ? GOLD : "none", transition: "fill 0.2s" }}
                       />
-                      <span className="text-[10px] sm:text-xs font-medium hidden sm:block" style={{ color: GOLD }}>
+                      <span className="text-xs font-medium" style={{ color: GOLD }}>
                         Dodajte u omiljene
                       </span>
                     </button>
@@ -1533,7 +1547,7 @@ const VideoPlayer = ({
                       const visible = miniChannels.slice(start, start + 5);
 
                       return (
-                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 py-2 sm:py-3 px-2 sm:px-3 overflow-visible items-stretch">
+                        <div className="grid grid-cols-5 gap-1 py-3 px-3 overflow-visible items-stretch">
                           {visible.map((ch, i) => (
                             <EPGCard
                               key={ch.id}
@@ -1547,7 +1561,7 @@ const VideoPlayer = ({
                       );
                     })()
                   ) : (
-                    <div className="flex gap-1 sm:gap-2 h-16 sm:h-24 px-2 sm:px-3 py-1.5 sm:py-2 overflow-hidden">
+                    <div className="flex gap-2 h-24 px-3 py-2 overflow-hidden">
                       {miniChannels.slice(0, 5).map((ch) => (
                         <div
                           key={ch.id}
@@ -1562,9 +1576,7 @@ const VideoPlayer = ({
                             src={ch.thumbnail}
                             className="w-full h-full object-cover"
                             alt={ch.title}
-                            style={{
-                              filter: isFutureShow(ch.timeRange, ch.day) ? "grayscale(100%)" : "none",
-                            }}
+                            style={{ filter: isFutureShow(ch.timeRange, ch.day) ? "grayscale(100%)" : "none" }}
                           />
                         </div>
                       ))}
