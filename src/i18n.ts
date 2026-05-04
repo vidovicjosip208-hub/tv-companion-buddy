@@ -10,6 +10,10 @@ type Bundle = {
   tvFilters: Record<string, string>;
   videoteka: Record<string, string>;
   profile: Record<string, string>;
+  videotekaRows: Record<string, string>;
+  videotekaDetail: Record<string, string>;
+  videotekaSearch: Record<string, string>;
+  videotekaEpisodes: Record<string, string>;
 };
 
 const hr: Bundle = {
