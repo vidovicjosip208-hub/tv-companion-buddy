@@ -240,7 +240,7 @@ const EPGGrid = ({
       className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-xl gap-2"
     >
       {/* Left Column — Channel List */}
-      <div className="w-full lg:w-[21%] flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2">
+      <div className={cn("w-full flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2", hideSchedule ? "lg:w-[35%]" : "lg:w-[21%]") }>
         <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-4 pb-2">{t("epg.live")}</h2>
         {channels.map((channel, index) => (
           <ChannelItem
