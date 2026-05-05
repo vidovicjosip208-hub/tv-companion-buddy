@@ -33,6 +33,7 @@ interface EPGGridProps {
   focusedProgramIndex?: number;
   isProgramFocused?: boolean;
   onChannelClick?: (index: number) => void;
+  hideSchedule?: boolean;
 }
 
 function calculateProgress(startTime: string, endTime: string): number {
@@ -213,6 +214,7 @@ const EPGGrid = ({
   focusedProgramIndex = 0,
   isProgramFocused = false,
   onChannelClick,
+  hideSchedule = false,
 }: EPGGridProps) => {
   const { t } = useTranslation();
   const selectedChannel = isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
@@ -238,7 +240,7 @@ const EPGGrid = ({
       className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-xl gap-2"
     >
       {/* Left Column — Channel List */}
-      <div className="w-full lg:w-[21%] flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2">
+      <div className={cn("w-full flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2", hideSchedule ? "lg:w-[35%]" : "lg:w-[21%]") }>
         <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-4 pb-2">{t("epg.live")}</h2>
         {channels.map((channel, index) => (
           <ChannelItem
@@ -255,64 +257,67 @@ const EPGGrid = ({
       <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
 
       {/* Middle Column — Program Guide */}
-      <div className="w-full lg:w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2">
-        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-5 pb-2">{t("epg.schedule")}</h2>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedChannel?.id}
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -12 }}
-            transition={{ duration: 0.25 }}
-            className="flex flex-col"
-          >
-            <div className="flex items-center gap-3 px-3 sm:px-5 pb-3 mb-1 border-b border-border/20">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-accent/15 flex items-center justify-center overflow-hidden">
-                {selectedChannel?.logoUrl ? (
-                  <img
-                    src={selectedChannel.logoUrl}
-                    alt={selectedChannel.name}
-                    className="w-full h-full object-contain p-1"
-                    loading="lazy"
-                  />
-                ) : (
-                  <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
-                )}
-              </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
-                <span className="text-xs text-muted-foreground">{t("epg.channel")} {selectedChannel?.number}</span>
-              </div>
-            </div>
+      {!hideSchedule && (
+        <>
+          <div className="w-full lg:w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2">
+            <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-5 pb-2">{t("epg.schedule")}</h2>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedChannel?.id}
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.25 }}
+                className="flex flex-col"
+              >
+                <div className="flex items-center gap-3 px-3 sm:px-5 pb-3 mb-1 border-b border-border/20">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-accent/15 flex items-center justify-center overflow-hidden">
+                    {selectedChannel?.logoUrl ? (
+                      <img
+                        src={selectedChannel.logoUrl}
+                        alt={selectedChannel.name}
+                        className="w-full h-full object-contain p-1"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
+                    <span className="text-xs text-muted-foreground">{t("epg.channel")} {selectedChannel?.number}</span>
+                  </div>
+                </div>
 
-            <div className="flex flex-col gap-0.5 mt-1">
-              {selectedChannel?.programs.map((program, i) => (
-                <ProgramRow
-                  key={`${program.title}-${program.startTime}`}
-                  program={program}
-                  index={i}
-                  isFocused={isProgramFocused && focusedProgramIndex === i}
-                />
-              ))}
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+                <div className="flex flex-col gap-0.5 mt-1">
+                  {selectedChannel?.programs.map((program, i) => (
+                    <ProgramRow
+                      key={`${program.title}-${program.startTime}`}
+                      program={program}
+                      index={i}
+                      isFocused={isProgramFocused && focusedProgramIndex === i}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-      {/* Gold Divider */}
-      <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
-
+          {/* Gold Divider */}
+          <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
+        </>
+      )}
       {/* Right Column — Program Details */}
-      <div className="w-full lg:w-[31%] flex flex-col justify-center py-2 px-3 overflow-hidden lg:h-full">
+      <div className={cn("w-full flex flex-col justify-center py-2 px-3 overflow-hidden lg:h-full", hideSchedule ? "lg:flex-1 lg:items-center" : "lg:w-[31%]") }>
         <AnimatePresence mode="wait">
-          {selectedProgram && isProgramFocused && (
+          {selectedProgram && (isProgramFocused || hideSchedule) && (
             <motion.div
               key={`${selectedChannel?.id}-${selectedProgram.title}-${selectedProgram.startTime}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25 }}
-              className="rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 overflow-y-auto scrollbar-hide lg:h-[80%]"
+              className={cn("rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 overflow-y-auto scrollbar-hide lg:h-[80%]", hideSchedule && "lg:max-w-md w-full")}
             >
               <div className="flex justify-center">
                 <div className="w-16 h-10 sm:w-20 sm:h-12 rounded-md bg-accent/20 flex items-center justify-center overflow-hidden">
