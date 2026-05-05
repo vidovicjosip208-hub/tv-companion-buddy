@@ -1058,7 +1058,12 @@ const VideoPlayer = ({
   // Sve kartice u lancu (slot + HUD) koriste ovu istu funkciju.
   const getLogoUrl = (channelName: string | undefined): string | null => {
     if (!channelName) return null;
-    return (allChannels ?? []).find((c) => c.channelName === channelName)?.logoUrl ?? null;
+    const found = (allChannels ?? []).find((c) => c.channelName === channelName);
+    const logo = found?.logoUrl ?? null;
+    console.log(
+      `[getLogoUrl] "${channelName}" → found=${!!found} logoUrl=${logo} allChannels.length=${(allChannels ?? []).length}`,
+    );
+    return logo;
   };
 
   // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
