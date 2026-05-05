@@ -19,6 +19,14 @@ type Bundle = {
   weekdays: Record<string, string>;
 };
 
+const epgHr = { live: "Uživo", schedule: "TV Raspored", channel: "Kanal", today: "Danas", watch: "GLEDAJ", programDesc: "Pogledajte {{title}} na kanalu {{channel}}. Više informacija o programu uskoro." };
+const epgEn = { live: "Live", schedule: "TV Schedule", channel: "Channel", today: "Today", watch: "WATCH", programDesc: "Watch {{title}} on {{channel}}. More information about the program coming soon." };
+const epgDe = { live: "Live", schedule: "TV-Programm", channel: "Kanal", today: "Heute", watch: "ANSEHEN", programDesc: "Sehen Sie {{title}} auf {{channel}}. Weitere Informationen zum Programm in Kürze." };
+const epgFr = { live: "En direct", schedule: "Programme TV", channel: "Chaîne", today: "Aujourd'hui", watch: "REGARDER", programDesc: "Regardez {{title}} sur {{channel}}. Plus d'informations sur le programme prochainement." };
+const epgEs = { live: "En vivo", schedule: "Programación", channel: "Canal", today: "Hoy", watch: "VER", programDesc: "Vea {{title}} en {{channel}}. Más información sobre el programa próximamente." };
+const epgIt = { live: "Live", schedule: "Palinsesto", channel: "Canale", today: "Oggi", watch: "GUARDA", programDesc: "Guarda {{title}} su {{channel}}. Maggiori informazioni sul programma a breve." };
+type _T = {
+
 const hr: Bundle = {
   sidebar: {
     home: "Početna", tv: "TV Kanali", radio: "Radio stanice", favorites: "Omiljeni",
