@@ -1054,29 +1054,12 @@ const VideoPlayer = ({
     label: hudFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
   };
-  // Logo za HUD karticu — tražimo u više slojeva da nikad ne ostane prazan.
-  // Koristimo eksplicitnu provjeru !== undefined umjesto truthy da ne preskočimo
-  // vrijednosti koje su null (što bi moglo maskirati pravi URL).
-  const resolveLogoUrl = (channelName: string | undefined): string | null => {
-    // Uvijek prvo provjeri data?.logoUrl ako je to trenutni kanal koji se reproducira
-    if (channelName === data?.channelName && data?.logoUrl) return data.logoUrl;
-    // Traži u allChannels (najkompletniji izvor — direktno iz baze)
-    const fromAll = (allChannels ?? []).find((c) => c.channelName === channelName)?.logoUrl;
-    if (fromAll) return fromAll;
-    // Traži u favoriteChannels
-    const fromFav = favoriteChannels.find((c) => c.channelName === channelName)?.logoUrl;
-    if (fromFav) return fromFav;
-    // Krajnji fallback — data?.logoUrl bez obzira na kanal
-    return data?.logoUrl ?? null;
+  // Jedini pouzdani izvor za logo je allChannels — direktno iz baze s channel_logos merge-om.
+  // Sve kartice u lancu (slot + HUD) koriste ovu istu funkciju.
+  const getLogoUrl = (channelName: string | undefined): string | null => {
+    if (!channelName) return null;
+    return (allChannels ?? []).find((c) => c.channelName === channelName)?.logoUrl ?? null;
   };
-
-  // hudFav je isti objekt koji bi slot kartica koristila na toj poziciji —
-  // isti lanac, isti izvor, identičan logo.
-  const hudFavLogoUrl =
-    hudFav?.logoUrl ??
-    (allChannels ?? []).find((c) => c.channelName === hudFav?.channelName)?.logoUrl ??
-    (hudFav?.channelName === data?.channelName ? data?.logoUrl : null) ??
-    null;
 
   // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
   // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
@@ -1230,11 +1213,7 @@ const VideoPlayer = ({
                       isFocused={false}
                       width="100%"
                       showArrows={false}
-                      logoUrl={
-                        favCh?.logoUrl ??
-                        (allChannels ?? []).find((c) => c.channelName === favCh?.channelName)?.logoUrl ??
-                        null
-                      }
+                      logoUrl={getLogoUrl(favCh?.channelName)}
                       onClick={() => {
                         if (favCh && onSwitchChannel) {
                           const resolvedStreamUrl =
@@ -1335,12 +1314,7 @@ const VideoPlayer = ({
                       isFocused={sidebarOpen}
                       width={CARD_W}
                       showArrows
-                      logoUrl={
-                        favoriteChannels[hudIdx]?.logoUrl ??
-                        (allChannels ?? []).find((c) => c.channelName === favoriteChannels[hudIdx]?.channelName)
-                          ?.logoUrl ??
-                        null
-                      }
+                      logoUrl={getLogoUrl(favoriteChannels[hudIdx]?.channelName ?? data?.channelName)}
                       onClick={openSidebar}
                     />
                   </div>
