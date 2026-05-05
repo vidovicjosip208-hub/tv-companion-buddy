@@ -1054,16 +1054,20 @@ const VideoPlayer = ({
     label: hudFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
   };
-  // Logo za HUD karticu — tražimo u više slojeva da nikad ne ostane prazan
+  // Logo za HUD karticu — tražimo u više slojeva da nikad ne ostane prazan.
+  // Koristimo eksplicitnu provjeru !== undefined umjesto truthy da ne preskočimo
+  // vrijednosti koje su null (što bi moglo maskirati pravi URL).
   const resolveLogoUrl = (channelName: string | undefined): string | null => {
-    if (!channelName) return data?.logoUrl ?? null;
-    const fromFav = favoriteChannels.find((c) => c.channelName === channelName)?.logoUrl;
-    if (fromFav) return fromFav;
+    // Uvijek prvo provjeri data?.logoUrl ako je to trenutni kanal koji se reproducira
+    if (channelName === data?.channelName && data?.logoUrl) return data.logoUrl;
+    // Traži u allChannels (najkompletniji izvor — direktno iz baze)
     const fromAll = (allChannels ?? []).find((c) => c.channelName === channelName)?.logoUrl;
     if (fromAll) return fromAll;
-    // Ako je trenutni kanal, uzmi iz data propa
-    if (channelName === data?.channelName) return data?.logoUrl ?? null;
-    return null;
+    // Traži u favoriteChannels
+    const fromFav = favoriteChannels.find((c) => c.channelName === channelName)?.logoUrl;
+    if (fromFav) return fromFav;
+    // Krajnji fallback — data?.logoUrl bez obzira na kanal
+    return data?.logoUrl ?? null;
   };
 
   const hudLogoUrl = resolveLogoUrl(hudFav?.channelName ?? data?.channelName);
