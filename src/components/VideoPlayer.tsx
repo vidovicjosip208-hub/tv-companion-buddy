@@ -1053,7 +1053,10 @@ const VideoPlayer = ({
     label: hudFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
   };
-  const hudLogoUrl = hudFav?.logoUrl ?? (hudIsCurrent ? (data?.logoUrl ?? null) : null);
+  const hudLogoUrl =
+    hudFav?.logoUrl ??
+    (allChannels ?? favoriteChannels).find((c) => c.channelName === hudFav?.channelName)?.logoUrl ??
+    (hudIsCurrent ? (data?.logoUrl ?? null) : null);
 
   // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
   // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
@@ -1207,7 +1210,11 @@ const VideoPlayer = ({
                       isFocused={false}
                       width="100%"
                       showArrows={false}
-                      logoUrl={favCh?.logoUrl ?? null}
+                      logoUrl={
+                        favCh?.logoUrl ??
+                        (allChannels ?? favoriteChannels).find((c) => c.channelName === favCh?.channelName)?.logoUrl ??
+                        null
+                      }
                       onClick={() => {
                         if (favCh && onSwitchChannel) {
                           const resolvedStreamUrl =
