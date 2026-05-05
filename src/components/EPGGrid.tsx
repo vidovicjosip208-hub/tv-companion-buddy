@@ -317,7 +317,7 @@ const EPGGrid = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25 }}
-              className="rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 overflow-y-auto scrollbar-hide lg:h-[80%]"
+              className={cn("rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 overflow-y-auto scrollbar-hide lg:h-[80%]", hideSchedule && "lg:max-w-md w-full")}
             >
               <div className="flex justify-center">
                 <div className="w-16 h-10 sm:w-20 sm:h-12 rounded-md bg-accent/20 flex items-center justify-center overflow-hidden">
