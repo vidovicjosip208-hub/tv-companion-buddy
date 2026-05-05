@@ -1325,7 +1325,7 @@ const VideoPlayer = ({
                       isFocused={sidebarOpen}
                       width={CARD_W}
                       showArrows
-                      logoUrl={hudLogoUrl}
+                      logoUrl={resolveLogoUrl(favoriteChannels[hudIdx]?.channelName ?? data?.channelName)}
                       onClick={openSidebar}
                     />
                   </div>
