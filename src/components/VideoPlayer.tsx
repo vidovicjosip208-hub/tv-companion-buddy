@@ -1327,15 +1327,20 @@ const VideoPlayer = ({
                   className="relative flex items-center pt-3 pb-3"
                   style={{ backgroundColor: epgMode ? "rgba(10,10,10,0.46)" : "rgba(10,10,10,0.78)" }}
                 >
-                  {/* HUD kartica — uvijek vidljiva, fokusirana kad je sidebar otvoren */}
+                  {/* HUD kartica — fokusirana kartica u slotu, uvijek na dnu */}
                   <div className="ml-4 flex-shrink-0" style={{ width: CARD_W }}>
                     <ChannelCard
-                      ch={hudChannel}
+                      ch={favAsSidebarChannels[hudIdx] ?? hudChannel}
                       isActive={true}
                       isFocused={sidebarOpen}
                       width={CARD_W}
                       showArrows
-                      logoUrl={hudFavLogoUrl}
+                      logoUrl={
+                        favoriteChannels[hudIdx]?.logoUrl ??
+                        (allChannels ?? []).find((c) => c.channelName === favoriteChannels[hudIdx]?.channelName)
+                          ?.logoUrl ??
+                        null
+                      }
                       onClick={openSidebar}
                     />
                   </div>
