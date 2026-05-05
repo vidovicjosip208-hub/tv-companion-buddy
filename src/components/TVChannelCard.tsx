@@ -103,8 +103,8 @@ const TVChannelCard = ({
           />
         </div>
       </div>
-      <div className="p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 bg-card/70">
-        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+      <div className="p-3 flex items-center gap-3 bg-card/70">
+        <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
           {logoUrl ? (
             <img
               src={logoUrl}
@@ -116,12 +116,12 @@ const TVChannelCard = ({
               }}
             />
           ) : (
-            <span className="text-[10px] sm:text-[11px] font-bold text-foreground">{getChannelAbbr(channelName)}</span>
+            <span className="text-[11px] font-bold text-foreground">{getChannelAbbr(channelName)}</span>
           )}
         </div>
         <div className="flex-1 text-left min-w-0">
-          <h3 className="text-xs sm:text-sm font-medium text-foreground truncate">{title}</h3>
-          <p className="text-[10px] sm:text-xs text-muted-foreground">{timeSlot}</p>
+          <h3 className="text-sm font-medium text-foreground truncate">{title}</h3>
+          <p className="text-xs text-muted-foreground">{timeSlot}</p>
         </div>
       </div>
     </motion.button>
@@ -337,12 +337,9 @@ interface TVChannelGridProps {
   cardWidth?: number;
 }
 
-export const TVChannelGrid = ({ channels, cardWidth }: TVChannelGridProps) => {
+export const TVChannelGrid = ({ channels, cardWidth = 280 }: TVChannelGridProps) => {
   const [focused, setFocused] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const responsiveCardWidth =
-    cardWidth ?? (typeof window !== "undefined" ? Math.min(280, window.innerWidth * 0.75) : 280);
 
   const moveFocus = useCallback(
     (delta: number) => {
@@ -375,11 +372,11 @@ export const TVChannelGrid = ({ channels, cardWidth }: TVChannelGridProps) => {
   return (
     <div
       ref={scrollRef}
-      className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+      className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
       style={{ scrollbarWidth: "none" }}
     >
       {channels.map((ch, i) => (
-        <div key={i} className="flex-none snap-start" style={{ width: responsiveCardWidth }}>
+        <div key={i} className="flex-none snap-start" style={{ width: cardWidth }}>
           <TVChannelCard {...ch} index={i} isFocused={focused === i} onClick={() => setFocused(i)} />
         </div>
       ))}

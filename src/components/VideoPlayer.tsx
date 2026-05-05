@@ -263,12 +263,12 @@ const ChannelCard = ({
         {overrideNum ?? ch.num}
       </span>
 
-      <div className="mt-2 mb-2 flex items-center justify-center" style={{ height: 48 }}>
+      <div className="mt-3 mb-1 flex items-center justify-center" style={{ height: 32 }}>
         {logoUrl ? (
           <img
             src={logoUrl}
             alt={ch.label}
-            className="max-h-12 max-w-full object-contain"
+            className="max-h-8 max-w-full object-contain"
             style={{
               filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
               transition: "filter 0.18s",
@@ -280,8 +280,8 @@ const ChannelCard = ({
         ) : (
           <Tv
             style={{
-              width: 32,
-              height: 32,
+              width: 24,
+              height: 24,
               color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
               filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
               transition: "color 0.18s, filter 0.18s",
@@ -289,6 +289,29 @@ const ChannelCard = ({
           />
         )}
       </div>
+
+      <span
+        className="font-bold text-center leading-tight w-full truncate"
+        style={{
+          fontSize: "11px",
+          color: isFocused ? "#fff" : isActive ? "#f0e8c0" : "rgba(255,255,255,0.85)",
+          letterSpacing: "0.01em",
+        }}
+      >
+        {ch.label}
+      </span>
+
+      <span
+        className="font-semibold tracking-widest text-center"
+        style={{
+          fontSize: "6.5px",
+          color: isFocused ? `rgba(245,197,24,0.7)` : "rgba(255,255,255,0.28)",
+          marginTop: "2px",
+          letterSpacing: "0.1em",
+        }}
+      >
+        {ch.sub}
+      </span>
     </div>
 
     {showArrows ? (
@@ -785,7 +808,6 @@ const VideoPlayer = ({
   }, [favoriteChannels, data?.channelName]);
 
   const closeSidebar = useCallback(() => {
-    setSidebarFocus(-1);
     setFocusedControl(0);
     resetHideTimer();
   }, [resetHideTimer]);
@@ -1054,23 +1076,7 @@ const VideoPlayer = ({
     label: hudFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
   };
-  // Logo za HUD karticu — tražimo u više slojeva da nikad ne ostane prazan.
-  // Koristimo eksplicitnu provjeru !== undefined umjesto truthy da ne preskočimo
-  // vrijednosti koje su null (što bi moglo maskirati pravi URL).
-  const resolveLogoUrl = (channelName: string | undefined): string | null => {
-    // Uvijek prvo provjeri data?.logoUrl ako je to trenutni kanal koji se reproducira
-    if (channelName === data?.channelName && data?.logoUrl) return data.logoUrl;
-    // Traži u allChannels (najkompletniji izvor — direktno iz baze)
-    const fromAll = (allChannels ?? []).find((c) => c.channelName === channelName)?.logoUrl;
-    if (fromAll) return fromAll;
-    // Traži u favoriteChannels
-    const fromFav = favoriteChannels.find((c) => c.channelName === channelName)?.logoUrl;
-    if (fromFav) return fromFav;
-    // Krajnji fallback — data?.logoUrl bez obzira na kanal
-    return data?.logoUrl ?? null;
-  };
-
-  const hudLogoUrl = resolveLogoUrl(hudFav?.channelName ?? data?.channelName);
+  const hudLogoUrl = hudFav?.logoUrl ?? (hudIsCurrent ? (data?.logoUrl ?? null) : null);
 
   // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
   // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
@@ -1207,44 +1213,51 @@ const VideoPlayer = ({
                 gap: 6,
               }}
             >
-              {aboveWindow.map((chIdx) => {
-                const ch = favAsSidebarChannels[chIdx];
-                if (!ch) return null;
-                const favCh = favoriteChannels[chIdx];
-                return (
-                  <motion.div
-                    key={`slot-${chIdx}`}
-                    animate={{ opacity: 1, y: 0 }}
-                    initial={{ opacity: 0, y: -10 }}
-                    transition={{ type: "spring", stiffness: 350, damping: 35 }}
-                  >
-                    <ChannelCard
-                      ch={ch}
-                      isActive={false}
-                      isFocused={false}
-                      width="100%"
-                      showArrows={false}
-                      logoUrl={resolveLogoUrl(favCh?.channelName)}
-                      onClick={() => {
-                        if (favCh && onSwitchChannel) {
-                          const resolvedStreamUrl =
-                            favCh.streamUrl ??
-                            channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
-                          onSwitchChannel({
-                            channelNumber: String(favCh.number),
-                            showTitle: favCh.showTitle,
-                            timeRange: favCh.timeRange,
-                            thumbnail: favCh.thumbnail,
-                            channelName: favCh.channelName,
-                            streamUrl: resolvedStreamUrl,
-                            logoUrl: favCh.logoUrl,
-                          });
-                        }
-                      }}
-                    />
-                  </motion.div>
-                );
-              })}
+              <AnimatePresence mode="popLayout" initial={false}>
+                {/* 4 kartice iznad HUD-a — uvijek samo preview, nikad u fokusu. Fokus drži HUD. */}
+                {aboveWindow.map((chIdx, i) => {
+                  const ch = favAsSidebarChannels[chIdx];
+                  if (!ch) return null;
+                  const favCh = favoriteChannels[chIdx];
+                  const isActive = false;
+                  return (
+                    <motion.div
+                      key={`slot-${chIdx}`}
+                      layout
+                      initial={{ y: -80, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 80, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 350, damping: 35 }}
+                    >
+                      <ChannelCard
+                        ch={ch}
+                        isActive={isActive}
+                        isFocused={isActive}
+                        width="100%"
+                        showArrows={isActive}
+                        logoUrl={favCh?.logoUrl ?? null}
+                        onClick={() => {
+                          if (favCh && onSwitchChannel) {
+                            // Fallback: ako favCh.streamUrl nije dostupan, traži u channelLookup
+                            const resolvedStreamUrl =
+                              favCh.streamUrl ??
+                              channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
+                            onSwitchChannel({
+                              channelNumber: String(favCh.number),
+                              showTitle: favCh.showTitle,
+                              timeRange: favCh.timeRange,
+                              thumbnail: favCh.thumbnail,
+                              channelName: favCh.channelName,
+                              streamUrl: resolvedStreamUrl,
+                              logoUrl: favCh.logoUrl,
+                            });
+                          }
+                        }}
+                      />
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>

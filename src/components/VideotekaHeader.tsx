@@ -1,7 +1,6 @@
 import { Home, Search } from "lucide-react";
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-videoteka-logo.png";
 
@@ -9,12 +8,7 @@ export interface VideotekaHeaderHandle {
   focus: (index?: number) => void;
 }
 
-const navTabs = [
-  { id: "Home", labelKey: "videoteka.home" },
-  { id: "Shows", labelKey: "videoteka.shows" },
-  { id: "Movies", labelKey: "videoteka.movies" },
-  { id: "My List", labelKey: "videoteka.myList" },
-];
+const navTabs = [{ label: "Home" }, { label: "Shows" }, { label: "Movies" }, { label: "My List" }];
 
 interface VideotekaHeaderProps {
   activeTab?: string;
@@ -26,7 +20,6 @@ interface VideotekaHeaderProps {
 const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
   ({ activeTab, onSearchOpen, onFocusChange, onTabChange }, ref) => {
     const navigate = useNavigate();
-    const { t } = useTranslation();
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -39,7 +32,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
           onFocusChange?.(true);
           setTimeout(() => buttonRefs.current[clamped]?.focus(), 0);
         } else {
-          const activeIndex = navTabs.findIndex((t) => t.id === activeTab);
+          const activeIndex = navTabs.findIndex((t) => t.label === activeTab);
           const idx = activeIndex >= 0 ? activeIndex + 1 : 1;
           setFocusedIndex(idx);
           onFocusChange?.(true);
@@ -48,6 +41,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       },
     }));
 
+    // 0 = Home, 1 = Home tab, 2 = Shows, 3 = Movies, 4 = Search
     const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
     const totalButtons = 1 + navTabs.length + 1;
 
@@ -58,7 +52,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       buttonRefs.current[clamped]?.focus();
 
       if (clamped >= 1 && clamped <= navTabs.length) {
-        onTabChange?.(navTabs[clamped - 1].id);
+        onTabChange?.(navTabs[clamped - 1].label);
       }
     };
 
@@ -67,7 +61,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       onFocusChange?.(true, index);
 
       if (index >= 1 && index <= navTabs.length) {
-        onTabChange?.(navTabs[index - 1].id);
+        onTabChange?.(navTabs[index - 1].label);
       }
     };
 
@@ -126,15 +120,15 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
     }, [focusedIndex, searchOpen, totalButtons]);
 
     return (
-      <header className="relative z-10 px-4 sm:px-8 lg:px-12 -mt-[30px] sm:-mt-[50px] lg:-mt-[65px] pb-0">
+      <header className="relative z-10 px-12 -mt-[65px] pb-0">
         <div className="flex items-center">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Max Ovizija" className="h-[120px] sm:h-[170px] lg:h-[221px] w-auto" />
+            <img src={logo} alt="Max Ovizija" className="h-[221px] w-auto" />
           </div>
 
           {/* Navigation */}
-          <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
+          <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
             {/* Home button — index 0 */}
             <button
               ref={(el) => (buttonRefs.current[0] = el)}
@@ -142,55 +136,50 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
               onFocus={() => handleButtonFocus(0)}
               onBlur={handleButtonBlur}
               className={cn(
-                "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
+                "w-10 h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
                 focusedIndex === 0
                   ? "bg-white border-white/20 scale-105"
                   : "border-white/20 bg-muted/40 hover:opacity-90",
               )}
             >
-              <Home
-                className={cn(
-                  "w-[14px] h-[14px] sm:w-[18px] sm:h-[18px]",
-                  focusedIndex === 0 ? "text-black" : "text-white",
-                )}
-              />
+              <Home className={cn("w-[18px] h-[18px]", focusedIndex === 0 ? "text-black" : "text-white")} />
             </button>
 
-            {/* Nav tabs — indeksi 1, 2, 3, 4 */}
+            {/* Nav tabs — indeksi 1, 2, 3 */}
             {navTabs.map((tab, i) => {
               const index = i + 1;
               const isFocused = focusedIndex === index;
               return (
                 <button
-                  key={tab.id}
+                  key={tab.label}
                   ref={(el) => (buttonRefs.current[index] = el)}
-                  onClick={() => onTabChange?.(tab.id)}
+                  onClick={() => onTabChange?.(tab.label)}
                   onFocus={() => handleButtonFocus(index)}
                   onBlur={handleButtonBlur}
                   className={cn(
-                    "px-[10px] sm:px-[18px] py-[5px] sm:py-[7px] rounded-xl text-[12px] sm:text-[15px] font-bold transition-all outline-none border",
+                    "px-[18px] py-[7px] rounded-xl text-[15px] font-bold transition-all outline-none border",
                     isFocused
                       ? "bg-white border-white/20 text-black scale-105"
-                      : activeTab === tab.id
+                      : activeTab === tab.label
                         ? "border-white/20 bg-muted/40 text-white"
                         : "border-white/20 bg-muted/40 text-white/60 hover:text-white",
                   )}
                 >
-                  {t(tab.labelKey)}
+                  {tab.label}
                 </button>
               );
             })}
           </nav>
 
-          {/* Search — index 5 */}
+          {/* Search — index 4 */}
           <div className="ml-auto flex items-center gap-2">
             {searchOpen && (
               <input
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("videoteka.search")}
-                className="bg-white/10 border border-white/20 rounded-xl px-3 py-[5px] sm:py-[7px] text-xs sm:text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 w-32 sm:w-48 transition-all"
+                placeholder="Search..."
+                className="bg-white/10 border border-white/20 rounded-xl px-3 py-[7px] text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 w-48 transition-all"
               />
             )}
             <button
@@ -202,18 +191,13 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
               onFocus={() => handleButtonFocus(4)}
               onBlur={handleButtonBlur}
               className={cn(
-                "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
+                "w-10 h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
                 focusedIndex === 4
                   ? "bg-white border-white/20 scale-105"
                   : "border-white/20 bg-muted/40 text-white/60 hover:text-white",
               )}
             >
-              <Search
-                className={cn(
-                  "w-[14px] h-[14px] sm:w-[18px] sm:h-[18px]",
-                  focusedIndex === 4 ? "text-black" : "text-white",
-                )}
-              />
+              <Search className={cn("w-[18px] h-[18px]", focusedIndex === 4 ? "text-black" : "text-white")} />
             </button>
           </div>
         </div>

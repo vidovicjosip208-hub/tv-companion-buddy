@@ -30,16 +30,19 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
   const [headerFocused, setHeaderFocused] = useState(true);
   const [rowTransitioning, setRowTransitioning] = useState(false);
 
+  // Focus header Home tab on mount
   useEffect(() => {
     setTimeout(() => headerRef.current?.focus(1), 100);
   }, []);
-
   const [detailViewOpen, setDetailViewOpen] = useState(false);
 
-  const rows = useMemo(() => tabRowsMap[activeTab] ?? tabRowsMap.Home ?? EMPTY_ROWS, [activeTab, tabRowsMap]);
-
+  const rows = useMemo(
+    () => tabRowsMap[activeTab] ?? tabRowsMap.Home ?? EMPTY_ROWS,
+    [activeTab, tabRowsMap],
+  );
   const [focusedItems, setFocusedItems] = useState<number[]>(rows.map(() => 0));
 
+  // Reset content state when tab changes
   useEffect(() => {
     setFocusedRow(0);
     setFocusedItems(rows.map(() => 0));
@@ -148,11 +151,11 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
       />
       {searchOpen && <VideotekaSearch allItems={allContentItems} onClose={() => setSearchOpen(false)} />}
       {!hasContent ? (
-        <div className="flex h-[60vh] items-center justify-center text-white/60 text-sm sm:text-base px-4 text-center">
+        <div className="flex h-[60vh] items-center justify-center text-white/60">
           {isLoading ? "Učitavanje sadržaja…" : "Nema sadržaja u Videoteci."}
         </div>
       ) : (
-        <div className="-mt-[15px] sm:-mt-[25px] lg:-mt-[35px]">
+        <div className="-mt-[35px]">
           <ContentRow
             title={currentRow!.title}
             titleHighlight={currentRow!.titleHighlight}
