@@ -310,7 +310,7 @@ const EPGGrid = ({
       {/* Right Column — Program Details */}
       <div className={cn("w-full flex flex-col justify-center py-2 px-3 overflow-hidden lg:h-full", hideSchedule ? "lg:flex-1 lg:items-center" : "lg:w-[31%]") }>
         <AnimatePresence mode="wait">
-          {selectedProgram && isProgramFocused && (
+          {selectedProgram && (isProgramFocused || hideSchedule) && (
             <motion.div
               key={`${selectedChannel?.id}-${selectedProgram.title}-${selectedProgram.startTime}`}
               initial={{ opacity: 0, y: 8 }}
