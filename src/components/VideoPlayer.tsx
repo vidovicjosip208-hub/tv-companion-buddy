@@ -785,6 +785,7 @@ const VideoPlayer = ({
   }, [favoriteChannels, data?.channelName]);
 
   const closeSidebar = useCallback(() => {
+    setSidebarFocus(-1);
     setFocusedControl(0);
     resetHideTimer();
   }, [resetHideTimer]);
@@ -1053,10 +1054,19 @@ const VideoPlayer = ({
     label: hudFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
   };
-  const hudLogoUrl =
-    hudFav?.logoUrl ??
-    (allChannels ?? favoriteChannels).find((c) => c.channelName === hudFav?.channelName)?.logoUrl ??
-    (hudIsCurrent ? (data?.logoUrl ?? null) : null);
+  // Logo za HUD karticu — tražimo u više slojeva da nikad ne ostane prazan
+  const resolveLogoUrl = (channelName: string | undefined): string | null => {
+    if (!channelName) return data?.logoUrl ?? null;
+    const fromFav = favoriteChannels.find((c) => c.channelName === channelName)?.logoUrl;
+    if (fromFav) return fromFav;
+    const fromAll = (allChannels ?? []).find((c) => c.channelName === channelName)?.logoUrl;
+    if (fromAll) return fromAll;
+    // Ako je trenutni kanal, uzmi iz data propa
+    if (channelName === data?.channelName) return data?.logoUrl ?? null;
+    return null;
+  };
+
+  const hudLogoUrl = resolveLogoUrl(hudFav?.channelName ?? data?.channelName);
 
   // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
   // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
@@ -1210,11 +1220,7 @@ const VideoPlayer = ({
                       isFocused={false}
                       width="100%"
                       showArrows={false}
-                      logoUrl={
-                        favCh?.logoUrl ??
-                        (allChannels ?? favoriteChannels).find((c) => c.channelName === favCh?.channelName)?.logoUrl ??
-                        null
-                      }
+                      logoUrl={resolveLogoUrl(favCh?.channelName)}
                       onClick={() => {
                         if (favCh && onSwitchChannel) {
                           const resolvedStreamUrl =
