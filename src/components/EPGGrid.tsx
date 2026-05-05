@@ -257,53 +257,56 @@ const EPGGrid = ({
       <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
 
       {/* Middle Column — Program Guide */}
-      <div className="w-full lg:w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2">
-        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-5 pb-2">{t("epg.schedule")}</h2>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedChannel?.id}
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -12 }}
-            transition={{ duration: 0.25 }}
-            className="flex flex-col"
-          >
-            <div className="flex items-center gap-3 px-3 sm:px-5 pb-3 mb-1 border-b border-border/20">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-accent/15 flex items-center justify-center overflow-hidden">
-                {selectedChannel?.logoUrl ? (
-                  <img
-                    src={selectedChannel.logoUrl}
-                    alt={selectedChannel.name}
-                    className="w-full h-full object-contain p-1"
-                    loading="lazy"
-                  />
-                ) : (
-                  <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
-                )}
-              </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
-                <span className="text-xs text-muted-foreground">{t("epg.channel")} {selectedChannel?.number}</span>
-              </div>
-            </div>
+      {!hideSchedule && (
+        <>
+          <div className="w-full lg:w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2">
+            <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-5 pb-2">{t("epg.schedule")}</h2>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedChannel?.id}
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.25 }}
+                className="flex flex-col"
+              >
+                <div className="flex items-center gap-3 px-3 sm:px-5 pb-3 mb-1 border-b border-border/20">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-accent/15 flex items-center justify-center overflow-hidden">
+                    {selectedChannel?.logoUrl ? (
+                      <img
+                        src={selectedChannel.logoUrl}
+                        alt={selectedChannel.name}
+                        className="w-full h-full object-contain p-1"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
+                    <span className="text-xs text-muted-foreground">{t("epg.channel")} {selectedChannel?.number}</span>
+                  </div>
+                </div>
 
-            <div className="flex flex-col gap-0.5 mt-1">
-              {selectedChannel?.programs.map((program, i) => (
-                <ProgramRow
-                  key={`${program.title}-${program.startTime}`}
-                  program={program}
-                  index={i}
-                  isFocused={isProgramFocused && focusedProgramIndex === i}
-                />
-              ))}
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+                <div className="flex flex-col gap-0.5 mt-1">
+                  {selectedChannel?.programs.map((program, i) => (
+                    <ProgramRow
+                      key={`${program.title}-${program.startTime}`}
+                      program={program}
+                      index={i}
+                      isFocused={isProgramFocused && focusedProgramIndex === i}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-      {/* Gold Divider */}
-      <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
-
+          {/* Gold Divider */}
+          <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
+        </>
+      )}
       {/* Right Column — Program Details */}
       <div className="w-full lg:w-[31%] flex flex-col justify-center py-2 px-3 overflow-hidden lg:h-full">
         <AnimatePresence mode="wait">
