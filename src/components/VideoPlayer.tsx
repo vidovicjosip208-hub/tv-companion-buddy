@@ -1070,7 +1070,13 @@ const VideoPlayer = ({
     return data?.logoUrl ?? null;
   };
 
-  const hudLogoUrl = resolveLogoUrl(hudFav?.channelName ?? data?.channelName);
+  // hudFav je isti objekt koji bi slot kartica koristila na toj poziciji —
+  // isti lanac, isti izvor, identičan logo.
+  const hudFavLogoUrl =
+    hudFav?.logoUrl ??
+    (allChannels ?? []).find((c) => c.channelName === hudFav?.channelName)?.logoUrl ??
+    (hudFav?.channelName === data?.channelName ? data?.logoUrl : null) ??
+    null;
 
   // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
   // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
@@ -1224,7 +1230,11 @@ const VideoPlayer = ({
                       isFocused={false}
                       width="100%"
                       showArrows={false}
-                      logoUrl={resolveLogoUrl(favCh?.channelName)}
+                      logoUrl={
+                        favCh?.logoUrl ??
+                        (allChannels ?? []).find((c) => c.channelName === favCh?.channelName)?.logoUrl ??
+                        null
+                      }
                       onClick={() => {
                         if (favCh && onSwitchChannel) {
                           const resolvedStreamUrl =
@@ -1325,7 +1335,7 @@ const VideoPlayer = ({
                       isFocused={sidebarOpen}
                       width={CARD_W}
                       showArrows
-                      logoUrl={resolveLogoUrl(favoriteChannels[hudIdx]?.channelName ?? data?.channelName)}
+                      logoUrl={hudFavLogoUrl}
                       onClick={openSidebar}
                     />
                   </div>
