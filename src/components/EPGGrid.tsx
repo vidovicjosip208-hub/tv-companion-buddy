@@ -89,7 +89,7 @@ const ChannelItem = ({
       <div
         className={cn(
           "w-12 sm:w-16 h-9 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
-          isFocused ? "bg-accent/20" : "bg-muted/40",
+          isFocused ? "bg-accent/10" : "bg-transparent",
         )}
       >
         {channel.logoUrl ? (
