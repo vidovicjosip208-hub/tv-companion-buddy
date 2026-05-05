@@ -1,6 +1,7 @@
 import { useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export interface EPGProgram {
@@ -213,6 +214,7 @@ const EPGGrid = ({
   isProgramFocused = false,
   onChannelClick,
 }: EPGGridProps) => {
+  const { t } = useTranslation();
   const selectedChannel = isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
 
   const selectedProgram = useMemo(() => {
@@ -237,7 +239,7 @@ const EPGGrid = ({
     >
       {/* Left Column — Channel List */}
       <div className="w-full lg:w-[21%] flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2">
-        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-4 pb-2">Uživo</h2>
+        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-4 pb-2">{t("epg.live")}</h2>
         {channels.map((channel, index) => (
           <ChannelItem
             key={channel.id}
@@ -254,7 +256,7 @@ const EPGGrid = ({
 
       {/* Middle Column — Program Guide */}
       <div className="w-full lg:w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2">
-        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-5 pb-2">TV Raspored</h2>
+        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-5 pb-2">{t("epg.schedule")}</h2>
         <AnimatePresence mode="wait">
           <motion.div
             key={selectedChannel?.id}
@@ -279,7 +281,7 @@ const EPGGrid = ({
               </div>
               <div>
                 <h3 className="text-sm sm:text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
-                <span className="text-xs text-muted-foreground">Kanal {selectedChannel?.number}</span>
+                <span className="text-xs text-muted-foreground">{t("epg.channel")} {selectedChannel?.number}</span>
               </div>
             </div>
 
@@ -333,7 +335,7 @@ const EPGGrid = ({
 
               <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                 {selectedProgram.isLive && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
-                <span>{selectedProgram.isLive ? "Danas" : selectedProgram.date}</span>
+                <span>{selectedProgram.isLive ? t("epg.today") : selectedProgram.date}</span>
                 <span>|</span>
                 <span>
                   {selectedProgram.startTime} - {selectedProgram.endTime}
@@ -348,12 +350,12 @@ const EPGGrid = ({
 
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 {selectedProgram.description ??
-                  `Pogledajte ${selectedProgram.title} na kanalu ${selectedChannel?.name}. Više informacija o programu uskoro.`}
+                  t("epg.programDesc", { title: selectedProgram.title, channel: selectedChannel?.name })}
               </p>
 
               <button className="mt-auto self-center flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-md transition-colors">
                 <Play className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
-                <span className="tracking-wide">GLEDAJ</span>
+                <span className="tracking-wide">{t("epg.watch")}</span>
               </button>
             </motion.div>
           )}

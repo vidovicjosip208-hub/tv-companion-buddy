@@ -14,7 +14,6 @@ const keyboardRows = [
   ["5", "6", "7", "8", "9", "0"],
 ];
 
-// Special keys row at top: space and backspace
 const SPACE_KEY = "SPACE";
 const BACKSPACE_KEY = "BACKSPACE";
 
@@ -23,13 +22,12 @@ interface VideotekaSearchProps {
   onClose: () => void;
 }
 
-const ITEM_HEIGHT = 200; // approximate height of each grid row (aspect 2:3 card + gap)
-const VISIBLE_OFFSET = 0; // keep focused row at top
+const ITEM_HEIGHT = 200;
 
 const VideotekaSearch = ({ allItems, onClose }: VideotekaSearchProps) => {
   const [query, setQuery] = useState("");
   const [focusArea, setFocusArea] = useState<"keyboard" | "results">("keyboard");
-  const [kbRow, setKbRow] = useState(0); // 0 = special row, 1-6 = letter rows
+  const [kbRow, setKbRow] = useState(0);
   const [kbCol, setKbCol] = useState(0);
   const [resultRow, setResultRow] = useState(0);
   const [resultCol, setResultCol] = useState(0);
@@ -37,7 +35,15 @@ const VideotekaSearch = ({ allItems, onClose }: VideotekaSearchProps) => {
   const filteredItems =
     query.length > 0 ? allItems.filter((item) => item.title.toLowerCase().includes(query.toLowerCase())) : allItems;
 
-  const resultCols = 4;
+  const getResultCols = () => {
+    if (typeof window === "undefined") return 4;
+    const vw = window.innerWidth;
+    if (vw < 640) return 2;
+    if (vw < 1024) return 3;
+    return 4;
+  };
+
+  const resultCols = getResultCols();
   const totalResultRows = Math.ceil(filteredItems.length / resultCols);
 
   const handleKeyPress = useCallback((key: string) => {
@@ -63,7 +69,6 @@ const VideotekaSearch = ({ allItems, onClose }: VideotekaSearchProps) => {
           onClose();
           return;
         }
-        // Backspace on keyboard area = delete char
         if (e.key === "Backspace") {
           e.preventDefault();
           setQuery((prev) => prev.slice(0, -1));
@@ -76,10 +81,8 @@ const VideotekaSearch = ({ allItems, onClose }: VideotekaSearchProps) => {
           case "ArrowRight":
             e.preventDefault();
             if (kbRow === 0) {
-              // Special row: space(0), backspace(1)
               if (kbCol === 0) setKbCol(1);
               else {
-                // Move to results
                 setFocusArea("results");
                 setResultRow(0);
                 setResultCol(0);
@@ -129,7 +132,6 @@ const VideotekaSearch = ({ allItems, onClose }: VideotekaSearchProps) => {
             break;
         }
       } else {
-        // Results area
         switch (e.key) {
           case "ArrowRight":
             e.preventDefault();
@@ -153,12 +155,11 @@ const VideotekaSearch = ({ allItems, onClose }: VideotekaSearchProps) => {
             break;
           case "Enter":
             e.preventDefault();
-            // Could navigate to content
             break;
         }
       }
     },
-    [focusArea, kbRow, kbCol, resultRow, resultCol, totalResultRows, onClose, handleKeyPress],
+    [focusArea, kbRow, kbCol, resultRow, resultCol, totalResultRows, onClose, handleKeyPress, resultCols],
   );
 
   useEffect(() => {
@@ -177,54 +178,56 @@ const VideotekaSearch = ({ allItems, onClose }: VideotekaSearchProps) => {
       <StarryBackground />
 
       {/* Search query display */}
-      <div className="relative z-10 flex items-center gap-2 px-8 pt-6 pb-4">
-        <Search className="w-5 h-5 text-muted-foreground" />
-        <span className="text-foreground text-lg font-medium tracking-wide min-h-[28px]">
+      <div className="relative z-10 flex items-center gap-2 px-4 sm:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4">
+        <Search className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground flex-shrink-0" />
+        <span className="text-foreground text-base sm:text-lg font-medium tracking-wide min-h-[24px] sm:min-h-[28px] truncate">
           {query || <span className="text-muted-foreground">Search...</span>}
         </span>
         {filteredItems.length > 0 && query.length > 0 && (
-          <span className="text-muted-foreground text-sm ml-2">{filteredItems.length} results</span>
+          <span className="text-muted-foreground text-xs sm:text-sm ml-2 flex-shrink-0">
+            {filteredItems.length} results
+          </span>
         )}
       </div>
 
-      <div className="relative z-10 flex flex-1 overflow-hidden px-4">
+      <div className="relative z-10 flex flex-1 overflow-hidden px-2 sm:px-4">
         {/* Virtual Keyboard */}
-        <div className="flex-shrink-0 w-[280px] p-4">
+        <div className="flex-shrink-0 w-[180px] sm:w-[240px] lg:w-[280px] p-2 sm:p-4">
           {/* Special keys: space + backspace */}
-          <div className="flex gap-1.5 mb-1.5">
+          <div className="flex gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
             <button
               onClick={() => handleKeyPress(SPACE_KEY)}
               className={cn(
-                "flex-1 h-10 rounded flex items-center justify-center transition-colors",
+                "flex-1 h-8 sm:h-10 rounded flex items-center justify-center transition-colors",
                 focusArea === "keyboard" && kbRow === 0 && kbCol === 0
                   ? "bg-white text-background ring-2 ring-white"
                   : "bg-white/10 text-foreground hover:bg-white/20",
               )}
             >
-              <Space className="w-4 h-4" />
+              <Space className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
             <button
               onClick={() => handleKeyPress(BACKSPACE_KEY)}
               className={cn(
-                "flex-1 h-10 rounded flex items-center justify-center transition-colors",
+                "flex-1 h-8 sm:h-10 rounded flex items-center justify-center transition-colors",
                 focusArea === "keyboard" && kbRow === 0 && kbCol === 1
                   ? "bg-white text-background ring-2 ring-white"
                   : "bg-white/10 text-foreground hover:bg-white/20",
               )}
             >
-              <Delete className="w-4 h-4" />
+              <Delete className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
           </div>
 
           {/* Letter/number grid */}
           {keyboardRows.map((row, rowIdx) => (
-            <div key={rowIdx} className="flex gap-1.5 mb-1.5">
+            <div key={rowIdx} className="flex gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
               {row.map((key, colIdx) => (
                 <button
                   key={key}
                   onClick={() => handleKeyPress(key)}
                   className={cn(
-                    "flex-1 h-10 rounded text-sm font-medium transition-colors",
+                    "flex-1 h-8 sm:h-10 rounded text-xs sm:text-sm font-medium transition-colors",
                     focusArea === "keyboard" && kbRow === rowIdx + 1 && kbCol === colIdx
                       ? "bg-white text-background ring-2 ring-white"
                       : "bg-white/10 text-foreground hover:bg-white/20",
@@ -237,13 +240,15 @@ const VideotekaSearch = ({ allItems, onClose }: VideotekaSearchProps) => {
           ))}
         </div>
 
-        {/* Results Grid - Netflix TV style: no scroll, translate the grid */}
-        <div className="flex-1 overflow-hidden p-4">
+        {/* Results Grid */}
+        <div className="flex-1 overflow-hidden p-2 sm:p-4">
           {filteredItems.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground">No results found</div>
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm sm:text-base">
+              No results found
+            </div>
           ) : (
             <motion.div
-              className="grid grid-cols-4 gap-3"
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3"
               animate={{
                 y: focusArea === "results" ? -resultRow * ITEM_HEIGHT : 0,
               }}

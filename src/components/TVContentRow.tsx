@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useRef, useEffect, cloneElement, isValidElement, Children } from "react";
+import { useRef, useEffect, isValidElement, Children } from "react";
 
 interface TVContentRowProps {
   title: string;
@@ -17,40 +17,42 @@ const TVContentRow = ({ title, delay = 0, children, rows = 2, focusedIndex }: TV
   useEffect(() => {
     const container = scrollRef.current;
     if (!container || focusedIndex === undefined) return;
-
     const card = container.children[focusedIndex] as HTMLElement | undefined;
     if (!card) return;
-
     const containerLeft = container.scrollLeft;
     const containerRight = containerLeft + container.clientWidth;
     const cardLeft = card.offsetLeft;
     const cardRight = cardLeft + card.offsetWidth;
-
-    // Scroll samo ako kartica nije potpuno vidljiva
     if (cardLeft < containerLeft) {
       container.scrollTo({ left: cardLeft, behavior: "smooth" });
     } else if (cardRight > containerRight) {
       container.scrollTo({ left: cardRight - container.clientWidth, behavior: "smooth" });
     }
-    // Ako je kartica već vidljiva — ne diraj scroll
   }, [focusedIndex]);
+
+  const getGridAutoColumns = () => {
+    if (typeof window === "undefined") return "calc(25% - 9px)";
+    const vw = window.innerWidth;
+    if (vw < 640) return "calc(80% - 9px)";
+    if (vw < 1024) return "calc(45% - 9px)";
+    return "calc(25% - 9px)";
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
-      className="mb-6"
+      className="mb-4 sm:mb-6"
     >
-      {title && <h2 className="text-foreground font-bold text-lg mb-3">{title}</h2>}
-
+      {title && <h2 className="text-foreground font-bold text-base sm:text-lg mb-2 sm:mb-3">{title}</h2>}
       <div
         ref={scrollRef}
-        className="grid gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden"
+        className="grid gap-2 sm:gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden"
         style={{
           gridAutoFlow: "column",
           gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
-          gridAutoColumns: "calc(25% - 9px)",
+          gridAutoColumns: getGridAutoColumns(),
           scrollbarWidth: "none",
           scrollSnapType: "x mandatory",
         }}

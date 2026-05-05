@@ -8,6 +8,8 @@ export interface ContentItem {
 export interface ContentRowData {
   title: string;
   titleHighlight?: string;
+  titleKey?: string;
+  titleHighlightKey?: string;
   items: ContentItem[];
 }
 
