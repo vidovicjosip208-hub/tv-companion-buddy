@@ -99,20 +99,37 @@ const formatTime = (seconds: number) => {
 };
 
 // ── useSeekPreview hook ───────────────────────────────────────────────────────
-// Drži skriveni <video> + <canvas> i vraća funkciju za dohvat frame-a po vremenu.
-// Koristi jednostavan queue s debounceom da ne guramo previše seekova odjednom.
+// Persistentni cache izvan komponente — živi dok je aplikacija otvorena.
+// Ključ je seekPreviewUrl, vrijednost je Map<time, dataURL>.
+// Zatvaranje i ponovnim otvaranjem playera NE briše učitane sličice.
+const globalFrameCache = new Map<string, Map<number, string>>();
 
 function useSeekPreview(seekPreviewUrl: string | null) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  // cache: Map<time_rounded, dataURL>
-  const cacheRef = useRef<Map<number, string>>(new Map());
-  const [frames, setFrames] = useState<Map<number, string>>(new Map());
   const pendingRef = useRef<Set<number>>(new Set());
   const seekingRef = useRef(false);
   const queueRef = useRef<number[]>([]);
 
-  // Inicijalizacija video elementa
+  // Dohvati ili kreiraj cache za ovaj URL
+  const getCache = useCallback((): Map<number, string> => {
+    if (!seekPreviewUrl) return new Map();
+    if (!globalFrameCache.has(seekPreviewUrl)) {
+      globalFrameCache.set(seekPreviewUrl, new Map());
+    }
+    return globalFrameCache.get(seekPreviewUrl)!;
+  }, [seekPreviewUrl]);
+
+  // React state samo za triggeranje re-rendera — pravi podaci su u globalFrameCache
+  const [, setFrameVersion] = useState(0);
+  const bumpVersion = useCallback(() => setFrameVersion((v) => v + 1), []);
+
+  // frames getter — čita iz globalnog cachea
+  const frames = seekPreviewUrl
+    ? (globalFrameCache.get(seekPreviewUrl) ?? new Map<number, string>())
+    : new Map<number, string>();
+
+  // Inicijalizacija video elementa — samo video/canvas, ne briše cache
   useEffect(() => {
     if (!seekPreviewUrl) return;
 
@@ -133,15 +150,17 @@ function useSeekPreview(seekPreviewUrl: string | null) {
     canvasRef.current = canvas;
 
     return () => {
+      // Zaustavi i ukloni video/canvas ali NE briši cache
       video.pause();
       video.src = "";
       video.remove();
       canvas.remove();
       videoRef.current = null;
       canvasRef.current = null;
-      cacheRef.current.clear();
+      // Resetiraj samo in-flight stanje, ne cache
       pendingRef.current.clear();
       queueRef.current = [];
+      seekingRef.current = false;
     };
   }, [seekPreviewUrl]);
 
@@ -153,7 +172,11 @@ function useSeekPreview(seekPreviewUrl: string | null) {
     if (!video || !canvas) return;
 
     const time = queueRef.current.shift()!;
-    if (cacheRef.current.has(time)) {
+    const cache = getCache();
+
+    // Već u globalnom cacheu — preskoči
+    if (cache.has(time)) {
+      pendingRef.current.delete(time);
       processQueue();
       return;
     }
@@ -167,25 +190,25 @@ function useSeekPreview(seekPreviewUrl: string | null) {
       if (ctx) {
         ctx.drawImage(video, 0, 0, SEEK_CANVAS_W, SEEK_CANVAS_H);
         const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-        cacheRef.current.set(time, dataUrl);
+        // Spremi u globalni cache
+        getCache().set(time, dataUrl);
         pendingRef.current.delete(time);
-        setFrames((prev) => {
-          const next = new Map(prev);
-          next.set(time, dataUrl);
-          return next;
-        });
+        // Triggeramo re-render
+        bumpVersion();
       }
       seekingRef.current = false;
       processQueue();
     };
 
     video.addEventListener("seeked", onSeeked);
-  }, []);
+  }, [getCache, bumpVersion]);
 
   const requestFrame = useCallback(
     (time: number) => {
       const t = Math.max(0, Math.round(time));
-      if (cacheRef.current.has(t)) return cacheRef.current.get(t)!;
+      const cache = getCache();
+      // Već u cacheu — vrati odmah bez seekanja
+      if (cache.has(t)) return cache.get(t)!;
       if (!pendingRef.current.has(t)) {
         pendingRef.current.add(t);
         queueRef.current.push(t);
@@ -193,7 +216,7 @@ function useSeekPreview(seekPreviewUrl: string | null) {
       }
       return null;
     },
-    [processQueue],
+    [getCache, processQueue],
   );
 
   return { frames, requestFrame };
