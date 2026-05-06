@@ -308,6 +308,14 @@ const FrozenHlsVideo = memo(
           nudgeMaxRetry: 5,
           nudgeOffset: 0.2,
           maxFragLookUpTolerance: 0.5,
+
+          // ── Brži start reprodukcije ───────────────────────────────────────
+          // Počni reproducirati čim ima 1 segment, ne čekaj puni buffer
+          maxStarvationDelay: 4, // default 4 — koliko čeka prije panike
+          maxLoadingDelay: 4, // default 4
+          highBufferWatchdogPeriod: 2, // češće provjerava buffer
+          // Ne čekaj više od 1s da počne first segment load
+          fragLoadingLoopThreshold: 3,
         } as ConstructorParameters<typeof Hls>[0] & { forceVideoHWAcceleration: boolean };
         const hls = new Hls(hlsConfig);
 
@@ -317,7 +325,6 @@ const FrozenHlsVideo = memo(
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           hls.startLoad();
-          playInitial();
 
           if (!hasHEVC && hls.levels?.length) {
             const supported = hls.levels
@@ -330,6 +337,11 @@ const FrozenHlsVideo = memo(
               hls.autoLevelCapping = supported[supported.length - 1].idx;
             }
           }
+        });
+
+        // Pokreni video tek kad je prvi fragment učitan — nema zastajkivanja na startu
+        hls.once(Hls.Events.FRAG_LOADED, () => {
+          playInitial();
         });
 
         hls.on(Hls.Events.ERROR, (_evt, data) => {
@@ -357,7 +369,9 @@ const FrozenHlsVideo = memo(
 
       const bypassTimer = setTimeout(() => {
         onReady();
-        playInitial();
+        // Pokušaj pokrenuti ako još nije krenulo
+        const vid = localVideoRef.current;
+        if (vid && vid.paused) playInitial();
       }, LOADER_MAX_DURATION);
 
       return () => {
