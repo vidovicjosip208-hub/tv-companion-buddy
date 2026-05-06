@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { ContentDetailsData, getEpisodesForItem, allContentItems } from "@/data/videotekaContent";
 
 interface EpisodesViewProps {
@@ -9,6 +10,7 @@ interface EpisodesViewProps {
 }
 
 const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
+  const { t } = useTranslation();
   const seasons = getEpisodesForItem(itemId);
   const [selectedSeason, setSelectedSeason] = useState(0);
   const [focusedArea, setFocusedArea] = useState<"seasons" | "episodes">("seasons");
@@ -166,8 +168,12 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
                   ${isFocused ? "ring-2 ring-inset ring-white/40" : ""}
                 `}
               >
-                <span className="font-semibold text-base sm:text-lg lg:text-xl">Season {season.season}</span>
-                <span className="text-xs sm:text-sm text-white/40">{season.episodes.length} episodes</span>
+                <span className="font-semibold text-base sm:text-lg lg:text-xl">
+                  {t("videotekaDetail.season")} {season.season}
+                </span>
+                <span className="text-xs sm:text-sm text-white/40">
+                  {season.episodes.length} {t("videotekaDetail.episodes")}
+                </span>
               </button>
             );
           })}
@@ -192,8 +198,8 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
               ${focusedArea === "seasons" && focusedSeasonIndex === seasons.length ? "ring-2 ring-inset ring-white/40" : ""}
             `}
           >
-            <span className="font-semibold text-base sm:text-lg lg:text-xl">Trailers & More</span>
-            <span className="text-xs sm:text-sm text-white/40">9 videos</span>
+            <span className="font-semibold text-base sm:text-lg lg:text-xl">{t("videotekaDetail.trailersAndMore")}</span>
+            <span className="text-xs sm:text-sm text-white/40">9 {t("videotekaDetail.videos")}</span>
           </button>
         </motion.nav>
       </div>
@@ -208,7 +214,9 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
           className="flex items-center gap-3 mb-5 lg:mb-7 shrink-0"
         >
           <h3 className="text-xl sm:text-2xl font-bold text-white">
-            {isTrailersSelected ? "Trailers & More" : `Season ${currentSeason.season}`}
+            {isTrailersSelected
+              ? t("videotekaDetail.trailersAndMore")
+              : `${t("videotekaDetail.season")} ${currentSeason.season}`}
           </h3>
           {!isTrailersSelected && details.rating && (
             <span className="px-2.5 py-1 border border-white/25 rounded text-xs sm:text-sm text-white/50 font-medium">
