@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo, useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -63,12 +63,17 @@ const ChannelItem = ({
   index: number;
 }) => {
   const ref = useRef<HTMLButtonElement>(null);
+  const [logoError, setLogoError] = useState(false);
 
   useEffect(() => {
     if (isFocused && ref.current) {
       ref.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }, [isFocused]);
+
+  useEffect(() => {
+    setLogoError(false);
+  }, [channel.logoUrl]);
 
   return (
     <motion.button
@@ -89,18 +94,16 @@ const ChannelItem = ({
       <div
         className={cn(
           "w-12 sm:w-16 h-9 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
-          isFocused ? "bg-accent/10" : "bg-transparent",
+          "bg-transparent",
         )}
       >
-        {channel.logoUrl ? (
+        {channel.logoUrl && !logoError ? (
           <img
             src={channel.logoUrl}
             alt={channel.name}
             className="w-full h-full object-contain p-1"
             loading="lazy"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
+            onError={() => setLogoError(true)}
           />
         ) : (
           <span
