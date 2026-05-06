@@ -605,7 +605,12 @@ const VideotekaPlayer = ({
   const [focusedCol, setFocusedCol] = useState(1);
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekTime, setSeekTime] = useState(0);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [skipHovered, setSkipHovered] = useState(false);
+
+  // Debounce seek — video seekuje tek kad korisnik prestane pritiskati tipke
+  const pendingSeekRef = useRef<number | null>(null);
+  const pendingSeekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [showSubtitleModal, setShowSubtitleModal] = useState(false);
   const [selectedSubtitle, setSelectedSubtitle] = useState("off");
@@ -764,13 +769,28 @@ const VideotekaPlayer = ({
     setVideoDuration(duration);
   }, []);
 
-  const handleSeeked = useCallback(() => setIsSeeking(false), []);
+  const handleSeeked = useCallback(() => {
+    setIsSeeking(false);
+    setIsBuffering(false);
+  }, []);
 
+  // Prati buffering stanje na glavnom video elementu
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    const onWaiting = () => setIsBuffering(true);
+    const onPlaying = () => setIsBuffering(false);
+    const onCanPlay = () => setIsBuffering(false);
+    video.addEventListener("waiting", onWaiting);
+    video.addEventListener("playing", onPlaying);
+    video.addEventListener("canplay", onCanPlay);
     video.addEventListener("seeked", handleSeeked);
-    return () => video.removeEventListener("seeked", handleSeeked);
+    return () => {
+      video.removeEventListener("waiting", onWaiting);
+      video.removeEventListener("playing", onPlaying);
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("seeked", handleSeeked);
+    };
   }, [handleSeeked]);
 
   const displayTime = isSeeking ? seekTime : currentTimeRef.current;
@@ -792,24 +812,39 @@ const VideotekaPlayer = ({
     seekThumbnailTimes.forEach((t) => requestFrame(t));
   }, [isSeeking, seekThumbnailTimes, requestFrame]);
 
+  // commitSeek — stvarno seekuje video, poziva se s debounceom
+  const commitSeek = useCallback((time: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    setIsBuffering(true);
+    if (typeof (video as HTMLVideoElement & { fastSeek?: (t: number) => void }).fastSeek === "function") {
+      (video as HTMLVideoElement & { fastSeek: (t: number) => void }).fastSeek(time);
+    } else {
+      video.currentTime = time;
+    }
+  }, []);
+
   const seekVideo = useCallback(
     (time: number) => {
       const clamped = Math.max(0, Math.min(time, totalDurationRef.current));
-      const video = videoRef.current;
-      if (video) {
-        // fastSeek je manje precizan ali puno brži — savršeno za seek preview
-        if (typeof (video as HTMLVideoElement & { fastSeek?: (t: number) => void }).fastSeek === "function") {
-          (video as HTMLVideoElement & { fastSeek: (t: number) => void }).fastSeek(clamped);
-        } else {
-          video.currentTime = clamped;
-        }
-      }
+
+      // Odmah ažuriraj UI i progress bar
+      pendingSeekRef.current = clamped;
       currentTimeRef.current = clamped;
       updateProgressDom(clamped);
       setSeekTime(clamped);
       setIsSeeking(true);
+
+      // Debounce: čekaj 300ms od zadnjeg pritiska pa tek seekuj video
+      if (pendingSeekTimerRef.current) clearTimeout(pendingSeekTimerRef.current);
+      pendingSeekTimerRef.current = setTimeout(() => {
+        if (pendingSeekRef.current !== null) {
+          commitSeek(pendingSeekRef.current);
+          pendingSeekRef.current = null;
+        }
+      }, 300);
     },
-    [updateProgressDom],
+    [updateProgressDom, commitSeek],
   );
 
   useEffect(() => {
@@ -1031,6 +1066,35 @@ const VideotekaPlayer = ({
 
       <AnimatePresence>
         {!loaderDone && !streamError && <Loader key="loader" ready={videoReady} onDone={markVideoReady} />}
+      </AnimatePresence>
+
+      {/* ── Buffering spinner — prikazuje se dok čeka segment nakon seeka ── */}
+      <AnimatePresence>
+        {loaderDone && isBuffering && (
+          <motion.div
+            key="buffering"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.3 } }}
+            className="absolute inset-0 z-[50] flex items-center justify-center pointer-events-none"
+          >
+            <svg width={56} height={56} viewBox="0 0 56 56" style={{ animation: "spin 0.9s linear infinite" }}>
+              <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+              <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="4" />
+              <circle
+                cx="28"
+                cy="28"
+                r="22"
+                fill="none"
+                stroke="#F5C518"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray="138"
+                strokeDashoffset="100"
+              />
+            </svg>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <AnimatePresence>
