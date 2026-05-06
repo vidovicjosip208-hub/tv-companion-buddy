@@ -492,7 +492,7 @@ const Index = () => {
   const { data: dbEpg } = useEPGData(channelIds.length > 0 ? channelIds : undefined);
 
   const liveChannelCards = useMemo(() => {
-    if (!dbChannels || dbChannels.length === 0) return defaultChannelCards;
+    if (!dbChannels || dbChannels.length === 0) return [];
     const epgByChannel = new Map<string, typeof dbEpg>();
     if (dbEpg) {
       for (const ep of dbEpg) {
