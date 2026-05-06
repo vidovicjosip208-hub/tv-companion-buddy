@@ -31,6 +31,9 @@ interface VideotekaPlayerProps {
   onNextEpisode?: () => void;
   itemId?: string;
   streamUrl?: string;
+  // ── NOVO: opcionalni URL za seek-preview video (može biti isti kao streamUrl,
+  //    ili niži quality MP4 za brže seekanje)
+  seekPreviewUrl?: string;
 }
 
 const supportsHEVC = (): boolean => {
@@ -57,6 +60,10 @@ const THUMBNAIL_COUNT = 7;
 const GOLD = "#F5C518";
 const LOADER_MIN_DURATION = 1200;
 const LOADER_MAX_DURATION = 5000;
+
+// ── NOVO: dimenzije seek preview canvasa ──────────────────────────────────────
+const SEEK_CANVAS_W = 320;
+const SEEK_CANVAS_H = 180;
 
 const DUMMY_SUBTITLES = [
   { code: "off", label: "Isključeno" },
@@ -90,6 +97,109 @@ const formatTime = (seconds: number) => {
   const s = seconds % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
+
+// ── useSeekPreview hook ───────────────────────────────────────────────────────
+// Drži skriveni <video> + <canvas> i vraća funkciju za dohvat frame-a po vremenu.
+// Koristi jednostavan queue s debounceom da ne guramo previše seekova odjednom.
+
+function useSeekPreview(seekPreviewUrl: string | null) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // cache: Map<time_rounded, dataURL>
+  const cacheRef = useRef<Map<number, string>>(new Map());
+  const [frames, setFrames] = useState<Map<number, string>>(new Map());
+  const pendingRef = useRef<Set<number>>(new Set());
+  const seekingRef = useRef(false);
+  const queueRef = useRef<number[]>([]);
+
+  // Inicijalizacija video elementa
+  useEffect(() => {
+    if (!seekPreviewUrl) return;
+
+    const video = document.createElement("video");
+    video.src = seekPreviewUrl;
+    video.preload = "metadata";
+    video.muted = true;
+    video.crossOrigin = "anonymous";
+    video.style.display = "none";
+    document.body.appendChild(video);
+    videoRef.current = video;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = SEEK_CANVAS_W;
+    canvas.height = SEEK_CANVAS_H;
+    canvas.style.display = "none";
+    document.body.appendChild(canvas);
+    canvasRef.current = canvas;
+
+    return () => {
+      video.pause();
+      video.src = "";
+      video.remove();
+      canvas.remove();
+      videoRef.current = null;
+      canvasRef.current = null;
+      cacheRef.current.clear();
+      pendingRef.current.clear();
+      queueRef.current = [];
+    };
+  }, [seekPreviewUrl]);
+
+  const processQueue = useCallback(() => {
+    if (seekingRef.current) return;
+    if (queueRef.current.length === 0) return;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    const time = queueRef.current.shift()!;
+    if (cacheRef.current.has(time)) {
+      processQueue();
+      return;
+    }
+
+    seekingRef.current = true;
+    video.currentTime = time;
+
+    const onSeeked = () => {
+      video.removeEventListener("seeked", onSeeked);
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, SEEK_CANVAS_W, SEEK_CANVAS_H);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        cacheRef.current.set(time, dataUrl);
+        pendingRef.current.delete(time);
+        setFrames((prev) => {
+          const next = new Map(prev);
+          next.set(time, dataUrl);
+          return next;
+        });
+      }
+      seekingRef.current = false;
+      processQueue();
+    };
+
+    video.addEventListener("seeked", onSeeked);
+  }, []);
+
+  const requestFrame = useCallback(
+    (time: number) => {
+      const t = Math.max(0, Math.round(time));
+      if (cacheRef.current.has(t)) return cacheRef.current.get(t)!;
+      if (!pendingRef.current.has(t)) {
+        pendingRef.current.add(t);
+        queueRef.current.push(t);
+        processQueue();
+      }
+      return null;
+    },
+    [processQueue],
+  );
+
+  return { frames, requestFrame };
+}
+
+// ── FrozenHlsVideo ────────────────────────────────────────────────────────────
 
 type FrozenVideoRefs = {
   videoRef: MutableRefObject<HTMLVideoElement | null>;
@@ -454,6 +564,7 @@ const VideotekaPlayer = ({
   onNextEpisode,
   itemId,
   streamUrl: streamUrlProp,
+  seekPreviewUrl: seekPreviewUrlProp, // ── NOVO
 }: VideotekaPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -464,6 +575,12 @@ const VideotekaPlayer = ({
     error: fetchError,
   } = useMovieStream(streamUrlProp ? undefined : itemId);
   const streamUrl = streamUrlProp ?? movie?.stream_url ?? null;
+
+  // ── NOVO: seek preview URL — iz propa, ili fallback na stream_url iz API-ja
+  const seekPreviewUrl = seekPreviewUrlProp ?? movie?.seek_preview_url ?? streamUrl;
+
+  // ── NOVO: hook koji drži skriveni video + canvas za frame capture
+  const { frames: seekFrames, requestFrame } = useSeekPreview(seekPreviewUrl);
 
   const [isVisible, setIsVisible] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -647,13 +764,20 @@ const VideotekaPlayer = ({
   const elapsed = formatTime(displayTime);
   const remaining = formatTime(Math.max(0, totalDuration - displayTime));
 
-  const seekThumbnails = useMemo(() => {
+  // ── NOVO: seek thumbnails su sada vremenski offseti + tražimo frame capture
+  const seekThumbnailTimes = useMemo(() => {
     const half = Math.floor(THUMBNAIL_COUNT / 2);
     return Array.from({ length: THUMBNAIL_COUNT }, (_, i) => {
       const t = seekTime + (i - half) * 30;
       return Math.max(0, Math.min(totalDuration, t));
     });
   }, [seekTime, totalDuration]);
+
+  // Kad se pokrene seeking, odmah zatraži sve frameove koji su nam potrebni
+  useEffect(() => {
+    if (!isSeeking) return;
+    seekThumbnailTimes.forEach((t) => requestFrame(t));
+  }, [isSeeking, seekThumbnailTimes, requestFrame]);
 
   const seekVideo = useCallback(
     (time: number) => {
@@ -996,7 +1120,7 @@ const VideotekaPlayer = ({
 
                 {/* BOTTOM AREA */}
                 <div className="flex flex-col gap-3 sm:gap-4 pb-2 sm:pb-4 w-full">
-                  {/* Thumbnail strip */}
+                  {/* ── NOVO: Thumbnail strip s pravim frame capture-om ─────── */}
                   <div className="h-20 sm:h-32 flex items-end justify-center">
                     <AnimatePresence>
                       {isSeeking && (
@@ -1006,25 +1130,36 @@ const VideotekaPlayer = ({
                           exit={{ opacity: 0 }}
                           className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-4"
                         >
-                          {seekThumbnails.map((t, i) => (
-                            <div
-                              key={i}
-                              className={`relative overflow-hidden transition-all duration-200 ${
-                                i === 3
-                                  ? "w-28 h-16 sm:w-48 sm:h-28 z-10 scale-110 ring-1 ring-white"
-                                  : "w-20 h-12 sm:w-32 sm:h-20 opacity-50"
-                              }`}
-                            >
-                              <img src={thumbnail} className="w-full h-full object-cover" alt="seek preview" />
-                              {i === 3 && (
-                                <div className="absolute bottom-1 left-0 right-0 text-center">
-                                  <span className="text-[10px] sm:text-[12px] text-white font-bold font-mono">
-                                    {formatTime(t)}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                          {seekThumbnailTimes.map((t, i) => {
+                            const isCentre = i === Math.floor(THUMBNAIL_COUNT / 2);
+                            // Pokušaj dohvatiti stvarni frame; fallback na poster
+                            const frameSrc = seekFrames.get(Math.round(t)) ?? thumbnail;
+                            return (
+                              <div
+                                key={i}
+                                className={`relative overflow-hidden transition-all duration-200 ${
+                                  isCentre
+                                    ? "w-28 h-16 sm:w-48 sm:h-28 z-10 scale-110 ring-1 ring-white"
+                                    : "w-20 h-12 sm:w-32 sm:h-20 opacity-50"
+                                }`}
+                              >
+                                <img
+                                  src={frameSrc}
+                                  className="w-full h-full object-cover"
+                                  alt="seek preview"
+                                  // crossOrigin potrebno za canvas taint ako src nije isti origin
+                                  crossOrigin="anonymous"
+                                />
+                                {isCentre && (
+                                  <div className="absolute bottom-1 left-0 right-0 text-center">
+                                    <span className="text-[10px] sm:text-[12px] text-white font-bold font-mono drop-shadow">
+                                      {formatTime(t)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </motion.div>
                       )}
                     </AnimatePresence>
