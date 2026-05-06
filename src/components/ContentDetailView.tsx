@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, RotateCcw, Layers, Captions, ThumbsUp, ThumbsDown, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ContentDetailsData } from "@/data/videotekaContent";
 import EpisodesView from "@/components/EpisodesView";
 import VideotekaPlayer from "@/components/VideotekaPlayer";
@@ -21,6 +22,7 @@ type ButtonId = (typeof ALL_BUTTONS)[number];
 const VISIBLE_COUNT = 4;
 
 const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetailViewProps) => {
+  const { t } = useTranslation();
   const [showEpisodes, setShowEpisodes] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -94,6 +96,8 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
   const isMovie = !details.episodes;
   const hasProgress = false;
   const showPlaySeries = !isMovie && !hasProgress;
+  const localizedGenre =
+    details.genre === "Movie" ? t("videotekaRows.movies") : details.genre === "Series" ? t("videotekaRows.shows") : details.genre;
 
   const getButtonContent = (id: ButtonId, isFocused: boolean) => {
     if (id === "resume") {
@@ -112,7 +116,13 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
           <span
             className={`font-medium text-sm sm:text-base transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           >
-            {showPlay ? (isMovie ? "Play" : "Play S1: Ep. 1") : isMovie ? "Resume" : "Resume S1: Ep. 1"}
+            {showPlay
+              ? isMovie
+                ? t("videotekaDetail.play")
+                : t("videotekaDetail.playEp")
+              : isMovie
+                ? t("videotekaDetail.resume")
+                : t("videotekaDetail.resumeEp")}
           </span>
           {!showPlay && (
             <div className="ml-auto w-16 sm:w-20 h-1 bg-muted-foreground/30 rounded-full overflow-hidden">
@@ -130,7 +140,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           />
         ),
-        label: "Play From Beginning",
+        label: t("videotekaDetail.playFromBeginning"),
         onClick: () => setShowPlayer(true),
       },
       episodesAndMore: {
@@ -139,7 +149,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           />
         ),
-        label: isMovie ? "Trailers & More" : "Episodes & More",
+        label: isMovie ? t("videotekaDetail.trailersAndMore") : t("videotekaDetail.episodesAndMore"),
         onClick: () => setShowEpisodes(true),
       },
       audioSubtitles: {
@@ -148,7 +158,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           />
         ),
-        label: "Audio & Subtitles",
+        label: t("videotekaDetail.audioSubtitles"),
       },
       addToMyList: {
         icon: (
@@ -156,7 +166,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isFocused ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
           />
         ),
-        label: "Add To My List",
+        label: t("videotekaDetail.addToMyList"),
       },
     };
 
@@ -227,7 +237,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
         >
           <span className="text-foreground">{details.year}</span>
           <span className="text-muted-foreground">•</span>
-          <span className="text-foreground">{details.genre}</span>
+          <span className="text-foreground">{localizedGenre}</span>
           {details.episodes && (
             <>
               <span className="text-muted-foreground">•</span>
