@@ -271,7 +271,7 @@ const EPGGrid = ({
                 className="flex flex-col"
               >
                 <div className="flex items-center gap-3 px-3 sm:px-5 pb-3 mb-1 border-b border-border/20">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-accent/15 flex items-center justify-center overflow-hidden">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-transparent flex items-center justify-center overflow-hidden">
                     {selectedChannel?.logoUrl ? (
                       <img
                         src={selectedChannel.logoUrl}
@@ -320,7 +320,7 @@ const EPGGrid = ({
               className={cn("rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 overflow-y-auto scrollbar-hide lg:h-[80%]", hideSchedule && "lg:max-w-md w-full")}
             >
               <div className="flex justify-center">
-                <div className="w-16 h-10 sm:w-20 sm:h-12 rounded-md bg-accent/20 flex items-center justify-center overflow-hidden">
+                <div className="w-16 h-10 sm:w-20 sm:h-12 rounded-md bg-transparent flex items-center justify-center overflow-hidden">
                   {selectedChannel?.logoUrl ? (
                     <img
                       src={selectedChannel.logoUrl}
