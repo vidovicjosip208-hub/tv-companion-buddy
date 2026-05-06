@@ -278,23 +278,36 @@ const FrozenHlsVideo = memo(
           progressive: true,
           lowLatencyMode: false,
           autoStartLoad: true,
-          maxBufferLength: 60,
-          maxMaxBufferLength: 120,
-          maxBufferSize: 300 * 1000 * 1000,
-          backBufferLength: 60,
-          startLevel: -1,
-          abrEwmaFastVoD: 4.0,
-          abrEwmaSlowVoD: 15.0,
-          abrBandWidthFactor: 0.9,
-          abrBandWidthUpFactor: 0.75,
-          manifestLoadingMaxRetry: 8,
-          levelLoadingMaxRetry: 8,
-          fragLoadingMaxRetry: 12,
-          fragLoadingRetryDelay: 1000,
-          levelLoadingRetryDelay: 1000,
-          fragLoadingTimeOut: 30000,
-          levelLoadingTimeOut: 20000,
-          manifestLoadingTimeOut: 20000,
+
+          // ── Buffer: manji = brži start i seek ────────────────────────────
+          maxBufferLength: 30, // bilo 60
+          maxMaxBufferLength: 60, // bilo 120
+          maxBufferSize: 60 * 1000 * 1000, // bilo 300MB
+          backBufferLength: 20, // bilo 60
+          maxBufferHole: 0.5,
+
+          // ── ABR: počni s niskom kvalitetom, brzo raste ───────────────────
+          startLevel: 0, // bilo -1 (auto) — bez čekanja probe
+          abrEwmaFastVoD: 3.0,
+          abrEwmaSlowVoD: 9.0,
+          abrBandWidthFactor: 0.85,
+          abrBandWidthUpFactor: 0.7,
+
+          // ── Timeoutovi: kraći = brža detekcija problema ──────────────────
+          manifestLoadingTimeOut: 8000, // bilo 20000
+          manifestLoadingMaxRetry: 3, // bilo 8
+          manifestLoadingRetryDelay: 500,
+          levelLoadingTimeOut: 8000, // bilo 20000
+          levelLoadingMaxRetry: 3, // bilo 8
+          levelLoadingRetryDelay: 500,
+          fragLoadingTimeOut: 10000, // bilo 30000
+          fragLoadingMaxRetry: 4, // bilo 12
+          fragLoadingRetryDelay: 500, // bilo 1000
+
+          // ── Seek optimizacije ─────────────────────────────────────────────
+          nudgeMaxRetry: 5,
+          nudgeOffset: 0.2,
+          maxFragLookUpTolerance: 0.5,
         } as ConstructorParameters<typeof Hls>[0] & { forceVideoHWAcceleration: boolean };
         const hls = new Hls(hlsConfig);
 
@@ -365,9 +378,9 @@ const FrozenHlsVideo = memo(
       let recoveryStage = 0;
       let lastRecoveryAt = 0;
 
-      const STALL_MS = 3000;
-      const TICK_MS = 500;
-      const RECOVERY_COOLDOWN_MS = 8000;
+      const STALL_MS = 1500; // bilo 3000 — brža detekcija stalla
+      const TICK_MS = 300; // bilo 500 — češća provjera
+      const RECOVERY_COOLDOWN_MS = 4000; // bilo 8000
 
       const interval = window.setInterval(() => {
         if (video.paused || video.ended || video.seeking) {
@@ -782,8 +795,14 @@ const VideotekaPlayer = ({
   const seekVideo = useCallback(
     (time: number) => {
       const clamped = Math.max(0, Math.min(time, totalDurationRef.current));
-      if (videoRef.current) {
-        videoRef.current.currentTime = clamped;
+      const video = videoRef.current;
+      if (video) {
+        // fastSeek je manje precizan ali puno brži — savršeno za seek preview
+        if (typeof (video as HTMLVideoElement & { fastSeek?: (t: number) => void }).fastSeek === "function") {
+          (video as HTMLVideoElement & { fastSeek: (t: number) => void }).fastSeek(clamped);
+        } else {
+          video.currentTime = clamped;
+        }
       }
       currentTimeRef.current = clamped;
       updateProgressDom(clamped);
