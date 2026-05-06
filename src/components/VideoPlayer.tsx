@@ -213,103 +213,111 @@ const ChannelCard = ({
   showArrows = false,
   logoUrl = null,
   overrideNum,
-}: ChannelCardProps) => (
-  <div
-    onClick={onClick}
-    className="flex flex-col items-center cursor-pointer flex-shrink-0 select-none"
-    style={{ width }}
-  >
-    {showArrows ? (
-      <div style={{ height: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 6 }}>
-        {isFocused && (
-          <div
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: "22px solid transparent",
-              borderRight: "22px solid transparent",
-              borderBottom: `16px solid ${GOLD}`,
-            }}
-          />
-        )}
-      </div>
-    ) : (
-      <div style={{ height: 8 }} />
-    )}
+}: ChannelCardProps) => {
+  const [logoError, setLogoError] = useState(false);
 
+  // Reset error kada se logoUrl promijeni
+  useEffect(() => {
+    setLogoError(false);
+  }, [logoUrl]);
+
+  return (
     <div
-      className="w-full relative flex flex-col items-center"
-      style={{
-        backgroundColor: "rgba(22,22,30,1)",
-        border: isFocused
-          ? `1.5px solid ${GOLD}`
-          : isActive
-            ? `1px solid rgba(245,197,24,0.45)`
-            : "1px solid rgba(255,255,255,0.1)",
-        borderRadius: "5px",
-        padding: "5px 7px 9px 7px",
-        minHeight: "80px",
-        boxShadow: isFocused
-          ? `0 0 14px 4px rgba(245,197,24,0.28)`
-          : isActive
-            ? `0 0 6px 2px rgba(245,197,24,0.1)`
-            : "none",
-      }}
+      onClick={onClick}
+      className="flex flex-col items-center cursor-pointer flex-shrink-0 select-none"
+      style={{ width }}
     >
-      <span
-        className="absolute top-1.5 left-2 font-bold tabular-nums leading-none"
-        style={{ fontSize: "10px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
+      {showArrows ? (
+        <div style={{ height: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 6 }}>
+          {isFocused && (
+            <div
+              style={{
+                width: 0,
+                height: 0,
+                borderLeft: "22px solid transparent",
+                borderRight: "22px solid transparent",
+                borderBottom: `16px solid ${GOLD}`,
+              }}
+            />
+          )}
+        </div>
+      ) : (
+        <div style={{ height: 8 }} />
+      )}
+
+      <div
+        className="w-full relative flex flex-col items-center"
+        style={{
+          backgroundColor: "rgba(22,22,30,1)",
+          border: isFocused
+            ? `1.5px solid ${GOLD}`
+            : isActive
+              ? `1px solid rgba(245,197,24,0.45)`
+              : "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "5px",
+          padding: "5px 7px 9px 7px",
+          minHeight: "80px",
+          boxShadow: isFocused
+            ? `0 0 14px 4px rgba(245,197,24,0.28)`
+            : isActive
+              ? `0 0 6px 2px rgba(245,197,24,0.1)`
+              : "none",
+        }}
       >
-        {overrideNum ?? ch.num}
-      </span>
+        <span
+          className="absolute top-1.5 left-2 font-bold tabular-nums leading-none"
+          style={{ fontSize: "10px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
+        >
+          {overrideNum ?? ch.num}
+        </span>
 
-      <div className="mt-2 mb-2 flex items-center justify-center" style={{ height: 48 }}>
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt={ch.label}
-            className="max-h-12 max-w-full object-contain"
-            style={{
-              filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
-              transition: "filter 0.18s",
-            }}
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
-        ) : (
-          <Tv
-            style={{
-              width: 32,
-              height: 32,
-              color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
-              filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
-              transition: "color 0.18s, filter 0.18s",
-            }}
-          />
-        )}
+        <div className="mt-2 mb-2 flex items-center justify-center" style={{ height: 48 }}>
+          {logoUrl && !logoError ? (
+            <img
+              key={logoUrl}
+              src={logoUrl}
+              alt={ch.label}
+              className="max-h-12 max-w-full object-contain"
+              style={{
+                filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
+                transition: "filter 0.18s",
+              }}
+              onError={() => setLogoError(true)}
+            />
+          ) : (
+            <Tv
+              style={{
+                width: 32,
+                height: 32,
+                color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
+                filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
+                transition: "color 0.18s, filter 0.18s",
+              }}
+            />
+          )}
+        </div>
       </div>
+
+      {showArrows ? (
+        <div style={{ height: 22, display: "flex", alignItems: "flex-start", justifyContent: "center", marginTop: 6 }}>
+          {isFocused && (
+            <div
+              style={{
+                width: 0,
+                height: 0,
+                borderLeft: "22px solid transparent",
+                borderRight: "22px solid transparent",
+                borderTop: `16px solid ${GOLD}`,
+              }}
+            />
+          )}
+        </div>
+      ) : (
+        <div style={{ height: 8 }} />
+      )}
     </div>
-
-    {showArrows ? (
-      <div style={{ height: 22, display: "flex", alignItems: "flex-start", justifyContent: "center", marginTop: 6 }}>
-        {isFocused && (
-          <div
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: "22px solid transparent",
-              borderRight: "22px solid transparent",
-              borderTop: `16px solid ${GOLD}`,
-            }}
-          />
-        )}
-      </div>
-    ) : (
-      <div style={{ height: 8 }} />
-    )}
-  </div>
-);
+  );
+};
 
 interface EPGCardProps {
   channel: MiniChannel;
