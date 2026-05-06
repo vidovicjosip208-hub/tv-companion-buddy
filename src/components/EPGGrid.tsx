@@ -101,7 +101,7 @@ const ChannelItem = ({
           <img
             src={channel.logoUrl}
             alt={channel.name}
-            className="w-full h-full object-contain p-1"
+            className="w-full h-full object-contain scale-125"
             loading="lazy"
             onError={() => setLogoError(true)}
           />
@@ -279,7 +279,7 @@ const EPGGrid = ({
                       <img
                         src={selectedChannel.logoUrl}
                         alt={selectedChannel.name}
-                        className="w-full h-full object-contain p-1"
+                        className="w-full h-full object-contain scale-125"
                         loading="lazy"
                       />
                     ) : (
@@ -328,7 +328,7 @@ const EPGGrid = ({
                     <img
                       src={selectedChannel.logoUrl}
                       alt={selectedChannel.name}
-                      className="w-full h-full object-contain p-1.5"
+                      className="w-full h-full object-contain scale-125"
                       loading="lazy"
                     />
                   ) : (
