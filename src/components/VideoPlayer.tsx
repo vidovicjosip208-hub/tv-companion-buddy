@@ -204,7 +204,7 @@ interface ChannelCardProps {
   overrideNum?: number | string;
 }
 
-const ChannelCard = ({
+const ChannelCard = React.memo(({
   ch,
   isActive = false,
   isFocused = false,
@@ -215,107 +215,110 @@ const ChannelCard = ({
   overrideNum,
 }: ChannelCardProps) => {
   const [logoError, setLogoError] = useState(false);
+  const prevLogoUrl = useRef(logoUrl);
 
-  // Reset error kada se logoUrl promijeni
-  useEffect(() => {
-    setLogoError(false);
-  }, [logoUrl]);
+  // Reset error samo kada se logoUrl stvarno promijeni
+  if (prevLogoUrl.current !== logoUrl) {
+    prevLogoUrl.current = logoUrl;
+    if (logoError) setLogoError(false);
+  }
 
   return (
+  <div
+    onClick={onClick}
+    className="flex flex-col items-center cursor-pointer flex-shrink-0 select-none"
+    style={{ width }}
+  >
+    {showArrows ? (
+      <div style={{ height: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 6 }}>
+        {isFocused && (
+          <div
+            style={{
+              width: 0,
+              height: 0,
+              borderLeft: "22px solid transparent",
+              borderRight: "22px solid transparent",
+              borderBottom: `16px solid ${GOLD}`,
+            }}
+          />
+        )}
+      </div>
+    ) : (
+      <div style={{ height: 8 }} />
+    )}
+
     <div
-      onClick={onClick}
-      className="flex flex-col items-center cursor-pointer flex-shrink-0 select-none"
-      style={{ width }}
+      className="w-full relative flex flex-col items-center"
+      style={{
+        backgroundColor: "rgba(22,22,30,1)",
+        border: isFocused
+          ? `1.5px solid ${GOLD}`
+          : isActive
+            ? `1px solid rgba(245,197,24,0.45)`
+            : "1px solid rgba(255,255,255,0.1)",
+        borderRadius: "5px",
+        padding: "5px 7px 9px 7px",
+        minHeight: "80px",
+        boxShadow: isFocused
+          ? `0 0 14px 4px rgba(245,197,24,0.28)`
+          : isActive
+            ? `0 0 6px 2px rgba(245,197,24,0.1)`
+            : "none",
+      }}
     >
-      {showArrows ? (
-        <div style={{ height: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 6 }}>
-          {isFocused && (
-            <div
-              style={{
-                width: 0,
-                height: 0,
-                borderLeft: "22px solid transparent",
-                borderRight: "22px solid transparent",
-                borderBottom: `16px solid ${GOLD}`,
-              }}
-            />
-          )}
-        </div>
-      ) : (
-        <div style={{ height: 8 }} />
-      )}
-
-      <div
-        className="w-full relative flex flex-col items-center"
-        style={{
-          backgroundColor: "rgba(22,22,30,1)",
-          border: isFocused
-            ? `1.5px solid ${GOLD}`
-            : isActive
-              ? `1px solid rgba(245,197,24,0.45)`
-              : "1px solid rgba(255,255,255,0.1)",
-          borderRadius: "5px",
-          padding: "5px 7px 9px 7px",
-          minHeight: "80px",
-          boxShadow: isFocused
-            ? `0 0 14px 4px rgba(245,197,24,0.28)`
-            : isActive
-              ? `0 0 6px 2px rgba(245,197,24,0.1)`
-              : "none",
-        }}
+      <span
+        className="absolute top-1.5 left-2 font-bold tabular-nums leading-none"
+        style={{ fontSize: "10px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
       >
-        <span
-          className="absolute top-1.5 left-2 font-bold tabular-nums leading-none"
-          style={{ fontSize: "10px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
-        >
-          {overrideNum ?? ch.num}
-        </span>
+        {overrideNum ?? ch.num}
+      </span>
 
-        <div className="mt-2 mb-2 flex items-center justify-center" style={{ height: 48 }}>
-          {logoUrl && !logoError ? (
-            <img
-              key={logoUrl}
-              src={logoUrl}
-              alt={ch.label}
-              className="max-h-12 max-w-full object-contain"
-              style={{
-                filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
-                transition: "filter 0.18s",
-              }}
-              onError={() => setLogoError(true)}
-            />
-          ) : (
-            <Tv
-              style={{
-                width: 32,
-                height: 32,
-                color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
-                filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
-                transition: "color 0.18s, filter 0.18s",
-              }}
-            />
-          )}
-        </div>
+      <div className="mt-2 mb-2 flex items-center justify-center" style={{ height: 48 }}>
+        {logoUrl && !logoError ? (
+          <img
+            key={logoUrl}
+            src={logoUrl}
+            alt={ch.label}
+            className="max-h-12 max-w-full object-contain"
+            style={{
+              filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
+              transition: "filter 0.18s",
+            }}
+            onError={() => setLogoError(true)}
+          />
+        ) : (
+          <Tv
+            style={{
+              width: 32,
+              height: 32,
+              color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
+              filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
+              transition: "color 0.18s, filter 0.18s",
+            }}
+          />
+        )}
       </div>
 
-      {showArrows ? (
-        <div style={{ height: 22, display: "flex", alignItems: "flex-start", justifyContent: "center", marginTop: 6 }}>
-          {isFocused && (
-            <div
-              style={{
-                width: 0,
-                height: 0,
-                borderLeft: "22px solid transparent",
-                borderRight: "22px solid transparent",
-                borderTop: `16px solid ${GOLD}`,
-              }}
-            />
-          )}
-        </div>
-      ) : (
-        <div style={{ height: 8 }} />
-      )}
     </div>
+
+    {showArrows ? (
+      <div style={{ height: 22, display: "flex", alignItems: "flex-start", justifyContent: "center", marginTop: 6 }}>
+        {isFocused && (
+          <div
+            style={{
+              width: 0,
+              height: 0,
+              borderLeft: "22px solid transparent",
+              borderRight: "22px solid transparent",
+              borderTop: `16px solid ${GOLD}`,
+            }}
+          />
+        )}
+      </div>
+    ) : (
+      <div style={{ height: 8 }} />
+    )}
+  </div>
   );
 };
 
@@ -573,30 +576,16 @@ const VideoPlayer = ({
     setVideoReady(false);
     const hevcOk = supportsHEVC();
 
-    const showSpinner = () => {
-      if (spinnerRef.current) spinnerRef.current.style.opacity = "1";
-    };
-    const hideSpinner = () => {
-      if (spinnerRef.current) spinnerRef.current.style.opacity = "0";
-    };
+    const showSpinner = () => { if (spinnerRef.current) spinnerRef.current.style.opacity = "1"; };
+    const hideSpinner = () => { if (spinnerRef.current) spinnerRef.current.style.opacity = "0"; };
 
     const onPlaying = () => {
       setVideoReady(true);
       hideSpinner();
-      try {
-        video.muted = false;
-        video.volume = 1;
-      } catch {
-        /* noop */
-      }
+      try { video.muted = false; video.volume = 1; } catch { /* noop */ }
     };
     const enableSoundOnGesture = () => {
-      try {
-        video.muted = false;
-        video.volume = 1;
-      } catch {
-        /* noop */
-      }
+      try { video.muted = false; video.volume = 1; } catch { /* noop */ }
       window.removeEventListener("pointerdown", enableSoundOnGesture);
       window.removeEventListener("keydown", enableSoundOnGesture);
     };
@@ -653,34 +642,21 @@ const VideoPlayer = ({
         switch (data.type) {
           case Hls.ErrorTypes.NETWORK_ERROR:
             recoverAttempts++;
-            try {
-              hls.startLoad();
-            } catch {
-              hls.recoverMediaError();
-            }
+            try { hls.startLoad(); } catch { hls.recoverMediaError(); }
             break;
           case Hls.ErrorTypes.MEDIA_ERROR:
             recoverAttempts++;
             if (recoverAttempts <= 2) hls.recoverMediaError();
-            else {
-              hls.swapAudioCodec();
-              hls.recoverMediaError();
-            }
+            else { hls.swapAudioCodec(); hls.recoverMediaError(); }
             break;
           default:
-            try {
-              hls.recoverMediaError();
-            } catch {
-              /* noop */
-            }
+            try { hls.recoverMediaError(); } catch { /* noop */ }
         }
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       // Safari native HLS
       video.src = streamUrl;
-      video.addEventListener("loadedmetadata", () => {
-        video.play().catch(() => {});
-      });
+      video.addEventListener("loadedmetadata", () => { video.play().catch(() => {}); });
     }
 
     return () => {
@@ -819,7 +795,8 @@ const VideoPlayer = ({
           if (favCh && onSwitchChannel) {
             // Fallback: ako favCh.streamUrl nije dostupan, traži u allChannels po imenu
             const resolvedStreamUrl =
-              favCh.streamUrl ?? (allChannels ?? []).find((c) => c.channelName === favCh.channelName)?.streamUrl;
+              favCh.streamUrl ??
+              (allChannels ?? []).find((c) => c.channelName === favCh.channelName)?.streamUrl;
             onSwitchChannel({
               channelNumber: String(favCh.number),
               showTitle: favCh.showTitle,
@@ -927,7 +904,8 @@ const VideoPlayer = ({
             if (favCh && onSwitchChannel && favCh.channelName !== data?.channelName) {
               // Fallback: ako favCh.streamUrl nije dostupan, traži u channelLookup
               const resolvedStreamUrl =
-                favCh.streamUrl ?? channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
+                favCh.streamUrl ??
+                channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
               onSwitchChannel({
                 channelNumber: String(favCh.number),
                 showTitle: favCh.showTitle,
@@ -1044,10 +1022,7 @@ const VideoPlayer = ({
   // HUD kartica je UVIJEK fokus zona. Skrolanjem se mijenja koji se kanal prikazuje
   // u HUD-u (preview), a 4 kartice iznad progress bara su sljedeći kandidati u nizu.
   // Enter učitava stream kanala koji je trenutno u HUD-u.
-  const currentIdx = Math.max(
-    0,
-    favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
-  );
+  const currentIdx = Math.max(0, favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName));
   const total = Math.max(favoriteChannels.length, 1);
 
   // hudIdx — koji se kanal prikazuje u HUD kartici. Default = trenutno reproducirani.
@@ -1068,9 +1043,7 @@ const VideoPlayer = ({
     if (!channelName) return null;
     const found = (allChannels ?? []).find((c) => c.channelName === channelName);
     const logo = found?.logoUrl ?? null;
-    console.log(
-      `[getLogoUrl] "${channelName}" → found=${!!found} logoUrl=${logo} allChannels.length=${(allChannels ?? []).length}`,
-    );
+    console.log(`[getLogoUrl] "${channelName}" → found=${!!found} logoUrl=${logo} allChannels.length=${(allChannels??[]).length}`);
     return logo;
   };
 
@@ -1133,14 +1106,7 @@ const VideoPlayer = ({
                   return { ...base, width: "100%", height: "100%", objectFit: "fill" as const };
                 }
                 if (aspectRatioMode === "4:3") {
-                  return {
-                    ...base,
-                    width: "auto",
-                    height: "100%",
-                    aspectRatio: "4/3",
-                    objectFit: "fill" as const,
-                    maxWidth: "100%",
-                  };
+                  return { ...base, width: "auto", height: "100%", aspectRatio: "4/3", objectFit: "fill" as const, maxWidth: "100%" };
                 }
                 // Za "16:9" i "original" — koristimo contain da nikad ne odrežemo sliku.
                 // Ako je stream širi od ekrana → fit by width; ako je viši → fit by height.
@@ -1210,43 +1176,43 @@ const VideoPlayer = ({
               }}
             >
               {aboveWindow.map((chIdx) => {
-                const ch = favAsSidebarChannels[chIdx];
-                if (!ch) return null;
-                const favCh = favoriteChannels[chIdx];
-                return (
-                  <motion.div
-                    key={`slot-${chIdx}`}
-                    animate={{ opacity: 1, y: 0 }}
-                    initial={{ opacity: 0, y: -10 }}
-                    transition={{ type: "spring", stiffness: 350, damping: 35 }}
-                  >
-                    <ChannelCard
-                      ch={ch}
-                      isActive={false}
-                      isFocused={false}
-                      width="100%"
-                      showArrows={false}
-                      logoUrl={getLogoUrl(favCh?.channelName)}
-                      onClick={() => {
-                        if (favCh && onSwitchChannel) {
-                          const resolvedStreamUrl =
-                            favCh.streamUrl ??
-                            channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
-                          onSwitchChannel({
-                            channelNumber: String(favCh.number),
-                            showTitle: favCh.showTitle,
-                            timeRange: favCh.timeRange,
-                            thumbnail: favCh.thumbnail,
-                            channelName: favCh.channelName,
-                            streamUrl: resolvedStreamUrl,
-                            logoUrl: favCh.logoUrl,
-                          });
-                        }
-                      }}
-                    />
-                  </motion.div>
-                );
-              })}
+                  const ch = favAsSidebarChannels[chIdx];
+                  if (!ch) return null;
+                  const favCh = favoriteChannels[chIdx];
+                  return (
+                    <motion.div
+                      key={`slot-${chIdx}`}
+                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: -10 }}
+                      transition={{ type: "spring", stiffness: 350, damping: 35 }}
+                    >
+                      <ChannelCard
+                        ch={ch}
+                        isActive={false}
+                        isFocused={false}
+                        width="100%"
+                        showArrows={false}
+                        logoUrl={getLogoUrl(favCh?.channelName)}
+                        onClick={() => {
+                          if (favCh && onSwitchChannel) {
+                            const resolvedStreamUrl =
+                              favCh.streamUrl ??
+                              channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
+                            onSwitchChannel({
+                              channelNumber: String(favCh.number),
+                              showTitle: favCh.showTitle,
+                              timeRange: favCh.timeRange,
+                              thumbnail: favCh.thumbnail,
+                              channelName: favCh.channelName,
+                              streamUrl: resolvedStreamUrl,
+                              logoUrl: favCh.logoUrl,
+                            });
+                          }
+                        }}
+                      />
+                    </motion.div>
+                  );
+                })}
             </motion.div>
           )}
         </AnimatePresence>
@@ -1319,7 +1285,7 @@ const VideoPlayer = ({
                   className="relative flex items-center pt-3 pb-3"
                   style={{ backgroundColor: epgMode ? "rgba(10,10,10,0.46)" : "rgba(10,10,10,0.78)" }}
                 >
-                  {/* HUD kartica — fokusirana kartica u slotu, uvijek na dnu */}
+                {/* HUD kartica — fokusirana kartica u slotu, uvijek na dnu */}
                   <div className="ml-4 flex-shrink-0" style={{ width: CARD_W }}>
                     <ChannelCard
                       ch={favAsSidebarChannels[hudIdx] ?? hudChannel}
@@ -1376,10 +1342,7 @@ const VideoPlayer = ({
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 8, flexShrink: 0 }}>
                     {/* Aspect Ratio gumb */}
                     <button
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        cycleAspectRatio();
-                      }}
+                      onMouseDown={(e) => { e.preventDefault(); cycleAspectRatio(); }}
                       title={`Aspect ratio: ${aspectRatioMode}`}
                       style={{
                         display: "inline-flex",
@@ -1399,89 +1362,29 @@ const VideoPlayer = ({
                       <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
                         {aspectRatioMode === "original" && (
                           <>
-                            <rect
-                              x="1"
-                              y="1"
-                              width="20"
-                              height="12"
-                              rx="1.5"
-                              stroke={GOLD}
-                              strokeWidth="1.5"
-                              fill="none"
-                            />
-                            <rect
-                              x="5"
-                              y="3"
-                              width="12"
-                              height="8"
-                              rx="0.5"
-                              stroke={GOLD}
-                              strokeWidth="1"
-                              fill="none"
-                              strokeDasharray="2 1"
-                            />
+                            <rect x="1" y="1" width="20" height="12" rx="1.5" stroke={GOLD} strokeWidth="1.5" fill="none"/>
+                            <rect x="5" y="3" width="12" height="8" rx="0.5" stroke={GOLD} strokeWidth="1" fill="none" strokeDasharray="2 1"/>
                           </>
                         )}
                         {aspectRatioMode === "fill" && (
-                          <rect
-                            x="1"
-                            y="1"
-                            width="20"
-                            height="12"
-                            rx="1.5"
-                            stroke={GOLD}
-                            strokeWidth="1.5"
-                            fill={GOLD}
-                            fillOpacity="0.4"
-                          />
+                          <rect x="1" y="1" width="20" height="12" rx="1.5" stroke={GOLD} strokeWidth="1.5" fill={GOLD} fillOpacity="0.4"/>
                         )}
                         {aspectRatioMode === "4:3" && (
                           <>
-                            <rect
-                              x="1"
-                              y="1"
-                              width="20"
-                              height="12"
-                              rx="1.5"
-                              stroke={GOLD}
-                              strokeWidth="1.5"
-                              fill="none"
-                            />
-                            <rect x="3" y="1" width="16" height="12" rx="0.5" fill={GOLD} fillOpacity="0.4" />
+                            <rect x="1" y="1" width="20" height="12" rx="1.5" stroke={GOLD} strokeWidth="1.5" fill="none"/>
+                            <rect x="3" y="1" width="16" height="12" rx="0.5" fill={GOLD} fillOpacity="0.4"/>
                           </>
                         )}
                         {aspectRatioMode === "16:9" && (
                           <>
-                            <rect
-                              x="1"
-                              y="1"
-                              width="20"
-                              height="12"
-                              rx="1.5"
-                              stroke={GOLD}
-                              strokeWidth="1.5"
-                              fill={GOLD}
-                              fillOpacity="0.4"
-                            />
-                            <line x1="1" y1="3.5" x2="21" y2="3.5" stroke={GOLD} strokeWidth="0.5" opacity="0.5" />
-                            <line x1="1" y1="10.5" x2="21" y2="10.5" stroke={GOLD} strokeWidth="0.5" opacity="0.5" />
+                            <rect x="1" y="1" width="20" height="12" rx="1.5" stroke={GOLD} strokeWidth="1.5" fill={GOLD} fillOpacity="0.4"/>
+                            <line x1="1" y1="3.5" x2="21" y2="3.5" stroke={GOLD} strokeWidth="0.5" opacity="0.5"/>
+                            <line x1="1" y1="10.5" x2="21" y2="10.5" stroke={GOLD} strokeWidth="0.5" opacity="0.5"/>
                           </>
                         )}
                       </svg>
-                      <span
-                        style={{
-                          fontSize: 8,
-                          fontWeight: 700,
-                          color: GOLD,
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase" as const,
-                        }}
-                      >
-                        {aspectRatioMode === "original"
-                          ? "Original"
-                          : aspectRatioMode === "fill"
-                            ? "Fill"
-                            : aspectRatioMode}
+                      <span style={{ fontSize: 8, fontWeight: 700, color: GOLD, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+                        {aspectRatioMode === "original" ? "Original" : aspectRatioMode === "fill" ? "Fill" : aspectRatioMode}
                       </span>
                     </button>
 
