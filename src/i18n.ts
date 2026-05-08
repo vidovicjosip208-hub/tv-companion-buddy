@@ -90,7 +90,7 @@ const de: Bundle = {
   videotekaSearch: { placeholder: "Suchen...", results: "Ergebnisse", noResults: "Keine Ergebnisse gefunden" },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Ihr Abonnement läuft in 30 Tagen ab", subscriptionShort: "30 Tage", location: "Belgrad" },
-  epg: { live: "Live", schedule: "TV-Programm", channel: "Kanal", today: "Heute", watch: "ANSEHEN", programDesc: "Sehen Sie {{title}} auf {{channel}}. Weitere Informationen zum Programm in Kürze." },
+  epg: { live: "Live", schedule: "TV-Programm", channel: "Kanal", today: "Heute", watch: "ANSEHEN", listen: "ANHÖREN", programDesc: "Sehen Sie {{title}} auf {{channel}}. Weitere Informationen zum Programm in Kürze." },
   weekdays: { sun: "So", mon: "Mo", tue: "Di", wed: "Mi", thu: "Do", fri: "Fr", sat: "Sa" },
 };
 
