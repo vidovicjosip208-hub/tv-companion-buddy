@@ -124,7 +124,7 @@ const es: Bundle = {
   videotekaSearch: { placeholder: "Buscar...", results: "resultados", noResults: "Sin resultados" },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Su suscripción caduca en 30 días", subscriptionShort: "30 días", location: "Belgrado" },
-  epg: { live: "En vivo", schedule: "Programación", channel: "Canal", today: "Hoy", watch: "VER", programDesc: "Vea {{title}} en {{channel}}. Más información sobre el programa próximamente." },
+  epg: { live: "En vivo", schedule: "Programación", channel: "Canal", today: "Hoy", watch: "VER", listen: "ESCUCHAR", programDesc: "Vea {{title}} en {{channel}}. Más información sobre el programa próximamente." },
   weekdays: { sun: "Dom", mon: "Lun", tue: "Mar", wed: "Mié", thu: "Jue", fri: "Vie", sat: "Sáb" },
 };
 
