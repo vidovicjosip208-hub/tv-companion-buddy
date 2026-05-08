@@ -107,7 +107,7 @@ const fr: Bundle = {
   videotekaSearch: { placeholder: "Rechercher...", results: "résultats", noResults: "Aucun résultat" },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Votre abonnement expire dans 30 jours", subscriptionShort: "30 jours", location: "Belgrade" },
-  epg: { live: "En direct", schedule: "Programme TV", channel: "Chaîne", today: "Aujourd'hui", watch: "REGARDER", programDesc: "Regardez {{title}} sur {{channel}}. Plus d'informations sur le programme prochainement." },
+  epg: { live: "En direct", schedule: "Programme TV", channel: "Chaîne", today: "Aujourd'hui", watch: "REGARDER", listen: "ÉCOUTER", programDesc: "Regardez {{title}} sur {{channel}}. Plus d'informations sur le programme prochainement." },
   weekdays: { sun: "Dim", mon: "Lun", tue: "Mar", wed: "Mer", thu: "Jeu", fri: "Ven", sat: "Sam" },
 };
 
