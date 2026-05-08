@@ -365,7 +365,7 @@ const EPGGrid = ({
 
               <button className="mt-auto self-center flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-md transition-colors">
                 <Play className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
-                <span className="tracking-wide">{t("epg.watch")}</span>
+                <span className="tracking-wide">{t(isRadio ? "epg.listen" : "epg.watch")}</span>
               </button>
             </motion.div>
           )}
