@@ -967,6 +967,16 @@ const Index = () => {
             openPlayerFromEPG(epgIndex);
           } else if (focusZone === "cards") {
             openPlayerFromCard(liveChannelCards[cardIndex]);
+          } else if (focusZone === "cameraHeaders") {
+            const grp = camerasByCountry[cameraHeaderIndex];
+            if (grp) {
+              setCollapsedCountries((prev) => {
+                const next = new Set(prev);
+                if (next.has(grp.country)) next.delete(grp.country);
+                else next.add(grp.country);
+                return next;
+              });
+            }
           }
           break;
 
@@ -987,7 +997,7 @@ const Index = () => {
             setShowCategories(false);
             setSidebarExpanded(true);
             setFocusZone("sidebar");
-          } else if (focusZone === "cameras") {
+          } else if (focusZone === "cameras" || focusZone === "cameraHeaders") {
             setShowCameras(false);
             setSidebarExpanded(true);
             setFocusZone("sidebar");
