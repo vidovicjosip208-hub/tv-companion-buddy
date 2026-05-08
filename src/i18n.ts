@@ -56,7 +56,7 @@ const hr: Bundle = {
   videotekaSearch: { placeholder: "Pretraži...", results: "rezultata", noResults: "Nema rezultata." },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Vaša pretplata ističe za 30 dan/a", subscriptionShort: "30 dan/a", location: "Beograd" },
-  epg: { live: "Uživo", schedule: "TV Raspored", channel: "Kanal", today: "Danas", watch: "GLEDAJ", programDesc: "Pogledajte {{title}} na kanalu {{channel}}. Više informacija o programu uskoro." },
+  epg: { live: "Uživo", schedule: "TV Raspored", channel: "Kanal", today: "Danas", watch: "GLEDAJ", listen: "SLUŠAJ", programDesc: "Pogledajte {{title}} na kanalu {{channel}}. Više informacija o programu uskoro." },
   weekdays: { sun: "Ned", mon: "Pon", tue: "Uto", wed: "Sri", thu: "Čet", fri: "Pet", sat: "Sub" },
 };
 
@@ -73,7 +73,7 @@ const en: Bundle = {
   videotekaSearch: { placeholder: "Search...", results: "results", noResults: "No results found" },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Your subscription expires in 30 days", subscriptionShort: "30 days", location: "Belgrade" },
-  epg: { live: "Live", schedule: "TV Schedule", channel: "Channel", today: "Today", watch: "WATCH", programDesc: "Watch {{title}} on {{channel}}. More information about the program coming soon." },
+  epg: { live: "Live", schedule: "TV Schedule", channel: "Channel", today: "Today", watch: "WATCH", listen: "LISTEN", programDesc: "Watch {{title}} on {{channel}}. More information about the program coming soon." },
   weekdays: { sun: "Sun", mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat" },
 };
 
@@ -90,7 +90,7 @@ const de: Bundle = {
   videotekaSearch: { placeholder: "Suchen...", results: "Ergebnisse", noResults: "Keine Ergebnisse gefunden" },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Ihr Abonnement läuft in 30 Tagen ab", subscriptionShort: "30 Tage", location: "Belgrad" },
-  epg: { live: "Live", schedule: "TV-Programm", channel: "Kanal", today: "Heute", watch: "ANSEHEN", programDesc: "Sehen Sie {{title}} auf {{channel}}. Weitere Informationen zum Programm in Kürze." },
+  epg: { live: "Live", schedule: "TV-Programm", channel: "Kanal", today: "Heute", watch: "ANSEHEN", listen: "ANHÖREN", programDesc: "Sehen Sie {{title}} auf {{channel}}. Weitere Informationen zum Programm in Kürze." },
   weekdays: { sun: "So", mon: "Mo", tue: "Di", wed: "Mi", thu: "Do", fri: "Fr", sat: "Sa" },
 };
 
@@ -107,7 +107,7 @@ const fr: Bundle = {
   videotekaSearch: { placeholder: "Rechercher...", results: "résultats", noResults: "Aucun résultat" },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Votre abonnement expire dans 30 jours", subscriptionShort: "30 jours", location: "Belgrade" },
-  epg: { live: "En direct", schedule: "Programme TV", channel: "Chaîne", today: "Aujourd'hui", watch: "REGARDER", programDesc: "Regardez {{title}} sur {{channel}}. Plus d'informations sur le programme prochainement." },
+  epg: { live: "En direct", schedule: "Programme TV", channel: "Chaîne", today: "Aujourd'hui", watch: "REGARDER", listen: "ÉCOUTER", programDesc: "Regardez {{title}} sur {{channel}}. Plus d'informations sur le programme prochainement." },
   weekdays: { sun: "Dim", mon: "Lun", tue: "Mar", wed: "Mer", thu: "Jeu", fri: "Ven", sat: "Sam" },
 };
 
@@ -124,7 +124,7 @@ const es: Bundle = {
   videotekaSearch: { placeholder: "Buscar...", results: "resultados", noResults: "Sin resultados" },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Su suscripción caduca en 30 días", subscriptionShort: "30 días", location: "Belgrado" },
-  epg: { live: "En vivo", schedule: "Programación", channel: "Canal", today: "Hoy", watch: "VER", programDesc: "Vea {{title}} en {{channel}}. Más información sobre el programa próximamente." },
+  epg: { live: "En vivo", schedule: "Programación", channel: "Canal", today: "Hoy", watch: "VER", listen: "ESCUCHAR", programDesc: "Vea {{title}} en {{channel}}. Más información sobre el programa próximamente." },
   weekdays: { sun: "Dom", mon: "Lun", tue: "Mar", wed: "Mié", thu: "Jue", fri: "Vie", sat: "Sáb" },
 };
 
@@ -141,7 +141,7 @@ const it: Bundle = {
   videotekaSearch: { placeholder: "Cerca...", results: "risultati", noResults: "Nessun risultato" },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Il tuo abbonamento scade tra 30 giorni", subscriptionShort: "30 giorni", location: "Belgrado" },
-  epg: { live: "Live", schedule: "Palinsesto", channel: "Canale", today: "Oggi", watch: "GUARDA", programDesc: "Guarda {{title}} su {{channel}}. Maggiori informazioni sul programma a breve." },
+  epg: { live: "Live", schedule: "Palinsesto", channel: "Canale", today: "Oggi", watch: "GUARDA", listen: "ASCOLTA", programDesc: "Guarda {{title}} su {{channel}}. Maggiori informazioni sul programma a breve." },
   weekdays: { sun: "Dom", mon: "Lun", tue: "Mar", wed: "Mer", thu: "Gio", fri: "Ven", sat: "Sab" },
 };
 

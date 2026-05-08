@@ -1237,6 +1237,7 @@ const Index = () => {
                     focusedProgramIndex={programIndex}
                     isProgramFocused={focusZone === "epgPrograms"}
                     hideSchedule={showRadio}
+                    isRadio={showRadio}
                     onChannelClick={(i) => {
                       setFocusZone("epg");
                       setEpgIndex(i);
