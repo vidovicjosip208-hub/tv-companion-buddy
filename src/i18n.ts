@@ -56,7 +56,7 @@ const hr: Bundle = {
   videotekaSearch: { placeholder: "Pretraži...", results: "rezultata", noResults: "Nema rezultata." },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Vaša pretplata ističe za 30 dan/a", subscriptionShort: "30 dan/a", location: "Beograd" },
-  epg: { live: "Uživo", schedule: "TV Raspored", channel: "Kanal", today: "Danas", watch: "GLEDAJ", programDesc: "Pogledajte {{title}} na kanalu {{channel}}. Više informacija o programu uskoro." },
+  epg: { live: "Uživo", schedule: "TV Raspored", channel: "Kanal", today: "Danas", watch: "GLEDAJ", listen: "SLUŠAJ", programDesc: "Pogledajte {{title}} na kanalu {{channel}}. Više informacija o programu uskoro." },
   weekdays: { sun: "Ned", mon: "Pon", tue: "Uto", wed: "Sri", thu: "Čet", fri: "Pet", sat: "Sub" },
 };
 
