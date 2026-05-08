@@ -758,6 +758,27 @@ const Index = () => {
 
   const selectedChannelPrograms = activeEpgChannels[epgIndex]?.programs ?? [];
 
+  const camerasByCountry = useMemo(() => {
+    const map = new Map<string, CameraItem[]>();
+    for (const cam of liveCameras) {
+      if (!map.has(cam.country)) map.set(cam.country, []);
+      map.get(cam.country)!.push(cam);
+    }
+    return CAMERA_COUNTRY_ORDER.filter((c) => map.has(c)).map((country) => ({
+      country,
+      items: map.get(country)!,
+    }));
+  }, []);
+
+  const visibleCameraIndices = useMemo(() => {
+    const indices: number[] = [];
+    camerasByCountry.forEach(({ country, items }) => {
+      if (collapsedCountries.has(country)) return;
+      items.forEach((cam) => indices.push(liveCameras.indexOf(cam)));
+    });
+    return indices;
+  }, [camerasByCountry, collapsedCountries]);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (playerVisible) return;
