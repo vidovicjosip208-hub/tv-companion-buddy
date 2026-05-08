@@ -798,7 +798,7 @@ const Index = () => {
             } else if (isRadioActive && showRadio) {
               setFocusZone("epg");
             } else if (isCamerasActive && showCameras) {
-              setFocusZone("cameras");
+              setFocusZone("cameraHeaders");
             } else {
               setFocusZone("cards");
             }
