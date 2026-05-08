@@ -73,7 +73,7 @@ const en: Bundle = {
   videotekaSearch: { placeholder: "Search...", results: "results", noResults: "No results found" },
   videotekaEpisodes: {},
   header: { subscriptionExpiring: "Your subscription expires in 30 days", subscriptionShort: "30 days", location: "Belgrade" },
-  epg: { live: "Live", schedule: "TV Schedule", channel: "Channel", today: "Today", watch: "WATCH", programDesc: "Watch {{title}} on {{channel}}. More information about the program coming soon." },
+  epg: { live: "Live", schedule: "TV Schedule", channel: "Channel", today: "Today", watch: "WATCH", listen: "LISTEN", programDesc: "Watch {{title}} on {{channel}}. More information about the program coming soon." },
   weekdays: { sun: "Sun", mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat" },
 };
 
