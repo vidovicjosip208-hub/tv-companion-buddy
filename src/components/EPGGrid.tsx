@@ -34,6 +34,7 @@ interface EPGGridProps {
   isProgramFocused?: boolean;
   onChannelClick?: (index: number) => void;
   hideSchedule?: boolean;
+  isRadio?: boolean;
 }
 
 function calculateProgress(startTime: string, endTime: string): number {
