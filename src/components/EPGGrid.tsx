@@ -219,6 +219,7 @@ const EPGGrid = ({
   isProgramFocused = false,
   onChannelClick,
   hideSchedule = false,
+  isRadio = false,
 }: EPGGridProps) => {
   const { t } = useTranslation();
   const selectedChannel = isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
