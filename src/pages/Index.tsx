@@ -749,7 +749,8 @@ const Index = () => {
         setShowFavorites(false);
         setShowRadio(false);
         setCameraIndex(0);
-        setFocusZone("cameras");
+        setCameraHeaderIndex(0);
+        setFocusZone("cameraHeaders");
         setSidebarExpanded(false);
       }
     },
