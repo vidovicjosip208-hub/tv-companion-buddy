@@ -306,66 +306,39 @@ const PROFILE_INDEX = 7;
 
 const CARDS_ROWS = 2;
 
-type FocusZone = "sidebar" | "categories" | "filters" | "epg" | "epgPrograms" | "cards" | "cameras" | "radio";
+type FocusZone = "sidebar" | "categories" | "filters" | "epg" | "epgPrograms" | "cards" | "cameras" | "cameraHeaders" | "radio";
 
 interface CameraItem {
   id: string;
   name: string;
   location: string;
+  country: string; // ISO-ish code: HR, RS, BA, SI, ME, MK
   thumbnail: string;
   streamUrl?: string;
 }
 
 const liveCameras: CameraItem[] = [
-  {
-    id: "cam1",
-    name: "Zagreb - Trg",
-    location: "Zagreb",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam2",
-    name: "Split - Riva",
-    location: "Split",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam3",
-    name: "Dubrovnik - Stradun",
-    location: "Dubrovnik",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam4",
-    name: "Beograd - Kalemegdan",
-    location: "Beoград",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam5",
-    name: "Sarajevo - Baščaršija",
-    location: "Sarajevo",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam6",
-    name: "Ljubljana - Prešernov trg",
-    location: "Ljubljana",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam7",
-    name: "Podgorica - Centar",
-    location: "Podgorica",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam8",
-    name: "Skopje - Ploštad",
-    location: "Skopje",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
+  { id: "cam1", name: "Zagreb - Trg", location: "Zagreb", country: "HR", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam2", name: "Split - Riva", location: "Split", country: "HR", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam3", name: "Dubrovnik - Stradun", location: "Dubrovnik", country: "HR", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam4", name: "Beograd - Kalemegdan", location: "Beograd", country: "RS", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam5", name: "Sarajevo - Baščaršija", location: "Sarajevo", country: "BA", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam6", name: "Ljubljana - Prešernov trg", location: "Ljubljana", country: "SI", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam7", name: "Podgorica - Centar", location: "Podgorica", country: "ME", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam8", name: "Skopje - Ploštad", location: "Skopje", country: "MK", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
 ];
+
+const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
+  HR: { flag: "🇭🇷", name: "Hrvatska" },
+  RS: { flag: "🇷🇸", name: "Srbija" },
+  BA: { flag: "🇧🇦", name: "Bosna i Hercegovina" },
+  SI: { flag: "🇸🇮", name: "Slovenija" },
+  ME: { flag: "🇲🇪", name: "Crna Gora" },
+  MK: { flag: "🇲🇰", name: "Sjeverna Makedonija" },
+};
+
+const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
+
 
 const radioStations: EPGChannel[] = [
   {
