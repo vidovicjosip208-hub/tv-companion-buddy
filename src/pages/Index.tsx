@@ -306,66 +306,39 @@ const PROFILE_INDEX = 7;
 
 const CARDS_ROWS = 2;
 
-type FocusZone = "sidebar" | "categories" | "filters" | "epg" | "epgPrograms" | "cards" | "cameras" | "radio";
+type FocusZone = "sidebar" | "categories" | "filters" | "epg" | "epgPrograms" | "cards" | "cameras" | "cameraHeaders" | "radio";
 
 interface CameraItem {
   id: string;
   name: string;
   location: string;
+  country: string; // ISO-ish code: HR, RS, BA, SI, ME, MK
   thumbnail: string;
   streamUrl?: string;
 }
 
 const liveCameras: CameraItem[] = [
-  {
-    id: "cam1",
-    name: "Zagreb - Trg",
-    location: "Zagreb",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam2",
-    name: "Split - Riva",
-    location: "Split",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam3",
-    name: "Dubrovnik - Stradun",
-    location: "Dubrovnik",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam4",
-    name: "Beograd - Kalemegdan",
-    location: "Beoград",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam5",
-    name: "Sarajevo - Baščaršija",
-    location: "Sarajevo",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam6",
-    name: "Ljubljana - Prešernov trg",
-    location: "Ljubljana",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam7",
-    name: "Podgorica - Centar",
-    location: "Podgorica",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
-  {
-    id: "cam8",
-    name: "Skopje - Ploštad",
-    location: "Skopje",
-    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
-  },
+  { id: "cam1", name: "Zagreb - Trg", location: "Zagreb", country: "HR", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam2", name: "Split - Riva", location: "Split", country: "HR", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam3", name: "Dubrovnik - Stradun", location: "Dubrovnik", country: "HR", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam4", name: "Beograd - Kalemegdan", location: "Beograd", country: "RS", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam5", name: "Sarajevo - Baščaršija", location: "Sarajevo", country: "BA", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam6", name: "Ljubljana - Prešernov trg", location: "Ljubljana", country: "SI", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam7", name: "Podgorica - Centar", location: "Podgorica", country: "ME", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  { id: "cam8", name: "Skopje - Ploštad", location: "Skopje", country: "MK", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
 ];
+
+const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
+  HR: { flag: "🇭🇷", name: "Hrvatska" },
+  RS: { flag: "🇷🇸", name: "Srbija" },
+  BA: { flag: "🇧🇦", name: "Bosna i Hercegovina" },
+  SI: { flag: "🇸🇮", name: "Slovenija" },
+  ME: { flag: "🇲🇪", name: "Crna Gora" },
+  MK: { flag: "🇲🇰", name: "Sjeverna Makedonija" },
+};
+
+const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
+
 
 const radioStations: EPGChannel[] = [
   {
@@ -482,6 +455,8 @@ const Index = () => {
   const [showCameras, setShowCameras] = useState(false);
   const [showRadio, setShowRadio] = useState(false);
   const [cameraIndex, setCameraIndex] = useState(0);
+  const [collapsedCountries, setCollapsedCountries] = useState<Set<string>>(new Set());
+  const [cameraHeaderIndex, setCameraHeaderIndex] = useState(0);
   const [showProfile, setShowProfile] = useState(false);
 
   const [playerVisible, setPlayerVisible] = useState(false);
@@ -774,7 +749,8 @@ const Index = () => {
         setShowFavorites(false);
         setShowRadio(false);
         setCameraIndex(0);
-        setFocusZone("cameras");
+        setCameraHeaderIndex(0);
+        setFocusZone("cameraHeaders");
         setSidebarExpanded(false);
       }
     },
@@ -782,6 +758,27 @@ const Index = () => {
   );
 
   const selectedChannelPrograms = activeEpgChannels[epgIndex]?.programs ?? [];
+
+  const camerasByCountry = useMemo(() => {
+    const map = new Map<string, CameraItem[]>();
+    for (const cam of liveCameras) {
+      if (!map.has(cam.country)) map.set(cam.country, []);
+      map.get(cam.country)!.push(cam);
+    }
+    return CAMERA_COUNTRY_ORDER.filter((c) => map.has(c)).map((country) => ({
+      country,
+      items: map.get(country)!,
+    }));
+  }, []);
+
+  const visibleCameraIndices = useMemo(() => {
+    const indices: number[] = [];
+    camerasByCountry.forEach(({ country, items }) => {
+      if (collapsedCountries.has(country)) return;
+      items.forEach((cam) => indices.push(liveCameras.indexOf(cam)));
+    });
+    return indices;
+  }, [camerasByCountry, collapsedCountries]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -801,7 +798,7 @@ const Index = () => {
             } else if (isRadioActive && showRadio) {
               setFocusZone("epg");
             } else if (isCamerasActive && showCameras) {
-              setFocusZone("cameras");
+              setFocusZone("cameraHeaders");
             } else {
               setFocusZone("cards");
             }
@@ -815,9 +812,10 @@ const Index = () => {
           } else if (focusZone === "cards") {
             setCardIndex((p) => moveCardIndexLive(p, "right"));
           } else if (focusZone === "cameras") {
-            const col = cameraIndex % CAMERAS_COLS;
-            if (col < CAMERAS_COLS - 1 && cameraIndex + 1 < liveCameras.length) {
-              setCameraIndex((p) => p + 1);
+            const pos = visibleCameraIndices.indexOf(cameraIndex);
+            const col = pos % CAMERAS_COLS;
+            if (col < CAMERAS_COLS - 1 && pos + 1 < visibleCameraIndices.length) {
+              setCameraIndex(visibleCameraIndices[pos + 1]);
             }
           }
           break;
@@ -856,13 +854,17 @@ const Index = () => {
               setCardIndex((p) => moveCardIndexLive(p, "left"));
             }
           } else if (focusZone === "cameras") {
-            const col = cameraIndex % CAMERAS_COLS;
+            const pos = visibleCameraIndices.indexOf(cameraIndex);
+            const col = pos % CAMERAS_COLS;
             if (col === 0) {
               setSidebarExpanded(true);
               setFocusZone("sidebar");
             } else {
-              setCameraIndex((p) => p - 1);
+              setCameraIndex(visibleCameraIndices[pos - 1]);
             }
+          } else if (focusZone === "cameraHeaders") {
+            setSidebarExpanded(true);
+            setFocusZone("sidebar");
           }
           break;
 
@@ -881,8 +883,28 @@ const Index = () => {
           } else if (focusZone === "cards") {
             setCardIndex((p) => moveCardIndexLive(p, "down"));
           } else if (focusZone === "cameras") {
-            const nextIdx = cameraIndex + CAMERAS_COLS;
-            if (nextIdx < liveCameras.length) setCameraIndex(nextIdx);
+            const pos = visibleCameraIndices.indexOf(cameraIndex);
+            const nextPos = pos + CAMERAS_COLS;
+            if (nextPos < visibleCameraIndices.length) {
+              setCameraIndex(visibleCameraIndices[nextPos]);
+            } else {
+              // Move to next country header
+              const cam = liveCameras[cameraIndex];
+              const grpIdx = camerasByCountry.findIndex((g) => g.country === cam.country);
+              if (grpIdx >= 0 && grpIdx + 1 < camerasByCountry.length) {
+                setCameraHeaderIndex(grpIdx + 1);
+                setFocusZone("cameraHeaders");
+              }
+            }
+          } else if (focusZone === "cameraHeaders") {
+            const grp = camerasByCountry[cameraHeaderIndex];
+            if (grp && !collapsedCountries.has(grp.country)) {
+              const firstIdx = liveCameras.indexOf(grp.items[0]);
+              setCameraIndex(firstIdx);
+              setFocusZone("cameras");
+            } else if (cameraHeaderIndex + 1 < camerasByCountry.length) {
+              setCameraHeaderIndex((p) => p + 1);
+            }
           }
           break;
 
@@ -907,8 +929,30 @@ const Index = () => {
           } else if (focusZone === "cards") {
             setCardIndex((p) => moveCardIndexLive(p, "up"));
           } else if (focusZone === "cameras") {
-            const nextIdx = cameraIndex - CAMERAS_COLS;
-            if (nextIdx >= 0) setCameraIndex(nextIdx);
+            const pos = visibleCameraIndices.indexOf(cameraIndex);
+            const prevPos = pos - CAMERAS_COLS;
+            if (prevPos >= 0) {
+              setCameraIndex(visibleCameraIndices[prevPos]);
+            } else {
+              // Move up to current group's header
+              const cam = liveCameras[cameraIndex];
+              const grpIdx = camerasByCountry.findIndex((g) => g.country === cam.country);
+              if (grpIdx >= 0) {
+                setCameraHeaderIndex(grpIdx);
+                setFocusZone("cameraHeaders");
+              }
+            }
+          } else if (focusZone === "cameraHeaders") {
+            if (cameraHeaderIndex > 0) {
+              setCameraHeaderIndex((p) => p - 1);
+              const prevGrp = camerasByCountry[cameraHeaderIndex - 1];
+              if (prevGrp && !collapsedCountries.has(prevGrp.country)) {
+                // jump into last row of previous group
+                const lastIdx = liveCameras.indexOf(prevGrp.items[prevGrp.items.length - 1]);
+                setCameraIndex(lastIdx);
+                setFocusZone("cameras");
+              }
+            }
           }
           break;
 
@@ -924,6 +968,16 @@ const Index = () => {
             openPlayerFromEPG(epgIndex);
           } else if (focusZone === "cards") {
             openPlayerFromCard(liveChannelCards[cardIndex]);
+          } else if (focusZone === "cameraHeaders") {
+            const grp = camerasByCountry[cameraHeaderIndex];
+            if (grp) {
+              setCollapsedCountries((prev) => {
+                const next = new Set(prev);
+                if (next.has(grp.country)) next.delete(grp.country);
+                else next.add(grp.country);
+                return next;
+              });
+            }
           }
           break;
 
@@ -944,7 +998,7 @@ const Index = () => {
             setShowCategories(false);
             setSidebarExpanded(true);
             setFocusZone("sidebar");
-          } else if (focusZone === "cameras") {
+          } else if (focusZone === "cameras" || focusZone === "cameraHeaders") {
             setShowCameras(false);
             setSidebarExpanded(true);
             setFocusZone("sidebar");
@@ -960,6 +1014,10 @@ const Index = () => {
       categoryIndex,
       cardIndex,
       cameraIndex,
+      cameraHeaderIndex,
+      camerasByCountry,
+      visibleCameraIndices,
+      collapsedCountries,
       programIndex,
       selectedChannelPrograms,
       handleSidebarAction,
@@ -1176,36 +1234,72 @@ const Index = () => {
                 <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4 px-1">
                   {t("home.camerasLive")}
                 </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 px-1">
-                  {liveCameras.map((cam, i) => {
-                    const isFocused = focusZone === "cameras" && cameraIndex === i;
+                <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
+                  {camerasByCountry.map(({ country, items }, groupIdx) => {
+                    const info = COUNTRY_INFO[country] ?? { flag: "🏳️", name: country };
+                    const collapsed = collapsedCountries.has(country);
+                    const isHeaderFocused = focusZone === "cameraHeaders" && cameraHeaderIndex === groupIdx;
                     return (
-                      <motion.div
-                        key={cam.id}
-                        whileHover={{ scale: 1.03 }}
-                        className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
-                          isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
-                        }`}
-                        onClick={() => {
-                          setFocusZone("cameras");
-                          setCameraIndex(i);
-                        }}
-                      >
-                        <div className="aspect-video relative">
-                          <img src={cam.thumbnail} alt={cam.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                          <div className="absolute top-2 left-2 flex items-center gap-1 sm:gap-1.5">
-                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500 animate-pulse" />
-                            <span className="text-[10px] sm:text-xs font-medium text-foreground">
-                              {t("home.liveLabel")}
-                            </span>
+                      <div key={country} className="flex flex-col gap-2">
+                        <button
+                          onClick={() => {
+                            setFocusZone("cameraHeaders");
+                            setCameraHeaderIndex(groupIdx);
+                            setCollapsedCountries((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(country)) next.delete(country);
+                              else next.add(country);
+                              return next;
+                            });
+                          }}
+                          className={`flex items-center gap-2 self-start px-3 py-1.5 rounded-md transition-all ${
+                            isHeaderFocused
+                              ? "bg-accent/20 ring-2 ring-accent"
+                              : "bg-muted/20 ring-1 ring-border/30 hover:bg-muted/30"
+                          }`}
+                        >
+                          <span className="text-lg sm:text-xl leading-none">{info.flag}</span>
+                          <span className="text-xs sm:text-sm font-semibold text-foreground">{info.name}</span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground">({items.length})</span>
+                          <span className="text-xs text-muted-foreground ml-1">{collapsed ? "▸" : "▾"}</span>
+                        </button>
+                        {!collapsed && (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 px-1">
+                            {items.map((cam) => {
+                              const i = liveCameras.indexOf(cam);
+                              const isFocused = focusZone === "cameras" && cameraIndex === i;
+                              return (
+                                <motion.div
+                                  key={cam.id}
+                                  whileHover={{ scale: 1.03 }}
+                                  className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
+                                    isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
+                                  }`}
+                                  onClick={() => {
+                                    setFocusZone("cameras");
+                                    setCameraIndex(i);
+                                  }}
+                                >
+                                  <div className="aspect-video relative">
+                                    <img src={cam.thumbnail} alt={cam.name} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                    <div className="absolute top-2 left-2 flex items-center gap-1 sm:gap-1.5">
+                                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500 animate-pulse" />
+                                      <span className="text-[10px] sm:text-xs font-medium text-foreground">
+                                        {t("home.liveLabel")}
+                                      </span>
+                                    </div>
+                                    <div className="absolute bottom-2 left-2 right-2">
+                                      <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{cam.name}</p>
+                                      <p className="text-[10px] sm:text-xs text-muted-foreground">{cam.location}</p>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
                           </div>
-                          <div className="absolute bottom-2 left-2 right-2">
-                            <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{cam.name}</p>
-                            <p className="text-[10px] sm:text-xs text-muted-foreground">{cam.location}</p>
-                          </div>
-                        </div>
-                      </motion.div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
