@@ -811,9 +811,10 @@ const Index = () => {
           } else if (focusZone === "cards") {
             setCardIndex((p) => moveCardIndexLive(p, "right"));
           } else if (focusZone === "cameras") {
-            const col = cameraIndex % CAMERAS_COLS;
-            if (col < CAMERAS_COLS - 1 && cameraIndex + 1 < liveCameras.length) {
-              setCameraIndex((p) => p + 1);
+            const pos = visibleCameraIndices.indexOf(cameraIndex);
+            const col = pos % CAMERAS_COLS;
+            if (col < CAMERAS_COLS - 1 && pos + 1 < visibleCameraIndices.length) {
+              setCameraIndex(visibleCameraIndices[pos + 1]);
             }
           }
           break;
