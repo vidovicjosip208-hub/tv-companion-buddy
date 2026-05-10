@@ -557,6 +557,14 @@ const VideoPlayer = ({
   const timeRange = data?.timeRange ?? "18:10 - 18:30";
   const thumbnail = data?.thumbnail ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80";
   const streamUrl = data?.streamUrl;
+  const channelId = data?.channelId;
+  const fallbackThumb = data?.thumbnail ?? thumbnail;
+
+  const { data: epgRows } = useChannelEPG(channelId ?? null);
+  const miniChannels: MiniChannel[] = useMemo(() => {
+    if (epgRows && epgRows.length > 0) return buildMiniChannelsFromEPG(epgRows, fallbackThumb);
+    return FALLBACK_MINI_CHANNELS;
+  }, [epgRows, fallbackThumb]);
 
   // favAsSidebarChannels — favoriteChannels konvertirani u SidebarChannel format
   const favAsSidebarChannels: SidebarChannel[] = favoriteChannels.map((fc) => ({
