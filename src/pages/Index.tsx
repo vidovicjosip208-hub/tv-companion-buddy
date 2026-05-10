@@ -647,6 +647,7 @@ const Index = () => {
 
   const handleSwitchChannel = useCallback(
     (next: PlayerData) => {
+      const matchedCard = liveChannelCards.find((c) => c.channelName === next.channelName);
       const resolvedStreamUrl =
         next.streamUrl ?? allPlayerChannels.find((c) => c.channelName === next.channelName)?.streamUrl;
 
@@ -657,10 +658,11 @@ const Index = () => {
 
       setPlayerData({
         ...next,
+        channelId: next.channelId ?? matchedCard?.id,
         streamUrl: resolvedStreamUrl,
       });
     },
-    [allPlayerChannels],
+    [allPlayerChannels, liveChannelCards],
   );
 
   const selectedCategoryId = showCategories ? tvCategories[categoryIndex]?.id : null;
