@@ -483,6 +483,7 @@ const Index = () => {
         return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
       };
       return {
+        id: ch.id,
         title: liveProgram?.title ?? ch.name,
         thumbnail:
           ch.thumbnail_url ?? `https://via.placeholder.com/400x225/1a1a2e/d4af37?text=${encodeURIComponent(ch.name)}`,
@@ -580,6 +581,7 @@ const Index = () => {
 
   const openPlayerFromCard = useCallback((card: (typeof liveChannelCards)[0]) => {
     setPlayerData({
+      channelId: card.id,
       channelNumber: card.channelNumber,
       showTitle: card.title,
       timeRange: card.timeSlot,
@@ -645,6 +647,7 @@ const Index = () => {
 
   const handleSwitchChannel = useCallback(
     (next: PlayerData) => {
+      const matchedCard = liveChannelCards.find((c) => c.channelName === next.channelName);
       const resolvedStreamUrl =
         next.streamUrl ?? allPlayerChannels.find((c) => c.channelName === next.channelName)?.streamUrl;
 
@@ -655,10 +658,11 @@ const Index = () => {
 
       setPlayerData({
         ...next,
+        channelId: next.channelId ?? matchedCard?.id,
         streamUrl: resolvedStreamUrl,
       });
     },
-    [allPlayerChannels],
+    [allPlayerChannels, liveChannelCards],
   );
 
   const selectedCategoryId = showCategories ? tvCategories[categoryIndex]?.id : null;
@@ -678,6 +682,7 @@ const Index = () => {
       if (!ch) return;
       const liveProgram = ch.programs.find((p) => p.isLive) ?? ch.programs[0];
       setPlayerData({
+        channelId: ch.id,
         channelNumber: String(ch.number),
         showTitle: liveProgram?.title ?? ch.name,
         timeRange: liveProgram ? `${liveProgram.startTime} - ${liveProgram.endTime}` : "",

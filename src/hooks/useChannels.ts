@@ -89,16 +89,46 @@ export const useChannels = () => {
 };
 
 /**
- * EPG data hook. The user's Supabase does not yet contain a programs/EPG
- * table, so this resolves to an empty array. Once a `tv_programs` table
- * exists, swap the queryFn to read from it and keep the same return shape.
+ * EPG data hook. Queries the `epg_data` table in Supabase. When channelIds
+ * is provided, restricts to those channels. Returns rows ordered by start_time.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const useEPGData = (_channelIds?: string[]) => {
+export const useEPGData = (channelIds?: string[]) => {
   return useQuery({
-    queryKey: ["tv_programs"],
-    queryFn: async (): Promise<EPGProgram[]> => [],
-    staleTime: Infinity,
+    queryKey: ["epg_data", channelIds?.slice().sort().join(",") ?? "all"],
+    enabled: channelIds === undefined || channelIds.length > 0,
+    queryFn: async (): Promise<EPGProgram[]> => {
+      let q = supabase
+        .from("epg_data")
+        .select("id, channel_id, title, description, start_time, end_time, is_live")
+        .order("start_time", { ascending: true });
+      if (channelIds && channelIds.length > 0) {
+        q = q.in("channel_id", channelIds);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as EPGProgram[];
+    },
+    staleTime: 60_000,
+  });
+};
+
+/**
+ * EPG for a single channel — used by VideoPlayer's mini strip.
+ */
+export const useChannelEPG = (channelId?: string | null) => {
+  return useQuery({
+    queryKey: ["epg_data", "channel", channelId ?? "none"],
+    enabled: Boolean(channelId),
+    queryFn: async (): Promise<EPGProgram[]> => {
+      const { data, error } = await supabase
+        .from("epg_data")
+        .select("id, channel_id, title, description, start_time, end_time, is_live")
+        .eq("channel_id", channelId!)
+        .order("start_time", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as EPGProgram[];
+    },
+    staleTime: 60_000,
   });
 };
 

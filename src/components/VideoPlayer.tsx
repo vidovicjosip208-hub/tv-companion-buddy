@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
+import { useChannelEPG } from "@/hooks/useChannels";
 
 // Detect HEVC (H.265) decoding support — most 4K IPTV streams use HEVC.
 const supportsHEVC = (): boolean => {
@@ -49,6 +50,7 @@ interface SidebarChannel {
 }
 
 export interface PlayerData {
+  channelId?: string;
   channelNumber?: string;
   showTitle?: string;
   timeRange?: string;
@@ -163,7 +165,41 @@ const buildSchedule = (): MiniChannel[] => {
   return result;
 };
 
-const miniChannels: MiniChannel[] = buildSchedule();
+const FALLBACK_MINI_CHANNELS: MiniChannel[] = buildSchedule();
+
+const buildMiniChannelsFromEPG = (
+  programs: Array<{ id: string; title: string; start_time: string; end_time: string; is_live?: boolean | null }>,
+  fallbackThumb: string,
+): MiniChannel[] => {
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+
+  return programs.map((p) => {
+    const start = new Date(p.start_time);
+    const end = new Date(p.end_time);
+    const fmt = (d: Date) =>
+      `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const dayStart = new Date(start);
+    dayStart.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((dayStart.getTime() - startOfToday.getTime()) / 86400000);
+    let day: string;
+    if (diffDays === 0) day = "Danas";
+    else if (diffDays === 1) day = "Sutra";
+    else if (diffDays === -1) day = "Jučer";
+    else day = DAY_NAMES_HR[start.getDay()];
+    const isCurrent = start <= now && now < end;
+    return {
+      id: p.id,
+      title: p.title,
+      timeRange: `${fmt(start)} - ${fmt(end)}`,
+      day,
+      date: `${String(start.getDate()).padStart(2, "0")}.${String(start.getMonth() + 1).padStart(2, "0")}.`,
+      thumbnail: fallbackThumb,
+      ...(isCurrent ? { isCurrent: true } : {}),
+    };
+  });
+};
 
 const sidebarChannels: SidebarChannel[] = [
   { id: "s1", num: 4, label: "federalna", sub: "ODIVIZIJA" },
@@ -521,6 +557,14 @@ const VideoPlayer = ({
   const timeRange = data?.timeRange ?? "18:10 - 18:30";
   const thumbnail = data?.thumbnail ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80";
   const streamUrl = data?.streamUrl;
+  const channelId = data?.channelId;
+  const fallbackThumb = data?.thumbnail ?? thumbnail;
+
+  const { data: epgRows } = useChannelEPG(channelId ?? null);
+  const miniChannels: MiniChannel[] = useMemo(() => {
+    if (epgRows && epgRows.length > 0) return buildMiniChannelsFromEPG(epgRows, fallbackThumb);
+    return FALLBACK_MINI_CHANNELS;
+  }, [epgRows, fallbackThumb]);
 
   // favAsSidebarChannels — favoriteChannels konvertirani u SidebarChannel format
   const favAsSidebarChannels: SidebarChannel[] = favoriteChannels.map((fc) => ({
@@ -735,8 +779,14 @@ const VideoPlayer = ({
 
   const [epgFocusIndex, setEpgFocusIndex] = useState<number>(() => {
     const idx = miniChannels.findIndex((c) => c.isCurrent);
-    return idx >= 0 ? idx : 2;
+    return idx >= 0 ? idx : Math.min(2, Math.max(0, miniChannels.length - 1));
   });
+
+  // Re-center epg focus on current program whenever channel/EPG changes
+  useEffect(() => {
+    const idx = miniChannels.findIndex((c) => c.isCurrent);
+    setEpgFocusIndex(idx >= 0 ? idx : Math.min(2, Math.max(0, miniChannels.length - 1)));
+  }, [channelId, miniChannels]);
 
   // verticalIndex — pozicija u favAsSidebarChannels, inicijalizira se na trenutni kanal
   const [verticalIndex, setVerticalIndex] = useState<number>(() =>
