@@ -164,7 +164,41 @@ const buildSchedule = (): MiniChannel[] => {
   return result;
 };
 
-const miniChannels: MiniChannel[] = buildSchedule();
+const FALLBACK_MINI_CHANNELS: MiniChannel[] = buildSchedule();
+
+const buildMiniChannelsFromEPG = (
+  programs: Array<{ id: string; title: string; start_time: string; end_time: string; is_live?: boolean | null }>,
+  fallbackThumb: string,
+): MiniChannel[] => {
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+
+  return programs.map((p) => {
+    const start = new Date(p.start_time);
+    const end = new Date(p.end_time);
+    const fmt = (d: Date) =>
+      `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const dayStart = new Date(start);
+    dayStart.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((dayStart.getTime() - startOfToday.getTime()) / 86400000);
+    let day: string;
+    if (diffDays === 0) day = "Danas";
+    else if (diffDays === 1) day = "Sutra";
+    else if (diffDays === -1) day = "Jučer";
+    else day = DAY_NAMES_HR[start.getDay()];
+    const isCurrent = start <= now && now < end;
+    return {
+      id: p.id,
+      title: p.title,
+      timeRange: `${fmt(start)} - ${fmt(end)}`,
+      day,
+      date: `${String(start.getDate()).padStart(2, "0")}.${String(start.getMonth() + 1).padStart(2, "0")}.`,
+      thumbnail: fallbackThumb,
+      ...(isCurrent ? { isCurrent: true } : {}),
+    };
+  });
+};
 
 const sidebarChannels: SidebarChannel[] = [
   { id: "s1", num: 4, label: "federalna", sub: "ODIVIZIJA" },
