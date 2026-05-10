@@ -483,6 +483,7 @@ const Index = () => {
         return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
       };
       return {
+        id: ch.id,
         title: liveProgram?.title ?? ch.name,
         thumbnail:
           ch.thumbnail_url ?? `https://via.placeholder.com/400x225/1a1a2e/d4af37?text=${encodeURIComponent(ch.name)}`,
