@@ -779,8 +779,14 @@ const VideoPlayer = ({
 
   const [epgFocusIndex, setEpgFocusIndex] = useState<number>(() => {
     const idx = miniChannels.findIndex((c) => c.isCurrent);
-    return idx >= 0 ? idx : 2;
+    return idx >= 0 ? idx : Math.min(2, Math.max(0, miniChannels.length - 1));
   });
+
+  // Re-center epg focus on current program whenever channel/EPG changes
+  useEffect(() => {
+    const idx = miniChannels.findIndex((c) => c.isCurrent);
+    setEpgFocusIndex(idx >= 0 ? idx : Math.min(2, Math.max(0, miniChannels.length - 1)));
+  }, [channelId, miniChannels]);
 
   // verticalIndex — pozicija u favAsSidebarChannels, inicijalizira se na trenutni kanal
   const [verticalIndex, setVerticalIndex] = useState<number>(() =>
