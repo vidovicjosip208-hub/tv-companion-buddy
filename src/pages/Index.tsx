@@ -581,6 +581,7 @@ const Index = () => {
 
   const openPlayerFromCard = useCallback((card: (typeof liveChannelCards)[0]) => {
     setPlayerData({
+      channelId: card.id,
       channelNumber: card.channelNumber,
       showTitle: card.title,
       timeRange: card.timeSlot,
