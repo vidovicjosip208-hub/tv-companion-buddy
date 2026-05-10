@@ -49,6 +49,7 @@ interface SidebarChannel {
 }
 
 export interface PlayerData {
+  channelId?: string;
   channelNumber?: string;
   showTitle?: string;
   timeRange?: string;
