@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
+import { useChannelEPG } from "@/hooks/useChannels";
 
 // Detect HEVC (H.265) decoding support — most 4K IPTV streams use HEVC.
 const supportsHEVC = (): boolean => {
