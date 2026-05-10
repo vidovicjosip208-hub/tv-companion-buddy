@@ -680,6 +680,7 @@ const Index = () => {
       if (!ch) return;
       const liveProgram = ch.programs.find((p) => p.isLive) ?? ch.programs[0];
       setPlayerData({
+        channelId: ch.id,
         channelNumber: String(ch.number),
         showTitle: liveProgram?.title ?? ch.name,
         timeRange: liveProgram ? `${liveProgram.startTime} - ${liveProgram.endTime}` : "",
