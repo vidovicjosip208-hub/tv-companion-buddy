@@ -31,6 +31,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </ScaleToFit>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
