@@ -10,7 +10,6 @@ import VideotekaMovies from "./pages/VideotekaMovies.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Settings from "./pages/Settings.tsx";
 import Player from "./pages/Player.tsx";
-import FitToScreen from "./components/FitToScreen";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +20,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <FitToScreen>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/videoteka" element={<Videoteka />} />
@@ -31,7 +29,6 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </FitToScreen>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
