@@ -1,9 +1,46 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+
+const DESIGN_WIDTH = 1920;
+const DESIGN_HEIGHT = 1080;
+
+const getViewportSize = () => ({
+  width: typeof window === "undefined" ? DESIGN_WIDTH : window.innerWidth,
+  height: typeof window === "undefined" ? DESIGN_HEIGHT : window.innerHeight,
+});
 
 /**
- * Pass-through wrapper. Aplikacija se renderira na punu veličinu ekrana
- * (responsive), bez letterbox skaliranja.
+ * TV viewport: isti 1920x1080 raspored se rastegne na cijeli dostupni ekran,
+ * bez letterbox crnih traka i bez rezanja sadržaja na mobitelu.
  */
-const ScaleToFit = ({ children }: { children: ReactNode }) => <>{children}</>;
+const ScaleToFit = ({ children }: { children: ReactNode }) => {
+  const [viewport, setViewport] = useState(getViewportSize);
+
+  useEffect(() => {
+    const update = () => setViewport(getViewportSize());
+    update();
+    window.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("resize", update);
+    };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 overflow-hidden bg-background">
+      <div
+        className="scale-fill-canvas"
+        style={{
+          width: DESIGN_WIDTH,
+          height: DESIGN_HEIGHT,
+          transform: `scale(${viewport.width / DESIGN_WIDTH}, ${viewport.height / DESIGN_HEIGHT})`,
+          transformOrigin: "top left",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
 
 export default ScaleToFit;
