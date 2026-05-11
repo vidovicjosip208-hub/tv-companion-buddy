@@ -37,6 +37,7 @@ const ScaleToFit = ({ children }: { children: ReactNode }) => {
       }}
     >
       <div
+        className="scale-canvas"
         style={{
           width: `${DESIGN_W}px`,
           height: `${DESIGN_H}px`,
@@ -44,6 +45,7 @@ const ScaleToFit = ({ children }: { children: ReactNode }) => {
           transformOrigin: "center center",
           flexShrink: 0,
           position: "relative",
+          overflow: "hidden",
         }}
       >
         {children}
