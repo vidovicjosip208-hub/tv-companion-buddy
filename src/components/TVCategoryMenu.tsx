@@ -40,7 +40,7 @@ interface TVCategoryMenuProps {
 const TVCategoryMenu = ({ isVisible, focusedIndex, onItemClick }: TVCategoryMenuProps) => {
   const { t } = useTranslation();
 
-  const menuWidth = typeof window !== "undefined" ? Math.min(300, window.innerWidth * 0.75) : 300;
+  const menuWidth = 300;
 
   return (
     <motion.div
@@ -56,7 +56,7 @@ const TVCategoryMenu = ({ isVisible, focusedIndex, onItemClick }: TVCategoryMenu
         className="h-full flex flex-col mt-24 sm:mt-32 lg:mt-40"
         style={{
           width: `${menuWidth}px`,
-          height: "calc(100vh - 96px)",
+          height: "calc(1080px - 160px)",
         }}
       >
         <nav className="flex-1 flex flex-col gap-0.5 px-2 sm:px-3 pt-3 sm:pt-5 pb-4 sm:pb-6 overflow-y-auto scrollbar-hide">
