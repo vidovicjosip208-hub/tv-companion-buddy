@@ -40,7 +40,7 @@ const ScaleToFit = ({ children }: { children: ReactNode }) => {
         style={{
           width: DESIGN_WIDTH,
           height: DESIGN_HEIGHT,
-          transform: `translate(0px, ${offsetY}px) scale(${scale})`,
+          transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
           transformOrigin: "top left",
         }}
       >
