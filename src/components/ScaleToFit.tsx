@@ -27,7 +27,10 @@ const ScaleToFit = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const scale = viewport.width / DESIGN_WIDTH;
+  // Skaliraj tako da TV layout uvijek POPUNI cijeli viewport (cover),
+  // bez crnih traka. Na portrait ekranima sadržaj se obreže s lijeva/desna.
+  const scale = Math.max(viewport.width / DESIGN_WIDTH, viewport.height / DESIGN_HEIGHT);
+  const offsetX = (viewport.width - DESIGN_WIDTH * scale) / 2;
   const offsetY = (viewport.height - DESIGN_HEIGHT * scale) / 2;
 
   return (
@@ -37,7 +40,7 @@ const ScaleToFit = ({ children }: { children: ReactNode }) => {
         style={{
           width: DESIGN_WIDTH,
           height: DESIGN_HEIGHT,
-          transform: `translate(0px, ${offsetY}px) scale(${scale})`,
+          transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
           transformOrigin: "top left",
         }}
       >
