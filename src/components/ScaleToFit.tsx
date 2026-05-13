@@ -1,51 +1,44 @@
-import { useEffect, useState, ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
-const DESIGN_W = 1920;
-const DESIGN_H = 1080;
+const DESIGN_WIDTH = 1920;
+const DESIGN_HEIGHT = 1080;
+
+const getViewportSize = () => ({
+  width: typeof window === "undefined" ? DESIGN_WIDTH : window.innerWidth,
+  height: typeof window === "undefined" ? DESIGN_HEIGHT : window.innerHeight,
+});
 
 /**
- * Skalira fiksni 1920x1080 "canvas" da stane u bilo koju veličinu ekrana,
- * čuvajući aspect ratio i relativne pozicije svih elemenata (TV/kiosk pristup).
+ * TV viewport: isti 1920x1080 raspored se rastegne na cijeli dostupni ekran,
+ * bez letterbox crnih traka i bez rezanja sadržaja na mobitelu.
  */
 const ScaleToFit = ({ children }: { children: ReactNode }) => {
-  const [scale, setScale] = useState(1);
+  const [viewport, setViewport] = useState(getViewportSize);
 
   useEffect(() => {
-    const update = () => {
-      const s = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
-      setScale(s);
-    };
+    const update = () => setViewport(getViewportSize());
     update();
     window.addEventListener("resize", update);
-    window.addEventListener("orientationchange", update);
+    window.visualViewport?.addEventListener("resize", update);
     return () => {
       window.removeEventListener("resize", update);
-      window.removeEventListener("orientationchange", update);
+      window.visualViewport?.removeEventListener("resize", update);
     };
   }, []);
 
+  const scale = Math.min(viewport.width / DESIGN_WIDTH, viewport.height / DESIGN_HEIGHT);
+  const offsetX = (viewport.width - DESIGN_WIDTH * scale) / 2;
+  const offsetY = (viewport.height - DESIGN_HEIGHT * scale) / 2;
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "#000",
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
+    <div className="fixed inset-0 overflow-hidden bg-background">
       <div
-        className="scale-canvas"
+        className="scale-fill-canvas"
         style={{
-          width: `${DESIGN_W}px`,
-          height: `${DESIGN_H}px`,
-          transform: `scale(${scale})`,
-          transformOrigin: "center center",
-          flexShrink: 0,
-          position: "relative",
-          overflow: "hidden",
+          width: DESIGN_WIDTH,
+          height: DESIGN_HEIGHT,
+          transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
+          transformOrigin: "top left",
         }}
       >
         {children}
