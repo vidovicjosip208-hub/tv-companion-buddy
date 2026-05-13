@@ -9,8 +9,9 @@ const getViewportSize = () => ({
 });
 
 /**
- * TV viewport: isti 1920x1080 raspored se rastegne na cijeli dostupni ekran,
- * bez letterbox crnih traka i bez rezanja sadržaja na mobitelu.
+ * TV viewport: 1920x1080 layout se skalira prema širini ekrana tako da
+ * uvijek popuni cijelu širinu viewporta (identično kao na slici).
+ * Visina se centrira — na portrait mobitelu ostaju gornje/donje crne trake.
  */
 const ScaleToFit = ({ children }: { children: ReactNode }) => {
   const [viewport, setViewport] = useState(getViewportSize);
@@ -26,26 +27,8 @@ const ScaleToFit = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Ako je ekran u portrait orijentaciji (npr. mobitel uspravno),
-  // rotiramo TV layout za 90° tako da uvijek ispuni cijeli ekran
-  // identično kao na slici (1920x1080 landscape).
-  const isPortrait = viewport.height > viewport.width;
-  const effW = isPortrait ? viewport.height : viewport.width;
-  const effH = isPortrait ? viewport.width : viewport.height;
-
-  const scale = Math.min(effW / DESIGN_WIDTH, effH / DESIGN_HEIGHT);
-  const scaledW = DESIGN_WIDTH * scale;
-  const scaledH = DESIGN_HEIGHT * scale;
-
-  const rotation = isPortrait ? 90 : 0;
-  // Nakon rotacije za 90° oko top-left, sadržaj zauzima [-scaledH, 0] x [0, scaledW].
-  // Pomakni ga tako da bude centriran u stvarnom viewportu.
-  const offsetX = isPortrait
-    ? (viewport.width + scaledH) / 2
-    : (viewport.width - scaledW) / 2;
-  const offsetY = isPortrait
-    ? (viewport.height - scaledW) / 2
-    : (viewport.height - scaledH) / 2;
+  const scale = viewport.width / DESIGN_WIDTH;
+  const offsetY = (viewport.height - DESIGN_HEIGHT * scale) / 2;
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-background">
@@ -54,7 +37,7 @@ const ScaleToFit = ({ children }: { children: ReactNode }) => {
         style={{
           width: DESIGN_WIDTH,
           height: DESIGN_HEIGHT,
-          transform: `translate(${offsetX}px, ${offsetY}px) rotate(${rotation}deg) scale(${scale})`,
+          transform: `translate(0px, ${offsetY}px) scale(${scale})`,
           transformOrigin: "top left",
         }}
       >
