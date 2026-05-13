@@ -1,47 +1,51 @@
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState, ReactNode } from "react";
 
-const DESIGN_WIDTH = 1920;
-const DESIGN_HEIGHT = 1080;
-
-const getViewportSize = () => ({
-  width: typeof window === "undefined" ? DESIGN_WIDTH : window.innerWidth,
-  height: typeof window === "undefined" ? DESIGN_HEIGHT : window.innerHeight,
-});
+const DESIGN_W = 1920;
+const DESIGN_H = 1080;
 
 /**
- * TV viewport: 1920x1080 layout se skalira prema širini ekrana tako da
- * uvijek popuni cijelu širinu viewporta (identično kao na slici).
- * Visina se centrira — na portrait mobitelu ostaju gornje/donje crne trake.
+ * Skalira fiksni 1920x1080 "canvas" da stane u bilo koju veličinu ekrana,
+ * čuvajući aspect ratio i relativne pozicije svih elemenata (TV/kiosk pristup).
  */
 const ScaleToFit = ({ children }: { children: ReactNode }) => {
-  const [viewport, setViewport] = useState(getViewportSize);
+  const [scale, setScale] = useState(1);
 
   useEffect(() => {
-    const update = () => setViewport(getViewportSize());
+    const update = () => {
+      const s = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
+      setScale(s);
+    };
     update();
     window.addEventListener("resize", update);
-    window.visualViewport?.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
     return () => {
       window.removeEventListener("resize", update);
-      window.visualViewport?.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
     };
   }, []);
 
-  // Skaliraj tako da TV layout uvijek POPUNI cijeli viewport (cover),
-  // bez crnih traka. Na portrait ekranima sadržaj se obreže s lijeva/desna.
-  const scale = Math.max(viewport.width / DESIGN_WIDTH, viewport.height / DESIGN_HEIGHT);
-  const offsetX = (viewport.width - DESIGN_WIDTH * scale) / 2;
-  const offsetY = (viewport.height - DESIGN_HEIGHT * scale) / 2;
-
   return (
-    <div className="fixed inset-0 overflow-hidden bg-background">
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "#000",
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <div
-        className="scale-fill-canvas"
+        className="scale-canvas"
         style={{
-          width: DESIGN_WIDTH,
-          height: DESIGN_HEIGHT,
-          transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
-          transformOrigin: "top left",
+          width: `${DESIGN_W}px`,
+          height: `${DESIGN_H}px`,
+          transform: `scale(${scale})`,
+          transformOrigin: "center center",
+          flexShrink: 0,
+          position: "relative",
+          overflow: "hidden",
         }}
       >
         {children}

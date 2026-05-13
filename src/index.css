@@ -96,15 +96,6 @@
     @apply bg-background text-foreground;
     overflow: hidden;
   }
-
-  .scale-fill-canvas .h-screen,
-  .scale-fill-canvas .min-h-screen {
-    height: 1080px;
-  }
-
-  .scale-fill-canvas .w-screen {
-    width: 1920px;
-  }
 }
 
 /* Focus glow effect for TV navigation */
@@ -148,3 +139,9 @@
   scrollbar-width: none;
 }
 
+/* ScaleToFit: fixne 1920x1080 jedinice unutar canvas wrappera */
+.scale-canvas { font-size: 16px; }
+.scale-canvas .h-screen { height: 1080px !important; }
+.scale-canvas .w-screen { width: 1920px !important; }
+.scale-canvas .min-h-screen { min-height: 1080px !important; }
+.scale-canvas .max-h-screen { max-height: 1080px !important; }
