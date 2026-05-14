@@ -5,13 +5,6 @@ export default {
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
-    screens: {
-      sm: "1px",
-      md: "1px",
-      lg: "1px",
-      xl: "1px",
-      "2xl": "1px",
-    },
     container: {
       center: true,
       padding: "2rem",

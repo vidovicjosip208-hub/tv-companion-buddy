@@ -96,15 +96,6 @@
     @apply bg-background text-foreground;
     overflow: hidden;
   }
-
-  .scale-fill-canvas .h-screen,
-  .scale-fill-canvas .min-h-screen {
-    height: 1080px;
-  }
-
-  .scale-fill-canvas .w-screen {
-    width: 1920px;
-  }
 }
 
 /* Focus glow effect for TV navigation */
@@ -147,4 +138,3 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
