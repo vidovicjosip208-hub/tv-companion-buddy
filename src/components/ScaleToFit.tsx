@@ -26,9 +26,8 @@ const ScaleToFit = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const scale = Math.min(viewport.width / DESIGN_WIDTH, viewport.height / DESIGN_HEIGHT);
-  const offsetX = (viewport.width - DESIGN_WIDTH * scale) / 2;
-  const offsetY = (viewport.height - DESIGN_HEIGHT * scale) / 2;
+  const scaleX = viewport.width / DESIGN_WIDTH;
+  const scaleY = viewport.height / DESIGN_HEIGHT;
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-background">
@@ -37,7 +36,7 @@ const ScaleToFit = ({ children }: { children: ReactNode }) => {
         style={{
           width: DESIGN_WIDTH,
           height: DESIGN_HEIGHT,
-          transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
+          transform: `scale(${scaleX}, ${scaleY})`,
           transformOrigin: "top left",
         }}
       >
