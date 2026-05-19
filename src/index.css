@@ -95,29 +95,7 @@
   body {
     @apply bg-background text-foreground;
     overflow: hidden;
-    touch-action: manipulation;
   }
-
-  #root {
-    width: 100vw;
-    height: 100dvh;
-    overflow: hidden;
-  }
-}
-
-.tv-scale-viewport {
-  width: 100vw;
-  height: 100dvh;
-  overflow: hidden;
-  background: hsl(var(--background));
-}
-
-.tv-scale-stage {
-  width: var(--tv-stage-width);
-  height: var(--tv-stage-height);
-  min-height: var(--tv-stage-height);
-  transform-origin: top left;
-  overflow: hidden;
 }
 
 /* Focus glow effect for TV navigation */

@@ -40,7 +40,7 @@ interface TVCategoryMenuProps {
 const TVCategoryMenu = ({ isVisible, focusedIndex, onItemClick }: TVCategoryMenuProps) => {
   const { t } = useTranslation();
 
-  const menuWidth = 300;
+  const menuWidth = typeof window !== "undefined" ? Math.min(300, window.innerWidth * 0.75) : 300;
 
   return (
     <motion.div
