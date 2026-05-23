@@ -79,7 +79,8 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
               onClick={() => onItemClick(index)}
               onMouseEnter={() => {
                 if (item.id !== "movies") {
-                  onItemHover ? onItemHover(index) : onItemClick(index);
+                  if (onItemHover) onItemHover(index);
+                  else onItemClick(index);
                 }
               }}
               whileHover={{ scale: 1.02 }}
