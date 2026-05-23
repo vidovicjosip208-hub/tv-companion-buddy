@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useRef, useEffect, isValidElement, Children } from "react";
+import { getLayoutViewportWidth } from "@/lib/viewport";
 
 interface TVContentRowProps {
   title: string;
@@ -31,8 +32,7 @@ const TVContentRow = ({ title, delay = 0, children, rows = 2, focusedIndex }: TV
   }, [focusedIndex]);
 
   const getGridAutoColumns = () => {
-    if (typeof window === "undefined") return "calc(25% - 9px)";
-    const vw = window.innerWidth;
+    const vw = getLayoutViewportWidth();
     if (vw < 640) return "calc(80% - 9px)";
     if (vw < 1024) return "calc(45% - 9px)";
     return "calc(25% - 9px)";

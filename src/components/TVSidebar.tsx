@@ -2,6 +2,7 @@ import { Home, Tv, Radio, Heart, Film, Cctv, Sparkles, User, Settings } from "lu
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { getLayoutViewportWidth } from "@/lib/viewport";
 
 interface SidebarItem {
   id: string;
@@ -33,18 +34,12 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
   const { t } = useTranslation();
   const showLabels = isExpanded && !isMini;
 
-  const sidebarWidth =
-    typeof window !== "undefined"
-      ? isMini
-        ? Math.min(72, window.innerWidth * 0.12)
-        : isExpanded
-          ? Math.min(240, window.innerWidth * 0.4)
-          : Math.min(80, window.innerWidth * 0.14)
-      : isMini
-        ? 72
-        : isExpanded
-          ? 240
-          : 80;
+  const layoutWidth = getLayoutViewportWidth();
+  const sidebarWidth = isMini
+    ? Math.min(72, layoutWidth * 0.12)
+    : isExpanded
+      ? Math.min(240, layoutWidth * 0.4)
+      : Math.min(80, layoutWidth * 0.14);
 
   return (
     <motion.aside
@@ -84,7 +79,8 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
               onClick={() => onItemClick(index)}
               onMouseEnter={() => {
                 if (item.id !== "movies") {
-                  onItemHover ? onItemHover(index) : onItemClick(index);
+                  if (onItemHover) onItemHover(index);
+                  else onItemClick(index);
                 }
               }}
               whileHover={{ scale: 1.02 }}
