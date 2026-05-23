@@ -1,4 +1,5 @@
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useRef, useState, ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 const DESIGN_WIDTH = 1920;
 const DESIGN_HEIGHT = 1080;
@@ -11,6 +12,8 @@ interface Props {
 }
 
 const ViewportScaler = ({ children }: Props) => {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeBody, setIframeBody] = useState<HTMLElement | null>(null);
   const [dims, setDims] = useState(() => ({
     w: typeof window !== "undefined" ? window.innerWidth : DESIGN_WIDTH,
     h: typeof window !== "undefined" ? window.innerHeight : DESIGN_HEIGHT,
@@ -31,6 +34,59 @@ const ViewportScaler = ({ children }: Props) => {
     return <>{children}</>;
   }
 
+  const syncIframeDocument = () => {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+
+    doc.documentElement.className = document.documentElement.className;
+    doc.documentElement.style.colorScheme = "dark";
+    doc.body.className = document.body.className;
+    Object.assign(doc.body.style, {
+      margin: "0",
+      width: `${DESIGN_WIDTH}px`,
+      height: `${DESIGN_HEIGHT}px`,
+      overflow: "hidden",
+      background: "hsl(var(--background))",
+    });
+
+    doc.head.innerHTML = document.head.innerHTML;
+    setIframeBody(doc.body);
+  };
+
+  useEffect(() => {
+    if (dims.w >= NATIVE_BREAKPOINT) return;
+
+    syncIframeDocument();
+    const observer = new MutationObserver(syncIframeDocument);
+    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
+
+    const iframeWindow = iframeRef.current?.contentWindow;
+    const bridgeKeyEvent = (event: KeyboardEvent) => {
+      const bridgedEvent = new KeyboardEvent(event.type, {
+        key: event.key,
+        code: event.code,
+        location: event.location,
+        repeat: event.repeat,
+        ctrlKey: event.ctrlKey,
+        shiftKey: event.shiftKey,
+        altKey: event.altKey,
+        metaKey: event.metaKey,
+        bubbles: true,
+        cancelable: true,
+      });
+      if (!window.dispatchEvent(bridgedEvent)) event.preventDefault();
+    };
+
+    iframeWindow?.addEventListener("keydown", bridgeKeyEvent);
+    iframeWindow?.addEventListener("keyup", bridgeKeyEvent);
+
+    return () => {
+      observer.disconnect();
+      iframeWindow?.removeEventListener("keydown", bridgeKeyEvent);
+      iframeWindow?.removeEventListener("keyup", bridgeKeyEvent);
+    };
+  }, [dims.w]);
+
   // Smaller screens: scale the full 1920x1080 design uniformly to fit, centered (letterboxed).
   const scale = Math.min(dims.w / DESIGN_WIDTH, dims.h / DESIGN_HEIGHT);
   const scaledW = DESIGN_WIDTH * scale;
@@ -47,19 +103,22 @@ const ViewportScaler = ({ children }: Props) => {
         overflow: "hidden",
       }}
     >
-      <div
+      <iframe
+        ref={iframeRef}
+        title="App preview"
+        onLoad={syncIframeDocument}
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           width: DESIGN_WIDTH,
           height: DESIGN_HEIGHT,
+          border: 0,
           transformOrigin: "top left",
           transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
         }}
-      >
-        {children}
-      </div>
+      />
+      {iframeBody ? createPortal(children, iframeBody) : null}
     </div>
   );
 };
