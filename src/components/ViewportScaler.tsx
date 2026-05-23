@@ -28,9 +28,23 @@ const ViewportScaler = ({ children }: Props) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (dims.w < NATIVE_BREAKPOINT) {
+      document.documentElement.dataset.viewportScaler = "active";
+    } else {
+      delete document.documentElement.dataset.viewportScaler;
+    }
+
+    return () => {
+      delete document.documentElement.dataset.viewportScaler;
+    };
+  }, [dims.w]);
+
   const syncIframeDocument = () => {
     const doc = iframeRef.current?.contentDocument;
     if (!doc) return;
+
+    document.documentElement.dataset.viewportScaler = "active";
 
     doc.documentElement.className = document.documentElement.className;
     doc.documentElement.dataset.viewportScaler = "active";
