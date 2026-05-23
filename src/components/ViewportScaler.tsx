@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useState, ReactNode } from "react";
 import { DESIGN_VIEWPORT_HEIGHT, DESIGN_VIEWPORT_WIDTH } from "@/lib/viewport";
 
-// Above this viewport width we render the app at its native size (laptop/desktop/TV).
-// Below it (tablets/phones), we scale the whole 1920x1080 canvas to fit so nothing is cut off.
+// Above this viewport width we render at native size (laptop/desktop/TV).
+// Below it (mobile/tablet/preview frames) we shrink the full 1920x1080 canvas
+// so every detail visible on laptop is visible on smaller screens too.
 const NATIVE_BREAKPOINT = 1280;
 
 interface Props {
@@ -11,15 +11,14 @@ interface Props {
 }
 
 const ViewportScaler = ({ children }: Props) => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeBody, setIframeBody] = useState<HTMLElement | null>(null);
   const [dims, setDims] = useState(() => ({
     w: typeof window !== "undefined" ? window.innerWidth : DESIGN_VIEWPORT_WIDTH,
     h: typeof window !== "undefined" ? window.innerHeight : DESIGN_VIEWPORT_HEIGHT,
   }));
 
   useEffect(() => {
-    const onResize = () => setDims({ w: window.innerWidth, h: window.innerHeight });
+    const onResize = () =>
+      setDims({ w: window.innerWidth, h: window.innerHeight });
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
     return () => {
@@ -28,81 +27,25 @@ const ViewportScaler = ({ children }: Props) => {
     };
   }, []);
 
+  const scaled = dims.w < NATIVE_BREAKPOINT;
+
   useEffect(() => {
-    if (dims.w < NATIVE_BREAKPOINT) {
+    if (scaled) {
       document.documentElement.dataset.viewportScaler = "active";
     } else {
       delete document.documentElement.dataset.viewportScaler;
     }
-
     return () => {
       delete document.documentElement.dataset.viewportScaler;
     };
-  }, [dims.w]);
+  }, [scaled]);
 
-  const syncIframeDocument = () => {
-    const doc = iframeRef.current?.contentDocument;
-    if (!doc) return;
+  if (!scaled) return <>{children}</>;
 
-    document.documentElement.dataset.viewportScaler = "active";
-
-    doc.documentElement.className = document.documentElement.className;
-    doc.documentElement.dataset.viewportScaler = "active";
-    doc.documentElement.style.colorScheme = "dark";
-    doc.body.className = document.body.className;
-    Object.assign(doc.body.style, {
-      margin: "0",
-      width: `${DESIGN_VIEWPORT_WIDTH}px`,
-      height: `${DESIGN_VIEWPORT_HEIGHT}px`,
-      overflow: "hidden",
-      background: "hsl(var(--background))",
-    });
-
-    doc.head.innerHTML = document.head.innerHTML;
-    setIframeBody(doc.body);
-  };
-
-  useEffect(() => {
-    if (dims.w >= NATIVE_BREAKPOINT) return;
-
-    syncIframeDocument();
-    const observer = new MutationObserver(syncIframeDocument);
-    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
-
-    const iframeWindow = iframeRef.current?.contentWindow;
-    const bridgeKeyEvent = (event: KeyboardEvent) => {
-      const bridgedEvent = new KeyboardEvent(event.type, {
-        key: event.key,
-        code: event.code,
-        location: event.location,
-        repeat: event.repeat,
-        ctrlKey: event.ctrlKey,
-        shiftKey: event.shiftKey,
-        altKey: event.altKey,
-        metaKey: event.metaKey,
-        bubbles: true,
-        cancelable: true,
-      });
-      if (!window.dispatchEvent(bridgedEvent)) event.preventDefault();
-    };
-
-    iframeWindow?.addEventListener("keydown", bridgeKeyEvent);
-    iframeWindow?.addEventListener("keyup", bridgeKeyEvent);
-
-    return () => {
-      observer.disconnect();
-      iframeWindow?.removeEventListener("keydown", bridgeKeyEvent);
-      iframeWindow?.removeEventListener("keyup", bridgeKeyEvent);
-    };
-  }, [dims.w]);
-
-  // Laptop / desktop / TV: render natively, no changes.
-  if (dims.w >= NATIVE_BREAKPOINT) {
-    return <>{children}</>;
-  }
-
-  // Smaller screens: scale the full 1920x1080 design uniformly to fit, centered (letterboxed).
-  const scale = Math.min(dims.w / DESIGN_VIEWPORT_WIDTH, dims.h / DESIGN_VIEWPORT_HEIGHT);
+  const scale = Math.min(
+    dims.w / DESIGN_VIEWPORT_WIDTH,
+    dims.h / DESIGN_VIEWPORT_HEIGHT,
+  );
   const scaledW = DESIGN_VIEWPORT_WIDTH * scale;
   const scaledH = DESIGN_VIEWPORT_HEIGHT * scale;
   const offsetX = (dims.w - scaledW) / 2;
@@ -115,24 +58,23 @@ const ViewportScaler = ({ children }: Props) => {
         inset: 0,
         background: "hsl(var(--background))",
         overflow: "hidden",
+        zIndex: 0,
       }}
     >
-      <iframe
-        ref={iframeRef}
-        title="App preview"
-        onLoad={syncIframeDocument}
+      <div
         style={{
           position: "absolute",
           top: 0,
           left: 0,
-          width: DESIGN_VIEWPORT_WIDTH,
-          height: DESIGN_VIEWPORT_HEIGHT,
-          border: 0,
+          width: `${DESIGN_VIEWPORT_WIDTH}px`,
+          height: `${DESIGN_VIEWPORT_HEIGHT}px`,
           transformOrigin: "top left",
           transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
+          overflow: "hidden",
         }}
-      />
-      {iframeBody ? createPortal(children, iframeBody) : null}
+      >
+        {children}
+      </div>
     </div>
   );
 };
