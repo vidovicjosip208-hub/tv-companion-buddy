@@ -22,7 +22,8 @@ const ViewportScaler = ({ children }: Props) => {
     };
   }, []);
 
-  const scaled = dims.w < DESIGN_VIEWPORT_WIDTH || dims.h < DESIGN_VIEWPORT_HEIGHT;
+  const NATIVE_BREAKPOINT = 1280;
+  const scaled = dims.w < NATIVE_BREAKPOINT;
 
   useEffect(() => {
     if (scaled) {
