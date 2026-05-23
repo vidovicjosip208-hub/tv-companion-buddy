@@ -1,11 +1,6 @@
 import { useEffect, useState, ReactNode } from "react";
 import { DESIGN_VIEWPORT_HEIGHT, DESIGN_VIEWPORT_WIDTH } from "@/lib/viewport";
 
-// Above this viewport width we render at native size (laptop/desktop/TV).
-// Below it (mobile/tablet/preview frames) we shrink the full 1920x1080 canvas
-// so every detail visible on laptop is visible on smaller screens too.
-const NATIVE_BREAKPOINT = 1280;
-
 interface Props {
   children: ReactNode;
 }
