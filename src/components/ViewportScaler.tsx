@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { DESIGN_VIEWPORT_HEIGHT, DESIGN_VIEWPORT_WIDTH } from "@/lib/viewport";
 
-const DESIGN_WIDTH = 1920;
-const DESIGN_HEIGHT = 1080;
 // Above this viewport width we render the app at its native size (laptop/desktop/TV).
 // Below it (tablets/phones), we scale the whole 1920x1080 canvas to fit so nothing is cut off.
 const NATIVE_BREAKPOINT = 1280;
@@ -15,8 +14,8 @@ const ViewportScaler = ({ children }: Props) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeBody, setIframeBody] = useState<HTMLElement | null>(null);
   const [dims, setDims] = useState(() => ({
-    w: typeof window !== "undefined" ? window.innerWidth : DESIGN_WIDTH,
-    h: typeof window !== "undefined" ? window.innerHeight : DESIGN_HEIGHT,
+    w: typeof window !== "undefined" ? window.innerWidth : DESIGN_VIEWPORT_WIDTH,
+    h: typeof window !== "undefined" ? window.innerHeight : DESIGN_VIEWPORT_HEIGHT,
   }));
 
   useEffect(() => {
@@ -34,12 +33,13 @@ const ViewportScaler = ({ children }: Props) => {
     if (!doc) return;
 
     doc.documentElement.className = document.documentElement.className;
+    doc.documentElement.dataset.viewportScaler = "active";
     doc.documentElement.style.colorScheme = "dark";
     doc.body.className = document.body.className;
     Object.assign(doc.body.style, {
       margin: "0",
-      width: `${DESIGN_WIDTH}px`,
-      height: `${DESIGN_HEIGHT}px`,
+      width: `${DESIGN_VIEWPORT_WIDTH}px`,
+      height: `${DESIGN_VIEWPORT_HEIGHT}px`,
       overflow: "hidden",
       background: "hsl(var(--background))",
     });
@@ -88,9 +88,9 @@ const ViewportScaler = ({ children }: Props) => {
   }
 
   // Smaller screens: scale the full 1920x1080 design uniformly to fit, centered (letterboxed).
-  const scale = Math.min(dims.w / DESIGN_WIDTH, dims.h / DESIGN_HEIGHT);
-  const scaledW = DESIGN_WIDTH * scale;
-  const scaledH = DESIGN_HEIGHT * scale;
+  const scale = Math.min(dims.w / DESIGN_VIEWPORT_WIDTH, dims.h / DESIGN_VIEWPORT_HEIGHT);
+  const scaledW = DESIGN_VIEWPORT_WIDTH * scale;
+  const scaledH = DESIGN_VIEWPORT_HEIGHT * scale;
   const offsetX = (dims.w - scaledW) / 2;
   const offsetY = (dims.h - scaledH) / 2;
 
@@ -111,8 +111,8 @@ const ViewportScaler = ({ children }: Props) => {
           position: "absolute",
           top: 0,
           left: 0,
-          width: DESIGN_WIDTH,
-          height: DESIGN_HEIGHT,
+          width: DESIGN_VIEWPORT_WIDTH,
+          height: DESIGN_VIEWPORT_HEIGHT,
           border: 0,
           transformOrigin: "top left",
           transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
