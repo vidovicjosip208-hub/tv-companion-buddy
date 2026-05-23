@@ -29,11 +29,6 @@ const ViewportScaler = ({ children }: Props) => {
     };
   }, []);
 
-  // Laptop / desktop / TV: render natively, no changes.
-  if (dims.w >= NATIVE_BREAKPOINT) {
-    return <>{children}</>;
-  }
-
   const syncIframeDocument = () => {
     const doc = iframeRef.current?.contentDocument;
     if (!doc) return;
@@ -86,6 +81,11 @@ const ViewportScaler = ({ children }: Props) => {
       iframeWindow?.removeEventListener("keyup", bridgeKeyEvent);
     };
   }, [dims.w]);
+
+  // Laptop / desktop / TV: render natively, no changes.
+  if (dims.w >= NATIVE_BREAKPOINT) {
+    return <>{children}</>;
+  }
 
   // Smaller screens: scale the full 1920x1080 design uniformly to fit, centered (letterboxed).
   const scale = Math.min(dims.w / DESIGN_WIDTH, dims.h / DESIGN_HEIGHT);
