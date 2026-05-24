@@ -1358,11 +1358,12 @@ const Index = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-w-0 w-full px-1 sm:px-2 py-2"
+                className="flex-1 min-h-0 overflow-hidden min-w-0 w-full px-1 sm:px-2 py-2"
               >
                 <TVContentRow
                   title="Uživo"
                   delay={0.1}
+                  rows={CARDS_ROWS}
                   navigationDisabled={focusZone !== "cards"}
                   focusedIndex={focusZone === "cards" ? cardIndex : undefined}
                 >
