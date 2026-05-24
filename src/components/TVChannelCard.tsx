@@ -84,13 +84,13 @@ const TVChannelCard = ({
       onClick={onClick}
       className={cn(
         "group relative rounded-2xl overflow-hidden transition-[box-shadow,border-color,filter] duration-200 ease-out",
-        "focus:outline-none bg-card/60 backdrop-blur-sm w-full border-2",
+        "focus:outline-none bg-card/60 backdrop-blur-sm w-full h-full border-2 flex flex-col",
         isFocused
           ? "border-white/60 shadow-[0_0_40px_10px_rgba(255,255,255,0.22)]"
           : "border-white/15 hover:brightness-110",
       )}
     >
-      <div className="relative aspect-[16/9] overflow-hidden">
+      <div className="relative aspect-[16/9] shrink-0 overflow-hidden">
         <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
         <div className="absolute bottom-0 left-0 w-full">
           <div className="w-full bg-muted/70" style={{ height: "3px" }} />
