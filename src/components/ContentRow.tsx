@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { getLayoutViewportWidth } from "@/lib/viewport";
 
 interface ContentItem {
   id: string;
@@ -39,7 +38,15 @@ const ContentRow = ({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const getResponsiveValues = () => {
-    const vw = getLayoutViewportWidth();
+    if (typeof window === "undefined") {
+      return {
+        defaultW: portrait ? 140 : 280,
+        expandedW: portrait ? 300 : 650,
+        cardH: 350,
+        leftPad: 48,
+      };
+    }
+    const vw = window.innerWidth;
     return {
       defaultW: portrait ? Math.min(140, vw * 0.28) : Math.min(280, vw * 0.4),
       expandedW: portrait ? Math.min(300, vw * 0.55) : Math.min(650, vw * 0.75),

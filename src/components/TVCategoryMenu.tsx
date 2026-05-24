@@ -2,7 +2,6 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { FileText, Baby, Film, Trophy, PartyPopper, MonitorPlay, MapPin, Globe, Youtube } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { getLayoutViewportWidth } from "@/lib/viewport";
 
 export interface CategoryItem {
   id: string;
@@ -41,7 +40,7 @@ interface TVCategoryMenuProps {
 const TVCategoryMenu = ({ isVisible, focusedIndex, onItemClick }: TVCategoryMenuProps) => {
   const { t } = useTranslation();
 
-  const menuWidth = Math.min(300, getLayoutViewportWidth() * 0.75);
+  const menuWidth = typeof window !== "undefined" ? Math.min(300, window.innerWidth * 0.75) : 300;
 
   return (
     <motion.div

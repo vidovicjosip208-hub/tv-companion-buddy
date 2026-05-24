@@ -4,7 +4,6 @@ import { Delete, Space, Search } from "lucide-react";
 import StarryBackground from "@/components/StarryBackground";
 import { ContentItem } from "@/data/videotekaContent";
 import { cn } from "@/lib/utils";
-import { getLayoutViewportWidth } from "@/lib/viewport";
 
 const keyboardRows = [
   ["a", "b", "c", "d", "e", "f"],
@@ -37,7 +36,8 @@ const VideotekaSearch = ({ allItems, onClose }: VideotekaSearchProps) => {
     query.length > 0 ? allItems.filter((item) => item.title.toLowerCase().includes(query.toLowerCase())) : allItems;
 
   const getResultCols = () => {
-    const vw = getLayoutViewportWidth();
+    if (typeof window === "undefined") return 4;
+    const vw = window.innerWidth;
     if (vw < 640) return 2;
     if (vw < 1024) return 3;
     return 4;
