@@ -38,7 +38,7 @@ const ViewportScaler = ({ children }: Props) => {
   const NATIVE_BREAKPOINT = 1280;
   const isTouchLike =
     typeof window !== "undefined" &&
-    (window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0);
+    ((window.matchMedia?.("(pointer: coarse)")?.matches ?? false) || navigator.maxTouchPoints > 0);
   const smallerThanDesign = dims.w < DESIGN_VIEWPORT_WIDTH || dims.h < DESIGN_VIEWPORT_HEIGHT;
   const scaled = dims.w < NATIVE_BREAKPOINT || (isTouchLike && smallerThanDesign);
 
