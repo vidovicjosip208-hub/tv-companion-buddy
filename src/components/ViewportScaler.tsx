@@ -5,25 +5,42 @@ interface Props {
   children: ReactNode;
 }
 
+const getViewportDims = () => {
+  if (typeof window === "undefined") {
+    return { w: DESIGN_VIEWPORT_WIDTH, h: DESIGN_VIEWPORT_HEIGHT };
+  }
+
+  return {
+    w: Math.round(window.visualViewport?.width ?? window.innerWidth),
+    h: Math.round(window.visualViewport?.height ?? window.innerHeight),
+  };
+};
+
 const ViewportScaler = ({ children }: Props) => {
-  const [dims, setDims] = useState(() => ({
-    w: typeof window !== "undefined" ? window.innerWidth : DESIGN_VIEWPORT_WIDTH,
-    h: typeof window !== "undefined" ? window.innerHeight : DESIGN_VIEWPORT_HEIGHT,
-  }));
+  const [dims, setDims] = useState(getViewportDims);
 
   useEffect(() => {
-    const onResize = () =>
-      setDims({ w: window.innerWidth, h: window.innerHeight });
+    const onResize = () => {
+      setDims(getViewportDims());
+      requestAnimationFrame(() => setDims(getViewportDims()));
+      window.setTimeout(() => setDims(getViewportDims()), 250);
+    };
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
     };
   }, []);
 
   const NATIVE_BREAKPOINT = 1280;
-  const scaled = dims.w < NATIVE_BREAKPOINT;
+  const isTouchLike =
+    typeof window !== "undefined" &&
+    ((window.matchMedia?.("(pointer: coarse)")?.matches ?? false) || navigator.maxTouchPoints > 0);
+  const smallerThanDesign = dims.w < DESIGN_VIEWPORT_WIDTH || dims.h < DESIGN_VIEWPORT_HEIGHT;
+  const scaled = dims.w < NATIVE_BREAKPOINT || (isTouchLike && smallerThanDesign);
 
   useEffect(() => {
     if (scaled) {
