@@ -304,7 +304,7 @@ const CAMERAS_INDEX = 5;
 const SETTINGS_INDEX = 6;
 const PROFILE_INDEX = 7;
 
-const CARDS_ROWS = 4;
+const CARDS_ROWS = 2;
 
 type FocusZone = "sidebar" | "categories" | "filters" | "epg" | "epgPrograms" | "cards" | "cameras" | "cameraHeaders" | "radio";
 
