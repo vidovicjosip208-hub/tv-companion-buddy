@@ -90,7 +90,7 @@ const TVChannelCard = ({
           : "border-white/15 hover:brightness-110",
       )}
     >
-      <div className="relative aspect-[16/9] shrink-0 overflow-hidden">
+      <div className="relative flex-1 min-h-0 overflow-hidden">
         <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
         <div className="absolute bottom-0 left-0 w-full">
           <div className="w-full bg-muted/70" style={{ height: "3px" }} />
@@ -103,7 +103,7 @@ const TVChannelCard = ({
           />
         </div>
       </div>
-      <div className="p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 bg-card/70">
+      <div className="p-2 sm:p-2.5 flex items-center gap-2 sm:gap-3 bg-card/70 shrink-0">
         <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
           {logoUrl ? (
             <img
