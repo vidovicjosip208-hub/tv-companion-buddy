@@ -12,7 +12,7 @@ interface TVContentRowProps {
 
 const TVContentRow = ({ title, delay = 0, children, rows = 2 }: TVContentRowProps) => {
   const cards = Children.toArray(children);
-  const visibleRows = Math.min(4, Math.max(rows, Math.ceil(cards.length / 8)));
+  const visibleRows = Math.max(1, rows);
   const visibleColumns = Math.max(1, Math.ceil(cards.length / visibleRows));
 
   return (
