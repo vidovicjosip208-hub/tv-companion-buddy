@@ -9,11 +9,18 @@ const getViewportDims = () => {
   if (typeof window === "undefined") {
     return { w: DESIGN_VIEWPORT_WIDTH, h: DESIGN_VIEWPORT_HEIGHT };
   }
-
-  return {
-    w: Math.round(window.visualViewport?.width ?? window.innerWidth),
-    h: Math.round(window.visualViewport?.height ?? window.innerHeight),
-  };
+  // Use documentElement.clientWidth/Height — these are the layout viewport
+  // values that CSS 100vw/100vh resolve to, and they are reliable on Android
+  // Chrome across rotations (unlike visualViewport which can lag/include
+  // browser chrome).
+  const docEl = document.documentElement;
+  const w = Math.round(
+    docEl.clientWidth || window.innerWidth || DESIGN_VIEWPORT_WIDTH,
+  );
+  const h = Math.round(
+    docEl.clientHeight || window.innerHeight || DESIGN_VIEWPORT_HEIGHT,
+  );
+  return { w, h };
 };
 
 const ViewportScaler = ({ children }: Props) => {
@@ -23,7 +30,8 @@ const ViewportScaler = ({ children }: Props) => {
     const onResize = () => {
       setDims(getViewportDims());
       requestAnimationFrame(() => setDims(getViewportDims()));
-      window.setTimeout(() => setDims(getViewportDims()), 250);
+      window.setTimeout(() => setDims(getViewportDims()), 150);
+      window.setTimeout(() => setDims(getViewportDims()), 500);
     };
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
@@ -35,12 +43,12 @@ const ViewportScaler = ({ children }: Props) => {
     };
   }, []);
 
-  const NATIVE_BREAKPOINT = 1280;
-  const isTouchLike =
-    typeof window !== "undefined" &&
-    ((window.matchMedia?.("(pointer: coarse)")?.matches ?? false) || navigator.maxTouchPoints > 0);
-  const smallerThanDesign = dims.w < DESIGN_VIEWPORT_WIDTH || dims.h < DESIGN_VIEWPORT_HEIGHT;
-  const scaled = dims.w < NATIVE_BREAKPOINT || (isTouchLike && smallerThanDesign);
+  // Scale whenever the viewport is smaller than the native design in either
+  // dimension. This guarantees mobile + tablet always see the full 1920×1080
+  // layout, proportionally shrunk to fit.
+  const smallerThanDesign =
+    dims.w < DESIGN_VIEWPORT_WIDTH || dims.h < DESIGN_VIEWPORT_HEIGHT;
+  const scaled = smallerThanDesign;
 
   useEffect(() => {
     if (scaled) {
