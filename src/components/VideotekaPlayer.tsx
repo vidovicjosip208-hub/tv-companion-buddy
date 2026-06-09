@@ -285,16 +285,29 @@ const FrozenHlsVideo = memo(
 
       onError(null);
       video.preload = "auto";
+      video.crossOrigin = "anonymous";
+      (video as HTMLVideoElement).playsInline = true;
 
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
 
+      // Force reload da očistimo cached "format error" iz prethodnog izvora
+      try {
+        video.removeAttribute("src");
+        video.load();
+      } catch {
+        /* noop */
+      }
+
       const isNativeHls = video.canPlayType("application/vnd.apple.mpegurl") !== "";
       const hasHEVC = supportsHEVC();
 
-      if (Hls.isSupported() && !isNativeHls) {
+      // Detektiraj je li stream HLS (.m3u8). Sve ostalo (MP4 itd.) ide native.
+      const isHlsStream = /\.m3u8(\?|$)/i.test(streamUrl);
+
+      if (isHlsStream && Hls.isSupported() && !isNativeHls) {
         const hlsConfig = {
           enableWorker: true,
           forceVideoHWAcceleration: true,
@@ -303,29 +316,29 @@ const FrozenHlsVideo = memo(
           autoStartLoad: true,
 
           // ── Buffer: manji = brži start i seek ────────────────────────────
-          maxBufferLength: 30, // bilo 60
-          maxMaxBufferLength: 60, // bilo 120
-          maxBufferSize: 60 * 1000 * 1000, // bilo 300MB
-          backBufferLength: 20, // bilo 60
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          maxBufferSize: 60 * 1000 * 1000,
+          backBufferLength: 20,
           maxBufferHole: 0.5,
 
           // ── ABR: počni s niskom kvalitetom, brzo raste ───────────────────
-          startLevel: 0, // bilo -1 (auto) — bez čekanja probe
+          startLevel: 0,
           abrEwmaFastVoD: 3.0,
           abrEwmaSlowVoD: 9.0,
           abrBandWidthFactor: 0.85,
           abrBandWidthUpFactor: 0.7,
 
-          // ── Timeoutovi: kraći = brža detekcija problema ──────────────────
-          manifestLoadingTimeOut: 8000, // bilo 20000
-          manifestLoadingMaxRetry: 3, // bilo 8
+          // ── Timeoutovi ───────────────────────────────────────────────────
+          manifestLoadingTimeOut: 8000,
+          manifestLoadingMaxRetry: 3,
           manifestLoadingRetryDelay: 500,
-          levelLoadingTimeOut: 8000, // bilo 20000
-          levelLoadingMaxRetry: 3, // bilo 8
+          levelLoadingTimeOut: 8000,
+          levelLoadingMaxRetry: 3,
           levelLoadingRetryDelay: 500,
-          fragLoadingTimeOut: 10000, // bilo 30000
-          fragLoadingMaxRetry: 4, // bilo 12
-          fragLoadingRetryDelay: 500, // bilo 1000
+          fragLoadingTimeOut: 10000,
+          fragLoadingMaxRetry: 4,
+          fragLoadingRetryDelay: 500,
 
           // ── Seek optimizacije ─────────────────────────────────────────────
           nudgeMaxRetry: 5,
@@ -333,11 +346,9 @@ const FrozenHlsVideo = memo(
           maxFragLookUpTolerance: 0.5,
 
           // ── Brži start reprodukcije ───────────────────────────────────────
-          // Počni reproducirati čim ima 1 segment, ne čekaj puni buffer
-          maxStarvationDelay: 4, // default 4 — koliko čeka prije panike
-          maxLoadingDelay: 4, // default 4
-          highBufferWatchdogPeriod: 2, // češće provjerava buffer
-          // Ne čekaj više od 1s da počne first segment load
+          maxStarvationDelay: 4,
+          maxLoadingDelay: 4,
+          highBufferWatchdogPeriod: 2,
           fragLoadingLoopThreshold: 3,
         } as ConstructorParameters<typeof Hls>[0] & { forceVideoHWAcceleration: boolean };
         const hls = new Hls(hlsConfig);
@@ -362,7 +373,6 @@ const FrozenHlsVideo = memo(
           }
         });
 
-        // Pokreni video tek kad je prvi fragment učitan — nema zastajkivanja na startu
         hls.once(Hls.Events.FRAG_LOADED, () => {
           playInitial();
         });
@@ -383,11 +393,17 @@ const FrozenHlsVideo = memo(
           }
           onError("Reprodukcija nije uspjela.");
         });
-      } else if (isNativeHls) {
-        video.src = streamUrl;
-        playInitial();
       } else {
-        onError("Vaš preglednik ne podržava HLS reprodukciju.");
+        // Native playback (MP4, WebM, native HLS u Safariju, itd.)
+        video.src = streamUrl;
+        video.load();
+        const onLoaded = () => {
+          video.removeEventListener("loadeddata", onLoaded);
+          playInitial();
+        };
+        video.addEventListener("loadeddata", onLoaded);
+        // Backup: pokušaj i odmah
+        playInitial();
       }
 
       const bypassTimer = setTimeout(() => {
