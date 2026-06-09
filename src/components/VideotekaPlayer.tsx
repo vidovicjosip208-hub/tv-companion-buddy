@@ -513,6 +513,21 @@ const FrozenHlsVideo = memo(
         poster={thumbnail}
         playsInline
         preload="auto"
+        crossOrigin="anonymous"
+        onError={(e) => {
+          const el = e.currentTarget;
+          const err = el.error;
+          const codeMap: Record<number, string> = {
+            1: "MEDIA_ERR_ABORTED",
+            2: "MEDIA_ERR_NETWORK",
+            3: "MEDIA_ERR_DECODE",
+            4: "MEDIA_ERR_SRC_NOT_SUPPORTED",
+          };
+          const code = err ? codeMap[err.code] ?? `code ${err.code}` : "unknown";
+          const msg = err?.message ? ` — ${err.message}` : "";
+          console.error("[VideotekaPlayer] <video> error:", code, err);
+          onError(`Greška reprodukcije: ${code}${msg}`);
+        }}
         className="relative z-10 w-full h-full object-contain bg-black"
       />
     );
