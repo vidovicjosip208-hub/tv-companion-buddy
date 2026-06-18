@@ -313,7 +313,10 @@ const FrozenHlsVideo = memo(
           forceVideoHWAcceleration: true,
           progressive: true,
           lowLatencyMode: false,
-          autoStartLoad: true,
+          // Ne kreći s učitavanjem dok ručno ne postavimo najvišu razinu
+          autoStartLoad: false,
+          // Bez probnog bandwidth testa koji bi krenuo s niskom kvalitetom
+          testBandwidth: false,
 
           // ── Buffer: manji = brži start i seek ────────────────────────────
           maxBufferLength: 30,
@@ -326,8 +329,8 @@ const FrozenHlsVideo = memo(
           // startLevel se postavlja ručno u MANIFEST_PARSED na najvišu razinu
           abrEwmaFastVoD: 3.0,
           abrEwmaSlowVoD: 9.0,
-          abrBandWidthFactor: 0.85,
-          abrBandWidthUpFactor: 0.7,
+          abrBandWidthFactor: 0.95,
+          abrBandWidthUpFactor: 0.9,
 
           // ── Timeoutovi ───────────────────────────────────────────────────
           manifestLoadingTimeOut: 8000,
@@ -358,21 +361,26 @@ const FrozenHlsVideo = memo(
         hls.attachMedia(video);
 
         hls.on(Hls.Events.MANIFEST_PARSED, (_evt, data) => {
-          const highestLevel = Math.max(0, data.levels.length - 1);
-          hls.startLevel = highestLevel;
-          hls.startLoad();
+          let highestLevel = Math.max(0, data.levels.length - 1);
 
-          if (!hasHEVC && hls.levels?.length) {
-            const supported = hls.levels
+          if (!hasHEVC && data.levels?.length) {
+            const supported = data.levels
               .map((lvl, idx) => ({ lvl, idx }))
               .filter(({ lvl }) => {
                 const codec = (lvl.videoCodec ?? "").toLowerCase();
                 return !(codec.startsWith("hvc1") || codec.startsWith("hev1"));
               });
-            if (supported.length && supported.length < hls.levels.length) {
+            if (supported.length && supported.length < data.levels.length) {
               hls.autoLevelCapping = supported[supported.length - 1].idx;
+              highestLevel = supported[supported.length - 1].idx;
             }
           }
+
+          // Postavi najvišu razinu PRIJE nego što krene učitavanje
+          hls.startLevel = highestLevel;
+          hls.nextLevel = highestLevel;
+          hls.loadLevel = highestLevel;
+          hls.startLoad();
         });
 
         hls.once(Hls.Events.FRAG_LOADED, () => {
