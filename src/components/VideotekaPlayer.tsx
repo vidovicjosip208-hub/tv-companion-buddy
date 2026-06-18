@@ -361,21 +361,26 @@ const FrozenHlsVideo = memo(
         hls.attachMedia(video);
 
         hls.on(Hls.Events.MANIFEST_PARSED, (_evt, data) => {
-          const highestLevel = Math.max(0, data.levels.length - 1);
-          hls.startLevel = highestLevel;
-          hls.startLoad();
+          let highestLevel = Math.max(0, data.levels.length - 1);
 
-          if (!hasHEVC && hls.levels?.length) {
-            const supported = hls.levels
+          if (!hasHEVC && data.levels?.length) {
+            const supported = data.levels
               .map((lvl, idx) => ({ lvl, idx }))
               .filter(({ lvl }) => {
                 const codec = (lvl.videoCodec ?? "").toLowerCase();
                 return !(codec.startsWith("hvc1") || codec.startsWith("hev1"));
               });
-            if (supported.length && supported.length < hls.levels.length) {
+            if (supported.length && supported.length < data.levels.length) {
               hls.autoLevelCapping = supported[supported.length - 1].idx;
+              highestLevel = supported[supported.length - 1].idx;
             }
           }
+
+          // Postavi najvišu razinu PRIJE nego što krene učitavanje
+          hls.startLevel = highestLevel;
+          hls.nextLevel = highestLevel;
+          hls.loadLevel = highestLevel;
+          hls.startLoad();
         });
 
         hls.once(Hls.Events.FRAG_LOADED, () => {
