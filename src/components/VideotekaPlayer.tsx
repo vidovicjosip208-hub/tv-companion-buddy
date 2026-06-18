@@ -313,7 +313,10 @@ const FrozenHlsVideo = memo(
           forceVideoHWAcceleration: true,
           progressive: true,
           lowLatencyMode: false,
-          autoStartLoad: true,
+          // Ne kreći s učitavanjem dok ručno ne postavimo najvišu razinu
+          autoStartLoad: false,
+          // Bez probnog bandwidth testa koji bi krenuo s niskom kvalitetom
+          testBandwidth: false,
 
           // ── Buffer: manji = brži start i seek ────────────────────────────
           maxBufferLength: 30,
@@ -326,8 +329,8 @@ const FrozenHlsVideo = memo(
           // startLevel se postavlja ručno u MANIFEST_PARSED na najvišu razinu
           abrEwmaFastVoD: 3.0,
           abrEwmaSlowVoD: 9.0,
-          abrBandWidthFactor: 0.85,
-          abrBandWidthUpFactor: 0.7,
+          abrBandWidthFactor: 0.95,
+          abrBandWidthUpFactor: 0.9,
 
           // ── Timeoutovi ───────────────────────────────────────────────────
           manifestLoadingTimeOut: 8000,
