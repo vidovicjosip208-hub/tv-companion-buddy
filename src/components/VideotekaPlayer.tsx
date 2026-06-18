@@ -322,8 +322,8 @@ const FrozenHlsVideo = memo(
           backBufferLength: 20,
           maxBufferHole: 0.5,
 
-          // ── ABR: počni s niskom kvalitetom, brzo raste ───────────────────
-          startLevel: 0,
+          // ── ABR: počni odmah u punoj kvaliteti ────────────────────────────
+          // startLevel se postavlja ručno u MANIFEST_PARSED na najvišu razinu
           abrEwmaFastVoD: 3.0,
           abrEwmaSlowVoD: 9.0,
           abrBandWidthFactor: 0.85,
@@ -357,7 +357,9 @@ const FrozenHlsVideo = memo(
         hls.loadSource(streamUrl);
         hls.attachMedia(video);
 
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        hls.on(Hls.Events.MANIFEST_PARSED, (_evt, data) => {
+          const highestLevel = Math.max(0, data.levels.length - 1);
+          hls.startLevel = highestLevel;
           hls.startLoad();
 
           if (!hasHEVC && hls.levels?.length) {
