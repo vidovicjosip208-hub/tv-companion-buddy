@@ -325,8 +325,7 @@ const FrozenHlsVideo = memo(
           backBufferLength: 20,
           maxBufferHole: 0.5,
 
-          // ── ABR: počni odmah u punoj kvaliteti ────────────────────────────
-          // startLevel se postavlja ručno u MANIFEST_PARSED na najvišu razinu
+          // ── ABR: gašen — ostajemo fiksno na najvišoj razini (vidi MANIFEST_PARSED) ──
           abrEwmaFastVoD: 3.0,
           abrEwmaSlowVoD: 9.0,
           abrBandWidthFactor: 0.95,
@@ -376,10 +375,15 @@ const FrozenHlsVideo = memo(
             }
           }
 
-          // Postavi najvišu razinu PRIJE nego što krene učitavanje
+          // ── FIX: postavi najvišu razinu I ugasi ABR, inače hls.js svejedno
+          // procjenjuje bandwidth po prvom fragmentu (obično podcijeni zbog
+          // TCP slow-starta / cold CDN edgea) i spusti kvalitetu za sljedeći
+          // fragment, pa se onda postupno vraća gore kroz par sekundi.
           hls.startLevel = highestLevel;
           hls.nextLevel = highestLevel;
           hls.loadLevel = highestLevel;
+          hls.currentLevel = highestLevel;
+          hls.autoLevelEnabled = false;
           hls.startLoad();
         });
 
@@ -549,7 +553,7 @@ const FrozenHlsVideo = memo(
             3: "MEDIA_ERR_DECODE",
             4: "MEDIA_ERR_SRC_NOT_SUPPORTED",
           };
-          const code = err ? codeMap[err.code] ?? `code ${err.code}` : "unknown";
+          const code = err ? (codeMap[err.code] ?? `code ${err.code}`) : "unknown";
           const msg = err?.message ? ` — ${err.message}` : "";
           console.error("[VideotekaPlayer] <video> error:", code, err);
           onError(`Greška reprodukcije: ${code}${msg}`);
