@@ -310,7 +310,7 @@ const FrozenHlsVideo = memo(
       if (isHlsStream && Hls.isSupported() && !isNativeHls) {
         const hlsConfig = {
           enableWorker: true,
-          forceVideoHWAcceleration: true,
+          forceVideoHWAcceleration: false,
           progressive: true,
           lowLatencyMode: false,
           // Ne kreći s učitavanjem dok ručno ne postavimo najvišu razinu
