@@ -694,6 +694,23 @@ const VideotekaPlayer = ({
   const [isBuffering, setIsBuffering] = useState(false);
   const [skipHovered, setSkipHovered] = useState(false);
 
+  // Pravi fullscreen uklanja browser chrome koji inače mijenja omjer dostupnog
+  // prostora i stvara bočne trake čak i kod standardnog 16:9 videa.
+  useEffect(() => {
+    const root = playerRootRef.current as (HTMLDivElement & { webkitRequestFullscreen?: () => void }) | null;
+    if (!root || document.fullscreenElement) return;
+
+    const requestFullscreen = root.requestFullscreen?.bind(root) ?? root.webkitRequestFullscreen?.bind(root);
+    if (!requestFullscreen) return;
+
+    try {
+      const result = requestFullscreen();
+      Promise.resolve(result).catch(() => {});
+    } catch {
+      // Fullscreen može biti blokiran u ugrađenom preview iframeu; player i dalje radi.
+    }
+  }, []);
+
   // Debounce seek — video seekuje tek kad korisnik prestane pritiskati tipke
   const pendingSeekRef = useRef<number | null>(null);
   const pendingSeekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
