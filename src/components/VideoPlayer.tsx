@@ -674,20 +674,33 @@ const VideoPlayer = ({
         manifestLoadingMaxRetry: 10,
         levelLoadingMaxRetry: 10,
         capLevelToPlayerSize: false,
+        autoStartLoad: false,
+        testBandwidth: false,
+        startLevel: -1,
+        abrEwmaDefaultEstimate: 50_000_000,
       });
       hlsRef.current = hls;
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
-        // Filtriraj HEVC levelove ako browser ne podržava
-        const hasUsable = data.levels.some((lvl) => {
-          const codecs = (lvl.videoCodec || "").toLowerCase();
-          const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
-          return isHevc ? hevcOk : true;
-        });
-        if (hasUsable) video.play().catch(() => {});
-        else video.play().catch(() => {});
+        // Odaberi najvišu upotrebljivu razinu (preskoči HEVC ako nije podržan)
+        const usable = data.levels
+          .map((lvl, idx) => ({ lvl, idx }))
+          .filter(({ lvl }) => {
+            const codecs = (lvl.videoCodec || "").toLowerCase();
+            const isHevc = codecs.includes("hvc1") || codecs.includes("hev1") || codecs.includes("h265");
+            return isHevc ? hevcOk : true;
+          });
+        const best = usable.length
+          ? usable.reduce((a, b) => ((b.lvl.bitrate || 0) > (a.lvl.bitrate || 0) ? b : a))
+          : { idx: data.levels.length - 1 };
+        hls.startLevel = best.idx;
+        hls.nextLevel = best.idx;
+        hls.loadLevel = best.idx;
+        hls.currentLevel = best.idx;
+        hls.startLoad();
+        video.play().catch(() => {});
       });
 
       let recoverAttempts = 0;
