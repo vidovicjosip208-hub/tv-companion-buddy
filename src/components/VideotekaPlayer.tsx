@@ -384,7 +384,7 @@ const FrozenHlsVideo = memo(
           hls.nextLevel = highestLevel;
           hls.loadLevel = highestLevel;
           hls.currentLevel = highestLevel;
-          hls.autoLevelEnabled = false;
+          // autoLevelEnabled is read-only; fixing currentLevel/loadLevel disables ABR
           hls.startLoad();
         });
 
