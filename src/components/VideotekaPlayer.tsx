@@ -561,7 +561,7 @@ const FrozenHlsVideo = memo(
           console.error("[VideotekaPlayer] <video> error:", code, err);
           onError(`Greška reprodukcije: ${code}${msg}`);
         }}
-        className="relative z-10 w-full h-full object-cover bg-black"
+        className="relative z-10 w-full h-full object-contain bg-black"
       />
     );
   },
