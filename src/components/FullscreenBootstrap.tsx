@@ -13,13 +13,18 @@ const isFullscreen = () => {
   return !!(d.fullscreenElement || d.webkitFullscreenElement);
 };
 
+const isInstalledApp = () =>
+  window.matchMedia("(display-mode: fullscreen)").matches ||
+  window.matchMedia("(display-mode: standalone)").matches ||
+  Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
+
 const FullscreenBootstrap = () => {
-  const [fs, setFs] = useState<boolean>(isFullscreen());
+  const [fs, setFs] = useState<boolean>(() => isFullscreen() || isInstalledApp());
   const autoAttemptedRef = useRef(false);
   const requestPendingRef = useRef(false);
 
   const requestFs = useCallback(async () => {
-    if (isFullscreen() || requestPendingRef.current) return;
+    if (isFullscreen() || isInstalledApp() || requestPendingRef.current) return;
 
     const el = document.documentElement as FSEl;
     const request = el.requestFullscreen?.bind(el) ?? el.webkitRequestFullscreen?.bind(el);
@@ -38,7 +43,7 @@ const FullscreenBootstrap = () => {
 
   useEffect(() => {
     const onChange = () => {
-      setFs(isFullscreen());
+      setFs(isFullscreen() || isInstalledApp());
       requestPendingRef.current = false;
     };
     document.addEventListener("fullscreenchange", onChange);
@@ -49,8 +54,10 @@ const FullscreenBootstrap = () => {
       autoAttemptedRef.current = true;
       void requestFs();
     };
-    window.addEventListener("keydown", onFirstGesture, { once: true, capture: true });
-    window.addEventListener("click", onFirstGesture, { once: true, capture: true });
+    if (!isInstalledApp()) {
+      window.addEventListener("keydown", onFirstGesture, { once: true, capture: true });
+      window.addEventListener("click", onFirstGesture, { once: true, capture: true });
+    }
 
     return () => {
       document.removeEventListener("fullscreenchange", onChange);
