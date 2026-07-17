@@ -664,6 +664,7 @@ const VideotekaPlayer = ({
   streamUrl: streamUrlProp,
   seekPreviewUrl: seekPreviewUrlProp, // ── NOVO
 }: VideotekaPlayerProps) => {
+  const playerRootRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
 
@@ -692,6 +693,23 @@ const VideotekaPlayer = ({
   const [seekTime, setSeekTime] = useState(0);
   const [isBuffering, setIsBuffering] = useState(false);
   const [skipHovered, setSkipHovered] = useState(false);
+
+  // Pravi fullscreen uklanja browser chrome koji inače mijenja omjer dostupnog
+  // prostora i stvara bočne trake čak i kod standardnog 16:9 videa.
+  useEffect(() => {
+    const root = playerRootRef.current as (HTMLDivElement & { webkitRequestFullscreen?: () => void }) | null;
+    if (!root || document.fullscreenElement) return;
+
+    const requestFullscreen = root.requestFullscreen?.bind(root) ?? root.webkitRequestFullscreen?.bind(root);
+    if (!requestFullscreen) return;
+
+    try {
+      const result = requestFullscreen();
+      Promise.resolve(result).catch(() => {});
+    } catch {
+      // Fullscreen može biti blokiran u ugrađenom preview iframeu; player i dalje radi.
+    }
+  }, []);
 
   // Debounce seek — video seekuje tek kad korisnik prestane pritiskati tipke
   const pendingSeekRef = useRef<number | null>(null);
@@ -1118,7 +1136,7 @@ const VideotekaPlayer = ({
   const skipActive = skipHovered || (focusedRow === 0 && focusedCol === 2);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black font-sans overflow-hidden">
+    <div ref={playerRootRef} className="fixed inset-0 z-[100] bg-black font-sans overflow-hidden">
       <div className="absolute inset-0">
         <FrozenHlsVideo
           streamUrl={streamUrl}

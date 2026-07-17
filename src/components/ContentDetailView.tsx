@@ -28,10 +28,31 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [scrollOffset, setScrollOffset] = useState(0);
 
-  const handleSelect = useCallback((id: ButtonId) => {
-    if (id === "resume" || id === "playFromBeginning") setShowPlayer(true);
-    if (id === "episodesAndMore") setShowEpisodes(true);
+  const openPlayer = useCallback(() => {
+    const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
+    const requestFullscreen = root.requestFullscreen?.bind(root) ?? root.webkitRequestFullscreen?.bind(root);
+
+    if (!document.fullscreenElement && requestFullscreen) {
+      try {
+        const result = requestFullscreen();
+        Promise.resolve(result).catch(() => {});
+      } catch {
+        // Neki TV preglednici dopuštaju fullscreen tek nakon što se video pokrene.
+      }
+    }
+
+    setShowPlayer(true);
   }, []);
+
+  const closePlayer = useCallback(() => {
+    setShowPlayer(false);
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  }, []);
+
+  const handleSelect = useCallback((id: ButtonId) => {
+    if (id === "resume" || id === "playFromBeginning") openPlayer();
+    if (id === "episodesAndMore") setShowEpisodes(true);
+  }, [openPlayer]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -105,7 +126,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
       return (
         <button
           key={id}
-          onClick={() => setShowPlayer(true)}
+          onClick={openPlayer}
           className={`flex items-center gap-3 rounded-lg px-4 sm:px-10 py-3 sm:py-4 w-full sm:w-fit sm:min-w-[360px] transition-all duration-300 group ${
             isFocused ? "bg-white/20 border border-white/60 ring-2 ring-white/80" : "hover:bg-muted/20"
           }`}
@@ -141,7 +162,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
           />
         ),
         label: t("videotekaDetail.playFromBeginning"),
-        onClick: () => setShowPlayer(true),
+        onClick: openPlayer,
       },
       episodesAndMore: {
         icon: (
@@ -351,7 +372,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             itemId={itemId}
             title={details.title}
             thumbnail={thumbnail}
-            onClose={() => setShowPlayer(false)}
+            onClose={closePlayer}
           />
         )}
       </AnimatePresence>
