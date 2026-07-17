@@ -98,6 +98,20 @@
   }
 }
 
+/* ScaleToFit renders against the fixed reference canvas rather than the
+   browser's often incorrect TV/mobile CSS viewport. */
+.scale-to-fit-canvas .h-screen,
+.scale-to-fit-canvas .min-h-screen {
+  height: 768px;
+  min-height: 768px;
+}
+
+.scale-to-fit-canvas .w-screen,
+.scale-to-fit-canvas .min-w-screen {
+  width: 1624px;
+  min-width: 1624px;
+}
+
 /* Focus glow effect for TV navigation */
 .tv-focus-glow {
   box-shadow:

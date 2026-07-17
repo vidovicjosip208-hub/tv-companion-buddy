@@ -1,21 +1,24 @@
 import { useEffect, useState, type ReactNode } from "react";
 
-const BASE_WIDTH = 1600;
-const BASE_HEIGHT = 900;
+// Exact reference canvas supplied by the user. It is deliberately stretched
+// to the available panel so the whole composition is always visible edge to
+// edge, regardless of the browser-reported aspect ratio.
+const BASE_WIDTH = 1624;
+const BASE_HEIGHT = 768;
 
 interface ScaleToFitProps {
   children: ReactNode;
 }
 
 const ScaleToFit = ({ children }: ScaleToFitProps) => {
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState({ x: 1, y: 1 });
 
   useEffect(() => {
     const update = () => {
-      const sx = window.innerWidth / BASE_WIDTH;
-      const sy = window.innerHeight / BASE_HEIGHT;
-      // Uniformno skaliranje bez rezanja; za 16:9 viewport jednako je oboje.
-      setScale(Math.min(sx, sy));
+      setScale({
+        x: window.innerWidth / BASE_WIDTH,
+        y: window.innerHeight / BASE_HEIGHT,
+      });
     };
     update();
     window.addEventListener("resize", update);
@@ -23,14 +26,14 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-black flex items-center justify-center">
+    <div className="fixed inset-0 overflow-hidden bg-background">
       <div
+        className="scale-to-fit-canvas"
         style={{
           width: `${BASE_WIDTH}px`,
           height: `${BASE_HEIGHT}px`,
-          transform: `scale(${scale})`,
-          transformOrigin: "center center",
-          flexShrink: 0,
+          transform: `scale(${scale.x}, ${scale.y})`,
+          transformOrigin: "top left",
         }}
       >
         {children}
