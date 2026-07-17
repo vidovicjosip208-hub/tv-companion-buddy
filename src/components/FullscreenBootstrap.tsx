@@ -14,16 +14,32 @@ const isFullscreen = () => {
   return !!(d.fullscreenElement || d.webkitFullscreenElement);
 };
 
-const requestFs = () => {
-  if (isFullscreen()) return;
-  const el = document.documentElement as FSEl;
-  const req = el.requestFullscreen?.bind(el) ?? el.webkitRequestFullscreen?.bind(el);
-  if (!req) return;
+const lockLandscape = async () => {
   try {
-    Promise.resolve(req()).catch(() => {});
+    const orientation = screen.orientation as ScreenOrientation & {
+      lock?: (o: string) => Promise<void>;
+    };
+    if (orientation?.lock) {
+      await orientation.lock("landscape");
+    }
   } catch {
-    // ignore
+    // ignore — desktop and iOS Safari don't support this
   }
+};
+
+const requestFs = async () => {
+  if (!isFullscreen()) {
+    const el = document.documentElement as FSEl;
+    const req = el.requestFullscreen?.bind(el) ?? el.webkitRequestFullscreen?.bind(el);
+    if (req) {
+      try {
+        await Promise.resolve(req());
+      } catch {
+        // ignore
+      }
+    }
+  }
+  await lockLandscape();
 };
 
 const FullscreenBootstrap = () => {
