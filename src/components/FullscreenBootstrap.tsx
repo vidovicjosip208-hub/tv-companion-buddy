@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Maximize2 } from "lucide-react";
 
 type FSDoc = Document & {
@@ -14,46 +14,56 @@ const isFullscreen = () => {
   return !!(d.fullscreenElement || d.webkitFullscreenElement);
 };
 
-const lockLandscape = async () => {
+const tryLockLandscape = () => {
   try {
     const orientation = screen.orientation as ScreenOrientation & {
       lock?: (o: string) => Promise<void>;
     };
-    if (orientation?.lock) {
-      await orientation.lock("landscape");
-    }
+    // Fire-and-forget. Odbijanje NE smije prekinuti fullscreen tok.
+    orientation?.lock?.("landscape").catch(() => {});
   } catch {
-    // ignore — desktop and iOS Safari don't support this
+    // ignore
   }
 };
 
-const requestFs = async () => {
-  if (!isFullscreen()) {
-    const el = document.documentElement as FSEl;
-    const req = el.requestFullscreen?.bind(el) ?? el.webkitRequestFullscreen?.bind(el);
-    if (req) {
-      try {
-        await Promise.resolve(req());
-      } catch {
-        // ignore
-      }
-    }
+const requestFs = async (withOrientationLock: boolean) => {
+  if (isFullscreen()) {
+    if (withOrientationLock) tryLockLandscape();
+    return true;
   }
-  await lockLandscape();
+  const el = document.documentElement as FSEl;
+  const req = el.requestFullscreen?.bind(el) ?? el.webkitRequestFullscreen?.bind(el);
+  if (!req) return false;
+  try {
+    await Promise.resolve(req());
+  } catch {
+    return false;
+  }
+  if (withOrientationLock) tryLockLandscape();
+  return true;
 };
 
 const FullscreenBootstrap = () => {
   const [fs, setFs] = useState<boolean>(isFullscreen());
+  // Nakon što jednom uđemo pa izađemo (npr. preview iframe ne dopušta), ne pokušavamo automatski ponovno.
+  const autoAttemptedRef = useRef(false);
+  const hasEnteredOnceRef = useRef(false);
 
   useEffect(() => {
-    const onChange = () => setFs(isFullscreen());
+    const onChange = () => {
+      const nowFs = isFullscreen();
+      if (nowFs) hasEnteredOnceRef.current = true;
+      setFs(nowFs);
+    };
     document.addEventListener("fullscreenchange", onChange);
     document.addEventListener("webkitfullscreenchange", onChange as EventListener);
 
     const onFirstGesture = () => {
-      requestFs();
+      if (autoAttemptedRef.current) return;
+      autoAttemptedRef.current = true;
+      // Bez orientation locka — na nekim Android/preview iframe okruženjima odmah izbacuje iz fullscreena.
+      requestFs(false);
     };
-    // Any first user gesture triggers fullscreen (browsers require gesture).
     window.addEventListener("keydown", onFirstGesture, { once: true });
     window.addEventListener("pointerdown", onFirstGesture, { once: true });
 
@@ -69,7 +79,7 @@ const FullscreenBootstrap = () => {
 
   return (
     <button
-      onClick={requestFs}
+      onClick={() => requestFs(true)}
       aria-label="Uđi u fullscreen"
       className="fixed bottom-4 right-4 z-[9999] flex items-center gap-2 rounded-full bg-black/70 px-4 py-2 text-sm text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 hover:bg-black/85"
     >
