@@ -30,14 +30,6 @@ const TVContentRow = ({ title, delay = 0, children, rows = 2, focusedIndex }: TV
     }
   }, [focusedIndex]);
 
-  const getGridAutoColumns = () => {
-    if (typeof window === "undefined") return "calc(25% - 9px)";
-    const vw = window.innerWidth;
-    if (vw < 640) return "calc(80% - 9px)";
-    if (vw < 1024) return "calc(45% - 9px)";
-    return "calc(25% - 9px)";
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -52,7 +44,7 @@ const TVContentRow = ({ title, delay = 0, children, rows = 2, focusedIndex }: TV
         style={{
           gridAutoFlow: "column",
           gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
-          gridAutoColumns: getGridAutoColumns(),
+          gridAutoColumns: "calc(25% - 9px)",
           scrollbarWidth: "none",
           scrollSnapType: "x mandatory",
         }}
