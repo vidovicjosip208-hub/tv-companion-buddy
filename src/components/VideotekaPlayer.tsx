@@ -301,18 +301,21 @@ const FrozenHlsVideo = memo(
         /* noop */
       }
 
-      const isNativeHls = video.canPlayType("application/vnd.apple.mpegurl") !== "";
       const hasHEVC = supportsHEVC();
 
       // Detektiraj je li stream HLS (.m3u8). Sve ostalo (MP4 itd.) ide native.
       const isHlsStream = /\.m3u8(\?|$)/i.test(streamUrl);
 
-      if (isHlsStream && Hls.isSupported() && !isNativeHls) {
+      // Kad je MSE dostupan uvijek koristi hls.js. Neki TV preglednici prijave
+      // native HLS podršku, ali njihov interni ABR ipak pokrene najnižu razinu
+      // i ne dopušta nam da unaprijed zaključamo kvalitetu.
+      if (isHlsStream && Hls.isSupported()) {
         const hlsConfig = {
           enableWorker: true,
           forceVideoHWAcceleration: true,
           progressive: true,
           lowLatencyMode: false,
+          capLevelToPlayerSize: false,
           // Ne kreći s učitavanjem dok ručno ne postavimo najvišu razinu
           autoStartLoad: false,
           // Bez probnog bandwidth testa koji bi krenuo s niskom kvalitetom
@@ -360,32 +363,31 @@ const FrozenHlsVideo = memo(
         hls.attachMedia(video);
 
         hls.on(Hls.Events.MANIFEST_PARSED, (_evt, data) => {
-          let highestLevel = Math.max(0, data.levels.length - 1);
+          const levelScore = (level: (typeof data.levels)[number]) =>
+            (level.width ?? 0) * (level.height ?? 0) * 1_000_000 + (level.bitrate ?? 0);
+          let playableLevels = data.levels.map((level, index) => ({ level, index }));
 
           if (!hasHEVC && data.levels?.length) {
-            const supported = data.levels
-              .map((lvl, idx) => ({ lvl, idx }))
-              .filter(({ lvl }) => {
-                const codec = (lvl.videoCodec ?? "").toLowerCase();
+            const supported = playableLevels.filter(({ level }) => {
+                const codec = (level.videoCodec ?? "").toLowerCase();
                 return !(codec.startsWith("hvc1") || codec.startsWith("hev1"));
               });
-            if (supported.length && supported.length < data.levels.length) {
-              hls.autoLevelCapping = supported[supported.length - 1].idx;
-              highestLevel = supported[supported.length - 1].idx;
-            }
+            if (supported.length) playableLevels = supported;
           }
 
-          // ── FIX: postavi najvišu razinu I ugasi ABR. Bez ovoga hls.js
-          // svejedno procjenjuje bandwidth po prvom fragmentu (obično
-          // podcijeni zbog TCP slow-starta / cold CDN edgea) i spusti
-          // kvalitetu za sljedeći fragment, pa se onda postupno vraća
-          // gore kroz par sekundi — to je taj efekt "zamuti pa izoštri".
+          const highestLevel = playableLevels.reduce(
+            (best, candidate) =>
+              levelScore(candidate.level) > levelScore(best.level) ? candidate : best,
+            playableLevels[0],
+          ).index;
+
+          // startLevel određuje baš prvi segment, a loadLevel postavlja
+          // manualLevel i time gasi ABR za sve sljedeće segmente. Pozivi na
+          // currentLevel/nextLevel ovdje bi nepotrebno pokrenuli prebacivanje
+          // i pražnjenje buffera prije nego što je prvi segment učitan.
           hls.startLevel = highestLevel;
-          hls.nextLevel = highestLevel;
           hls.loadLevel = highestLevel;
-          hls.currentLevel = highestLevel;
-          // autoLevelEnabled is read-only; fixing currentLevel/loadLevel disables ABR
-          hls.startLoad();
+          hls.startLoad(-1);
         });
 
         hls.once(Hls.Events.FRAG_LOADED, () => {
