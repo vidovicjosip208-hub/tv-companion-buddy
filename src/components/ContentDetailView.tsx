@@ -29,18 +29,6 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
   const [scrollOffset, setScrollOffset] = useState(0);
 
   const openPlayer = useCallback(() => {
-    const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
-    const requestFullscreen = root.requestFullscreen?.bind(root) ?? root.webkitRequestFullscreen?.bind(root);
-
-    if (!document.fullscreenElement && requestFullscreen) {
-      try {
-        const result = requestFullscreen();
-        Promise.resolve(result).catch(() => {});
-      } catch {
-        // Neki TV preglednici dopuštaju fullscreen tek nakon što se video pokrene.
-      }
-    }
-
     setShowPlayer(true);
   }, []);
 
