@@ -52,14 +52,28 @@ const FullscreenBootstrap = () => {
   if (fs) return null;
 
   return (
-    <button
+    <div
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6 bg-black/95 text-white backdrop-blur-md"
       onClick={requestFs}
-      aria-label="Uđi u fullscreen"
-      className="fixed bottom-4 right-4 z-[9999] flex items-center gap-2 rounded-full bg-black/70 px-4 py-2 text-sm text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 hover:bg-black/85"
     >
-      <Maximize2 className="h-4 w-4" />
-      Fullscreen
-    </button>
+      <div className="flex flex-col items-center gap-3 text-center px-6">
+        <Maximize2 className="h-16 w-16 text-[#F5C518]" />
+        <h1 className="text-3xl font-bold">Uđi u fullscreen</h1>
+        <p className="text-base text-white/70 max-w-md">
+          Aplikacija je dizajnirana za prikaz preko cijelog ekrana. Klikni bilo gdje ili pritisni bilo koju tipku.
+        </p>
+      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          requestFs();
+        }}
+        className="flex items-center gap-2 rounded-full bg-[#F5C518] px-8 py-3 text-base font-semibold text-black shadow-lg hover:bg-[#e0b315] transition-colors"
+      >
+        <Maximize2 className="h-5 w-5" />
+        Pokreni fullscreen
+      </button>
+    </div>
   );
 };
 
