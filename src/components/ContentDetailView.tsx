@@ -46,7 +46,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
 
   const closePlayer = useCallback(() => {
     setShowPlayer(false);
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    // Namjerno NE izlazimo iz fullscreena — cijela aplikacija ostaje u full screenu.
   }, []);
 
   const handleSelect = useCallback((id: ButtonId) => {

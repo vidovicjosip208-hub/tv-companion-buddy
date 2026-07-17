@@ -10,6 +10,7 @@ import VideotekaMovies from "./pages/VideotekaMovies.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Settings from "./pages/Settings.tsx";
 import Player from "./pages/Player.tsx";
+import FullscreenBootstrap from "./components/FullscreenBootstrap.tsx";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <FullscreenBootstrap />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
