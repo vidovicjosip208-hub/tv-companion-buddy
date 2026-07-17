@@ -35,7 +35,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
     if (!document.fullscreenElement && requestFullscreen) {
       try {
         const result = requestFullscreen();
-        if (result instanceof Promise) result.catch(() => {});
+        Promise.resolve(result).catch(() => {});
       } catch {
         // Neki TV preglednici dopuštaju fullscreen tek nakon što se video pokrene.
       }

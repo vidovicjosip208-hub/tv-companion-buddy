@@ -705,7 +705,7 @@ const VideotekaPlayer = ({
 
     try {
       const result = requestFullscreen();
-      if (result instanceof Promise) result.catch(() => {});
+      Promise.resolve(result).catch(() => {});
     } catch {
       // Fullscreen može biti blokiran u ugrađenom preview iframeu; player i dalje radi.
     }
