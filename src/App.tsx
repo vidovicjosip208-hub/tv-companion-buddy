@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound.tsx";
 import Settings from "./pages/Settings.tsx";
 import Player from "./pages/Player.tsx";
 import FullscreenBootstrap from "./components/FullscreenBootstrap.tsx";
+import RemoteBackKey from "./components/RemoteBackKey.tsx";
 import ExitAppDialog from "./components/ExitAppDialog.tsx";
 import ScaleToFit from "./components/ScaleToFit.tsx";
 
