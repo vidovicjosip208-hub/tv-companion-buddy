@@ -1007,6 +1007,8 @@ const Index = () => {
             setShowCameras(false);
             setSidebarExpanded(true);
             setFocusZone("sidebar");
+          } else {
+            window.dispatchEvent(new CustomEvent("app:request-exit"));
           }
           break;
       }
