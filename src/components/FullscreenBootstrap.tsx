@@ -1,12 +1,16 @@
 import { useEffect, useRef } from "react";
-import { requestAppExit } from "./ExitAppDialog";
 
 type FSDoc = Document & {
   webkitFullscreenElement?: Element | null;
-  webkitExitFullscreen?: () => Promise<void>;
 };
 type FSEl = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void>;
+};
+type KeyboardLockNav = Navigator & {
+  keyboard?: {
+    lock?: (keys?: string[]) => Promise<void>;
+    unlock?: () => void;
+  };
 };
 
 const isFullscreen = () => {
@@ -14,36 +18,44 @@ const isFullscreen = () => {
   return !!(d.fullscreenElement || d.webkitFullscreenElement);
 };
 
-const requestFs = () => {
+const requestFs = async () => {
   if (isFullscreen()) return;
   const el = document.documentElement as FSEl;
   const req = el.requestFullscreen?.bind(el) ?? el.webkitRequestFullscreen?.bind(el);
   if (!req) return;
   try {
-    Promise.resolve(req()).catch(() => {});
+    await Promise.resolve(req());
+  } catch {
+    // ignore
+  }
+  // Lock Escape so the browser doesn't leave fullscreen on Esc —
+  // we handle Escape ourselves (back navigation / exit popup).
+  try {
+    const nav = navigator as KeyboardLockNav;
+    await nav.keyboard?.lock?.(["Escape"]);
   } catch {
     // ignore
   }
 };
 
 const FullscreenBootstrap = () => {
-  const hasEnteredRef = useRef(false);
+  const wasFullscreenRef = useRef(false);
 
   useEffect(() => {
-    // Any user gesture ensures fullscreen (browsers require a gesture).
-    // Keep re-entering on every gesture so the app stays fullscreen while used.
     const onGesture = () => {
-      requestFs();
+      void requestFs();
     };
     window.addEventListener("keydown", onGesture);
     window.addEventListener("pointerdown", onGesture);
 
     const onFsChange = () => {
       if (isFullscreen()) {
-        hasEnteredRef.current = true;
-      } else if (hasEnteredRef.current) {
-        // User exited fullscreen (e.g. Esc) — offer the TV-style exit popup.
-        requestAppExit();
+        wasFullscreenRef.current = true;
+      } else if (wasFullscreenRef.current) {
+        // If we somehow leave fullscreen (e.g. OS-level gesture), try to re-enter
+        // on the next user gesture. Do NOT auto-open the exit popup here —
+        // the exit popup is driven exclusively by the app's back-navigation logic.
+        // requestFs will run again from the gesture listeners above.
       }
     };
     document.addEventListener("fullscreenchange", onFsChange);
