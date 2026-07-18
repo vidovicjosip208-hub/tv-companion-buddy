@@ -575,7 +575,7 @@ const VideoPlayer = ({
   }));
 
   const [progress, setProgress] = useState(42);
-  const [aspectRatioMode, setAspectRatioMode] = useState<"original" | "fill" | "4:3" | "16:9">("16:9");
+  const [aspectRatioMode, setAspectRatioMode] = useState<"original" | "fill" | "4:3" | "16:9">("fill");
   const [videoNativeAR, setVideoNativeAR] = useState<number | null>(null);
 
   // Detektiramo native aspect ratio streama čim metadata bude dostupna
@@ -1205,14 +1205,14 @@ const VideoPlayer = ({
                     maxWidth: "100%",
                   };
                 }
-                // Za "16:9" i "original" — koristimo contain da nikad ne odrežemo sliku.
-                // Ako je stream širi od ekrana → fit by width; ako je viši → fit by height.
-                // object-fit: contain to radi automatski.
+                // Referentno platno se zasebno skalira po X/Y osi na stvarni ekran.
+                // Zato video mora ispuniti cijelo platno; contain bi unutar njega
+                // dodao trake koje nakon vanjskog skaliranja ostaju vidljive.
                 return {
                   ...base,
                   width: "100%",
                   height: "100%",
-                  objectFit: "contain" as const,
+                  objectFit: "fill" as const,
                   backgroundColor: "transparent",
                 };
               })()}
