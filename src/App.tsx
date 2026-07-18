@@ -23,6 +23,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <FullscreenBootstrap />
+        <ExitAppDialog />
         <ScaleToFit>
           <BrowserRouter>
             <Routes>
