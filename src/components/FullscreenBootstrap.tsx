@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { requestAppExit } from "./ExitAppDialog";
 
 type FSDoc = Document & {
   webkitFullscreenElement?: Element | null;
@@ -26,17 +27,33 @@ const requestFs = () => {
 };
 
 const FullscreenBootstrap = () => {
+  const hasEnteredRef = useRef(false);
+
   useEffect(() => {
-    const onFirstGesture = () => {
+    // Any user gesture ensures fullscreen (browsers require a gesture).
+    // Keep re-entering on every gesture so the app stays fullscreen while used.
+    const onGesture = () => {
       requestFs();
     };
-    // Any first user gesture triggers fullscreen (browsers require gesture).
-    window.addEventListener("keydown", onFirstGesture, { once: true });
-    window.addEventListener("pointerdown", onFirstGesture, { once: true });
+    window.addEventListener("keydown", onGesture);
+    window.addEventListener("pointerdown", onGesture);
+
+    const onFsChange = () => {
+      if (isFullscreen()) {
+        hasEnteredRef.current = true;
+      } else if (hasEnteredRef.current) {
+        // User exited fullscreen (e.g. Esc) — offer the TV-style exit popup.
+        requestAppExit();
+      }
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    document.addEventListener("webkitfullscreenchange", onFsChange);
 
     return () => {
-      window.removeEventListener("keydown", onFirstGesture);
-      window.removeEventListener("pointerdown", onFirstGesture);
+      window.removeEventListener("keydown", onGesture);
+      window.removeEventListener("pointerdown", onGesture);
+      document.removeEventListener("fullscreenchange", onFsChange);
+      document.removeEventListener("webkitfullscreenchange", onFsChange);
     };
   }, []);
 
