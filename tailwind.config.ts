@@ -5,6 +5,17 @@ export default {
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
+    // The app is a 10-foot TV interface rendered on a fixed reference canvas.
+    // Device-specific breakpoints must not rearrange that canvas before
+    // ScaleToFit maps it to the physical screen, otherwise TV browsers with a
+    // smaller CSS viewport show a different composition than the editor.
+    screens: {
+      sm: "1px",
+      md: "1px",
+      lg: "1px",
+      xl: "1px",
+      "2xl": "1px",
+    },
     container: {
       center: true,
       padding: "2rem",
