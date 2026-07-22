@@ -290,9 +290,9 @@ const ChannelCard = ({
             : isActive
               ? `1px solid rgba(245,197,24,0.45)`
               : "1px solid rgba(255,255,255,0.1)",
-          borderRadius: "5px",
-          padding: "5px 7px 9px 7px",
-          minHeight: "80px",
+          borderRadius: "6px",
+          padding: "7px 8px 11px 8px",
+          minHeight: "104px",
           boxShadow: isFocused
             ? `0 0 14px 4px rgba(245,197,24,0.28)`
             : isActive
@@ -307,13 +307,13 @@ const ChannelCard = ({
           {overrideNum ?? ch.num}
         </span>
 
-        <div className="mt-2 mb-2 flex items-center justify-center" style={{ height: 48 }}>
+        <div className="mt-3 mb-2 flex items-center justify-center" style={{ height: 68 }}>
           {logoUrl && !logoError ? (
             <img
               key={logoUrl}
               src={logoUrl}
               alt={ch.label}
-              className="max-h-12 max-w-full object-contain"
+              className="max-h-[68px] max-w-full object-contain"
               style={{
                 filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
                 transition: "filter 0.18s",
@@ -323,8 +323,8 @@ const ChannelCard = ({
           ) : (
             <Tv
               style={{
-                width: 32,
-                height: 32,
+                width: 44,
+                height: 44,
                 color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
                 filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
                 transition: "color 0.18s, filter 0.18s",
@@ -1142,7 +1142,7 @@ const VideoPlayer = ({
   // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
   const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((hudIdx + (4 - i)) % total) + total) % total);
 
-  const CARD_W = 200;
+  const CARD_W = 170;
   // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
   // Fokusirana kartica (s trokutićima, visina ~142px) je najniža u sidebaru
   // pa sidebar container treba početi dovoljno visoko da fokusirana ne ulazi u HUD.
