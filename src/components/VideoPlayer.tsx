@@ -1142,7 +1142,7 @@ const VideoPlayer = ({
   // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
   const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((hudIdx + (4 - i)) % total) + total) % total);
 
-  const CARD_W = 132;
+  const CARD_W = 200;
   // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
   // Fokusirana kartica (s trokutićima, visina ~142px) je najniža u sidebaru
   // pa sidebar container treba početi dovoljno visoko da fokusirana ne ulazi u HUD.
