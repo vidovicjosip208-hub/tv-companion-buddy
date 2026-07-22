@@ -714,6 +714,7 @@ const VideotekaPlayer = ({
   // Debounce seek — video seekuje tek kad korisnik prestane pritiskati tipke
   const pendingSeekRef = useRef<number | null>(null);
   const pendingSeekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasPlayingBeforeSeekRef = useRef<boolean>(false);
 
   const [showSubtitleModal, setShowSubtitleModal] = useState(false);
   const [selectedSubtitle, setSelectedSubtitle] = useState("off");
