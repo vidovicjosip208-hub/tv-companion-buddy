@@ -1442,6 +1442,7 @@ const VideoPlayer = ({
                     <button
                       onMouseDown={(e) => {
                         e.preventDefault();
+                        setFocusedControl(3);
                         cycleAspectRatio();
                       }}
                       title={`Aspect ratio: ${aspectRatioMode}`}
@@ -1452,12 +1453,16 @@ const VideoPlayer = ({
                         justifyContent: "center",
                         gap: 2,
                         padding: "4px 10px",
-                        background: "none",
-                        border: `1.5px solid rgba(245,197,24,0.4)`,
+                        background:
+                          focusedControl === 3 && !epgMode && !isProgressFocused
+                            ? "rgba(245,197,24,0.15)"
+                            : "none",
+                        border: `1.5px solid ${focusedControl === 3 && !epgMode && !isProgressFocused ? GOLD : "rgba(245,197,24,0.4)"}`,
                         borderRadius: 6,
                         cursor: "pointer",
                         transition: "all 0.2s",
-                        opacity: 0.8,
+                        opacity: focusedControl === 3 && !epgMode && !isProgressFocused ? 1 : 0.8,
+                        transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.08)" : "scale(1)",
                       }}
                     >
                       <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
