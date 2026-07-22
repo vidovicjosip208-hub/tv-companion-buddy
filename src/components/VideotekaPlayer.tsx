@@ -714,6 +714,7 @@ const VideotekaPlayer = ({
   // Debounce seek — video seekuje tek kad korisnik prestane pritiskati tipke
   const pendingSeekRef = useRef<number | null>(null);
   const pendingSeekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasPlayingBeforeSeekRef = useRef<boolean>(false);
 
   const [showSubtitleModal, setShowSubtitleModal] = useState(false);
   const [selectedSubtitle, setSelectedSubtitle] = useState("off");
@@ -932,6 +933,15 @@ const VideotekaPlayer = ({
     (time: number) => {
       const clamped = Math.max(0, Math.min(time, totalDurationRef.current));
 
+      // Pauziraj video prvi put kad korisnik uđe u seek način.
+      const video = videoRef.current;
+      if (!isSeekingRef.current) {
+        wasPlayingBeforeSeekRef.current = video ? !video.paused : false;
+        if (video && !video.paused) {
+          try { video.pause(); } catch { /* noop */ }
+        }
+      }
+
       // Samo ažuriraj UI/preview — video se NE pomiče dok korisnik ne potvrdi s OK.
       pendingSeekRef.current = clamped;
       updateProgressDom(clamped);
@@ -959,6 +969,12 @@ const VideotekaPlayer = ({
     updateProgressDom(target);
     commitSeek(target);
     setIsSeeking(false);
+    // Nakon potvrde uvijek pokreni reprodukciju s odabrane pozicije.
+    const video = videoRef.current;
+    if (video) {
+      try { video.play().catch(() => {}); } catch { /* noop */ }
+    }
+    wasPlayingBeforeSeekRef.current = false;
   }, [commitSeek, updateProgressDom]);
 
   // Otkazivanje seeka (Escape / promjena reda) — vrati UI na trenutnu poziciju videa.
@@ -971,6 +987,14 @@ const VideotekaPlayer = ({
     updateProgressDom(currentTimeRef.current);
     setSeekTime(currentTimeRef.current);
     setIsSeeking(false);
+    // Ako je video svirao prije ulaska u seek, nastavi reprodukciju.
+    if (wasPlayingBeforeSeekRef.current) {
+      const video = videoRef.current;
+      if (video) {
+        try { video.play().catch(() => {}); } catch { /* noop */ }
+      }
+    }
+    wasPlayingBeforeSeekRef.current = false;
   }, [updateProgressDom]);
 
   useEffect(() => {
