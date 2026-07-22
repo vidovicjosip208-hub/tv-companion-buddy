@@ -1457,13 +1457,14 @@ const VideoPlayer = ({
                           focusedControl === 3 && !epgMode && !isProgressFocused
                             ? "rgba(245,197,24,0.15)"
                             : "none",
-                        border: `1.5px solid ${focusedControl === 3 && !epgMode && !isProgressFocused ? GOLD : "rgba(245,197,24,0.4)"}`,
+                        border: `1.5px solid ${focusedControl === 3 && !epgMode && !isProgressFocused ? GOLD : "transparent"}`,
                         borderRadius: 6,
                         cursor: "pointer",
                         transition: "all 0.2s",
-                        opacity: focusedControl === 3 && !epgMode && !isProgressFocused ? 1 : 0.8,
+                        opacity: focusedControl === 3 && !epgMode && !isProgressFocused ? 1 : 0.55,
                         transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.08)" : "scale(1)",
                       }}
+
                     >
                       <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
                         {aspectRatioMode === "original" && (
