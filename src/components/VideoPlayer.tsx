@@ -1270,7 +1270,7 @@ const VideoPlayer = ({
                 width: CARD_W,
                 display: "flex",
                 flexDirection: "column",
-                gap: 6,
+                gap: 10,
               }}
             >
               {aboveWindow.map((chIdx) => {
