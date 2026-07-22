@@ -1100,6 +1100,11 @@ const VideotekaPlayer = ({
     selectedAudio,
     selectedFont,
     videoReady,
+    isSeeking,
+    seekTime,
+    confirmSeek,
+    cancelSeek,
+    updateProgressDom,
   ]);
 
   useEffect(() => {
