@@ -828,10 +828,11 @@ const VideotekaPlayer = ({
   }, [cancelHideTimer]);
 
   useEffect(() => {
-    if (isVisible && isPlaying) startHideTimer();
+    // Dok korisnik skrola seek preview, HUD ostaje vidljiv — ne startaj hide timer.
+    if (isVisible && isPlaying && !isSeeking) startHideTimer();
     else cancelHideTimer();
     return () => cancelHideTimer();
-  }, [isVisible, isPlaying, startHideTimer, cancelHideTimer]);
+  }, [isVisible, isPlaying, isSeeking, startHideTimer, cancelHideTimer]);
 
   useEffect(() => {
     if (loaderDone) {
