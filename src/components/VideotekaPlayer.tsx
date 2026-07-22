@@ -932,24 +932,46 @@ const VideotekaPlayer = ({
     (time: number) => {
       const clamped = Math.max(0, Math.min(time, totalDurationRef.current));
 
-      // Odmah ažuriraj UI i progress bar
+      // Samo ažuriraj UI/preview — video se NE pomiče dok korisnik ne potvrdi s OK.
       pendingSeekRef.current = clamped;
-      currentTimeRef.current = clamped;
       updateProgressDom(clamped);
       setSeekTime(clamped);
       setIsSeeking(true);
 
-      // Debounce: čekaj 300ms od zadnjeg pritiska pa tek seekuj video
-      if (pendingSeekTimerRef.current) clearTimeout(pendingSeekTimerRef.current);
-      pendingSeekTimerRef.current = setTimeout(() => {
-        if (pendingSeekRef.current !== null) {
-          commitSeek(pendingSeekRef.current);
-          pendingSeekRef.current = null;
-        }
-      }, 300);
+      // Očisti eventualni raniji debounce timer — više ne komitamo automatski.
+      if (pendingSeekTimerRef.current) {
+        clearTimeout(pendingSeekTimerRef.current);
+        pendingSeekTimerRef.current = null;
+      }
     },
-    [updateProgressDom, commitSeek],
+    [updateProgressDom],
   );
+
+  // Potvrda seeka (OK gumb) — sada stvarno pomakni video na odabranu poziciju.
+  const confirmSeek = useCallback(() => {
+    const target = pendingSeekRef.current;
+    pendingSeekRef.current = null;
+    if (target === null) {
+      setIsSeeking(false);
+      return;
+    }
+    currentTimeRef.current = target;
+    updateProgressDom(target);
+    commitSeek(target);
+    setIsSeeking(false);
+  }, [commitSeek, updateProgressDom]);
+
+  // Otkazivanje seeka (Escape / promjena reda) — vrati UI na trenutnu poziciju videa.
+  const cancelSeek = useCallback(() => {
+    pendingSeekRef.current = null;
+    if (pendingSeekTimerRef.current) {
+      clearTimeout(pendingSeekTimerRef.current);
+      pendingSeekTimerRef.current = null;
+    }
+    updateProgressDom(currentTimeRef.current);
+    setSeekTime(currentTimeRef.current);
+    setIsSeeking(false);
+  }, [updateProgressDom]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
