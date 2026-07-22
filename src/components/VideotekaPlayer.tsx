@@ -828,10 +828,11 @@ const VideotekaPlayer = ({
   }, [cancelHideTimer]);
 
   useEffect(() => {
-    if (isVisible && isPlaying) startHideTimer();
+    // Dok korisnik skrola seek preview, HUD ostaje vidljiv — ne startaj hide timer.
+    if (isVisible && isPlaying && !isSeeking) startHideTimer();
     else cancelHideTimer();
     return () => cancelHideTimer();
-  }, [isVisible, isPlaying, startHideTimer, cancelHideTimer]);
+  }, [isVisible, isPlaying, isSeeking, startHideTimer, cancelHideTimer]);
 
   useEffect(() => {
     if (loaderDone) {
@@ -931,24 +932,46 @@ const VideotekaPlayer = ({
     (time: number) => {
       const clamped = Math.max(0, Math.min(time, totalDurationRef.current));
 
-      // Odmah ažuriraj UI i progress bar
+      // Samo ažuriraj UI/preview — video se NE pomiče dok korisnik ne potvrdi s OK.
       pendingSeekRef.current = clamped;
-      currentTimeRef.current = clamped;
       updateProgressDom(clamped);
       setSeekTime(clamped);
       setIsSeeking(true);
 
-      // Debounce: čekaj 300ms od zadnjeg pritiska pa tek seekuj video
-      if (pendingSeekTimerRef.current) clearTimeout(pendingSeekTimerRef.current);
-      pendingSeekTimerRef.current = setTimeout(() => {
-        if (pendingSeekRef.current !== null) {
-          commitSeek(pendingSeekRef.current);
-          pendingSeekRef.current = null;
-        }
-      }, 300);
+      // Očisti eventualni raniji debounce timer — više ne komitamo automatski.
+      if (pendingSeekTimerRef.current) {
+        clearTimeout(pendingSeekTimerRef.current);
+        pendingSeekTimerRef.current = null;
+      }
     },
-    [updateProgressDom, commitSeek],
+    [updateProgressDom],
   );
+
+  // Potvrda seeka (OK gumb) — sada stvarno pomakni video na odabranu poziciju.
+  const confirmSeek = useCallback(() => {
+    const target = pendingSeekRef.current;
+    pendingSeekRef.current = null;
+    if (target === null) {
+      setIsSeeking(false);
+      return;
+    }
+    currentTimeRef.current = target;
+    updateProgressDom(target);
+    commitSeek(target);
+    setIsSeeking(false);
+  }, [commitSeek, updateProgressDom]);
+
+  // Otkazivanje seeka (Escape / promjena reda) — vrati UI na trenutnu poziciju videa.
+  const cancelSeek = useCallback(() => {
+    pendingSeekRef.current = null;
+    if (pendingSeekTimerRef.current) {
+      clearTimeout(pendingSeekTimerRef.current);
+      pendingSeekTimerRef.current = null;
+    }
+    updateProgressDom(currentTimeRef.current);
+    setSeekTime(currentTimeRef.current);
+    setIsSeeking(false);
+  }, [updateProgressDom]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -968,7 +991,11 @@ const VideotekaPlayer = ({
         case "Escape":
         case "Backspace":
           e.preventDefault();
-          setIsVisible(false);
+          if (isSeeking) {
+            cancelSeek();
+          } else {
+            setIsVisible(false);
+          }
           break;
 
         case "ArrowRight":
@@ -977,7 +1004,8 @@ const VideotekaPlayer = ({
             if (focusedCol === 1) {
               setFocusedCol(2);
             } else if (focusedCol === 2) {
-              seekVideo(currentTimeRef.current + SEEK_STEP);
+              const base = isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current;
+              seekVideo(base + SEEK_STEP);
             } else {
               setFocusedCol((prev) => Math.min(prev + 1, ROW_SIZES[focusedRow] - 1));
             }
@@ -992,7 +1020,8 @@ const VideotekaPlayer = ({
             if (focusedCol === 1) {
               setFocusedCol(0);
             } else if (focusedCol === 0) {
-              seekVideo(currentTimeRef.current - SEEK_STEP);
+              const base = isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current;
+              seekVideo(base - SEEK_STEP);
             } else {
               setFocusedCol((prev) => Math.max(prev - 1, 0));
             }
@@ -1003,8 +1032,9 @@ const VideotekaPlayer = ({
 
         case "ArrowDown":
           e.preventDefault();
+          // Dok skrolamo seek preview, ne dopusti promjenu reda — mora se potvrditi (OK) ili otkazati (Escape).
+          if (isSeeking) break;
           if (focusedRow < ROW_SIZES.length - 1) {
-            setIsSeeking(false);
             setFocusedRow((prev) => prev + 1);
             setFocusedCol(0);
           }
@@ -1012,8 +1042,8 @@ const VideotekaPlayer = ({
 
         case "ArrowUp":
           e.preventDefault();
+          if (isSeeking) break;
           if (focusedRow > 0) {
-            setIsSeeking(false);
             setFocusedRow((prev) => prev - 1);
             setFocusedCol(0);
           }
@@ -1031,13 +1061,19 @@ const VideotekaPlayer = ({
             }
             if (focusedCol === 2 && onNextEpisode) onNextEpisode();
           } else if (focusedRow === 2) {
-            if (focusedCol === 0) seekVideo(currentTimeRef.current - 10);
+            if (focusedCol === 0) seekVideo((isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current) - 10);
             if (focusedCol === 1) {
-              setIsSeeking(false);
-              if (videoRef.current?.paused) startPlayback(150);
-              else pausePlayback();
+              if (isSeeking) {
+                // OK potvrđuje seek preview i pokreće reprodukciju s odabrane pozicije.
+                confirmSeek();
+                startPlayback(150);
+              } else if (videoRef.current?.paused) {
+                startPlayback(150);
+              } else {
+                pausePlayback();
+              }
             }
-            if (focusedCol === 2) seekVideo(currentTimeRef.current + 10);
+            if (focusedCol === 2) seekVideo((isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current) + 10);
           } else if (focusedRow === 3) {
             if (focusedCol === 0) openSubtitleModal(DUMMY_SUBTITLES.findIndex((s) => s.code === selectedSubtitle));
             if (focusedCol === 1) openAudioModal(DUMMY_AUDIO_TRACKS.findIndex((a) => a.code === selectedAudio));
@@ -1064,6 +1100,11 @@ const VideotekaPlayer = ({
     selectedAudio,
     selectedFont,
     videoReady,
+    isSeeking,
+    seekTime,
+    confirmSeek,
+    cancelSeek,
+    updateProgressDom,
   ]);
 
   useEffect(() => {
