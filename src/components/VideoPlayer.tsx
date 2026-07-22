@@ -1559,9 +1559,9 @@ const VideoPlayer = ({
                         flexShrink: 0,
                         transition: "all 0.2s",
                         width: "fit-content",
-                        opacity: isFavoriteProp || focusedControl === 3 ? 1 : 0.55,
+                        opacity: isFavoriteProp || focusedControl === 4 ? 1 : 0.55,
                         outline:
-                          focusedControl === 3 && !epgMode && !isProgressFocused
+                          focusedControl === 4 && !epgMode && !isProgressFocused
                             ? `2px solid rgba(245,197,24,0.5)`
                             : "2px solid transparent",
                         outlineOffset: "4px",
@@ -1570,11 +1570,11 @@ const VideoPlayer = ({
                         border: "none",
                         cursor: "pointer",
                         padding: "4px 8px",
-                        transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
+                        transform: focusedControl === 4 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
                       }}
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        setFocusedControl(3);
+                        setFocusedControl(4);
                         onToggleFavorite?.();
                       }}
                     >
