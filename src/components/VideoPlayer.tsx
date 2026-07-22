@@ -291,8 +291,8 @@ const ChannelCard = ({
               ? `1px solid rgba(245,197,24,0.45)`
               : "1px solid rgba(255,255,255,0.1)",
           borderRadius: "6px",
-          padding: "7px 8px 11px 8px",
-          minHeight: "104px",
+          padding: "6px 8px 9px 8px",
+          minHeight: "96px",
           boxShadow: isFocused
             ? `0 0 14px 4px rgba(245,197,24,0.28)`
             : isActive
@@ -307,13 +307,13 @@ const ChannelCard = ({
           {overrideNum ?? ch.num}
         </span>
 
-        <div className="mt-3 mb-2 flex items-center justify-center" style={{ height: 68 }}>
+        <div className="mt-3 mb-1 flex items-center justify-center" style={{ height: 62 }}>
           {logoUrl && !logoError ? (
             <img
               key={logoUrl}
               src={logoUrl}
               alt={ch.label}
-              className="max-h-[68px] max-w-full object-contain"
+              className="max-h-[62px] max-w-full object-contain"
               style={{
                 filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
                 transition: "filter 0.18s",
@@ -323,8 +323,8 @@ const ChannelCard = ({
           ) : (
             <Tv
               style={{
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
                 color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
                 filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
                 transition: "color 0.18s, filter 0.18s",
