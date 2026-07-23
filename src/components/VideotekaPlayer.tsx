@@ -675,8 +675,44 @@ const VideotekaPlayer = ({
   } = useMovieStream(streamUrlProp ? undefined : itemId);
   const streamUrl = streamUrlProp ?? movie?.stream_url ?? null;
 
+  // ── Serije: sezone + odabrana epizoda ─────────────────────────────────────
+  const seasons = movie?.seasons ?? [];
+  const hasEpisodes = seasons.some((s) => s.episodes.length > 0);
+  const firstSeasonWithEpisodes = seasons.find((s) => s.episodes.length > 0) ?? null;
+  const firstEpisodeId = firstSeasonWithEpisodes?.episodes[0]?.id ?? null;
+
+  const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | null>(null);
+  useEffect(() => {
+    if (hasEpisodes && !selectedEpisodeId && firstEpisodeId) {
+      setSelectedEpisodeId(firstEpisodeId);
+    }
+  }, [hasEpisodes, firstEpisodeId, selectedEpisodeId]);
+
+  const activeEpisode = useMemo(() => {
+    if (!selectedEpisodeId) return null;
+    for (const s of seasons) {
+      for (const e of s.episodes) if (e.id === selectedEpisodeId) return e;
+    }
+    return null;
+  }, [seasons, selectedEpisodeId]);
+
+  const effectiveStreamUrl = activeEpisode?.stream_url ?? streamUrl;
+
+  const [showEpisodesPanel, setShowEpisodesPanel] = useState(false);
+  const [epFocusArea, setEpFocusArea] = useState<"seasons" | "episodes">("seasons");
+  const [epSeasonIdx, setEpSeasonIdx] = useState(0);
+  const [epEpisodeIdx, setEpEpisodeIdx] = useState(0);
+  const episodesPanelRef = useRef(false);
+  const hasEpisodesRef = useRef(false);
+  useEffect(() => {
+    episodesPanelRef.current = showEpisodesPanel;
+  }, [showEpisodesPanel]);
+  useEffect(() => {
+    hasEpisodesRef.current = hasEpisodes;
+  }, [hasEpisodes]);
+
   // ── NOVO: seek preview URL — iz propa, ili isti stream_url kao glavni video
-  const seekPreviewUrl = seekPreviewUrlProp ?? streamUrl;
+  const seekPreviewUrl = seekPreviewUrlProp ?? effectiveStreamUrl;
 
   // ── NOVO: hook koji drži skriveni video + canvas za frame capture
   const { frames: seekFrames, requestFrame } = useSeekPreview(seekPreviewUrl);
@@ -1010,6 +1046,13 @@ const VideotekaPlayer = ({
       startHideTimer();
 
       if (subtitleModalRef.current || audioModalRef.current || fontModalRef.current) return;
+      if (episodesPanelRef.current) return;
+
+      if ((e.key === "e" || e.key === "E") && hasEpisodesRef.current) {
+        e.preventDefault();
+        setShowEpisodesPanel(true);
+        return;
+      }
 
       switch (e.key) {
         case "Escape":
@@ -1198,13 +1241,68 @@ const VideotekaPlayer = ({
     return () => window.removeEventListener("keydown", handleModalKeyDown, { capture: true });
   }, []);
 
+  // ── Keyboard za episode panel ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!showEpisodesPanel) return;
+    const handler = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const currentSeason = seasons[epSeasonIdx];
+      const epCount = currentSeason?.episodes.length ?? 0;
+      if (e.key === "Escape" || e.key === "Backspace") {
+        setShowEpisodesPanel(false);
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        setEpFocusArea("seasons");
+        return;
+      }
+      if (e.key === "ArrowRight") {
+        if (epCount > 0) setEpFocusArea("episodes");
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        if (epFocusArea === "seasons") {
+          setEpSeasonIdx((i) => Math.max(0, i - 1));
+          setEpEpisodeIdx(0);
+        } else {
+          setEpEpisodeIdx((i) => Math.max(0, i - 1));
+        }
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        if (epFocusArea === "seasons") {
+          setEpSeasonIdx((i) => Math.min(seasons.length - 1, i + 1));
+          setEpEpisodeIdx(0);
+        } else {
+          setEpEpisodeIdx((i) => Math.min(Math.max(0, epCount - 1), i + 1));
+        }
+        return;
+      }
+      if (e.key === "Enter") {
+        if (epFocusArea === "seasons") {
+          if (epCount > 0) setEpFocusArea("episodes");
+        } else {
+          const ep = currentSeason?.episodes[epEpisodeIdx];
+          if (ep) {
+            setSelectedEpisodeId(ep.id);
+            setStreamError(null);
+            setShowEpisodesPanel(false);
+          }
+        }
+      }
+    };
+    window.addEventListener("keydown", handler, { capture: true });
+    return () => window.removeEventListener("keydown", handler, { capture: true });
+  }, [showEpisodesPanel, epFocusArea, epSeasonIdx, epEpisodeIdx, seasons]);
+
   const skipActive = skipHovered || (focusedRow === 0 && focusedCol === 2);
 
   return (
     <div ref={playerRootRef} className="fixed inset-0 z-[100] bg-black font-sans overflow-hidden">
       <div className="absolute inset-0">
         <FrozenHlsVideo
-          streamUrl={streamUrl}
+          streamUrl={effectiveStreamUrl}
           thumbnail={thumbnail}
           fetchingStream={fetchingStream}
           fetchError={fetchError}
@@ -1807,6 +1905,132 @@ const VideotekaPlayer = ({
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+      {/* ── Episode selector panel (za serije) ─────────────────────────── */}
+      {hasEpisodes && (
+        <button
+          type="button"
+          onClick={() => setShowEpisodesPanel(true)}
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[160] px-4 py-2 rounded-md bg-black/60 hover:bg-black/80 text-white text-sm font-semibold border border-white/20 backdrop-blur"
+        >
+          Epizode
+        </button>
+      )}
+
+      <AnimatePresence>
+        {showEpisodesPanel && (
+          <motion.div
+            key="episodes-panel"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-[170] flex bg-black/80 backdrop-blur-sm"
+          >
+            {/* Seasons */}
+            <div className="w-[280px] shrink-0 h-full overflow-y-auto p-6 border-r border-white/10">
+              <h3 className="text-white/50 text-xs uppercase tracking-widest mb-4">Sezone</h3>
+              <div className="flex flex-col gap-1">
+                {seasons.map((s, idx) => {
+                  const isFocused = epFocusArea === "seasons" && epSeasonIdx === idx;
+                  const isSelected = epSeasonIdx === idx;
+                  return (
+                    <button
+                      key={s.id}
+                      onMouseEnter={() => {
+                        setEpFocusArea("seasons");
+                        setEpSeasonIdx(idx);
+                        setEpEpisodeIdx(0);
+                      }}
+                      onClick={() => {
+                        setEpSeasonIdx(idx);
+                        setEpEpisodeIdx(0);
+                        setEpFocusArea("episodes");
+                      }}
+                      className={`text-left px-4 py-3 rounded-lg transition ${
+                        isSelected ? "bg-white/15 text-white" : "text-white/60 hover:text-white"
+                      } ${isFocused ? "ring-2 ring-inset ring-white/50" : ""}`}
+                    >
+                      <div className="font-semibold">Sezona {s.season_number}</div>
+                      <div className="text-xs text-white/40">{s.episodes.length} epizoda</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Episodes */}
+            <div className="flex-1 h-full overflow-y-auto p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white text-xl font-bold">
+                  Sezona {seasons[epSeasonIdx]?.season_number ?? ""}
+                </h3>
+                <button
+                  onClick={() => setShowEpisodesPanel(false)}
+                  className="text-white/60 hover:text-white text-sm"
+                >
+                  Zatvori (Esc)
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {(seasons[epSeasonIdx]?.episodes ?? []).map((ep, idx) => {
+                  const isFocused = epFocusArea === "episodes" && epEpisodeIdx === idx;
+                  const isActive = ep.id === selectedEpisodeId;
+                  return (
+                    <button
+                      key={ep.id}
+                      onMouseEnter={() => {
+                        setEpFocusArea("episodes");
+                        setEpEpisodeIdx(idx);
+                      }}
+                      onClick={() => {
+                        setSelectedEpisodeId(ep.id);
+                        setStreamError(null);
+                        setShowEpisodesPanel(false);
+                      }}
+                      className={`flex gap-4 items-stretch text-left p-3 rounded-lg transition ${
+                        isActive ? "bg-white/15" : "hover:bg-white/10"
+                      } ${isFocused ? "ring-2 ring-white/60" : ""}`}
+                    >
+                      <div className="w-[160px] aspect-video shrink-0 rounded-md overflow-hidden bg-white/5 relative">
+                        {ep.thumbnail_url ? (
+                          <img
+                            src={ep.thumbnail_url}
+                            alt={ep.title ?? `Epizoda ${ep.episode_number}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full grid place-items-center text-white/30 text-2xl">
+                            {ep.episode_number}
+                          </div>
+                        )}
+                        <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+                          E{ep.episode_number}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <h4 className="text-white font-semibold truncate">
+                            {ep.title ?? `Epizoda ${ep.episode_number}`}
+                          </h4>
+                          {ep.duration && (
+                            <span className="shrink-0 text-white/40 text-xs">{ep.duration}</span>
+                          )}
+                        </div>
+                        {ep.description && (
+                          <p className="text-white/50 text-xs line-clamp-2">{ep.description}</p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+                {(seasons[epSeasonIdx]?.episodes.length ?? 0) === 0 && (
+                  <p className="text-white/40 text-sm">Nema dostupnih epizoda za ovu sezonu.</p>
+                )}
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
