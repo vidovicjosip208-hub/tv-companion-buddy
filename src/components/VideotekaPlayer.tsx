@@ -36,17 +36,6 @@ interface VideotekaPlayerProps {
   seekPreviewUrl?: string;
 }
 
-const supportsHEVC = (): boolean => {
-  if (typeof window === "undefined") return false;
-  const v = document.createElement("video");
-  const codecs = ['video/mp4; codecs="hvc1.1.6.L93.B0"', 'video/mp4; codecs="hev1.1.6.L93.B0"'];
-  if (codecs.some((c) => v.canPlayType(c) !== "")) return true;
-  if (typeof MediaSource !== "undefined" && MediaSource.isTypeSupported) {
-    return codecs.some((c) => MediaSource.isTypeSupported(c));
-  }
-  return false;
-};
-
 type StreamKind = "hls" | "file" | "unknown";
 
 const getStreamKind = (source: string): StreamKind => {
