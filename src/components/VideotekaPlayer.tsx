@@ -502,6 +502,8 @@ const FrozenHlsVideo = memo(
 
       return () => {
         disposed = true;
+        window.clearTimeout(startupWatchdog);
+        video.removeEventListener("loadedmetadata", clearWatchdogOnMeta);
         video.removeEventListener("error", handleNativeError);
         destroyHls();
         destroyDash();
