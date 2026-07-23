@@ -366,7 +366,6 @@ const FrozenHlsVideo = memo(
           maxStarvationDelay: 4,
           maxLoadingDelay: 4,
           highBufferWatchdogPeriod: 2,
-          fragLoadingLoopThreshold: 3,
         } satisfies ConstructorParameters<typeof Hls>[0];
         const hls = new Hls(hlsConfig);
 
