@@ -13,6 +13,7 @@ import {
   FastForward,
 } from "lucide-react";
 import Hls from "hls.js";
+import { MediaPlayer, type MediaPlayerClass } from "dashjs";
 import logo from "@/assets/max-ovizija-videoteka-logo.png";
 import { useMovieStream } from "@/hooks/useMovieStream";
 
@@ -36,12 +37,13 @@ interface VideotekaPlayerProps {
   seekPreviewUrl?: string;
 }
 
-type StreamKind = "hls" | "file" | "unknown";
+type StreamKind = "hls" | "dash" | "file" | "unknown";
 
 const getStreamKind = (source: string): StreamKind => {
   const normalized = decodeURIComponent(source).toLowerCase();
   const cleanPath = normalized.split(/[?#]/, 1)[0];
   if (/\.m3u8(?:$|[/?#])/.test(normalized) || normalized.includes("format=m3u8")) return "hls";
+  if (/\.mpd(?:$|[/?#])/.test(normalized) || normalized.includes("format=mpd")) return "dash";
   if (/\.(mp4|m4v|webm|ogv|ogg|mov|mkv|avi)(?:$|[/?#])/.test(cleanPath)) return "file";
   return "unknown";
 };
@@ -283,6 +285,7 @@ const FrozenHlsVideo = memo(
   }: FrozenHlsVideoProps) => {
     const localVideoRef = useRef<HTMLVideoElement | null>(null);
     const usingHlsJsRef = useRef(false);
+    const dashRef = useRef<MediaPlayerClass | null>(null);
 
     const playInitial = useCallback(() => {
       const video = localVideoRef.current;
@@ -326,6 +329,11 @@ const FrozenHlsVideo = memo(
         usingHlsJsRef.current = false;
       };
 
+      const destroyDash = () => {
+        dashRef.current?.reset();
+        dashRef.current = null;
+      };
+
       const resetVideo = () => {
         video.pause();
         video.removeAttribute("src");
@@ -349,6 +357,7 @@ const FrozenHlsVideo = memo(
       startNative = () => {
         if (disposed) return;
         destroyHls();
+        destroyDash();
         resetVideo();
         usingHlsJsRef.current = false;
         video.src = streamUrl;
@@ -369,10 +378,10 @@ const FrozenHlsVideo = memo(
         }
 
         destroyHls();
+        destroyDash();
         resetVideo();
         usingHlsJsRef.current = true;
         const hls = new Hls({
-          debug: true,
           enableWorker: true,
           lowLatencyMode: false,
           capLevelToPlayerSize: false,
@@ -444,6 +453,21 @@ const FrozenHlsVideo = memo(
         });
       };
 
+      const startDash = () => {
+        if (disposed) return;
+        destroyHls();
+        destroyDash();
+        resetVideo();
+        usingHlsJsRef.current = true;
+        try {
+          const dash = MediaPlayer().create();
+          dashRef.current = dash;
+          dash.initialize(video, streamUrl, true);
+        } catch {
+          showFinalError();
+        }
+      };
+
       const handleNativeError = () => {
         if (disposed || usingHlsJsRef.current) return;
         // Ako izvor nema prepoznatljivu ekstenziju, native greška može značiti
@@ -458,6 +482,7 @@ const FrozenHlsVideo = memo(
 
       video.addEventListener("error", handleNativeError);
       if (streamKind === "hls") startHls();
+      else if (streamKind === "dash") startDash();
       else if (streamKind === "file") startNative();
       else {
         hlsFallbackTried = true;
@@ -468,6 +493,7 @@ const FrozenHlsVideo = memo(
         disposed = true;
         video.removeEventListener("error", handleNativeError);
         destroyHls();
+        destroyDash();
       };
     }, [streamUrl, fetchingStream, fetchError, hlsRef, onError, onReady, playInitial]);
 
