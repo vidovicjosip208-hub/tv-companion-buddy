@@ -1907,6 +1907,132 @@ const VideotekaPlayer = ({
           </>
         )}
       </AnimatePresence>
+      {/* ── Episode selector panel (za serije) ─────────────────────────── */}
+      {hasEpisodes && (
+        <button
+          type="button"
+          onClick={() => setShowEpisodesPanel(true)}
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[160] px-4 py-2 rounded-md bg-black/60 hover:bg-black/80 text-white text-sm font-semibold border border-white/20 backdrop-blur"
+        >
+          Epizode
+        </button>
+      )}
+
+      <AnimatePresence>
+        {showEpisodesPanel && (
+          <motion.div
+            key="episodes-panel"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-[170] flex bg-black/80 backdrop-blur-sm"
+          >
+            {/* Seasons */}
+            <div className="w-[280px] shrink-0 h-full overflow-y-auto p-6 border-r border-white/10">
+              <h3 className="text-white/50 text-xs uppercase tracking-widest mb-4">Sezone</h3>
+              <div className="flex flex-col gap-1">
+                {seasons.map((s, idx) => {
+                  const isFocused = epFocusArea === "seasons" && epSeasonIdx === idx;
+                  const isSelected = epSeasonIdx === idx;
+                  return (
+                    <button
+                      key={s.id}
+                      onMouseEnter={() => {
+                        setEpFocusArea("seasons");
+                        setEpSeasonIdx(idx);
+                        setEpEpisodeIdx(0);
+                      }}
+                      onClick={() => {
+                        setEpSeasonIdx(idx);
+                        setEpEpisodeIdx(0);
+                        setEpFocusArea("episodes");
+                      }}
+                      className={`text-left px-4 py-3 rounded-lg transition ${
+                        isSelected ? "bg-white/15 text-white" : "text-white/60 hover:text-white"
+                      } ${isFocused ? "ring-2 ring-inset ring-white/50" : ""}`}
+                    >
+                      <div className="font-semibold">Sezona {s.season_number}</div>
+                      <div className="text-xs text-white/40">{s.episodes.length} epizoda</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Episodes */}
+            <div className="flex-1 h-full overflow-y-auto p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white text-xl font-bold">
+                  Sezona {seasons[epSeasonIdx]?.season_number ?? ""}
+                </h3>
+                <button
+                  onClick={() => setShowEpisodesPanel(false)}
+                  className="text-white/60 hover:text-white text-sm"
+                >
+                  Zatvori (Esc)
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {(seasons[epSeasonIdx]?.episodes ?? []).map((ep, idx) => {
+                  const isFocused = epFocusArea === "episodes" && epEpisodeIdx === idx;
+                  const isActive = ep.id === selectedEpisodeId;
+                  return (
+                    <button
+                      key={ep.id}
+                      onMouseEnter={() => {
+                        setEpFocusArea("episodes");
+                        setEpEpisodeIdx(idx);
+                      }}
+                      onClick={() => {
+                        setSelectedEpisodeId(ep.id);
+                        setStreamError(null);
+                        setShowEpisodesPanel(false);
+                      }}
+                      className={`flex gap-4 items-stretch text-left p-3 rounded-lg transition ${
+                        isActive ? "bg-white/15" : "hover:bg-white/10"
+                      } ${isFocused ? "ring-2 ring-white/60" : ""}`}
+                    >
+                      <div className="w-[160px] aspect-video shrink-0 rounded-md overflow-hidden bg-white/5 relative">
+                        {ep.thumbnail_url ? (
+                          <img
+                            src={ep.thumbnail_url}
+                            alt={ep.title ?? `Epizoda ${ep.episode_number}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full grid place-items-center text-white/30 text-2xl">
+                            {ep.episode_number}
+                          </div>
+                        )}
+                        <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+                          E{ep.episode_number}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <h4 className="text-white font-semibold truncate">
+                            {ep.title ?? `Epizoda ${ep.episode_number}`}
+                          </h4>
+                          {ep.duration && (
+                            <span className="shrink-0 text-white/40 text-xs">{ep.duration}</span>
+                          )}
+                        </div>
+                        {ep.description && (
+                          <p className="text-white/50 text-xs line-clamp-2">{ep.description}</p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+                {(seasons[epSeasonIdx]?.episodes.length ?? 0) === 0 && (
+                  <p className="text-white/40 text-sm">Nema dostupnih epizoda za ovu sezonu.</p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
