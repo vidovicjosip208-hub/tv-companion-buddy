@@ -391,7 +391,6 @@ const FrozenHlsVideo = memo(
           // start nakon MANIFEST_PARSED na nekima od njih učita master manifest,
           // ali nikada ne zatraži level playlistu ni prvi segment.
           autoStartLoad: true,
-          testBandwidth: false,
           maxBufferLength: 30,
           maxMaxBufferLength: 60,
           maxBufferSize: 60 * 1000 * 1000,
@@ -437,8 +436,9 @@ const FrozenHlsVideo = memo(
               ).index
             : -1;
           if (highestLevel >= 0) {
-            hls.nextLevel = highestLevel;
-            hls.loadLevel = highestLevel;
+            // Postavi željeni početni nivo bez ručnog loadLevel/nextLevel
+            // prebacivanja koje na nekim TV browserima zaustavi početni load.
+            hls.startLevel = highestLevel;
           }
           playInitial();
         });
