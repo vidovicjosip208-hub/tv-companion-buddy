@@ -372,6 +372,7 @@ const FrozenHlsVideo = memo(
         resetVideo();
         usingHlsJsRef.current = true;
         const hls = new Hls({
+          debug: true,
           enableWorker: true,
           lowLatencyMode: false,
           capLevelToPlayerSize: false,
