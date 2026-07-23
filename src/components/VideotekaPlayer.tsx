@@ -675,8 +675,44 @@ const VideotekaPlayer = ({
   } = useMovieStream(streamUrlProp ? undefined : itemId);
   const streamUrl = streamUrlProp ?? movie?.stream_url ?? null;
 
+  // ── Serije: sezone + odabrana epizoda ─────────────────────────────────────
+  const seasons = movie?.seasons ?? [];
+  const hasEpisodes = seasons.some((s) => s.episodes.length > 0);
+  const firstSeasonWithEpisodes = seasons.find((s) => s.episodes.length > 0) ?? null;
+  const firstEpisodeId = firstSeasonWithEpisodes?.episodes[0]?.id ?? null;
+
+  const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | null>(null);
+  useEffect(() => {
+    if (hasEpisodes && !selectedEpisodeId && firstEpisodeId) {
+      setSelectedEpisodeId(firstEpisodeId);
+    }
+  }, [hasEpisodes, firstEpisodeId, selectedEpisodeId]);
+
+  const activeEpisode = useMemo(() => {
+    if (!selectedEpisodeId) return null;
+    for (const s of seasons) {
+      for (const e of s.episodes) if (e.id === selectedEpisodeId) return e;
+    }
+    return null;
+  }, [seasons, selectedEpisodeId]);
+
+  const effectiveStreamUrl = activeEpisode?.stream_url ?? streamUrl;
+
+  const [showEpisodesPanel, setShowEpisodesPanel] = useState(false);
+  const [epFocusArea, setEpFocusArea] = useState<"seasons" | "episodes">("seasons");
+  const [epSeasonIdx, setEpSeasonIdx] = useState(0);
+  const [epEpisodeIdx, setEpEpisodeIdx] = useState(0);
+  const episodesPanelRef = useRef(false);
+  const hasEpisodesRef = useRef(false);
+  useEffect(() => {
+    episodesPanelRef.current = showEpisodesPanel;
+  }, [showEpisodesPanel]);
+  useEffect(() => {
+    hasEpisodesRef.current = hasEpisodes;
+  }, [hasEpisodes]);
+
   // ── NOVO: seek preview URL — iz propa, ili isti stream_url kao glavni video
-  const seekPreviewUrl = seekPreviewUrlProp ?? streamUrl;
+  const seekPreviewUrl = seekPreviewUrlProp ?? effectiveStreamUrl;
 
   // ── NOVO: hook koji drži skriveni video + canvas za frame capture
   const { frames: seekFrames, requestFrame } = useSeekPreview(seekPreviewUrl);
