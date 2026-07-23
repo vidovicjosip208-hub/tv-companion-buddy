@@ -134,13 +134,38 @@ function useSeekPreview(seekPreviewUrl: string | null) {
     if (!seekPreviewUrl) return;
 
     const video = document.createElement("video");
-    video.src = seekPreviewUrl;
     video.preload = "metadata";
     video.muted = true;
     video.crossOrigin = "anonymous";
     video.style.display = "none";
     document.body.appendChild(video);
     videoRef.current = video;
+
+    const isHlsPreview = (() => {
+      try {
+        return new URL(seekPreviewUrl, window.location.href).pathname.toLowerCase().endsWith(".m3u8");
+      } catch {
+        return seekPreviewUrl.split(/[?#]/, 1)[0].toLowerCase().endsWith(".m3u8");
+      }
+    })();
+    let previewHls: Hls | null = null;
+
+    if (isHlsPreview && Hls.isSupported()) {
+      previewHls = new Hls({
+        enableWorker: true,
+        autoStartLoad: true,
+        startLevel: -1,
+        maxBufferLength: 10,
+        backBufferLength: 0,
+      });
+      previewHls.attachMedia(video);
+      previewHls.once(Hls.Events.MEDIA_ATTACHED, () => {
+        previewHls?.loadSource(seekPreviewUrl);
+      });
+    } else if (!isHlsPreview) {
+      video.src = seekPreviewUrl;
+      video.load();
+    }
 
     const canvas = document.createElement("canvas");
     canvas.width = SEEK_CANVAS_W;
@@ -151,8 +176,10 @@ function useSeekPreview(seekPreviewUrl: string | null) {
 
     return () => {
       // Zaustavi i ukloni video/canvas ali NE briši cache
+      previewHls?.destroy();
       video.pause();
-      video.src = "";
+      video.removeAttribute("src");
+      video.load();
       video.remove();
       canvas.remove();
       videoRef.current = null;
