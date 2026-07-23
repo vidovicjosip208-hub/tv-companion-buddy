@@ -1241,6 +1241,61 @@ const VideotekaPlayer = ({
     return () => window.removeEventListener("keydown", handleModalKeyDown, { capture: true });
   }, []);
 
+  // ── Keyboard za episode panel ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!showEpisodesPanel) return;
+    const handler = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const currentSeason = seasons[epSeasonIdx];
+      const epCount = currentSeason?.episodes.length ?? 0;
+      if (e.key === "Escape" || e.key === "Backspace") {
+        setShowEpisodesPanel(false);
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        setEpFocusArea("seasons");
+        return;
+      }
+      if (e.key === "ArrowRight") {
+        if (epCount > 0) setEpFocusArea("episodes");
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        if (epFocusArea === "seasons") {
+          setEpSeasonIdx((i) => Math.max(0, i - 1));
+          setEpEpisodeIdx(0);
+        } else {
+          setEpEpisodeIdx((i) => Math.max(0, i - 1));
+        }
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        if (epFocusArea === "seasons") {
+          setEpSeasonIdx((i) => Math.min(seasons.length - 1, i + 1));
+          setEpEpisodeIdx(0);
+        } else {
+          setEpEpisodeIdx((i) => Math.min(Math.max(0, epCount - 1), i + 1));
+        }
+        return;
+      }
+      if (e.key === "Enter") {
+        if (epFocusArea === "seasons") {
+          if (epCount > 0) setEpFocusArea("episodes");
+        } else {
+          const ep = currentSeason?.episodes[epEpisodeIdx];
+          if (ep) {
+            setSelectedEpisodeId(ep.id);
+            setStreamError(null);
+            setShowEpisodesPanel(false);
+          }
+        }
+      }
+    };
+    window.addEventListener("keydown", handler, { capture: true });
+    return () => window.removeEventListener("keydown", handler, { capture: true });
+  }, [showEpisodesPanel, epFocusArea, epSeasonIdx, epEpisodeIdx, seasons]);
+
   const skipActive = skipHovered || (focusedRow === 0 && focusedCol === 2);
 
   return (
