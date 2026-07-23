@@ -1046,6 +1046,13 @@ const VideotekaPlayer = ({
       startHideTimer();
 
       if (subtitleModalRef.current || audioModalRef.current || fontModalRef.current) return;
+      if (episodesPanelRef.current) return;
+
+      if ((e.key === "e" || e.key === "E") && hasEpisodesRef.current) {
+        e.preventDefault();
+        setShowEpisodesPanel(true);
+        return;
+      }
 
       switch (e.key) {
         case "Escape":
