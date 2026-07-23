@@ -325,7 +325,6 @@ const FrozenHlsVideo = memo(
       video.preload = "auto";
       (video as HTMLVideoElement).playsInline = true;
       const streamKind = getStreamKind(streamUrl);
-      const hasHEVC = supportsHEVC();
       let disposed = false;
       let hlsFallbackTried = false;
       let nativeFallbackTried = false;
@@ -419,27 +418,10 @@ const FrozenHlsVideo = memo(
           if (!disposed) hls.loadSource(streamUrl);
         });
 
-        hls.on(Hls.Events.MANIFEST_PARSED, (_evt, data) => {
-          const levelScore = (level: (typeof data.levels)[number]) =>
-            (level.width ?? 0) * (level.height ?? 0) * 1_000_000 + (level.bitrate ?? 0);
-          let playableLevels = data.levels.map((level, index) => ({ level, index }));
-          if (!hasHEVC) {
-            const supported = playableLevels.filter(({ level }) => {
-              const codec = (level.videoCodec ?? "").toLowerCase();
-              return !(codec.startsWith("hvc1") || codec.startsWith("hev1"));
-            });
-            if (supported.length) playableLevels = supported;
-          }
-          const highestLevel = playableLevels.length
-            ? playableLevels.reduce((best, candidate) =>
-                levelScore(candidate.level) > levelScore(best.level) ? candidate : best,
-              ).index
-            : -1;
-          if (highestLevel >= 0) {
-            // Postavi željeni početni nivo bez ručnog loadLevel/nextLevel
-            // prebacivanja koje na nekim TV browserima zaustavi početni load.
-            hls.startLevel = highestLevel;
-          }
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          // Prepusti hls.js-u izbor prve kompatibilne razine. Ručno zaključavanje
+          // ovdje može spriječiti level playlistu ako najviša varijanta koristi
+          // kodek koji konkretni TV ne može dekodirati.
           playInitial();
         });
 
