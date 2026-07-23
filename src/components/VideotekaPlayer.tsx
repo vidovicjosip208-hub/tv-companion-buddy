@@ -134,13 +134,38 @@ function useSeekPreview(seekPreviewUrl: string | null) {
     if (!seekPreviewUrl) return;
 
     const video = document.createElement("video");
-    video.src = seekPreviewUrl;
     video.preload = "metadata";
     video.muted = true;
     video.crossOrigin = "anonymous";
     video.style.display = "none";
     document.body.appendChild(video);
     videoRef.current = video;
+
+    const isHlsPreview = (() => {
+      try {
+        return new URL(seekPreviewUrl, window.location.href).pathname.toLowerCase().endsWith(".m3u8");
+      } catch {
+        return seekPreviewUrl.split(/[?#]/, 1)[0].toLowerCase().endsWith(".m3u8");
+      }
+    })();
+    let previewHls: Hls | null = null;
+
+    if (isHlsPreview && Hls.isSupported()) {
+      previewHls = new Hls({
+        enableWorker: true,
+        autoStartLoad: true,
+        startLevel: -1,
+        maxBufferLength: 10,
+        backBufferLength: 0,
+      });
+      previewHls.attachMedia(video);
+      previewHls.once(Hls.Events.MEDIA_ATTACHED, () => {
+        previewHls?.loadSource(seekPreviewUrl);
+      });
+    } else if (!isHlsPreview) {
+      video.src = seekPreviewUrl;
+      video.load();
+    }
 
     const canvas = document.createElement("canvas");
     canvas.width = SEEK_CANVAS_W;
@@ -151,8 +176,10 @@ function useSeekPreview(seekPreviewUrl: string | null) {
 
     return () => {
       // Zaustavi i ukloni video/canvas ali NE briši cache
+      previewHls?.destroy();
       video.pause();
-      video.src = "";
+      video.removeAttribute("src");
+      video.load();
       video.remove();
       canvas.remove();
       videoRef.current = null;
@@ -256,6 +283,7 @@ const FrozenHlsVideo = memo(
     onTimeSnapshot,
   }: FrozenHlsVideoProps) => {
     const localVideoRef = useRef<HTMLVideoElement | null>(null);
+    const usingHlsJsRef = useRef(false);
 
     const playInitial = useCallback(() => {
       const video = localVideoRef.current;
@@ -303,17 +331,28 @@ const FrozenHlsVideo = memo(
 
       const hasHEVC = supportsHEVC();
 
-      // Detektiraj je li stream HLS (.m3u8). Sve ostalo (MP4 itd.) ide native.
-      const isHlsStream = /\.m3u8(\?|$)/i.test(streamUrl);
+      // Query parametri i fragmenti ne smiju sakriti .m3u8 ekstenziju.
+      // HLS URL nikada ne prosljeđujemo u native video.src putanju.
+      const isHlsStream = (() => {
+        try {
+          return new URL(streamUrl, window.location.href).pathname.toLowerCase().endsWith(".m3u8");
+        } catch {
+          return streamUrl.split(/[?#]/, 1)[0].toLowerCase().endsWith(".m3u8");
+        }
+      })();
 
-      // Kad je MSE dostupan uvijek koristi hls.js. Neki TV preglednici prijave
-      // native HLS podršku, ali njihov interni ABR ipak pokrene najnižu razinu
-      // i ne dopušta nam da unaprijed zaključamo kvalitetu.
-      if (isHlsStream && Hls.isSupported()) {
+      if (isHlsStream) {
+        if (!Hls.isSupported()) {
+          usingHlsJsRef.current = false;
+          onError("Ovaj uređaj ne podržava HLS.js / Media Source reprodukciju.");
+          return;
+        }
+
+        // Za svaki .m3u8 stream koristimo isključivo hls.js. Ne oslanjamo se na
+        // canPlayType/native HLS jer pojedini TV preglednici to pogrešno prijave.
+        usingHlsJsRef.current = true;
         const hlsConfig = {
           enableWorker: true,
-          forceVideoHWAcceleration: true,
-          progressive: true,
           lowLatencyMode: false,
           capLevelToPlayerSize: false,
           // Ne kreći s učitavanjem dok ručno ne postavimo najvišu razinu
@@ -354,13 +393,18 @@ const FrozenHlsVideo = memo(
           maxStarvationDelay: 4,
           maxLoadingDelay: 4,
           highBufferWatchdogPeriod: 2,
-          fragLoadingLoopThreshold: 3,
-        } as ConstructorParameters<typeof Hls>[0] & { forceVideoHWAcceleration: boolean };
+        } satisfies ConstructorParameters<typeof Hls>[0];
         const hls = new Hls(hlsConfig);
 
         hlsRef.current = hls;
-        hls.loadSource(streamUrl);
+
+        // Canonical hls.js lifecycle: prvo spoji MediaSource na <video>, a tek
+        // nakon MEDIA_ATTACHED učitaj manifest. Tako .m3u8 nikad ne postaje
+        // native src i ne može završiti u MEDIA_ERR_SRC_NOT_SUPPORTED putanji.
         hls.attachMedia(video);
+        hls.once(Hls.Events.MEDIA_ATTACHED, () => {
+          hls.loadSource(streamUrl);
+        });
 
         hls.on(Hls.Events.MANIFEST_PARSED, (_evt, data) => {
           const levelScore = (level: (typeof data.levels)[number]) =>
@@ -375,43 +419,45 @@ const FrozenHlsVideo = memo(
             if (supported.length) playableLevels = supported;
           }
 
-          const highestLevel = playableLevels.reduce(
-            (best, candidate) =>
-              levelScore(candidate.level) > levelScore(best.level) ? candidate : best,
-            playableLevels[0],
-          ).index;
+          const highestLevel = playableLevels.length
+            ? playableLevels.reduce((best, candidate) =>
+                levelScore(candidate.level) > levelScore(best.level) ? candidate : best,
+              ).index
+            : -1;
 
           // startLevel određuje baš prvi segment, a loadLevel postavlja
           // manualLevel i time gasi ABR za sve sljedeće segmente. Pozivi na
           // currentLevel/nextLevel ovdje bi nepotrebno pokrenuli prebacivanje
           // i pražnjenje buffera prije nego što je prvi segment učitan.
-          hls.startLevel = highestLevel;
-          hls.loadLevel = highestLevel;
+          if (highestLevel >= 0) {
+            hls.startLevel = highestLevel;
+            hls.loadLevel = highestLevel;
+          }
           hls.startLoad(-1);
         });
 
-        hls.once(Hls.Events.FRAG_LOADED, () => {
+        hls.once(Hls.Events.MANIFEST_PARSED, () => {
           playInitial();
         });
 
         hls.on(Hls.Events.ERROR, (_evt, data) => {
           if (!data.fatal) return;
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            hls.startLoad();
-            return;
-          }
-          if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            onError(`HLS mrežna greška: ${data.details}.`);
+          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
             try {
               hls.recoverMediaError();
               return;
             } catch {
-              /* fallthrough */
+              onError(`HLS greška dekodiranja: ${data.details}.`);
             }
+          } else {
+            onError(`HLS reprodukcija nije uspjela: ${data.details}.`);
           }
-          onError("Reprodukcija nije uspjela.");
         });
       } else {
-        // Native playback (MP4, WebM, native HLS u Safariju, itd.)
+        usingHlsJsRef.current = false;
+        // Native playback je rezerviran za obične datoteke poput MP4/WebM.
         video.src = streamUrl;
         video.load();
         const onLoaded = () => {
@@ -432,6 +478,7 @@ const FrozenHlsVideo = memo(
 
       return () => {
         clearTimeout(bypassTimer);
+        usingHlsJsRef.current = false;
         if (hlsRef.current) {
           hlsRef.current.destroy();
           hlsRef.current = null;
@@ -550,6 +597,12 @@ const FrozenHlsVideo = memo(
         onError={(e) => {
           const el = e.currentTarget;
           const err = el.error;
+          // Dok je hls.js spojen, njegove ERROR događaje koristimo kao izvor
+          // istine. Native MediaError tada može biti prolazni MSE recovery signal.
+          if (usingHlsJsRef.current) {
+            console.warn("[VideotekaPlayer] hls.js media element signal:", err);
+            return;
+          }
           const codeMap: Record<number, string> = {
             1: "MEDIA_ERR_ABORTED",
             2: "MEDIA_ERR_NETWORK",
