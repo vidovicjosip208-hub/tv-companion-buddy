@@ -323,6 +323,17 @@ const FrozenHlsVideo = memo(
       let mediaRecoveryCount = 0;
       let networkRecoveryCount = 0;
 
+      // Watchdog: ako se za 15s ne dogodi loadedmetadata, prekini spinner s
+      // prijateljskom porukom umjesto beskonačnog vrtenja (npr. 404/403 izvor).
+      const startupWatchdog = window.setTimeout(() => {
+        if (disposed) return;
+        if (video.readyState < 1) {
+          onError("Video se trenutno ne može pokrenuti. Provjerite izvor ili pokušajte kasnije.");
+        }
+      }, 15000);
+      const clearWatchdogOnMeta = () => window.clearTimeout(startupWatchdog);
+      video.addEventListener("loadedmetadata", clearWatchdogOnMeta, { once: true });
+
       const destroyHls = () => {
         hlsRef.current?.destroy();
         hlsRef.current = null;
@@ -491,6 +502,8 @@ const FrozenHlsVideo = memo(
 
       return () => {
         disposed = true;
+        window.clearTimeout(startupWatchdog);
+        video.removeEventListener("loadedmetadata", clearWatchdogOnMeta);
         video.removeEventListener("error", handleNativeError);
         destroyHls();
         destroyDash();
