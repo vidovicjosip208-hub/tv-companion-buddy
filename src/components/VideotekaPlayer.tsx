@@ -1247,7 +1247,7 @@ const VideotekaPlayer = ({
     <div ref={playerRootRef} className="fixed inset-0 z-[100] bg-black font-sans overflow-hidden">
       <div className="absolute inset-0">
         <FrozenHlsVideo
-          streamUrl={streamUrl}
+          streamUrl={effectiveStreamUrl}
           thumbnail={thumbnail}
           fetchingStream={fetchingStream}
           fetchError={fetchError}
