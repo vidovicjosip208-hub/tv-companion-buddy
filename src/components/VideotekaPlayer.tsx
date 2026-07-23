@@ -387,7 +387,10 @@ const FrozenHlsVideo = memo(
           enableWorker: true,
           lowLatencyMode: false,
           capLevelToPlayerSize: false,
-          autoStartLoad: false,
+          // Automatski start je pouzdaniji na TV Chromium izvedbama. Ručni
+          // start nakon MANIFEST_PARSED na nekima od njih učita master manifest,
+          // ali nikada ne zatraži level playlistu ni prvi segment.
+          autoStartLoad: true,
           testBandwidth: false,
           maxBufferLength: 30,
           maxMaxBufferLength: 60,
@@ -434,10 +437,9 @@ const FrozenHlsVideo = memo(
               ).index
             : -1;
           if (highestLevel >= 0) {
-            hls.startLevel = highestLevel;
+            hls.nextLevel = highestLevel;
             hls.loadLevel = highestLevel;
           }
-          hls.startLoad(-1);
           playInitial();
         });
 
