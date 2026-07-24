@@ -40,6 +40,8 @@ interface MiniChannel {
   date: string;
   thumbnail: string;
   isCurrent?: boolean;
+  streamUrl?: string | null;
+  channelName?: string | null;
 }
 
 interface SidebarChannel {
