@@ -32,6 +32,7 @@ interface VideotekaPlayerProps {
   onNextEpisode?: () => void;
   itemId?: string;
   streamUrl?: string;
+  initialEpisodeId?: string | null;
   // ── NOVO: opcionalni URL za seek-preview video (može biti isti kao streamUrl,
   //    ili niži quality MP4 za brže seekanje)
   seekPreviewUrl?: string;
