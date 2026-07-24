@@ -114,7 +114,7 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
           break;
       }
     },
-    [focusedArea, focusedSeasonIndex, focusedEpisodeIndex, seasons.length, currentSeason.episodes.length, onClose],
+    [focusedArea, focusedSeasonIndex, focusedEpisodeIndex, seasons.length, currentSeason?.episodes.length, onClose],
   );
 
   useEffect(() => {
