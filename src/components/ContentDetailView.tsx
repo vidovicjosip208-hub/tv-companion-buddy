@@ -25,6 +25,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
   const { t } = useTranslation();
   const [showEpisodes, setShowEpisodes] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [initialEpisodeId, setInitialEpisodeId] = useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [scrollOffset, setScrollOffset] = useState(0);
 
@@ -362,7 +363,18 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
 
       {/* Episodes overlay */}
       <AnimatePresence>
-        {showEpisodes && <EpisodesView itemId={itemId} details={details} onClose={() => setShowEpisodes(false)} />}
+        {showEpisodes && (
+          <EpisodesView
+            itemId={itemId}
+            details={details}
+            onClose={() => setShowEpisodes(false)}
+            onPlayEpisode={(episodeId) => {
+              setInitialEpisodeId(episodeId);
+              setShowEpisodes(false);
+              openPlayer();
+            }}
+          />
+        )}
       </AnimatePresence>
 
       {/* Player overlay */}
@@ -372,6 +384,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             itemId={itemId}
             title={details.title}
             thumbnail={thumbnail}
+            initialEpisodeId={initialEpisodeId}
             onClose={closePlayer}
           />
         )}

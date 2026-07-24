@@ -32,6 +32,7 @@ interface VideotekaPlayerProps {
   onNextEpisode?: () => void;
   itemId?: string;
   streamUrl?: string;
+  initialEpisodeId?: string | null;
   // ── NOVO: opcionalni URL za seek-preview video (može biti isti kao streamUrl,
   //    ili niži quality MP4 za brže seekanje)
   seekPreviewUrl?: string;
@@ -719,6 +720,7 @@ const VideotekaPlayer = ({
   itemId,
   streamUrl: streamUrlProp,
   seekPreviewUrl: seekPreviewUrlProp, // ── NOVO
+  initialEpisodeId = null,
 }: VideotekaPlayerProps) => {
   const playerRootRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -737,7 +739,10 @@ const VideotekaPlayer = ({
   const firstSeasonWithEpisodes = seasons.find((s) => s.episodes.length > 0) ?? null;
   const firstEpisodeId = firstSeasonWithEpisodes?.episodes[0]?.id ?? null;
 
-  const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | null>(null);
+  const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | null>(initialEpisodeId);
+  useEffect(() => {
+    if (initialEpisodeId) setSelectedEpisodeId(initialEpisodeId);
+  }, [initialEpisodeId]);
   useEffect(() => {
     if (hasEpisodes && !selectedEpisodeId && firstEpisodeId) {
       setSelectedEpisodeId(firstEpisodeId);

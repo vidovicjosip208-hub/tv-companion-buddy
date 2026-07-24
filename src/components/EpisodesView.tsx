@@ -9,11 +9,12 @@ interface EpisodesViewProps {
   itemId: string;
   details: ContentDetailsData;
   onClose: () => void;
+  onPlayEpisode?: (episodeId: string) => void;
 }
 
 const FALLBACK_EP_THUMB = "https://images.unsplash.com/photo-1504593811423-6dd665756598?w=400&q=80";
 
-const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
+const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewProps) => {
   const { t } = useTranslation();
   const { data: movie, isLoading } = useMovieStream(itemId);
   const { data: catalog } = useVideotekaContent();
@@ -110,11 +111,14 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
           if (focusedArea === "seasons" && focusedSeasonIndex < seasons.length) {
             setSelectedSeason(focusedSeasonIndex);
             setFocusedEpisodeIndex(0);
+          } else if (focusedArea === "episodes" && currentSeason && !isTrailersSelected) {
+            const ep = currentSeason.episodes[focusedEpisodeIndex];
+            if (ep && onPlayEpisode) onPlayEpisode(ep.id);
           }
           break;
       }
     },
-    [focusedArea, focusedSeasonIndex, focusedEpisodeIndex, seasons.length, currentSeason?.episodes.length, onClose],
+    [focusedArea, focusedSeasonIndex, focusedEpisodeIndex, seasons.length, currentSeason, isTrailersSelected, onPlayEpisode, onClose],
   );
 
   useEffect(() => {
@@ -285,6 +289,9 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
                     onMouseEnter={() => {
                       setFocusedArea("episodes");
                       setFocusedEpisodeIndex(index);
+                    }}
+                    onClick={() => {
+                      if (onPlayEpisode) onPlayEpisode(ep.id);
                     }}
                     className={`
                       flex gap-3 sm:gap-5 rounded-xl px-3 sm:px-4 py-3 sm:py-4 cursor-pointer transition-colors flex-shrink-0
