@@ -562,11 +562,11 @@ const VideoPlayer = ({
   const channelId = data?.channelId;
   const fallbackThumb = data?.thumbnail ?? thumbnail;
 
-  const { data: epgRows } = useChannelEPG(channelId ?? null);
+  const { data: dwRows } = useDwSchedule();
   const miniChannels: MiniChannel[] = useMemo(() => {
-    if (epgRows && epgRows.length > 0) return buildMiniChannelsFromEPG(epgRows, fallbackThumb);
+    if (dwRows && dwRows.length > 0) return buildMiniChannelsFromDw(dwRows, fallbackThumb);
     return FALLBACK_MINI_CHANNELS;
-  }, [epgRows, fallbackThumb]);
+  }, [dwRows, fallbackThumb]);
 
   // favAsSidebarChannels — favoriteChannels konvertirani u SidebarChannel format
   const favAsSidebarChannels: SidebarChannel[] = favoriteChannels.map((fc) => ({
