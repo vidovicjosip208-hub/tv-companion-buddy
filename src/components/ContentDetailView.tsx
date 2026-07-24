@@ -25,6 +25,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
   const { t } = useTranslation();
   const [showEpisodes, setShowEpisodes] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [initialEpisodeId, setInitialEpisodeId] = useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [scrollOffset, setScrollOffset] = useState(0);
 
