@@ -363,7 +363,18 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
 
       {/* Episodes overlay */}
       <AnimatePresence>
-        {showEpisodes && <EpisodesView itemId={itemId} details={details} onClose={() => setShowEpisodes(false)} />}
+        {showEpisodes && (
+          <EpisodesView
+            itemId={itemId}
+            details={details}
+            onClose={() => setShowEpisodes(false)}
+            onPlayEpisode={(episodeId) => {
+              setInitialEpisodeId(episodeId);
+              setShowEpisodes(false);
+              openPlayer();
+            }}
+          />
+        )}
       </AnimatePresence>
 
       {/* Player overlay */}
@@ -373,6 +384,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             itemId={itemId}
             title={details.title}
             thumbnail={thumbnail}
+            initialEpisodeId={initialEpisodeId}
             onClose={closePlayer}
           />
         )}
