@@ -263,6 +263,17 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
                 <p className="text-white/40 text-base sm:text-lg">Traileri trenutno nisu dostupni.</p>
               </motion.div>
             ) : (
+            ) : !currentSeason ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-center h-full"
+              >
+                <p className="text-white/40 text-base sm:text-lg">
+                  {isLoading ? "Učitavanje..." : "Nema dostupnih epizoda."}
+                </p>
+              </motion.div>
+            ) : (
               currentSeason.episodes.map((ep, index) => {
                 const isFocused = focusedArea === "episodes" && focusedEpisodeIndex === index;
                 return (
