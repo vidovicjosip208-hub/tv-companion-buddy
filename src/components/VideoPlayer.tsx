@@ -978,6 +978,10 @@ const VideoPlayer = ({
             e.preventDefault();
             setEpgFocusIndex((p) => Math.min(p + 1, miniChannels.length - 1));
             return;
+          case "Enter":
+            e.preventDefault();
+            playScheduleItem(epgFocusIndex);
+            return;
           case "Escape":
           case "Backspace":
             e.preventDefault();
