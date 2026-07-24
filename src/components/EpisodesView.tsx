@@ -9,11 +9,12 @@ interface EpisodesViewProps {
   itemId: string;
   details: ContentDetailsData;
   onClose: () => void;
+  onPlayEpisode?: (episodeId: string) => void;
 }
 
 const FALLBACK_EP_THUMB = "https://images.unsplash.com/photo-1504593811423-6dd665756598?w=400&q=80";
 
-const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
+const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewProps) => {
   const { t } = useTranslation();
   const { data: movie, isLoading } = useMovieStream(itemId);
   const { data: catalog } = useVideotekaContent();
