@@ -232,7 +232,7 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
       {/* RIGHT — Episodes */}
       <div className="relative z-10 flex-1 flex flex-col min-w-0 py-6 lg:py-12 px-4 sm:px-8 lg:px-12 overflow-hidden">
         <motion.div
-          key={isTrailersSelected ? "trailers-header" : `season-header-${currentSeason.season}`}
+          key={isTrailersSelected ? "trailers-header" : `season-header-${currentSeason?.season ?? 0}`}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
