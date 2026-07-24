@@ -241,7 +241,9 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
           <h3 className="text-xl sm:text-2xl font-bold text-white">
             {isTrailersSelected
               ? t("videotekaDetail.trailersAndMore")
-              : `${t("videotekaDetail.season")} ${currentSeason.season}`}
+              : currentSeason
+                ? `${t("videotekaDetail.season")} ${currentSeason.season}`
+                : t("videotekaDetail.season")}
           </h3>
           {!isTrailersSelected && details.rating && (
             <span className="px-2.5 py-1 border border-white/25 rounded text-xs sm:text-sm text-white/50 font-medium">
