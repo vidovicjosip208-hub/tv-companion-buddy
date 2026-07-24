@@ -1675,7 +1675,14 @@ const VideoPlayer = ({
                               channel={ch}
                               isFocused={epgFocusIndex === start + i}
                               isFuture={isFutureShow(ch.timeRange, ch.day)}
-                              onSelect={() => setEpgFocusIndex(start + i)}
+                              onSelect={() => {
+                                const target = start + i;
+                                if (epgFocusIndex === target) {
+                                  playScheduleItem(target);
+                                } else {
+                                  setEpgFocusIndex(target);
+                                }
+                              }}
                             />
                           ))}
                         </div>
