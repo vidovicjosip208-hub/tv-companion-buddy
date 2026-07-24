@@ -601,6 +601,22 @@ const VideoPlayer = ({
     return FALLBACK_MINI_CHANNELS;
   }, [dwRows, fallbackThumb]);
 
+  const playScheduleItem = useCallback(
+    (idx: number) => {
+      const item = miniChannels[idx];
+      if (!item || !item.streamUrl || !onSwitchChannel) return;
+      onSwitchChannel({
+        channelName: item.channelName ?? data?.channelName,
+        showTitle: item.title,
+        timeRange: item.timeRange,
+        thumbnail: item.thumbnail,
+        streamUrl: item.streamUrl,
+        logoUrl: data?.logoUrl ?? null,
+      });
+    },
+    [miniChannels, onSwitchChannel, data?.channelName, data?.logoUrl],
+  );
+
   // favAsSidebarChannels — favoriteChannels konvertirani u SidebarChannel format
   const favAsSidebarChannels: SidebarChannel[] = favoriteChannels.map((fc) => ({
     id: `fav-${fc.number}`,
