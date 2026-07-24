@@ -262,7 +262,6 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
               >
                 <p className="text-white/40 text-base sm:text-lg">Traileri trenutno nisu dostupni.</p>
               </motion.div>
-            ) : (
             ) : !currentSeason ? (
               <motion.div
                 initial={{ opacity: 0 }}
