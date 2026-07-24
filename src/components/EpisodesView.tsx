@@ -1,7 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ContentDetailsData, getEpisodesForItem, allContentItems } from "@/data/videotekaContent";
+import { ContentDetailsData, getEpisodesForItem, allContentItems, type SeasonData } from "@/data/videotekaContent";
+import { useMovieStream } from "@/hooks/useMovieStream";
+import { useVideotekaContent } from "@/hooks/useVideotekaContent";
 
 interface EpisodesViewProps {
   itemId: string;
@@ -9,18 +11,41 @@ interface EpisodesViewProps {
   onClose: () => void;
 }
 
+const FALLBACK_EP_THUMB = "https://images.unsplash.com/photo-1504593811423-6dd665756598?w=400&q=80";
+
 const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
   const { t } = useTranslation();
-  const seasons = getEpisodesForItem(itemId);
+  const { data: movie, isLoading } = useMovieStream(itemId);
+  const { data: catalog } = useVideotekaContent();
+
+  const seasons: SeasonData[] = useMemo(() => {
+    const dbSeasons = movie?.seasons ?? [];
+    if (dbSeasons.length > 0) {
+      return dbSeasons.map((s) => ({
+        season: s.season_number,
+        episodes: s.episodes.map((e) => ({
+          id: e.id,
+          number: e.episode_number,
+          title: e.title ?? `Episode ${e.episode_number}`,
+          description: e.description ?? "",
+          duration: e.duration ?? "",
+          thumbnail: e.thumbnail_url ?? FALLBACK_EP_THUMB,
+        })),
+      }));
+    }
+    // Fallback to static data only while loading or if DB has nothing
+    return isLoading ? [] : getEpisodesForItem(itemId);
+  }, [movie, isLoading, itemId]);
+
   const [selectedSeason, setSelectedSeason] = useState(0);
   const [focusedArea, setFocusedArea] = useState<"seasons" | "episodes">("seasons");
   const [focusedSeasonIndex, setFocusedSeasonIndex] = useState(0);
   const [focusedEpisodeIndex, setFocusedEpisodeIndex] = useState(0);
-  const isTrailersSelected = selectedSeason === seasons.length;
+  const isTrailersSelected = seasons.length > 0 && selectedSeason === seasons.length;
 
-  const currentSeason = isTrailersSelected ? seasons[0] : seasons[selectedSeason];
-  const contentItem = allContentItems.find((item) => item.id === itemId);
-  const backdropImage = contentItem?.thumbnail ?? null;
+  const currentSeason = seasons.length > 0 ? (isTrailersSelected ? seasons[0] : seasons[selectedSeason]) : undefined;
+  const backdropImage =
+    catalog?.itemsById[itemId]?.thumbnail ?? allContentItems.find((item) => item.id === itemId)?.thumbnail ?? null;
 
   const episodeListRef = useRef<HTMLDivElement>(null);
   const seasonListRef = useRef<HTMLElement>(null);
@@ -66,7 +91,7 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
           if (focusedArea === "seasons") {
             setFocusedSeasonIndex((p) => Math.min(p + 1, seasons.length));
           } else {
-            setFocusedEpisodeIndex((p) => Math.min(p + 1, currentSeason.episodes.length - 1));
+            setFocusedEpisodeIndex((p) => Math.min(p + 1, (currentSeason?.episodes.length ?? 1) - 1));
           }
           break;
         case "ArrowRight":
@@ -89,7 +114,7 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
           break;
       }
     },
-    [focusedArea, focusedSeasonIndex, focusedEpisodeIndex, seasons.length, currentSeason.episodes.length, onClose],
+    [focusedArea, focusedSeasonIndex, focusedEpisodeIndex, seasons.length, currentSeason?.episodes.length, onClose],
   );
 
   useEffect(() => {
@@ -207,7 +232,7 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
       {/* RIGHT — Episodes */}
       <div className="relative z-10 flex-1 flex flex-col min-w-0 py-6 lg:py-12 px-4 sm:px-8 lg:px-12 overflow-hidden">
         <motion.div
-          key={isTrailersSelected ? "trailers-header" : `season-header-${currentSeason.season}`}
+          key={isTrailersSelected ? "trailers-header" : `season-header-${currentSeason?.season ?? 0}`}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
@@ -216,7 +241,9 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
           <h3 className="text-xl sm:text-2xl font-bold text-white">
             {isTrailersSelected
               ? t("videotekaDetail.trailersAndMore")
-              : `${t("videotekaDetail.season")} ${currentSeason.season}`}
+              : currentSeason
+                ? `${t("videotekaDetail.season")} ${currentSeason.season}`
+                : t("videotekaDetail.season")}
           </h3>
           {!isTrailersSelected && details.rating && (
             <span className="px-2.5 py-1 border border-white/25 rounded text-xs sm:text-sm text-white/50 font-medium">
@@ -234,6 +261,16 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
                 className="flex items-center justify-center h-full"
               >
                 <p className="text-white/40 text-base sm:text-lg">Traileri trenutno nisu dostupni.</p>
+              </motion.div>
+            ) : !currentSeason ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-center h-full"
+              >
+                <p className="text-white/40 text-base sm:text-lg">
+                  {isLoading ? "Učitavanje..." : "Nema dostupnih epizoda."}
+                </p>
               </motion.div>
             ) : (
               currentSeason.episodes.map((ep, index) => {
