@@ -91,7 +91,7 @@ const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
           if (focusedArea === "seasons") {
             setFocusedSeasonIndex((p) => Math.min(p + 1, seasons.length));
           } else {
-            setFocusedEpisodeIndex((p) => Math.min(p + 1, currentSeason.episodes.length - 1));
+            setFocusedEpisodeIndex((p) => Math.min(p + 1, (currentSeason?.episodes.length ?? 1) - 1));
           }
           break;
         case "ArrowRight":
