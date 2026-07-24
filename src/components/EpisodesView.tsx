@@ -111,6 +111,9 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
           if (focusedArea === "seasons" && focusedSeasonIndex < seasons.length) {
             setSelectedSeason(focusedSeasonIndex);
             setFocusedEpisodeIndex(0);
+          } else if (focusedArea === "episodes" && currentSeason && !isTrailersSelected) {
+            const ep = currentSeason.episodes[focusedEpisodeIndex];
+            if (ep && onPlayEpisode) onPlayEpisode(ep.id);
           }
           break;
       }
