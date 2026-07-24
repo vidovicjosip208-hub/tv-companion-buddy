@@ -1,7 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ContentDetailsData, getEpisodesForItem, allContentItems } from "@/data/videotekaContent";
+import { ContentDetailsData, getEpisodesForItem, allContentItems, type SeasonData } from "@/data/videotekaContent";
+import { useMovieStream } from "@/hooks/useMovieStream";
+import { useVideotekaContent } from "@/hooks/useVideotekaContent";
 
 interface EpisodesViewProps {
   itemId: string;
@@ -9,18 +11,41 @@ interface EpisodesViewProps {
   onClose: () => void;
 }
 
+const FALLBACK_EP_THUMB = "https://images.unsplash.com/photo-1504593811423-6dd665756598?w=400&q=80";
+
 const EpisodesView = ({ itemId, details, onClose }: EpisodesViewProps) => {
   const { t } = useTranslation();
-  const seasons = getEpisodesForItem(itemId);
+  const { data: movie, isLoading } = useMovieStream(itemId);
+  const { data: catalog } = useVideotekaContent();
+
+  const seasons: SeasonData[] = useMemo(() => {
+    const dbSeasons = movie?.seasons ?? [];
+    if (dbSeasons.length > 0) {
+      return dbSeasons.map((s) => ({
+        season: s.season_number,
+        episodes: s.episodes.map((e) => ({
+          id: e.id,
+          number: e.episode_number,
+          title: e.title ?? `Episode ${e.episode_number}`,
+          description: e.description ?? "",
+          duration: e.duration ?? "",
+          thumbnail: e.thumbnail_url ?? FALLBACK_EP_THUMB,
+        })),
+      }));
+    }
+    // Fallback to static data only while loading or if DB has nothing
+    return isLoading ? [] : getEpisodesForItem(itemId);
+  }, [movie, isLoading, itemId]);
+
   const [selectedSeason, setSelectedSeason] = useState(0);
   const [focusedArea, setFocusedArea] = useState<"seasons" | "episodes">("seasons");
   const [focusedSeasonIndex, setFocusedSeasonIndex] = useState(0);
   const [focusedEpisodeIndex, setFocusedEpisodeIndex] = useState(0);
-  const isTrailersSelected = selectedSeason === seasons.length;
+  const isTrailersSelected = seasons.length > 0 && selectedSeason === seasons.length;
 
-  const currentSeason = isTrailersSelected ? seasons[0] : seasons[selectedSeason];
-  const contentItem = allContentItems.find((item) => item.id === itemId);
-  const backdropImage = contentItem?.thumbnail ?? null;
+  const currentSeason = seasons.length > 0 ? (isTrailersSelected ? seasons[0] : seasons[selectedSeason]) : undefined;
+  const backdropImage =
+    catalog?.itemsById[itemId]?.thumbnail ?? allContentItems.find((item) => item.id === itemId)?.thumbnail ?? null;
 
   const episodeListRef = useRef<HTMLDivElement>(null);
   const seasonListRef = useRef<HTMLElement>(null);
