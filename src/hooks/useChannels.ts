@@ -143,3 +143,33 @@ export const useMoviesSeries = () => {
     },
   });
 };
+
+export interface DwScheduleItem {
+  id: string;
+  title: string | null;
+  start_time: string;
+  end_time: string;
+  stream_url: string | null;
+  thumbnail_url?: string | null;
+  channel_name?: string | null;
+  description?: string | null;
+}
+
+/**
+ * Fetch all schedule items from `dw_schedule` ordered by start_time ascending.
+ * Used by VideoPlayer to render the mini EPG strip and switch streams on click.
+ */
+export const useDwSchedule = () => {
+  return useQuery({
+    queryKey: ["dw_schedule", "all"],
+    queryFn: async (): Promise<DwScheduleItem[]> => {
+      const { data, error } = await supabase
+        .from("dw_schedule")
+        .select("*")
+        .order("start_time", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as DwScheduleItem[];
+    },
+    staleTime: 60_000,
+  });
+};

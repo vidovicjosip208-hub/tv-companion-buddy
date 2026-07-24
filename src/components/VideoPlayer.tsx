@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
-import { useChannelEPG } from "@/hooks/useChannels";
+import { useDwSchedule, type DwScheduleItem } from "@/hooks/useChannels";
 
 // Detect HEVC (H.265) decoding support — most 4K IPTV streams use HEVC.
 const supportsHEVC = (): boolean => {
@@ -40,6 +40,8 @@ interface MiniChannel {
   date: string;
   thumbnail: string;
   isCurrent?: boolean;
+  streamUrl?: string | null;
+  channelName?: string | null;
 }
 
 interface SidebarChannel {
@@ -200,6 +202,39 @@ const buildMiniChannelsFromEPG = (
     };
   });
 };
+const buildMiniChannelsFromDw = (rows: DwScheduleItem[], fallbackThumb: string): MiniChannel[] => {
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+
+  return rows.map((r, idx) => {
+    const start = new Date(r.start_time);
+    const end = new Date(r.end_time);
+    const fmt = (d: Date) =>
+      `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const dayStart = new Date(start);
+    dayStart.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((dayStart.getTime() - startOfToday.getTime()) / 86400000);
+    let day: string;
+    if (diffDays === 0) day = "Danas";
+    else if (diffDays === 1) day = "Sutra";
+    else if (diffDays === -1) day = "Jučer";
+    else day = DAY_NAMES_HR[start.getDay()];
+    const isCurrent = start <= now && now < end;
+    return {
+      id: r.id ?? `dw-${idx}`,
+      title: r.title ?? "",
+      timeRange: `${fmt(start)} - ${fmt(end)}`,
+      day,
+      date: `${String(start.getDate()).padStart(2, "0")}.${String(start.getMonth() + 1).padStart(2, "0")}.`,
+      thumbnail: r.thumbnail_url || fallbackThumb,
+      ...(isCurrent ? { isCurrent: true } : {}),
+      streamUrl: r.stream_url ?? null,
+      channelName: r.channel_name ?? null,
+    };
+  });
+};
+
 
 const sidebarChannels: SidebarChannel[] = [
   { id: "s1", num: 4, label: "federalna", sub: "ODIVIZIJA" },
@@ -560,11 +595,27 @@ const VideoPlayer = ({
   const channelId = data?.channelId;
   const fallbackThumb = data?.thumbnail ?? thumbnail;
 
-  const { data: epgRows } = useChannelEPG(channelId ?? null);
+  const { data: dwRows } = useDwSchedule();
   const miniChannels: MiniChannel[] = useMemo(() => {
-    if (epgRows && epgRows.length > 0) return buildMiniChannelsFromEPG(epgRows, fallbackThumb);
+    if (dwRows && dwRows.length > 0) return buildMiniChannelsFromDw(dwRows, fallbackThumb);
     return FALLBACK_MINI_CHANNELS;
-  }, [epgRows, fallbackThumb]);
+  }, [dwRows, fallbackThumb]);
+
+  const playScheduleItem = useCallback(
+    (idx: number) => {
+      const item = miniChannels[idx];
+      if (!item || !item.streamUrl || !onSwitchChannel) return;
+      onSwitchChannel({
+        channelName: item.channelName ?? data?.channelName,
+        showTitle: item.title,
+        timeRange: item.timeRange,
+        thumbnail: item.thumbnail,
+        streamUrl: item.streamUrl,
+        logoUrl: data?.logoUrl ?? null,
+      });
+    },
+    [miniChannels, onSwitchChannel, data?.channelName, data?.logoUrl],
+  );
 
   // favAsSidebarChannels — favoriteChannels konvertirani u SidebarChannel format
   const favAsSidebarChannels: SidebarChannel[] = favoriteChannels.map((fc) => ({
@@ -942,6 +993,10 @@ const VideoPlayer = ({
           case "ArrowRight":
             e.preventDefault();
             setEpgFocusIndex((p) => Math.min(p + 1, miniChannels.length - 1));
+            return;
+          case "Enter":
+            e.preventDefault();
+            playScheduleItem(epgFocusIndex);
             return;
           case "Escape":
           case "Backspace":
@@ -1620,7 +1675,14 @@ const VideoPlayer = ({
                               channel={ch}
                               isFocused={epgFocusIndex === start + i}
                               isFuture={isFutureShow(ch.timeRange, ch.day)}
-                              onSelect={() => setEpgFocusIndex(start + i)}
+                              onSelect={() => {
+                                const target = start + i;
+                                if (epgFocusIndex === target) {
+                                  playScheduleItem(target);
+                                } else {
+                                  setEpgFocusIndex(target);
+                                }
+                              }}
                             />
                           ))}
                         </div>
