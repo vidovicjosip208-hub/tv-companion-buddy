@@ -290,6 +290,9 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                       setFocusedArea("episodes");
                       setFocusedEpisodeIndex(index);
                     }}
+                    onClick={() => {
+                      if (onPlayEpisode) onPlayEpisode(ep.id);
+                    }}
                     className={`
                       flex gap-3 sm:gap-5 rounded-xl px-3 sm:px-4 py-3 sm:py-4 cursor-pointer transition-colors flex-shrink-0
                       ${isFocused ? "bg-white/12" : ""}
