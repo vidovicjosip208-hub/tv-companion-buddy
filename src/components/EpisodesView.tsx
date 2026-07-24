@@ -118,7 +118,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
           break;
       }
     },
-    [focusedArea, focusedSeasonIndex, focusedEpisodeIndex, seasons.length, currentSeason?.episodes.length, onClose],
+    [focusedArea, focusedSeasonIndex, focusedEpisodeIndex, seasons.length, currentSeason, isTrailersSelected, onPlayEpisode, onClose],
   );
 
   useEffect(() => {
