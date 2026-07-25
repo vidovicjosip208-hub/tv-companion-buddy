@@ -40,23 +40,26 @@ const ContentRow = ({
   const getResponsiveValues = () => {
     if (typeof window === "undefined") {
       return {
-        defaultW: portrait ? 160 : 300,
-        cardH: portrait ? 240 : 170,
+        defaultW: portrait ? 140 : 280,
+        expandedW: portrait ? 300 : 650,
+        cardH: 350,
         leftPad: 48,
       };
     }
     const vw = window.innerWidth;
     return {
-      defaultW: portrait ? Math.min(160, vw * 0.28) : Math.min(300, vw * 0.24),
-      cardH: portrait ? Math.min(240, vw * 0.42) : Math.min(170, vw * 0.14),
+      defaultW: portrait ? Math.min(140, vw * 0.28) : Math.min(280, vw * 0.4),
+      expandedW: portrait ? Math.min(300, vw * 0.55) : Math.min(650, vw * 0.75),
+      cardH: Math.min(350, vw * 0.45),
       leftPad: Math.min(48, vw * 0.05),
     };
   };
 
-  const { defaultW, cardH, leftPad } = getResponsiveValues();
+  const { defaultW, expandedW, cardH, leftPad } = getResponsiveValues();
 
-  const translateX =
-    focusedIndex === 0 || uniform
+  const translateX = uniform
+    ? `${leftPad}px`
+    : focusedIndex === 0
       ? `${leftPad}px`
       : `calc(${leftPad}px - ${focusedIndex} * ${defaultW + GAP}px)`;
 
@@ -68,19 +71,25 @@ const ContentRow = ({
           <span className="text-accent italic ml-2 font-normal text-sm sm:text-base">{titleHighlight}</span>
         )}
       </h2>
-      <div className={cn("overflow-visible", peek && "max-h-[100px] overflow-hidden")}>
+      <div className={cn("overflow-hidden", peek && "max-h-[100px]")}>
         <div
           className={cn("flex transition-transform duration-500 ease-out", peek && "px-4 sm:px-12")}
           style={
             peek
-              ? { gap: `${GAP}px`, transform: "none" }
-              : { gap: `${GAP}px`, transform: `translateX(${translateX})`, paddingTop: 4, paddingBottom: 4 }
+              ? {
+                  gap: `${GAP}px`,
+                  transform: "none",
+                }
+              : {
+                  gap: `${GAP}px`,
+                  transform: `translateX(${translateX})`,
+                }
           }
         >
           {items.map((item, index) => {
             const isFocused = isActive && index === focusedIndex;
             const isHovered = hoveredIndex === index;
-            const highlight = isFocused || isHovered;
+            const isExpanded = uniform ? false : isFocused || isHovered;
 
             return (
               <button
@@ -89,23 +98,26 @@ const ContentRow = ({
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={cn(
-                  "relative rounded-lg overflow-hidden shrink-0 transition-all duration-300 ease-out",
+                  "relative rounded-lg overflow-hidden shrink-0 transition-all duration-500 ease-in-out",
                   !peek && "cursor-pointer",
                   peek && "flex-1",
-                  highlight && !peek && "ring-2 ring-white shadow-2xl",
                 )}
                 style={
                   peek
-                    ? { aspectRatio: portrait ? "2/3" : "16/9", minWidth: 0 }
+                    ? {
+                        aspectRatio: portrait ? "2/3" : undefined,
+                        minWidth: 0,
+                      }
                     : {
-                        width: defaultW,
+                        width: isExpanded ? expandedW : defaultW,
                         height: portrait ? undefined : cardH,
                         aspectRatio: portrait ? "2/3" : undefined,
                         flexGrow: 0,
+                        borderBottom: "none",
                       }
                 }
               >
-                <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                <img src={item.thumbnail} alt={item.title} className="w-full h-full object-contain bg-black" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 {!peek && (item.progress !== undefined || (isFocused && showIndicator)) && (
                   <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-muted/50">
@@ -116,7 +128,12 @@ const ContentRow = ({
                   </div>
                 )}
                 <div className="absolute bottom-3 left-3 right-3">
-                  <h3 className="font-black text-foreground tracking-tight drop-shadow-lg text-xs sm:text-sm">
+                  <h3
+                    className={cn(
+                      "font-black text-foreground tracking-tight drop-shadow-lg transition-all duration-500",
+                      isExpanded ? "text-base sm:text-xl" : "text-xs sm:text-sm",
+                    )}
+                  >
                     {item.title}
                   </h3>
                 </div>
