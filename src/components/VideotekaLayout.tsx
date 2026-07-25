@@ -160,6 +160,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
             focusedIndex={focusedItems[focusedRow] ?? 0}
             isActive={!headerFocused}
             uniform={headerFocused || rowTransitioning}
+            portrait
             showIndicator={focusedRow === 0 && !headerFocused}
             onItemClick={(i) => {
               setFocusedItems((prev) => {
