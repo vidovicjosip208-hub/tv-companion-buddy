@@ -117,16 +117,8 @@ const ContentRow = ({
                       }
                 }
               >
-                <img
-                  src={item.thumbnail}
-                  alt={item.title}
-                  className={cn(
-                    "w-full h-full transition-all duration-500",
-                    isExpanded ? "object-contain bg-black" : "object-cover",
-                  )}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-
+                <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 {!peek && (item.progress !== undefined || (isFocused && showIndicator)) && (
                   <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-muted/50">
                     <div
