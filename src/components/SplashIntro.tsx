@@ -144,6 +144,7 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
           >
             {TILES.map((tile, i) => {
               const item = videos.length ? videos[i % videos.length] : undefined;
+              const src = item ? blobs[item.video_url] : undefined;
               return (
                 <div
                   key={i}
@@ -155,19 +156,22 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
                     height: `${tile.h}%`,
                   }}
                 >
-                  {item && (
+                  {src && (
                     <video
-                      src={item.video_url}
-                      poster={item.poster_url ?? undefined}
+                      key={src}
+                      src={src}
+                      poster={item?.poster_url ?? undefined}
                       autoPlay
                       loop
                       muted
                       playsInline
                       preload="auto"
+                      onCanPlay={(e) => void e.currentTarget.play().catch(() => undefined)}
                       className="w-full h-full object-cover rounded-sm"
                     />
                   )}
                 </div>
+
               );
             })}
 
