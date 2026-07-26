@@ -203,6 +203,7 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
                     sourceVideoRefs.current[item.video_url] = element;
                   }}
                   src={item.video_url}
+                  crossOrigin="anonymous"
                   muted
                   loop
                   playsInline
