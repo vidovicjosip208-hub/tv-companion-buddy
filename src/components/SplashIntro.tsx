@@ -9,32 +9,31 @@ interface SplashTileData {
   stream: string | null;
 }
 
-// Strict ring layout (percent of a 16:9 stage): 7 x 5 grid, only the perimeter
-// cells are used -> exactly 20 non-overlapping tiles forming a clean frame
-// around the centered logo. In a 16:9 stage a 16:9 tile is square in percent,
-// so these values never overlap on any screen size.
+// Scattered, non-overlapping frame of tiles around the centered logo,
+// traced from the reference layout (percent of the 16:9 stage).
 const TILES = [
-  { left: 3.0, top: 16.6, w: 12.4 },
-  { left: 16.6, top: 16.6, w: 12.4 },
-  { left: 30.2, top: 16.6, w: 12.4 },
-  { left: 43.8, top: 16.6, w: 12.4 },
-  { left: 57.4, top: 16.6, w: 12.4 },
-  { left: 71.0, top: 16.6, w: 12.4 },
-  { left: 84.6, top: 16.6, w: 12.4 },
-  { left: 3.0, top: 30.2, w: 12.4 },
-  { left: 84.6, top: 30.2, w: 12.4 },
-  { left: 3.0, top: 43.8, w: 12.4 },
-  { left: 84.6, top: 43.8, w: 12.4 },
-  { left: 3.0, top: 57.4, w: 12.4 },
-  { left: 84.6, top: 57.4, w: 12.4 },
-  { left: 3.0, top: 71.0, w: 12.4 },
-  { left: 16.6, top: 71.0, w: 12.4 },
-  { left: 30.2, top: 71.0, w: 12.4 },
-  { left: 43.8, top: 71.0, w: 12.4 },
-  { left: 57.4, top: 71.0, w: 12.4 },
-  { left: 71.0, top: 71.0, w: 12.4 },
-  { left: 84.6, top: 71.0, w: 12.4 },
+  { left: 8.1, top: 12.5, w: 13.5, h: 11.2 },
+  { left: 22.8, top: 8.6, w: 13.8, h: 12.2 },
+  { left: 38.0, top: 8.6, w: 13.6, h: 9.8 },
+  { left: 53.1, top: 8.3, w: 13.2, h: 12.0 },
+  { left: 67.9, top: 11.0, w: 13.5, h: 10.9 },
+  { left: 82.2, top: 15.4, w: 10.0, h: 11.0 },
+  { left: 4.6, top: 25.2, w: 15.3, h: 10.7 },
+  { left: 20.7, top: 22.9, w: 9.6, h: 10.5 },
+  { left: 69.9, top: 24.4, w: 11.5, h: 10.1 },
+  { left: 82.6, top: 28.6, w: 14.0, h: 11.2 },
+  { left: 2.8, top: 38.2, w: 16.1, h: 14.1 },
+  { left: 77.0, top: 41.5, w: 17.6, h: 12.5 },
+  { left: 5.3, top: 54.3, w: 16.9, h: 12.0 },
+  { left: 71.9, top: 56.2, w: 20.6, h: 11.2 },
+  { left: 6.4, top: 68.4, w: 10.4, h: 8.8 },
+  { left: 17.4, top: 68.2, w: 12.8, h: 13.9 },
+  { left: 31.3, top: 71.3, w: 11.3, h: 12.5 },
+  { left: 43.8, top: 74.0, w: 12.0, h: 12.4 },
+  { left: 57.0, top: 70.6, w: 14.9, h: 13.2 },
+  { left: 73.6, top: 69.8, w: 17.0, h: 10.4 },
 ];
+
 
 
 
@@ -88,7 +87,7 @@ const SplashTile = ({
         left: `${tile.left}%`,
         top: `${tile.top}%`,
         width: `${tile.w}%`,
-        aspectRatio: "16 / 9",
+        height: `${tile.h}%`,
       }}
     >
       {data?.poster && <img src={data.poster} alt="" className="w-full h-full object-cover" loading="eager" decoding="sync" fetchPriority="high" />}
