@@ -305,7 +305,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                       `}
                     >
                       <img src={ep.thumbnail} alt={ep.title} className="w-full h-full object-cover" />
-                      <span className="absolute bottom-2 left-2 bg-black/65 px-2 py-0.5 rounded text-[10px] sm:text-xs text-white font-medium">
+                      <span className="absolute bottom-2 left-2 bg-black/65 px-2 py-0.5 rounded text-[13px] sm:text-xs text-white font-medium">
                         S{currentSeason.season}: E{ep.number}
                       </span>
                       {ep.progress !== undefined && ep.progress > 0 && (
