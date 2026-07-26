@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,53 +55,15 @@ interface SplashIntroProps {
   duration?: number;
 }
 
-// Download each distinct clip ONCE and reuse the same object URL for every tile,
-// so 20 frames don't trigger 20 parallel network downloads.
-const useBlobUrls = (urls: string[]) => {
-  const [map, setMap] = useState<Record<string, string>>({});
-  const key = urls.join("|");
-
-  useEffect(() => {
-    if (!urls.length) return;
-    let cancelled = false;
-    const created: string[] = [];
-
-    Promise.all(
-      urls.map(async (u) => {
-        try {
-          const res = await fetch(u, { cache: "force-cache" });
-          const blob = await res.blob();
-          const obj = URL.createObjectURL(blob);
-          created.push(obj);
-          return [u, obj] as const;
-        } catch {
-          return [u, u] as const;
-        }
-      }),
-    ).then((pairs) => {
-      if (cancelled) {
-        created.forEach((o) => URL.revokeObjectURL(o));
-        return;
-      }
-      setMap(Object.fromEntries(pairs));
-    });
-
-    return () => {
-      cancelled = true;
-      created.forEach((o) => URL.revokeObjectURL(o));
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-
-  return map;
-};
-
 const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
+  const [revealed, setRevealed] = useState(false);
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [sourceAttempts, setSourceAttempts] = useState(() => Array(TILES.length).fill(0) as number[]);
+  const loadedTiles = useRef(new Set<number>());
+  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
-  const uniqueUrls = Array.from(new Set(videos.map((v) => v.video_url)));
-  const blobs = useBlobUrls(uniqueUrls);
 
   // Try to go fullscreen immediately; retry on the first user gesture if blocked.
   useEffect(() => {
@@ -120,9 +82,37 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(false), duration);
-    return () => clearTimeout(t);
-  }, [duration]);
+    if (loadedCount !== TILES.length || revealed) return;
+
+    const players = videoRefs.current.filter((player): player is HTMLVideoElement => player !== null);
+    players.forEach((player) => {
+      player.currentTime = 0;
+    });
+
+    void Promise.allSettled(players.map((player) => player.play())).then(() => setRevealed(true));
+  }, [loadedCount, revealed]);
+
+  useEffect(() => {
+    if (!revealed) return;
+    const t = window.setTimeout(() => setVisible(false), duration);
+    return () => window.clearTimeout(t);
+  }, [duration, revealed]);
+
+  const markLoaded = (index: number) => {
+    if (loadedTiles.current.has(index)) return;
+    loadedTiles.current.add(index);
+    setLoadedCount(loadedTiles.current.size);
+  };
+
+  const tryNextSource = (index: number) => {
+    if (loadedTiles.current.delete(index)) setLoadedCount(loadedTiles.current.size);
+    setSourceAttempts((current) => {
+      if (!videos.length || current[index] >= videos.length - 1) return current;
+      const next = [...current];
+      next[index] += 1;
+      return next;
+    });
+  };
 
   return (
     <AnimatePresence>
@@ -134,7 +124,7 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
           className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
           <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 ${revealed ? "opacity-100" : "opacity-0"}`}
             style={{
               width: "100vw",
               height: "56.25vw",
@@ -143,8 +133,8 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
             }}
           >
             {TILES.map((tile, i) => {
-              const item = videos.length ? videos[i % videos.length] : undefined;
-              const src = item ? blobs[item.video_url] : undefined;
+              const item = videos.length ? videos[(i + sourceAttempts[i]) % videos.length] : undefined;
+              const src = item?.video_url;
               return (
                 <div
                   key={i}
@@ -158,7 +148,10 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
                 >
                   {src && (
                     <video
-                      key={src}
+                      key={`${i}-${src}`}
+                      ref={(element) => {
+                        videoRefs.current[i] = element;
+                      }}
                       src={src}
                       poster={item?.poster_url ?? undefined}
                       autoPlay
@@ -166,7 +159,9 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
                       muted
                       playsInline
                       preload="auto"
-                      onCanPlay={(e) => void e.currentTarget.play().catch(() => undefined)}
+                      onLoadedData={() => markLoaded(i)}
+                      onCanPlayThrough={() => markLoaded(i)}
+                      onError={() => tryNextSource(i)}
                       className="w-full h-full object-cover rounded-sm"
                     />
                   )}
