@@ -89,7 +89,7 @@ const SplashTile = ({
         aspectRatio: "16 / 9",
       }}
     >
-      {data?.poster && <img src={data.poster} alt="" className="w-full h-full object-cover" loading="eager" />}
+      {data?.poster && <img src={data.poster} alt="" className="w-full h-full object-cover" loading="eager" decoding="sync" fetchPriority="high" />}
       {data?.stream && (
         <video
           ref={videoRef}
