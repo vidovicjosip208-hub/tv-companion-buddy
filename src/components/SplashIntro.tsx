@@ -112,27 +112,37 @@ interface SplashIntroProps {
   duration?: number;
 }
 
-const SplashIntro = ({ duration = 7000 }: SplashIntroProps) => {
+const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
   const [wave, setWave] = useState(0);
   const { data: content = [] } = useSplashContent();
 
+  // Try to go fullscreen immediately; retry on the first user gesture if blocked.
+  useEffect(() => {
+    const goFs = () => {
+      const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
+      if (document.fullscreenElement) return;
+      void (el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.())?.catch(() => undefined);
+    };
+    goFs();
+    window.addEventListener("pointerdown", goFs, { once: true });
+    window.addEventListener("keydown", goFs, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", goFs);
+      window.removeEventListener("keydown", goFs);
+    };
+  }, []);
+
   useEffect(() => {
     const t = setTimeout(() => setVisible(false), duration);
-    const dismiss = () => setVisible(false);
-    window.addEventListener("keydown", dismiss);
-    window.addEventListener("pointerdown", dismiss);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener("keydown", dismiss);
-      window.removeEventListener("pointerdown", dismiss);
-    };
+    return () => clearTimeout(t);
   }, [duration]);
 
   useEffect(() => {
     const i = setInterval(() => setWave((w) => w + 1), 2600);
     return () => clearInterval(i);
   }, []);
+
 
   // Only a few clips play at once so TV hardware stays smooth.
   const activeIndices = useMemo(() => {
