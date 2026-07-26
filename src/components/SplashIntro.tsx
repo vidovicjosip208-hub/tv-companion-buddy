@@ -9,31 +9,33 @@ interface SplashTileData {
   stream: string | null;
 }
 
-// Non-overlapping grid layout (percent of canvas): 6 x 5 cells of 16:9 tiles
-// with the middle block left free for the logo. Tiles never overlap so each
-// one can host its own small video player.
+// Strict ring layout (percent of a 16:9 stage): 7 x 5 grid, only the perimeter
+// cells are used -> exactly 20 non-overlapping tiles forming a clean frame
+// around the centered logo. In a 16:9 stage a 16:9 tile is square in percent,
+// so these values never overlap on any screen size.
 const TILES = [
-  { left: 8.3, top: 13.0, w: 13.3 },
-  { left: 22.8, top: 8.6, w: 18.6 },
-  { left: 38.7, top: 8.6, w: 12.8 },
-  { left: 53.3, top: 8.8, w: 13.3 },
-  { left: 67.7, top: 10.7, w: 13.3 },
-  { left: 82.2, top: 15.1, w: 10.1 },
-  { left: 4.6, top: 24.9, w: 16.3 },
-  { left: 21.9, top: 23.2, w: 10.4 },
-  { left: 70.0, top: 24.9, w: 12.4 },
-  { left: 82.8, top: 28.8, w: 13.3 },
-  { left: 2.9, top: 38.6, w: 16.6 },
-  { left: 76.8, top: 42.0, w: 17.9 },
-  { left: 5.5, top: 54.2, w: 18.2 },
-  { left: 70.3, top: 56.4, w: 23.4 },
-  { left: 6.4, top: 68.4, w: 20.5 },
-  { left: 13.7, top: 75.7, w: 16.6 },
-  { left: 31.1, top: 71.3, w: 11.4 },
-  { left: 43.8, top: 74.2, w: 12.0 },
-  { left: 57.0, top: 70.3, w: 14.6 },
-  { left: 73.2, top: 70.8, w: 17.6 },
+  { left: 3.0, top: 16.6, w: 12.4 },
+  { left: 16.6, top: 16.6, w: 12.4 },
+  { left: 30.2, top: 16.6, w: 12.4 },
+  { left: 43.8, top: 16.6, w: 12.4 },
+  { left: 57.4, top: 16.6, w: 12.4 },
+  { left: 71.0, top: 16.6, w: 12.4 },
+  { left: 84.6, top: 16.6, w: 12.4 },
+  { left: 3.0, top: 30.2, w: 12.4 },
+  { left: 84.6, top: 30.2, w: 12.4 },
+  { left: 3.0, top: 43.8, w: 12.4 },
+  { left: 84.6, top: 43.8, w: 12.4 },
+  { left: 3.0, top: 57.4, w: 12.4 },
+  { left: 84.6, top: 57.4, w: 12.4 },
+  { left: 3.0, top: 71.0, w: 12.4 },
+  { left: 16.6, top: 71.0, w: 12.4 },
+  { left: 30.2, top: 71.0, w: 12.4 },
+  { left: 43.8, top: 71.0, w: 12.4 },
+  { left: 57.4, top: 71.0, w: 12.4 },
+  { left: 71.0, top: 71.0, w: 12.4 },
+  { left: 84.6, top: 71.0, w: 12.4 },
 ];
+
 
 
 
@@ -158,23 +160,29 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
           exit={{ opacity: 0, transition: { duration: 0.6 } }}
           className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
-          {TILES.map((tile, i) => (
-            <SplashTile
-              key={i}
-              tile={tile}
-              data={content[i % Math.max(content.length, 1)]}
-              playing={activeIndices.has(i)}
-            />
-          ))}
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            style={{
+              width: "100vw",
+              height: "56.25vw",
+              minWidth: "177.78vh",
+              minHeight: "100vh",
+            }}
+          >
+            {TILES.map((tile, i) => (
+              <SplashTile
+                key={i}
+                tile={tile}
+                data={content[i % Math.max(content.length, 1)]}
+                playing={activeIndices.has(i)}
+              />
+            ))}
 
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <img
-              src={logo}
-              alt="MAXovizija"
-              className="relative w-[38%] max-w-[640px]"
-            />
-
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <img src={logo} alt="MAXovizija" className="w-[34%] max-w-[620px]" />
+            </div>
           </div>
+
         </motion.div>
       )}
     </AnimatePresence>
