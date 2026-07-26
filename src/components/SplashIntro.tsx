@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,11 +76,15 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
   const loadedSources = useRef(new Set<string>());
   const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const canvasRefs = useRef<Array<HTMLCanvasElement | null>>([]);
-  const animationFrame = useRef<number>();
+  const animationFrame = useRef<number | null>(null);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
-  const uniqueVideos = videos.filter(
-    (video, index, list) => list.findIndex((candidate) => candidate.video_url === video.video_url) === index,
+  const uniqueVideos = useMemo(
+    () =>
+      videos.filter(
+        (video, index, list) => list.findIndex((candidate) => candidate.video_url === video.video_url) === index,
+      ),
+    [videos],
   );
 
   // Try to go fullscreen immediately; retry on the first user gesture if blocked.
@@ -100,7 +104,7 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
   }, []);
 
   useEffect(() => {
-    if (!uniqueVideos.length || loadedSourceCount !== uniqueVideos.length || revealed) return;
+    if (!uniqueVideos.length || loadedSourceCount !== uniqueVideos.length) return;
 
     const players = uniqueVideos
       .map((video) => sourceVideoRefs.current[video.video_url])
@@ -157,9 +161,9 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
     });
 
     return () => {
-      if (animationFrame.current !== undefined) window.cancelAnimationFrame(animationFrame.current);
+      if (animationFrame.current !== null) window.cancelAnimationFrame(animationFrame.current);
     };
-  }, [loadedSourceCount, revealed, uniqueVideos, videos]);
+  }, [loadedSourceCount, uniqueVideos, videos]);
 
   useEffect(() => {
     if (!revealed) return;
