@@ -180,14 +180,12 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
 
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="absolute w-[55%] h-[45%] rounded-full bg-black blur-3xl" />
-            <motion.img
+            <img
               src={logo}
               alt="MAXovizija"
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, ease: "easeOut" }}
               className="relative w-[42%] max-w-[720px] drop-shadow-[0_0_60px_rgba(0,0,0,0.9)]"
             />
+
           </div>
         </motion.div>
       )}
