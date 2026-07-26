@@ -61,19 +61,36 @@ const SplashTile = ({
   tile,
   data,
   playing,
+  reveal,
+  onReady,
 }: {
   tile: (typeof TILES)[number];
   data?: SplashTileData;
   playing: boolean;
+  reveal: boolean;
+  onReady: () => void;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canPlay = playing && !!data?.stream && !data.stream.includes(".m3u8");
+  const readyFired = useRef(false);
+  const hasVideo = !!data?.stream && !data.stream.includes(".m3u8");
+  const canPlay = reveal && playing && hasVideo;
+
+  const fireReady = () => {
+    if (readyFired.current) return;
+    readyFired.current = true;
+    onReady();
+  };
+
+  // Tiles without a playable video are "ready" immediately.
+  useEffect(() => {
+    if (!hasVideo) fireReady();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasVideo]);
 
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     if (canPlay) {
-      v.currentTime = Math.random() * 60 + 10;
       void v.play().catch(() => undefined);
     } else {
       v.pause();
@@ -92,14 +109,17 @@ const SplashTile = ({
     >
       <div aria-hidden="true" className="absolute inset-0 bg-muted/30" />
       {data?.poster && <img src={data.poster} alt="" className="relative z-10 w-full h-full object-cover" loading="eager" decoding="sync" fetchPriority="high" />}
-      {data?.stream && (
+      {hasVideo && (
         <video
           ref={videoRef}
-          src={data.stream}
+          src={data!.stream!}
           muted
           loop
           playsInline
           preload="auto"
+          onLoadedData={fireReady}
+          onCanPlayThrough={fireReady}
+          onError={fireReady}
           className="absolute inset-0 z-20 w-full h-full object-cover transition-opacity duration-300"
           style={{ opacity: canPlay ? 1 : 0 }}
         />
@@ -107,6 +127,7 @@ const SplashTile = ({
     </div>
   );
 };
+
 
 interface SplashIntroProps {
   duration?: number;
