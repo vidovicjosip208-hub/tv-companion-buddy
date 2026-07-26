@@ -14,6 +14,7 @@ import FullscreenBootstrap from "./components/FullscreenBootstrap.tsx";
 import RemoteBackKey from "./components/RemoteBackKey.tsx";
 import ExitAppDialog from "./components/ExitAppDialog.tsx";
 import ScaleToFit from "./components/ScaleToFit.tsx";
+import SplashIntro from "./components/SplashIntro.tsx";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
         <FullscreenBootstrap />
         <RemoteBackKey />
         <ExitAppDialog />
+        <SplashIntro />
         <ScaleToFit>
           <BrowserRouter>
             <Routes>
