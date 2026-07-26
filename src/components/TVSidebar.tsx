@@ -1,9 +1,7 @@
-import { Home, Tv, Radio, Heart, Film, Cctv, User, Settings } from "lucide-react";
+import { Home, Tv, Radio, Heart, Film, Cctv, Sparkles, User, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import logo from "@/assets/max-ovizija-logo.png";
-
 
 interface SidebarItem {
   id: string;
@@ -55,18 +53,25 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
       transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
       className="h-full flex flex-col pt-4 sm:pt-6 lg:pt-8 pb-4 sm:pb-6 bg-transparent border-r border-sidebar-border relative z-20 flex-shrink-0"
     >
-      {/* Logo at top */}
+      {/* AI Button at top */}
       <div className="px-2 sm:px-3 mb-4 sm:mb-6 lg:mb-8">
-        <div className={cn("flex items-center", isMini ? "justify-center" : "justify-start")}>
-          <img
-            src={logo}
-            alt="Max Ovizija"
-            className={cn(
-              "w-auto transition-all duration-300",
-              isMini ? "h-8 sm:h-10" : "h-10 sm:h-14 lg:h-16",
-            )}
-          />
-        </div>
+        <button
+          className={cn(
+            "w-full flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-3 rounded-xl transition-all duration-300",
+            "bg-accent/10 border border-accent/20 hover:bg-accent/20",
+          )}
+        >
+          <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-accent flex-shrink-0" />
+          {showLabels && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-accent font-semibold text-xs sm:text-sm whitespace-nowrap"
+            >
+              AI Analyze
+            </motion.span>
+          )}
+        </button>
       </div>
 
       {/* Nav Items */}
