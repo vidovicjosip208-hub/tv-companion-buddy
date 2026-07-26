@@ -55,10 +55,53 @@ interface SplashIntroProps {
   duration?: number;
 }
 
+// Download each distinct clip ONCE and reuse the same object URL for every tile,
+// so 20 frames don't trigger 20 parallel network downloads.
+const useBlobUrls = (urls: string[]) => {
+  const [map, setMap] = useState<Record<string, string>>({});
+  const key = urls.join("|");
+
+  useEffect(() => {
+    if (!urls.length) return;
+    let cancelled = false;
+    const created: string[] = [];
+
+    Promise.all(
+      urls.map(async (u) => {
+        try {
+          const res = await fetch(u, { cache: "force-cache" });
+          const blob = await res.blob();
+          const obj = URL.createObjectURL(blob);
+          created.push(obj);
+          return [u, obj] as const;
+        } catch {
+          return [u, u] as const;
+        }
+      }),
+    ).then((pairs) => {
+      if (cancelled) {
+        created.forEach((o) => URL.revokeObjectURL(o));
+        return;
+      }
+      setMap(Object.fromEntries(pairs));
+    });
+
+    return () => {
+      cancelled = true;
+      created.forEach((o) => URL.revokeObjectURL(o));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  return map;
+};
+
 const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
+  const uniqueUrls = Array.from(new Set(videos.map((v) => v.video_url)));
+  const blobs = useBlobUrls(uniqueUrls);
 
   // Try to go fullscreen immediately; retry on the first user gesture if blocked.
   useEffect(() => {
@@ -101,6 +144,7 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
           >
             {TILES.map((tile, i) => {
               const item = videos.length ? videos[i % videos.length] : undefined;
+              const src = item ? blobs[item.video_url] : undefined;
               return (
                 <div
                   key={i}
@@ -112,19 +156,22 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
                     height: `${tile.h}%`,
                   }}
                 >
-                  {item && (
+                  {src && (
                     <video
-                      src={item.video_url}
-                      poster={item.poster_url ?? undefined}
+                      key={src}
+                      src={src}
+                      poster={item?.poster_url ?? undefined}
                       autoPlay
                       loop
                       muted
                       playsInline
                       preload="auto"
+                      onCanPlay={(e) => void e.currentTarget.play().catch(() => undefined)}
                       className="w-full h-full object-cover rounded-sm"
                     />
                   )}
                 </div>
+
               );
             })}
 
