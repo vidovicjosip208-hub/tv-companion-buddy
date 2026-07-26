@@ -29,7 +29,7 @@ const TVHeader = () => {
       className="flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 py-2 sm:py-3 border-b border-border/30 relative z-30"
     >
       {/* Left - Logo */}
-      <img src={logo} alt="Max Ovizija" className="h-10 sm:h-14 lg:h-16 w-auto flex-shrink-0" />
+      <img src={logo} alt="Max Ovizija" className="h-12 sm:h-16 lg:h-20 xl:h-24 w-auto flex-shrink-0" />
 
       {/* Center - Subscription Notice */}
       <div className="flex items-center gap-2 sm:gap-3">
