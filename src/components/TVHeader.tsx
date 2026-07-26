@@ -1,7 +1,6 @@
 import { Clock, CloudRain } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import logo from "@/assets/max-ovizija-logo.png";
 import { motion } from "framer-motion";
 
 const TVHeader = () => {
@@ -27,11 +26,6 @@ const TVHeader = () => {
       transition={{ duration: 0.6, delay: 0.2 }}
       className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4"
     >
-      {/* Logo */}
-      <div className="flex items-center">
-        <img src={logo} alt="Max Ovizija" className="h-16 sm:h-20 lg:h-28 w-auto -mt-2 sm:-mt-3 lg:-mt-5" />
-      </div>
-
       {/* Center - Subscription Notice */}
       <div className="flex items-center gap-2 sm:gap-3">
         <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border border-accent/40 flex items-center justify-center">
