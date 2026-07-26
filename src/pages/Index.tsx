@@ -1394,6 +1394,8 @@ const Index = () => {
           </AnimatePresence>
         </div>
       </div>
+      </div>
+
     </motion.div>
   );
 };
