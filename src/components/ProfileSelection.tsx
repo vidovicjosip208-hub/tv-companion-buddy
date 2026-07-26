@@ -3,6 +3,7 @@ import { User, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/max-ovizija-logo.png";
 
 interface ProfileSelectionProps {
   onBack: () => void;
