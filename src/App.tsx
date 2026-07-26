@@ -27,6 +27,7 @@ const App = () => (
         <FullscreenBootstrap />
         <RemoteBackKey />
         <ExitAppDialog />
+        <SplashIntro />
         <ScaleToFit>
           <BrowserRouter>
             <Routes>
