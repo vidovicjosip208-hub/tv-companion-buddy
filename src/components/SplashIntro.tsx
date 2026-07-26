@@ -87,7 +87,7 @@ const SplashTile = ({
         left: `${tile.left}%`,
         top: `${tile.top}%`,
         width: `${tile.w}%`,
-        height: `${tile.h * (16 / 9)}%`,
+        height: `${tile.h}%`,
       }}
     >
       {data?.poster && <img src={data.poster} alt="" className="w-full h-full object-cover" loading="eager" decoding="sync" fetchPriority="high" />}
