@@ -1124,10 +1124,13 @@ const Index = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className="h-screen flex overflow-hidden relative"
+      className="h-screen flex flex-col overflow-hidden relative"
     >
       <StarryBackground />
 
+      <TVHeader />
+
+      <div className="flex-1 flex overflow-hidden relative min-h-0">
       <TVSidebar
         focusedIndex={focusZone === "sidebar" ? sidebarIndex : -1}
         isExpanded={sidebarExpanded}
