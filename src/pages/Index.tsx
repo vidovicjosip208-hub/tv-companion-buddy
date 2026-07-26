@@ -1124,10 +1124,13 @@ const Index = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className="h-screen flex overflow-hidden relative"
+      className="h-screen flex flex-col overflow-hidden relative"
     >
       <StarryBackground />
 
+      <TVHeader />
+
+      <div className="flex-1 flex overflow-hidden relative min-h-0">
       <TVSidebar
         focusedIndex={focusZone === "sidebar" ? sidebarIndex : -1}
         isExpanded={sidebarExpanded}
@@ -1225,7 +1228,7 @@ const Index = () => {
       />
 
       <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
-        <TVHeader />
+
 
         <div className="flex-1 flex flex-col px-2 sm:px-4 pb-2 sm:pb-4 overflow-hidden relative min-w-0">
           <AnimatePresence mode="wait">
@@ -1391,6 +1394,8 @@ const Index = () => {
           </AnimatePresence>
         </div>
       </div>
+      </div>
+
     </motion.div>
   );
 };
