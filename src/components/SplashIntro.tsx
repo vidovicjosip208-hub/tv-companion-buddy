@@ -82,7 +82,7 @@ const SplashTile = ({
 
   return (
     <div
-      className="absolute overflow-hidden rounded-[3px] shadow-[0_14px_34px_rgba(0,0,0,0.8)]"
+      className="absolute overflow-hidden rounded-[3px] border border-border/60 bg-muted/30 shadow-[0_14px_34px_rgba(0,0,0,0.8)]"
       style={{
         left: `${tile.left}%`,
         top: `${tile.top}%`,
@@ -90,7 +90,8 @@ const SplashTile = ({
         height: `${tile.h}%`,
       }}
     >
-      {data?.poster && <img src={data.poster} alt="" className="w-full h-full object-cover" loading="eager" decoding="sync" fetchPriority="high" />}
+      <div aria-hidden="true" className="absolute inset-0 bg-muted/30" />
+      {data?.poster && <img src={data.poster} alt="" className="relative z-10 w-full h-full object-cover" loading="eager" decoding="sync" fetchPriority="high" />}
       {data?.stream && (
         <video
           ref={videoRef}
@@ -99,7 +100,7 @@ const SplashTile = ({
           loop
           playsInline
           preload="auto"
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+          className="absolute inset-0 z-20 w-full h-full object-cover transition-opacity duration-300"
           style={{ opacity: canPlay ? 1 : 0 }}
         />
       )}
