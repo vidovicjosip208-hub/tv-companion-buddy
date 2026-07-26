@@ -64,12 +64,10 @@ const SplashTile = ({
   tile,
   data,
   playing,
-  delay,
 }: {
   tile: (typeof TILES)[number];
   data?: SplashTileData;
   playing: boolean;
-  delay: number;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canPlay = playing && !!data?.stream && !data.stream.includes(".m3u8");
@@ -86,10 +84,7 @@ const SplashTile = ({
   }, [canPlay]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, delay }}
+    <div
       className="absolute overflow-hidden rounded-md shadow-[0_18px_40px_rgba(0,0,0,0.75)] ring-1 ring-white/5"
       style={{
         left: `${tile.left}%`,
@@ -98,7 +93,7 @@ const SplashTile = ({
         aspectRatio: "16 / 9",
       }}
     >
-      {data?.poster && <img src={data.poster} alt="" className="w-full h-full object-cover" loading="lazy" />}
+      {data?.poster && <img src={data.poster} alt="" className="w-full h-full object-cover" loading="eager" />}
       {data?.stream && (
         <video
           ref={videoRef}
@@ -106,13 +101,13 @@ const SplashTile = ({
           muted
           loop
           playsInline
-          preload="none"
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
           style={{ opacity: canPlay ? 1 : 0 }}
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
-    </motion.div>
+    </div>
   );
 };
 
@@ -174,7 +169,6 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
               tile={tile}
               data={content[i % Math.max(content.length, 1)]}
               playing={activeIndices.has(i)}
-              delay={Math.min(i * 0.05, 0.8)}
             />
           ))}
 
