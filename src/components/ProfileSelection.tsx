@@ -3,6 +3,7 @@ import { User, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/max-ovizija-logo.png";
 
 interface ProfileSelectionProps {
   onBack: () => void;
@@ -77,17 +78,7 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
     >
       {/* Logo area */}
       <div className="flex flex-col items-center gap-2 mb-2 sm:mb-4">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-accent flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-6 h-6 sm:w-7 sm:h-7 text-accent-foreground fill-current">
-              <polygon points="9.5,7.5 16,12 9.5,16.5" />
-            </svg>
-          </div>
-          <div>
-            <span className="text-xl sm:text-2xl font-bold text-foreground">MAX</span>
-            <span className="text-xl sm:text-2xl font-bold text-accent">ovizija</span>
-          </div>
-        </div>
+        <img src={logo} alt="Max Ovizija" className="h-16 sm:h-20 lg:h-28 w-auto" />
         <span className="text-xs font-semibold tracking-widest text-accent uppercase">{t("profile.brand")}</span>
       </div>
 
