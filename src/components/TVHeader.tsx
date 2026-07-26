@@ -1,7 +1,6 @@
 import { Clock, CloudRain } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import logo from "@/assets/max-ovizija-logo.png";
 import { motion } from "framer-motion";
 
 const TVHeader = () => {
