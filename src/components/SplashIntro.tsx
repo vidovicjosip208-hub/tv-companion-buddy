@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/max-ovizija-logo.png";
 
 interface SplashTileData {
-  poster: string;
-  stream: string | null;
+  video_url: string;
+  poster_url: string | null;
 }
 
 // Scattered, non-overlapping frame of tiles around the centered logo,
@@ -34,100 +34,22 @@ const TILES = [
   { left: 73.6, top: 69.8, w: 17.0, h: 10.4 },
 ];
 
-
-
-
-
 const useSplashContent = () =>
   useQuery<SplashTileData[]>({
-    queryKey: ["splash_content"],
+    queryKey: ["loading_thumbnails"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("movies_series")
-        .select("poster_url, backdrop_url, thumbnail_url, stream_url")
-        .limit(40);
+        .from("loading_thumbnails")
+        .select("video_url, poster_url, is_active, position_order")
+        .eq("is_active", true)
+        .order("position_order", { ascending: true });
       if (error) throw error;
       return (data ?? [])
-        .map((r) => ({
-          poster: r.backdrop_url || r.thumbnail_url || r.poster_url || "",
-          stream: r.stream_url ?? null,
-        }))
-        .filter((t) => t.poster || t.stream);
+        .filter((r) => !!r.video_url)
+        .map((r) => ({ video_url: r.video_url as string, poster_url: r.poster_url ?? null }));
     },
     staleTime: Infinity,
   });
-
-const SplashTile = ({
-  tile,
-  data,
-  playing,
-  reveal,
-  onReady,
-}: {
-  tile: (typeof TILES)[number];
-  data?: SplashTileData;
-  playing: boolean;
-  reveal: boolean;
-  onReady: () => void;
-}) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const readyFired = useRef(false);
-  const hasVideo = !!data?.stream && !data.stream.includes(".m3u8");
-  const canPlay = reveal && playing && hasVideo;
-
-  const fireReady = () => {
-    if (readyFired.current) return;
-    readyFired.current = true;
-    onReady();
-  };
-
-  // Tiles without a playable video are "ready" immediately.
-  useEffect(() => {
-    if (!hasVideo) fireReady();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasVideo]);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (canPlay) {
-      void v.play().catch(() => undefined);
-    } else {
-      v.pause();
-    }
-  }, [canPlay]);
-
-  return (
-    <div
-      className="absolute overflow-hidden rounded-[3px] border border-border/60 bg-muted/30 shadow-[0_14px_34px_rgba(0,0,0,0.8)]"
-      style={{
-        left: `${tile.left}%`,
-        top: `${tile.top}%`,
-        width: `${tile.w}%`,
-        height: `${tile.h}%`,
-      }}
-    >
-      <div aria-hidden="true" className="absolute inset-0 bg-muted/30" />
-      {data?.poster && <img src={data.poster} alt="" className="relative z-10 w-full h-full object-cover" loading="eager" decoding="sync" fetchPriority="high" />}
-      {hasVideo && (
-        <video
-          ref={videoRef}
-          src={data!.stream!}
-          muted
-          loop
-          playsInline
-          preload="auto"
-          onLoadedData={fireReady}
-          onCanPlayThrough={fireReady}
-          onError={fireReady}
-          className="absolute inset-0 z-20 w-full h-full object-cover transition-opacity duration-300"
-          style={{ opacity: canPlay ? 1 : 0 }}
-        />
-      )}
-    </div>
-  );
-};
-
 
 interface SplashIntroProps {
   duration?: number;
@@ -135,21 +57,8 @@ interface SplashIntroProps {
 
 const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
-  const [wave, setWave] = useState(0);
-  const [loadedCount, setLoadedCount] = useState(0);
-  const [forceReveal, setForceReveal] = useState(false);
-  const { data: content, isFetched } = useSplashContent();
-  const tiles = content ?? [];
-
-  const handleReady = () => setLoadedCount((c) => c + 1);
-
-  // Reveal only when every tile is buffered (or after a safety timeout).
-  const reveal = forceReveal || (isFetched && loadedCount >= TILES.length);
-
-  useEffect(() => {
-    const t = setTimeout(() => setForceReveal(true), 6000);
-    return () => clearTimeout(t);
-  }, []);
+  const { data: content } = useSplashContent();
+  const videos = content ?? [];
 
   // Try to go fullscreen immediately; retry on the first user gesture if blocked.
   useEffect(() => {
@@ -172,19 +81,6 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
     return () => clearTimeout(t);
   }, [duration]);
 
-  useEffect(() => {
-    const i = setInterval(() => setWave((w) => w + 1), 2600);
-    return () => clearInterval(i);
-  }, []);
-
-
-  // Only a few clips play at once so TV hardware stays smooth.
-  const activeIndices = useMemo(() => {
-    const set = new Set<number>();
-    for (let k = 0; k < 5; k++) set.add((wave * 5 + k * 3) % TILES.length);
-    return set;
-  }, [wave]);
-
   return (
     <AnimatePresence>
       {visible && (
@@ -201,20 +97,34 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
               height: "56.25vw",
               minWidth: "177.78vh",
               minHeight: "100vh",
-              opacity: reveal ? 1 : 0,
             }}
           >
             {TILES.map((tile, i) => {
-              const data = tiles.length ? tiles[i % tiles.length] : undefined;
+              const item = videos.length ? videos[i % videos.length] : undefined;
               return (
-                <SplashTile
-                  key={`${i}-${data?.stream ?? data?.poster ?? "empty"}`}
-                  tile={tile}
-                  data={data}
-                  playing={activeIndices.has(i)}
-                  reveal={reveal}
-                  onReady={handleReady}
-                />
+                <div
+                  key={i}
+                  className="absolute overflow-hidden rounded-[3px] border border-border/60 bg-muted/30"
+                  style={{
+                    left: `${tile.left}%`,
+                    top: `${tile.top}%`,
+                    width: `${tile.w}%`,
+                    height: `${tile.h}%`,
+                  }}
+                >
+                  {item && (
+                    <video
+                      src={item.video_url}
+                      poster={item.poster_url ?? undefined}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      preload="auto"
+                      className="w-full h-full object-cover rounded-sm"
+                    />
+                  )}
+                </div>
               );
             })}
 
@@ -222,9 +132,6 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
               <img src={logo} alt="MAXovizija" className="w-[34%] max-w-[620px]" />
             </div>
           </div>
-
-
-
         </motion.div>
       )}
     </AnimatePresence>
