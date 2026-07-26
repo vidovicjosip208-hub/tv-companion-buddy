@@ -13,30 +13,26 @@ interface SplashTileData {
 // with the middle block left free for the logo. Tiles never overlap so each
 // one can host its own small video player.
 const TILES = [
-  { left: 1.5, top: 1.4, w: 15.0 },
-  { left: 17.9, top: 1.4, w: 15.0 },
-  { left: 34.3, top: 1.4, w: 15.0 },
-  { left: 50.7, top: 1.4, w: 15.0 },
-  { left: 67.1, top: 1.4, w: 15.0 },
-  { left: 83.5, top: 1.4, w: 15.0 },
-  { left: 1.5, top: 21.2, w: 15.0 },
-  { left: 17.9, top: 21.2, w: 15.0 },
-  { left: 67.1, top: 21.2, w: 15.0 },
-  { left: 83.5, top: 21.2, w: 15.0 },
-  { left: 1.5, top: 41.1, w: 15.0 },
-  { left: 17.9, top: 41.1, w: 15.0 },
-  { left: 67.1, top: 41.1, w: 15.0 },
-  { left: 83.5, top: 41.1, w: 15.0 },
-  { left: 1.5, top: 60.9, w: 15.0 },
-  { left: 17.9, top: 60.9, w: 15.0 },
-  { left: 67.1, top: 60.9, w: 15.0 },
-  { left: 83.5, top: 60.9, w: 15.0 },
-  { left: 1.5, top: 80.8, w: 15.0 },
-  { left: 17.9, top: 80.8, w: 15.0 },
-  { left: 34.3, top: 80.8, w: 15.0 },
-  { left: 50.7, top: 80.8, w: 15.0 },
-  { left: 67.1, top: 80.8, w: 15.0 },
-  { left: 83.5, top: 80.8, w: 15.0 },
+  { left: 8.3, top: 13.0, w: 13.3 },
+  { left: 22.8, top: 8.6, w: 18.6 },
+  { left: 38.7, top: 8.6, w: 12.8 },
+  { left: 53.3, top: 8.8, w: 13.3 },
+  { left: 67.7, top: 10.7, w: 13.3 },
+  { left: 82.2, top: 15.1, w: 10.1 },
+  { left: 4.6, top: 24.9, w: 16.3 },
+  { left: 21.9, top: 23.2, w: 10.4 },
+  { left: 70.0, top: 24.9, w: 12.4 },
+  { left: 82.8, top: 28.8, w: 13.3 },
+  { left: 2.9, top: 38.6, w: 16.6 },
+  { left: 76.8, top: 42.0, w: 17.9 },
+  { left: 5.5, top: 54.2, w: 18.2 },
+  { left: 70.3, top: 56.4, w: 23.4 },
+  { left: 6.4, top: 68.4, w: 20.5 },
+  { left: 13.7, top: 75.7, w: 16.6 },
+  { left: 31.1, top: 71.3, w: 11.4 },
+  { left: 43.8, top: 74.2, w: 12.0 },
+  { left: 57.0, top: 70.3, w: 14.6 },
+  { left: 73.2, top: 70.8, w: 17.6 },
 ];
 
 
@@ -85,7 +81,7 @@ const SplashTile = ({
 
   return (
     <div
-      className="absolute overflow-hidden rounded-md shadow-[0_18px_40px_rgba(0,0,0,0.75)] ring-1 ring-white/5"
+      className="absolute overflow-hidden rounded-[3px] shadow-[0_14px_34px_rgba(0,0,0,0.8)]"
       style={{
         left: `${tile.left}%`,
         top: `${tile.top}%`,
@@ -93,7 +89,7 @@ const SplashTile = ({
         aspectRatio: "16 / 9",
       }}
     >
-      {data?.poster && <img src={data.poster} alt="" className="w-full h-full object-cover" loading="eager" />}
+      {data?.poster && <img src={data.poster} alt="" className="w-full h-full object-cover" loading="eager" decoding="sync" fetchPriority="high" />}
       {data?.stream && (
         <video
           ref={videoRef}
@@ -106,7 +102,6 @@ const SplashTile = ({
           style={{ opacity: canPlay ? 1 : 0 }}
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
     </div>
   );
 };
@@ -173,11 +168,10 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
           ))}
 
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="absolute w-[55%] h-[45%] rounded-full bg-black blur-3xl" />
             <img
               src={logo}
               alt="MAXovizija"
-              className="relative w-[42%] max-w-[720px] drop-shadow-[0_0_60px_rgba(0,0,0,0.9)]"
+              className="relative w-[38%] max-w-[640px]"
             />
 
           </div>
