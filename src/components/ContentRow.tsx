@@ -120,10 +120,8 @@ const ContentRow = ({
                 <img
                   src={item.thumbnail}
                   alt={item.title}
-                  aria-hidden
-                  className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50"
+                  className="absolute inset-0 w-full h-full object-cover object-top"
                 />
-                <img src={item.thumbnail} alt={item.title} className="relative w-full h-full object-contain" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 {!peek && (item.progress !== undefined || (isFocused && showIndicator)) && (
                   <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-muted/50">
