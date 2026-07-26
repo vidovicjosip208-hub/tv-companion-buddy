@@ -11,27 +11,28 @@ interface SplashTileData {
 
 // Scatter layout (percent of canvas) mirroring the intro collage composition.
 const TILES = [
-  { left: 8, top: 12, w: 13 },
-  { left: 22, top: 8, w: 15 },
-  { left: 38, top: 8, w: 13 },
-  { left: 53, top: 8, w: 13 },
-  { left: 67, top: 10, w: 14 },
-  { left: 82, top: 14, w: 11 },
-  { left: 4, top: 25, w: 16 },
-  { left: 21, top: 22, w: 11 },
-  { left: 69, top: 24, w: 13 },
-  { left: 82, top: 28, w: 14 },
-  { left: 2, top: 38, w: 17 },
-  { left: 76, top: 41, w: 19 },
-  { left: 5, top: 53, w: 19 },
-  { left: 70, top: 55, w: 22 },
-  { left: 6, top: 68, w: 16 },
-  { left: 13, top: 74, w: 17 },
-  { left: 31, top: 70, w: 12 },
-  { left: 44, top: 73, w: 12 },
-  { left: 57, top: 68, w: 15 },
-  { left: 73, top: 70, w: 18 },
+  { left: 8.1, top: 12.7, w: 13.3 },
+  { left: 22.8, top: 8.6, w: 14 },
+  { left: 38.7, top: 8.6, w: 13 },
+  { left: 53, top: 8.6, w: 13.3 },
+  { left: 67.7, top: 10.3, w: 13.7 },
+  { left: 82.4, top: 15.6, w: 9.8 },
+  { left: 4.6, top: 24.9, w: 16.3 },
+  { left: 21.9, top: 23.4, w: 10 },
+  { left: 70, top: 24.7, w: 12.4 },
+  { left: 83, top: 28.8, w: 14 },
+  { left: 2.9, top: 38.6, w: 16.6 },
+  { left: 77, top: 42, w: 18 },
+  { left: 5.5, top: 54.2, w: 18.5 },
+  { left: 70.3, top: 56.4, w: 23.4 },
+  { left: 6.2, top: 68.4, w: 19.2 },
+  { left: 13.7, top: 74.7, w: 16.6 },
+  { left: 31, top: 71.3, w: 11.9 },
+  { left: 44, top: 74, w: 11.7 },
+  { left: 57, top: 70.3, w: 15 },
+  { left: 73.2, top: 70.8, w: 17.6 },
 ];
+
 
 const useSplashContent = () =>
   useQuery<SplashTileData[]>({
