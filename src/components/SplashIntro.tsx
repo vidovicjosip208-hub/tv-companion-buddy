@@ -160,23 +160,29 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
           exit={{ opacity: 0, transition: { duration: 0.6 } }}
           className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
-          {TILES.map((tile, i) => (
-            <SplashTile
-              key={i}
-              tile={tile}
-              data={content[i % Math.max(content.length, 1)]}
-              playing={activeIndices.has(i)}
-            />
-          ))}
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            style={{
+              width: "100vw",
+              height: "56.25vw",
+              minWidth: "177.78vh",
+              minHeight: "100vh",
+            }}
+          >
+            {TILES.map((tile, i) => (
+              <SplashTile
+                key={i}
+                tile={tile}
+                data={content[i % Math.max(content.length, 1)]}
+                playing={activeIndices.has(i)}
+              />
+            ))}
 
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <img
-              src={logo}
-              alt="MAXovizija"
-              className="relative w-[38%] max-w-[640px]"
-            />
-
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <img src={logo} alt="MAXovizija" className="w-[34%] max-w-[620px]" />
+            </div>
           </div>
+
         </motion.div>
       )}
     </AnimatePresence>
