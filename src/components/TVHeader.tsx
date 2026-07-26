@@ -24,8 +24,11 @@ const TVHeader = () => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4"
+      className="flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 py-2 sm:py-3 border-b border-border/30 relative z-30"
     >
+      {/* Left - Logo */}
+      <img src={logo} alt="Max Ovizija" className="h-10 sm:h-14 lg:h-16 w-auto flex-shrink-0" />
+
       {/* Center - Subscription Notice */}
       <div className="flex items-center gap-2 sm:gap-3">
         <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border border-accent/40 flex items-center justify-center">
@@ -36,6 +39,7 @@ const TVHeader = () => {
         </span>
         <span className="text-accent font-medium text-xs sm:hidden">{t("header.subscriptionShort")}</span>
       </div>
+
 
       {/* Right - Time & Weather */}
       <div className="flex items-center gap-3 sm:gap-6">
