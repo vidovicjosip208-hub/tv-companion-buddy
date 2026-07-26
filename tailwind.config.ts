@@ -74,6 +74,21 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontSize: {
+        xs: ["15px", { lineHeight: "19px" }],
+        sm: ["17px", { lineHeight: "23px" }],
+        base: ["19px", { lineHeight: "27px" }],
+        lg: ["21px", { lineHeight: "31px" }],
+        xl: ["23px", { lineHeight: "31px" }],
+        "2xl": ["27px", { lineHeight: "35px" }],
+        "3xl": ["33px", { lineHeight: "39px" }],
+        "4xl": ["39px", { lineHeight: "43px" }],
+        "5xl": ["51px", { lineHeight: "1" }],
+        "6xl": ["63px", { lineHeight: "1" }],
+        "7xl": ["75px", { lineHeight: "1" }],
+        "8xl": ["99px", { lineHeight: "1" }],
+        "9xl": ["131px", { lineHeight: "1" }],
+      },
       keyframes: {
         "accordion-down": {
           from: {
