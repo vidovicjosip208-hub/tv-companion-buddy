@@ -54,17 +54,8 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
       transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
       className="h-full flex flex-col pt-4 sm:pt-6 lg:pt-8 pb-4 sm:pb-6 bg-transparent border-r border-sidebar-border relative z-20 flex-shrink-0"
     >
-      {/* Logo at top */}
-      <div className="px-2 sm:px-3 mb-4 sm:mb-6 lg:mb-8 flex justify-center">
-        <img
-          src={logo}
-          alt="Max Ovizija"
-          className={cn(
-            "w-auto transition-all duration-300",
-            isMini ? "h-10 sm:h-12" : "h-16 sm:h-20 lg:h-28",
-          )}
-        />
-      </div>
+      {/* Logo moved to header */}
+
 
       {/* Nav Items */}
       <nav className="flex-1 flex flex-col gap-0.5 sm:gap-1 px-1.5 sm:px-2">
