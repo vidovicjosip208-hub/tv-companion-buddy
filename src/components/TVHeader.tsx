@@ -49,14 +49,14 @@ const TVHeader = () => {
           <div className="text-foreground font-bold text-lg sm:text-xl lg:text-2xl leading-none">
             {hours}:{minutes}
           </div>
-          <div className="text-muted-foreground text-[10px] sm:text-xs">{dateStr}</div>
+          <div className="text-muted-foreground text-[13px] sm:text-xs">{dateStr}</div>
         </div>
         <div className="w-px h-6 sm:h-8 bg-border" />
         <div className="flex items-center gap-1.5 sm:gap-2">
           <CloudRain className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
           <div className="text-right">
             <div className="text-foreground font-semibold text-xs sm:text-sm">12°C</div>
-            <div className="text-muted-foreground text-[10px] sm:text-xs">{t("header.location")}</div>
+            <div className="text-muted-foreground text-[13px] sm:text-xs">{t("header.location")}</div>
           </div>
         </div>
       </div>

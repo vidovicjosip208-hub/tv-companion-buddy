@@ -163,7 +163,7 @@ const Settings = () => {
                       isFocused ? "text-accent" : "text-muted-foreground",
                     )}
                   />
-                  <span className={cn("flex-1 text-sm sm:text-[15px]", isFocused && "font-medium")}>{item.label}</span>
+                  <span className={cn("flex-1 text-sm sm:text-[18px]", isFocused && "font-medium")}>{item.label}</span>
                   <ChevronRight
                     className={cn(
                       "w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-opacity",
@@ -204,7 +204,7 @@ const Settings = () => {
                         isSelected ? "text-accent opacity-100" : "opacity-0",
                       )}
                     />
-                    <span className={cn("flex-1 text-sm sm:text-[15px]", isFocused && "font-medium")}>
+                    <span className={cn("flex-1 text-sm sm:text-[18px]", isFocused && "font-medium")}>
                       {lang.label}
                     </span>
                   </button>

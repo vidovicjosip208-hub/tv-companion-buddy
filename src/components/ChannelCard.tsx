@@ -35,9 +35,9 @@ const ChannelCard = ({ channel, isFocused, onClick }: Props) => {
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       <div className="absolute right-2 top-2 flex items-center gap-1">
         {live?.isLive && (
-          <span className="rounded bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">Live</span>
+          <span className="rounded bg-red-600 px-1.5 py-0.5 text-[12px] font-bold uppercase text-white">Live</span>
         )}
-        <span className="rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-bold text-white">
+        <span className="rounded bg-black/50 px-1.5 py-0.5 text-[12px] font-bold text-white">
           {channel.abbreviation}
         </span>
       </div>
@@ -46,7 +46,7 @@ const ChannelCard = ({ channel, isFocused, onClick }: Props) => {
       </div>
       <div className="relative z-10">
         <div className="text-xs sm:text-sm font-bold text-white">{channel.name}</div>
-        <div className="truncate text-[10px] sm:text-[11px] text-white/70">{live?.title}</div>
+        <div className="truncate text-[13px] sm:text-[14px] text-white/70">{live?.title}</div>
       </div>
     </button>
   );

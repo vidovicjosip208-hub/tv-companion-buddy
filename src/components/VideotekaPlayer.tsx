@@ -699,7 +699,7 @@ const Loader = ({ ready, onDone }: { ready: boolean; onDone: () => void }) => {
         </svg>
         <div
           className="absolute inset-0 flex items-center justify-center font-mono font-bold tabular-nums select-none"
-          style={{ color: GOLD, fontSize: "15px" }}
+          style={{ color: GOLD, fontSize: "18px" }}
         >
           {percent}%
         </div>
@@ -1480,7 +1480,7 @@ const VideotekaPlayer = ({
                     <div className="text-right text-white">
                       <p className="text-xs sm:text-sm font-bold">{title}</p>
                       {episodeInfo && (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{episodeInfo}</p>
+                        <p className="text-[13px] sm:text-xs text-muted-foreground mt-0.5">{episodeInfo}</p>
                       )}
                     </div>
                   </div>
@@ -1562,7 +1562,7 @@ const VideotekaPlayer = ({
                                 />
                                 {isCentre && (
                                   <div className="absolute bottom-1 left-0 right-0 text-center">
-                                    <span className="text-[10px] sm:text-[12px] text-white font-bold font-mono drop-shadow">
+                                    <span className="text-[13px] sm:text-[15px] text-white font-bold font-mono drop-shadow">
                                       {formatTime(t)}
                                     </span>
                                   </div>
@@ -1757,7 +1757,7 @@ const VideotekaPlayer = ({
                         >
                           {sub.label}
                         </span>
-                        {isActive && <span style={{ color: GOLD, fontSize: "18px" }}>✓</span>}
+                        {isActive && <span style={{ color: GOLD, fontSize: "21px" }}>✓</span>}
                       </button>
                     );
                   })}
@@ -1849,7 +1849,7 @@ const VideotekaPlayer = ({
                             {track.description}
                           </span>
                         </div>
-                        {isActive && <span style={{ color: GOLD, fontSize: "18px" }}>✓</span>}
+                        {isActive && <span style={{ color: GOLD, fontSize: "21px" }}>✓</span>}
                       </button>
                     );
                   })}
@@ -1953,7 +1953,7 @@ const VideotekaPlayer = ({
                             {font.description}
                           </span>
                         </div>
-                        {isActive && <span style={{ color: GOLD, fontSize: "18px" }}>✓</span>}
+                        {isActive && <span style={{ color: GOLD, fontSize: "21px" }}>✓</span>}
                       </button>
                     );
                   })}
@@ -2066,7 +2066,7 @@ const VideotekaPlayer = ({
                             {ep.episode_number}
                           </div>
                         )}
-                        <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+                        <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[13px] px-1.5 py-0.5 rounded">
                           E{ep.episode_number}
                         </span>
                       </div>

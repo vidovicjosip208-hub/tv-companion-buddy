@@ -1270,7 +1270,7 @@ const Index = () => {
                         >
                           <span className="text-lg sm:text-xl leading-none">{info.flag}</span>
                           <span className="text-xs sm:text-sm font-semibold text-foreground">{info.name}</span>
-                          <span className="text-[10px] sm:text-xs text-muted-foreground">({items.length})</span>
+                          <span className="text-[13px] sm:text-xs text-muted-foreground">({items.length})</span>
                           <span className="text-xs text-muted-foreground ml-1">{collapsed ? "▸" : "▾"}</span>
                         </button>
                         {!collapsed && (
@@ -1295,13 +1295,13 @@ const Index = () => {
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                                     <div className="absolute top-2 left-2 flex items-center gap-1 sm:gap-1.5">
                                       <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500 animate-pulse" />
-                                      <span className="text-[10px] sm:text-xs font-medium text-foreground">
+                                      <span className="text-[13px] sm:text-xs font-medium text-foreground">
                                         {t("home.liveLabel")}
                                       </span>
                                     </div>
                                     <div className="absolute bottom-2 left-2 right-2">
                                       <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{cam.name}</p>
-                                      <p className="text-[10px] sm:text-xs text-muted-foreground">{cam.location}</p>
+                                      <p className="text-[13px] sm:text-xs text-muted-foreground">{cam.location}</p>
                                     </div>
                                   </div>
                                 </motion.div>

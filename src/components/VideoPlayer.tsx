@@ -337,7 +337,7 @@ const ChannelCard = ({
       >
         <span
           className="absolute top-1.5 left-2 font-bold tabular-nums leading-none"
-          style={{ fontSize: "10px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
+          style={{ fontSize: "13px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
         >
           {overrideNum ?? ch.num}
         </span>
@@ -483,17 +483,17 @@ const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
       }}
     >
       <div className="flex items-center justify-between gap-1">
-        <p className="text-[10px] font-mono" style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}>
+        <p className="text-[13px] font-mono" style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}>
           {channel.timeRange}
         </p>
-        <p className="text-[10px]" style={{ color: isFocused ? "rgba(245,197,24,0.7)" : "rgba(255,255,255,0.3)" }}>
+        <p className="text-[13px]" style={{ color: isFocused ? "rgba(245,197,24,0.7)" : "rgba(255,255,255,0.3)" }}>
           {channel.date}
         </p>
       </div>
       <p className="text-xs font-semibold truncate" style={{ color: isFocused ? "#ffffff" : "rgba(255,255,255,0.7)" }}>
         {channel.title}
       </p>
-      <p className="text-[10px]" style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.35)" }}>
+      <p className="text-[13px]" style={{ color: isFocused ? GOLD : "rgba(255,255,255,0.35)" }}>
         {channel.day}
       </p>
     </div>
@@ -524,7 +524,7 @@ const ChannelNumberOverlay = ({ input, channelLabel, isFound }: ChannelNumberOve
     >
       <span
         style={{
-          fontSize: 17,
+          fontSize: 20,
           fontWeight: 900,
           letterSpacing: "0.18em",
           textTransform: "uppercase" as const,
@@ -542,7 +542,7 @@ const ChannelNumberOverlay = ({ input, channelLabel, isFound }: ChannelNumberOve
 
       <span
         style={{
-          fontSize: 88,
+          fontSize: 91,
           fontWeight: 200,
           lineHeight: 1,
           color: "#000000",
@@ -1421,7 +1421,7 @@ const VideoPlayer = ({
                           <div className="p-1 bg-white/20 backdrop-blur-md rounded-lg border border-white/40 shadow-2xl">
                             <div className="w-56 aspect-video rounded overflow-hidden relative bg-black">
                               <img src={thumbnail} alt="preview" className="w-full h-full object-cover" />
-                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded text-[11px] font-bold text-white tabular-nums border border-white/10">
+                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded text-[14px] font-bold text-white tabular-nums border border-white/10">
                                 {calculateTimeFromProgress(progress, timeRange)}
                               </div>
                             </div>
@@ -1595,7 +1595,7 @@ const VideoPlayer = ({
                       </svg>
                       <span
                         style={{
-                          fontSize: 8,
+                          fontSize: 11,
                           fontWeight: 700,
                           color: GOLD,
                           letterSpacing: "0.08em",

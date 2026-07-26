@@ -116,12 +116,12 @@ const TVChannelCard = ({
               }}
             />
           ) : (
-            <span className="text-[10px] sm:text-[11px] font-bold text-foreground">{getChannelAbbr(channelName)}</span>
+            <span className="text-[13px] sm:text-[14px] font-bold text-foreground">{getChannelAbbr(channelName)}</span>
           )}
         </div>
         <div className="flex-1 text-left min-w-0">
           <h3 className="text-xs sm:text-sm font-medium text-foreground truncate">{title}</h3>
-          <p className="text-[10px] sm:text-xs text-muted-foreground">{timeSlot}</p>
+          <p className="text-[13px] sm:text-xs text-muted-foreground">{timeSlot}</p>
         </div>
       </div>
     </motion.button>
