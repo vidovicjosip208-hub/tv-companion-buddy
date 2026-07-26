@@ -1,7 +1,8 @@
-import { Home, Tv, Radio, Heart, Film, Cctv, Sparkles, User, Settings } from "lucide-react";
+import { Home, Tv, Radio, Heart, Film, Cctv, User, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import logo from "@/assets/max-ovizija-logo.png";
 
 interface SidebarItem {
   id: string;
