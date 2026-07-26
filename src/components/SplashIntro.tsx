@@ -72,12 +72,16 @@ interface SplashIntroProps {
 const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
   const [revealed, setRevealed] = useState(false);
-  const [loadedCount, setLoadedCount] = useState(0);
-  const [sourceAttempts, setSourceAttempts] = useState(() => Array(TILES.length).fill(0) as number[]);
-  const loadedTiles = useRef(new Set<number>());
-  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const [loadedSourceCount, setLoadedSourceCount] = useState(0);
+  const loadedSources = useRef(new Set<string>());
+  const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+  const canvasRefs = useRef<Array<HTMLCanvasElement | null>>([]);
+  const animationFrame = useRef<number>();
   const { data: content } = useSplashContent();
   const videos = content ?? [];
+  const uniqueVideos = videos.filter(
+    (video, index, list) => list.findIndex((candidate) => candidate.video_url === video.video_url) === index,
+  );
 
   // Try to go fullscreen immediately; retry on the first user gesture if blocked.
   useEffect(() => {
@@ -96,15 +100,66 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
   }, []);
 
   useEffect(() => {
-    if (loadedCount !== TILES.length || revealed) return;
+    if (!uniqueVideos.length || loadedSourceCount !== uniqueVideos.length || revealed) return;
 
-    const players = videoRefs.current.filter((player): player is HTMLVideoElement => player !== null);
+    const players = uniqueVideos
+      .map((video) => sourceVideoRefs.current[video.video_url])
+      .filter((player): player is HTMLVideoElement => player !== null);
+
+    const drawFrames = () => {
+      TILES.forEach((_, index) => {
+        const item = videos[index % videos.length];
+        const player = item ? sourceVideoRefs.current[item.video_url] : null;
+        const canvas = canvasRefs.current[index];
+        if (!player || !canvas || player.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+
+        const context = canvas.getContext("2d");
+        if (!context || !player.videoWidth || !player.videoHeight) return;
+
+        const targetWidth = Math.min(480, Math.max(160, Math.round(canvas.clientWidth)));
+        const targetHeight = Math.min(270, Math.max(90, Math.round(canvas.clientHeight)));
+        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+        }
+
+        const scale = Math.max(targetWidth / player.videoWidth, targetHeight / player.videoHeight);
+        const sourceWidth = targetWidth / scale;
+        const sourceHeight = targetHeight / scale;
+        const sourceX = (player.videoWidth - sourceWidth) / 2;
+        const sourceY = (player.videoHeight - sourceHeight) / 2;
+        context.drawImage(
+          player,
+          sourceX,
+          sourceY,
+          sourceWidth,
+          sourceHeight,
+          0,
+          0,
+          targetWidth,
+          targetHeight,
+        );
+      });
+    };
+
     players.forEach((player) => {
       player.currentTime = 0;
     });
+    drawFrames();
 
-    void Promise.allSettled(players.map((player) => player.play())).then(() => setRevealed(true));
-  }, [loadedCount, revealed]);
+    void Promise.allSettled(players.map((player) => player.play())).then(() => {
+      const render = () => {
+        drawFrames();
+        animationFrame.current = window.requestAnimationFrame(render);
+      };
+      render();
+      setRevealed(true);
+    });
+
+    return () => {
+      if (animationFrame.current !== undefined) window.cancelAnimationFrame(animationFrame.current);
+    };
+  }, [loadedSourceCount, revealed, uniqueVideos, videos]);
 
   useEffect(() => {
     if (!revealed) return;
@@ -112,20 +167,10 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
     return () => window.clearTimeout(t);
   }, [duration, revealed]);
 
-  const markLoaded = (index: number) => {
-    if (loadedTiles.current.has(index)) return;
-    loadedTiles.current.add(index);
-    setLoadedCount(loadedTiles.current.size);
-  };
-
-  const tryNextSource = (index: number) => {
-    if (loadedTiles.current.delete(index)) setLoadedCount(loadedTiles.current.size);
-    setSourceAttempts((current) => {
-      if (!videos.length || current[index] >= videos.length - 1) return current;
-      const next = [...current];
-      next[index] += 1;
-      return next;
-    });
+  const markSourceLoaded = (url: string) => {
+    if (loadedSources.current.has(url)) return;
+    loadedSources.current.add(url);
+    setLoadedSourceCount(loadedSources.current.size);
   };
 
   return (
@@ -146,9 +191,25 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
               minHeight: "100vh",
             }}
           >
+            <div className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0" aria-hidden="true">
+              {uniqueVideos.map((item) => (
+                <video
+                  key={item.video_url}
+                  ref={(element) => {
+                    sourceVideoRefs.current[item.video_url] = element;
+                  }}
+                  src={item.video_url}
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                  onLoadedData={() => markSourceLoaded(item.video_url)}
+                  onCanPlayThrough={() => markSourceLoaded(item.video_url)}
+                />
+              ))}
+            </div>
+
             {TILES.map((tile, i) => {
-              const item = videos.length ? videos[(i + sourceAttempts[i]) % videos.length] : undefined;
-              const src = item?.video_url;
               return (
                 <div
                   key={i}
@@ -160,25 +221,12 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
                     height: `${tile.h}%`,
                   }}
                 >
-                  {src && (
-                    <video
-                      key={`${i}-${src}`}
-                      ref={(element) => {
-                        videoRefs.current[i] = element;
-                      }}
-                      src={src}
-                      poster={item?.poster_url ?? undefined}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      preload="auto"
-                      onLoadedData={() => markLoaded(i)}
-                      onCanPlayThrough={() => markLoaded(i)}
-                      onError={() => tryNextSource(i)}
-                      className="w-full h-full object-cover rounded-sm"
-                    />
-                  )}
+                  <canvas
+                    ref={(element) => {
+                      canvasRefs.current[i] = element;
+                    }}
+                    className="h-full w-full rounded-sm"
+                  />
                 </div>
 
               );
