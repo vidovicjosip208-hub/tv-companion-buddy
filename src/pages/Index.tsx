@@ -1228,7 +1228,7 @@ const Index = () => {
       />
 
       <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
-        <TVHeader />
+
 
         <div className="flex-1 flex flex-col px-2 sm:px-4 pb-2 sm:pb-4 overflow-hidden relative min-w-0">
           <AnimatePresence mode="wait">
