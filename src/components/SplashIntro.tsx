@@ -61,19 +61,36 @@ const SplashTile = ({
   tile,
   data,
   playing,
+  reveal,
+  onReady,
 }: {
   tile: (typeof TILES)[number];
   data?: SplashTileData;
   playing: boolean;
+  reveal: boolean;
+  onReady: () => void;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canPlay = playing && !!data?.stream && !data.stream.includes(".m3u8");
+  const readyFired = useRef(false);
+  const hasVideo = !!data?.stream && !data.stream.includes(".m3u8");
+  const canPlay = reveal && playing && hasVideo;
+
+  const fireReady = () => {
+    if (readyFired.current) return;
+    readyFired.current = true;
+    onReady();
+  };
+
+  // Tiles without a playable video are "ready" immediately.
+  useEffect(() => {
+    if (!hasVideo) fireReady();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasVideo]);
 
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     if (canPlay) {
-      v.currentTime = Math.random() * 60 + 10;
       void v.play().catch(() => undefined);
     } else {
       v.pause();
@@ -92,14 +109,17 @@ const SplashTile = ({
     >
       <div aria-hidden="true" className="absolute inset-0 bg-muted/30" />
       {data?.poster && <img src={data.poster} alt="" className="relative z-10 w-full h-full object-cover" loading="eager" decoding="sync" fetchPriority="high" />}
-      {data?.stream && (
+      {hasVideo && (
         <video
           ref={videoRef}
-          src={data.stream}
+          src={data!.stream!}
           muted
           loop
           playsInline
           preload="auto"
+          onLoadedData={fireReady}
+          onCanPlayThrough={fireReady}
+          onError={fireReady}
           className="absolute inset-0 z-20 w-full h-full object-cover transition-opacity duration-300"
           style={{ opacity: canPlay ? 1 : 0 }}
         />
@@ -108,6 +128,7 @@ const SplashTile = ({
   );
 };
 
+
 interface SplashIntroProps {
   duration?: number;
 }
@@ -115,7 +136,20 @@ interface SplashIntroProps {
 const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
   const [wave, setWave] = useState(0);
-  const { data: content = [] } = useSplashContent();
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [forceReveal, setForceReveal] = useState(false);
+  const { data: content, isFetched } = useSplashContent();
+  const tiles = content ?? [];
+
+  const handleReady = () => setLoadedCount((c) => c + 1);
+
+  // Reveal only when every tile is buffered (or after a safety timeout).
+  const reveal = forceReveal || (isFetched && loadedCount >= TILES.length);
+
+  useEffect(() => {
+    const t = setTimeout(() => setForceReveal(true), 6000);
+    return () => clearTimeout(t);
+  }, []);
 
   // Try to go fullscreen immediately; retry on the first user gesture if blocked.
   useEffect(() => {
@@ -167,21 +201,29 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
               height: "56.25vw",
               minWidth: "177.78vh",
               minHeight: "100vh",
+              opacity: reveal ? 1 : 0,
             }}
           >
-            {TILES.map((tile, i) => (
-              <SplashTile
-                key={i}
-                tile={tile}
-                data={content[i % Math.max(content.length, 1)]}
-                playing={activeIndices.has(i)}
-              />
-            ))}
+            {TILES.map((tile, i) => {
+              const data = tiles.length ? tiles[i % tiles.length] : undefined;
+              return (
+                <SplashTile
+                  key={`${i}-${data?.stream ?? data?.poster ?? "empty"}`}
+                  tile={tile}
+                  data={data}
+                  playing={activeIndices.has(i)}
+                  reveal={reveal}
+                  onReady={handleReady}
+                />
+              );
+            })}
 
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <img src={logo} alt="MAXovizija" className="w-[34%] max-w-[620px]" />
             </div>
           </div>
+
+
 
         </motion.div>
       )}
