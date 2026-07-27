@@ -13,18 +13,18 @@ interface SplashTileData {
 // (percent of the 16:9 stage). Each tile is 13% of the stage.
 const TILE_SIZE = { w: 13, h: 13 };
 const TILES = [
-  { left: 43.5, top: 7.5, ...TILE_SIZE },   // 12 o'clock
-  { left: 64.5, top: 12.3, ...TILE_SIZE },  // 1 o'clock
-  { left: 79.9, top: 25.5, ...TILE_SIZE },  // 2 o'clock
-  { left: 85.5, top: 43.5, ...TILE_SIZE },  // 3 o'clock
-  { left: 79.9, top: 61.5, ...TILE_SIZE },  // 4 o'clock
-  { left: 64.5, top: 74.7, ...TILE_SIZE },  // 5 o'clock
-  { left: 43.5, top: 79.5, ...TILE_SIZE },  // 6 o'clock
-  { left: 22.5, top: 74.7, ...TILE_SIZE },  // 7 o'clock
-  { left: 7.1, top: 61.5, ...TILE_SIZE },   // 8 o'clock
-  { left: 1.5, top: 43.5, ...TILE_SIZE },   // 9 o'clock
-  { left: 7.1, top: 25.5, ...TILE_SIZE },   // 10 o'clock
-  { left: 22.5, top: 12.3, ...TILE_SIZE },  // 11 o'clock
+  { left: 43.5, top: 9.5, ...TILE_SIZE },   // 12 o'clock
+  { left: 63.5, top: 14.1, ...TILE_SIZE },  // 1 o'clock
+  { left: 78.1, top: 26.5, ...TILE_SIZE },  // 2 o'clock
+  { left: 83.5, top: 43.5, ...TILE_SIZE },  // 3 o'clock
+  { left: 78.1, top: 60.5, ...TILE_SIZE },  // 4 o'clock
+  { left: 63.5, top: 72.9, ...TILE_SIZE },  // 5 o'clock
+  { left: 43.5, top: 77.5, ...TILE_SIZE },  // 6 o'clock
+  { left: 23.5, top: 72.9, ...TILE_SIZE },  // 7 o'clock
+  { left: 8.9, top: 60.5, ...TILE_SIZE },   // 8 o'clock
+  { left: 3.5, top: 43.5, ...TILE_SIZE },   // 9 o'clock
+  { left: 8.9, top: 26.5, ...TILE_SIZE },   // 10 o'clock
+  { left: 23.5, top: 14.1, ...TILE_SIZE },  // 11 o'clock
 ];
 
 const useSplashContent = () =>
