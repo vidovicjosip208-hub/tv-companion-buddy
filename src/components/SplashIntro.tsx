@@ -54,7 +54,9 @@ interface SplashIntroProps {
 
 const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
-  const [revealed, setRevealed] = useState(false);
+  // The static splash shell must paint on the first React frame. Videos can
+  // populate its already-visible canvases later without leaving a black gap.
+  const [revealed, setRevealed] = useState(true);
   const [loadedSourceCount, setLoadedSourceCount] = useState(0);
   const loadedSources = useRef(new Set<string>());
   const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
@@ -276,7 +278,14 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
             })}
 
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <img src={logo} alt="MAXovizija" className="w-[34%] max-w-[620px]" />
+              <img
+                src={logo}
+                alt="MAXovizija"
+                className="w-[34%] max-w-[620px]"
+                loading="eager"
+                decoding="sync"
+                fetchPriority="high"
+              />
             </div>
           </div>
         </motion.div>
