@@ -93,9 +93,12 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   }, []);
 
   useEffect(() => {
-    if (!uniqueVideos.length || loadedSourceCount !== uniqueVideos.length) return;
+    // Start as soon as the FIRST source is ready — waiting for every clip is
+    // what made the intro feel late on slow connections.
+    const readyVideos = uniqueVideos.filter((video) => loadedSources.current.has(video.video_url));
+    if (!readyVideos.length) return;
 
-    const players = uniqueVideos
+    const players = readyVideos
       .map((video) => sourceVideoRefs.current[video.video_url])
       .filter((player): player is HTMLVideoElement => player !== null);
 
@@ -105,12 +108,13 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     const BUF_W = 128;
     const BUF_H = 72;
     const buffers = new Map<string, { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number }>();
-    uniqueVideos.forEach((video) => {
+    readyVideos.forEach((video) => {
       const c = document.createElement("canvas");
       c.width = BUF_W;
       c.height = BUF_H;
-      buffers.set(video.video_url, { canvas: c, ctx: c.getContext("2d"), t: -1 });
+      buffers.set(video.video_url, { canvas: c, ctx: c.getContext("2d", { alpha: false }), t: -1 });
     });
+
 
     // Precomputed tile -> buffer mapping + cached 2d contexts (no per-frame lookups)
     const tileTargets: Array<{
