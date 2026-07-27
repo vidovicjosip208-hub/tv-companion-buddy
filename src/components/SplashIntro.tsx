@@ -169,7 +169,7 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
     return () => {
       if (animationFrame.current !== null) window.clearInterval(animationFrame.current);
       animationFrame.current = null;
-      players.forEach((player) => player.pause());
+      players.forEach((player) => { player.pause(); player.src = ""; player.load(); });
     };
   }, [loadedSourceCount, uniqueVideos]);
 

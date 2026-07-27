@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
  * - the canvas backing store is rendered at a reduced resolution and upscaled by CSS
  * - the ~700 dust stars are rasterised ONCE into an offscreen layer and blitted each frame
  * - only the handful of bright cross stars are redrawn per frame
- * - the wisps are drawn in a single pass and the loop is throttled to ~24 fps
+ * - the wisps are drawn in a single pass and the loop is throttled to ~12 fps
  */
 const RENDER_SCALE = 0.4;
 const FRAME_INTERVAL = 1000 / 12;
@@ -21,8 +21,9 @@ const StarryBackground = () => {
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
-    let animationId: number;
+    let animationId: number | null = null;
     let paused = false;
+    let isVisible = true;
 
     // Pause the animation whenever a <video> is actively playing anywhere in
     // the document — the starfield is invisible behind the player and would
@@ -36,13 +37,33 @@ const StarryBackground = () => {
     };
 
     const updatePauseState = () => {
-      paused = checkVideoActive();
+      const shouldPause = checkVideoActive() || !isVisible;
+      if (shouldPause !== paused) {
+        paused = shouldPause;
+        if (paused) {
+          if (animationId !== null) {
+            cancelAnimationFrame(animationId);
+            animationId = null;
+          }
+        } else {
+          if (animationId === null) {
+            last = performance.now();
+            animationId = requestAnimationFrame(animate);
+          }
+        }
+      }
     };
 
-    const pollId = window.setInterval(updatePauseState, 1000);
+    const onVisibilityChange = () => {
+      isVisible = document.visibilityState === "visible";
+      updatePauseState();
+    };
+
+    const pollId = window.setInterval(updatePauseState, 3000);
     document.addEventListener("play", updatePauseState, true);
     document.addEventListener("pause", updatePauseState, true);
     document.addEventListener("ended", updatePauseState, true);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     interface BrightStar {
       x: number;
@@ -80,7 +101,6 @@ const StarryBackground = () => {
       if (lctx) {
         const dustCount = Math.round((w * h) / 2200);
         for (let i = 0; i < dustCount; i++) {
-          // bias part of the field towards the upper half like before
           const y = i % 3 === 0 ? Math.random() * h * 0.5 : Math.random() * h;
           const r = Math.random() * 0.8 + 0.2;
           const a = Math.random() * 0.5 + 0.15;
@@ -196,7 +216,6 @@ const StarryBackground = () => {
         if (i === 0) {
           ctx.moveTo(px, py);
         } else {
-          // smooth the polyline with midpoint quadratics (cheap)
           ctx.quadraticCurveTo(prevX, prevY, (prevX + px) / 2, (prevY + py) / 2);
         }
         prevX = px;
@@ -208,11 +227,10 @@ const StarryBackground = () => {
       ctx.stroke();
     };
 
-
     let last = 0;
     const animate = (now: number) => {
-      animationId = requestAnimationFrame(animate);
       if (paused) return;
+      animationId = requestAnimationFrame(animate);
       if (now - last < FRAME_INTERVAL) return;
       last = now;
 
@@ -233,13 +251,14 @@ const StarryBackground = () => {
     animationId = requestAnimationFrame(animate);
 
     return () => {
-      cancelAnimationFrame(animationId);
+      if (animationId !== null) cancelAnimationFrame(animationId);
       window.clearTimeout(resizeTimer);
       window.removeEventListener("resize", onResize);
       window.clearInterval(pollId);
       document.removeEventListener("play", updatePauseState, true);
       document.removeEventListener("pause", updatePauseState, true);
       document.removeEventListener("ended", updatePauseState, true);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
