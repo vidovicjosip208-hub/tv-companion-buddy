@@ -9,23 +9,22 @@ interface SplashTileData {
   poster_url: string | null;
 }
 
-// Scattered, non-overlapping frame of tiles around the centered logo,
-// traced from the reference layout (percent of the 16:9 stage).
-// All 13 frames share the same 16:9 dimensions as the highlighted tile.
+// Circular ring of 12 tiles around the centered logo
+// (percent of the 16:9 stage). Each tile is 13% of the stage.
 const TILE_SIZE = { w: 13, h: 13 };
 const TILES = [
-  { left: 22, top: 8, ...TILE_SIZE },
-  { left: 38, top: 8, ...TILE_SIZE },
-  { left: 54, top: 8, ...TILE_SIZE },
-  { left: 4, top: 24, ...TILE_SIZE },
-  { left: 78, top: 24, ...TILE_SIZE },
-  { left: 4, top: 39, ...TILE_SIZE },
-  { left: 78, top: 39, ...TILE_SIZE },
-  { left: 4, top: 54, ...TILE_SIZE },
-  { left: 78, top: 54, ...TILE_SIZE },
-  { left: 19, top: 70, ...TILE_SIZE },
-  { left: 49, top: 70, ...TILE_SIZE },
-  { left: 64, top: 70, ...TILE_SIZE },
+  { left: 43.5, top: 7.5, ...TILE_SIZE },   // 12 o'clock
+  { left: 64.5, top: 12.3, ...TILE_SIZE },  // 1 o'clock
+  { left: 79.9, top: 25.5, ...TILE_SIZE },  // 2 o'clock
+  { left: 85.5, top: 43.5, ...TILE_SIZE },  // 3 o'clock
+  { left: 79.9, top: 61.5, ...TILE_SIZE },  // 4 o'clock
+  { left: 64.5, top: 74.7, ...TILE_SIZE },  // 5 o'clock
+  { left: 43.5, top: 79.5, ...TILE_SIZE },  // 6 o'clock
+  { left: 22.5, top: 74.7, ...TILE_SIZE },  // 7 o'clock
+  { left: 7.1, top: 61.5, ...TILE_SIZE },   // 8 o'clock
+  { left: 1.5, top: 43.5, ...TILE_SIZE },   // 9 o'clock
+  { left: 7.1, top: 25.5, ...TILE_SIZE },   // 10 o'clock
+  { left: 22.5, top: 12.3, ...TILE_SIZE },  // 11 o'clock
 ];
 
 const useSplashContent = () =>
