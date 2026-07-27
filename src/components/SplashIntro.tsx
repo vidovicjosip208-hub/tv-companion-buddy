@@ -217,8 +217,8 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
               <ellipse
                 cx="50"
                 cy="50"
-                rx="42"
-                ry="36"
+                rx="40"
+                ry="34"
                 fill="none"
                 stroke="rgba(255,255,255,0.12)"
                 strokeWidth="0.4"
