@@ -207,6 +207,24 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
               ))}
             </div>
 
+            {/* Subtle connecting ring between the circular tile frames */}
+            <svg
+              className="pointer-events-none absolute inset-0 h-full w-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <ellipse
+                cx="50"
+                cy="50"
+                rx="42"
+                ry="36"
+                fill="none"
+                stroke="rgba(255,255,255,0.12)"
+                strokeWidth="0.4"
+              />
+            </svg>
+
             {TILES.map((tile, i) => {
               return (
                 <div
