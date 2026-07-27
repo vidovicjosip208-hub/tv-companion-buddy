@@ -521,8 +521,8 @@ const FrozenHlsVideo = memo(
       let recoveryStage = 0;
       let lastRecoveryAt = 0;
 
-      const STALL_MS = 1500; // bilo 3000 — brža detekcija stalla
-      const TICK_MS = 300; // bilo 500 — češća provjera
+      const STALL_MS = 2000;
+      const TICK_MS = 1000; // rjeđi tick — manje opterećenje CPU-a na TV-u
       const RECOVERY_COOLDOWN_MS = 4000; // bilo 8000
 
       const interval = window.setInterval(() => {
