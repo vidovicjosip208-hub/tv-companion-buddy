@@ -401,10 +401,11 @@ const FrozenHlsVideo = memo(
           // start nakon MANIFEST_PARSED na nekima od njih učita master manifest,
           // ali nikada ne zatraži level playlistu ni prvi segment.
           autoStartLoad: true,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60,
-          maxBufferSize: 60 * 1000 * 1000,
-          backBufferLength: 20,
+          // Manji bufferi = znatno manja potrošnja RAM-a i CPU-a na TV uređajima.
+          maxBufferLength: 16,
+          maxMaxBufferLength: 30,
+          maxBufferSize: 24 * 1000 * 1000,
+          backBufferLength: 8,
           maxBufferHole: 0.5,
           manifestLoadingTimeOut: 10000,
           manifestLoadingMaxRetry: 4,
@@ -520,8 +521,8 @@ const FrozenHlsVideo = memo(
       let recoveryStage = 0;
       let lastRecoveryAt = 0;
 
-      const STALL_MS = 1500; // bilo 3000 — brža detekcija stalla
-      const TICK_MS = 300; // bilo 500 — češća provjera
+      const STALL_MS = 2000;
+      const TICK_MS = 1000; // rjeđi tick — manje opterećenje CPU-a na TV-u
       const RECOVERY_COOLDOWN_MS = 4000; // bilo 8000
 
       const interval = window.setInterval(() => {
@@ -586,7 +587,13 @@ const FrozenHlsVideo = memo(
         onReady();
       };
       const onCanPlay = () => onReady();
-      const onTimeUpdate = () => onTimeSnapshot(Math.floor(video.currentTime));
+      let lastSnapshot = -1;
+      const onTimeUpdate = () => {
+        const sec = Math.floor(video.currentTime);
+        if (sec === lastSnapshot) return; // preskoči duplikate (timeupdate ide ~4x/s)
+        lastSnapshot = sec;
+        onTimeSnapshot(sec);
+      };
       const onPlay = () => {
         video.muted = false;
         video.volume = 1;
@@ -639,10 +646,10 @@ const Loader = ({ ready, onDone }: { ready: boolean; onDone: () => void }) => {
 
   useEffect(() => {
     const startTime = performance.now();
-    let raf = 0;
+    let timer = 0;
 
-    const tick = (now: number) => {
-      const elapsed = now - startTime;
+    const tick = () => {
+      const elapsed = performance.now() - startTime;
 
       if (ready || elapsed >= LOADER_MAX_DURATION) {
         setPercent(100);
@@ -655,13 +662,12 @@ const Loader = ({ ready, onDone }: { ready: boolean; onDone: () => void }) => {
 
       const raw = elapsed / LOADER_MIN_DURATION;
       const eased = 1 - Math.pow(1 - Math.min(raw, 1), 2);
-      const p = Math.min(90, Math.round(eased * 90));
-      setPercent(p);
-      raf = requestAnimationFrame(tick);
+      setPercent(Math.min(90, Math.round(eased * 90)));
+      timer = window.setTimeout(tick, 120);
     };
 
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    tick();
+    return () => window.clearTimeout(timer);
   }, [ready, onDone]);
 
   const dashOffset = CIRCUMFERENCE - (percent / 100) * CIRCUMFERENCE;
