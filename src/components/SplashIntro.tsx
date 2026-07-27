@@ -24,7 +24,6 @@ const TILES = [
   { left: 4, top: 54, ...TILE_SIZE },
   { left: 78, top: 54, ...TILE_SIZE },
   { left: 19, top: 70, ...TILE_SIZE },
-  { left: 34, top: 70, ...TILE_SIZE },
   { left: 49, top: 70, ...TILE_SIZE },
   { left: 64, top: 70, ...TILE_SIZE },
 ];
