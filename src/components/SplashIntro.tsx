@@ -9,23 +9,24 @@ interface SplashTileData {
   poster_url: string | null;
 }
 
-// True circular ring of 12 tiles around the centered logo
-// (percent of the 16:9 stage). Each tile is 13% of the stage.
-const TILE_SIZE = { w: 13, h: 13 };
+// 12 tiles evenly placed on a true visual circle around the centered logo.
+// Stage is 16:9, so the vertical radius (% of height) = horizontal radius * 16/9.
+const TILE_SIZE = { w: 11, h: 11 };
 const TILES = [
-  { left: 43.5, top: 3.5, ...TILE_SIZE },   // 12 o'clock
-  { left: 54.75, top: 8.86, ...TILE_SIZE },  // 1 o'clock
-  { left: 62.99, top: 23.5, ...TILE_SIZE },  // 2 o'clock
-  { left: 66, top: 43.5, ...TILE_SIZE },  // 3 o'clock
-  { left: 62.99, top: 63.5, ...TILE_SIZE },  // 4 o'clock
-  { left: 54.75, top: 78.14, ...TILE_SIZE },  // 5 o'clock
-  { left: 43.5, top: 83.5, ...TILE_SIZE },  // 6 o'clock
-  { left: 32.25, top: 78.14, ...TILE_SIZE },  // 7 o'clock
-  { left: 24.01, top: 63.5, ...TILE_SIZE },   // 8 o'clock
-  { left: 21, top: 43.5, ...TILE_SIZE },   // 9 o'clock
-  { left: 24.01, top: 23.5, ...TILE_SIZE },   // 10 o'clock
-  { left: 32.25, top: 8.86, ...TILE_SIZE },  // 11 o'clock
+  { left: 44.5, top: 1.83, ...TILE_SIZE },   // 12 o'clock
+  { left: 56.5, top: 7.55, ...TILE_SIZE },   // 1
+  { left: 65.28, top: 23.17, ...TILE_SIZE }, // 2
+  { left: 68.5, top: 44.5, ...TILE_SIZE },   // 3
+  { left: 65.28, top: 65.83, ...TILE_SIZE }, // 4
+  { left: 56.5, top: 81.45, ...TILE_SIZE },  // 5
+  { left: 44.5, top: 87.17, ...TILE_SIZE },  // 6
+  { left: 32.5, top: 81.45, ...TILE_SIZE },  // 7
+  { left: 23.72, top: 65.83, ...TILE_SIZE }, // 8
+  { left: 20.5, top: 44.5, ...TILE_SIZE },   // 9
+  { left: 23.72, top: 23.17, ...TILE_SIZE }, // 10
+  { left: 32.5, top: 7.55, ...TILE_SIZE },   // 11
 ];
+
 
 const useSplashContent = () =>
   useQuery<SplashTileData[]>({
