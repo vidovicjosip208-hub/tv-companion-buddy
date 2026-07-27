@@ -62,13 +62,19 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   const animationFrame = useRef<number | null>(null);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
+  // Decoding a video is by far the most expensive part on TV boxes, so we keep
+  // at most a handful of distinct sources alive and cycle them across the tiles.
+  const MAX_SOURCES = 4;
   const uniqueVideos = useMemo(
     () =>
-      videos.filter(
-        (video, index, list) => list.findIndex((candidate) => candidate.video_url === video.video_url) === index,
-      ),
+      videos
+        .filter(
+          (video, index, list) => list.findIndex((candidate) => candidate.video_url === video.video_url) === index,
+        )
+        .slice(0, MAX_SOURCES),
     [videos],
   );
+
 
   // Try to go fullscreen immediately; retry on the first user gesture if blocked.
   useEffect(() => {
