@@ -180,6 +180,7 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
           className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
           <div
+            id="splash-stage"
             className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 ${revealed ? "opacity-100" : "opacity-0"}`}
             style={{
               width: "100vw",
