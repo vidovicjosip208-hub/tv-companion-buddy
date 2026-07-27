@@ -5,12 +5,10 @@ import { useEffect, useRef } from "react";
  *
  * Performance notes (TV boxes have very weak GPUs/CPUs):
  * - the canvas backing store is rendered at a reduced resolution and upscaled by CSS
- * - the ~700 dust stars are rasterised ONCE into an offscreen layer and blitted each frame
- * - only the handful of bright cross stars are redrawn per frame
- * - the wisps are drawn in a single pass and the loop is throttled to ~12 fps
+ * - the dust, bright stars and wisps are rasterised once into a static frame
+ * - no continuous animation loop competes with navigation or video decoding
  */
 const RENDER_SCALE = 0.4;
-const FRAME_INTERVAL = 1000 / 12;
 
 const StarryBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -20,50 +18,6 @@ const StarryBackground = () => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
-
-    let animationId: number | null = null;
-    let paused = false;
-    let isVisible = true;
-
-    // Pause the animation whenever a <video> is actively playing anywhere in
-    // the document — the starfield is invisible behind the player and would
-    // otherwise compete with the video decoder for CPU/GPU.
-    const checkVideoActive = () => {
-      const videos = document.querySelectorAll("video");
-      for (const v of Array.from(videos)) {
-        if (!v.paused && !v.ended && v.readyState > 2) return true;
-      }
-      return false;
-    };
-
-    const updatePauseState = () => {
-      const shouldPause = checkVideoActive() || !isVisible;
-      if (shouldPause !== paused) {
-        paused = shouldPause;
-        if (paused) {
-          if (animationId !== null) {
-            cancelAnimationFrame(animationId);
-            animationId = null;
-          }
-        } else {
-          if (animationId === null) {
-            last = performance.now();
-            animationId = requestAnimationFrame(animate);
-          }
-        }
-      }
-    };
-
-    const onVisibilityChange = () => {
-      isVisible = document.visibilityState === "visible";
-      updatePauseState();
-    };
-
-    const pollId = window.setInterval(updatePauseState, 3000);
-    document.addEventListener("play", updatePauseState, true);
-    document.addEventListener("pause", updatePauseState, true);
-    document.addEventListener("ended", updatePauseState, true);
-    document.addEventListener("visibilitychange", onVisibilityChange);
 
     interface BrightStar {
       x: number;
@@ -168,21 +122,7 @@ const StarryBackground = () => {
       }
     };
 
-    const resize = () => {
-      canvas.width = Math.max(1, Math.round(window.innerWidth * RENDER_SCALE));
-      canvas.height = Math.max(1, Math.round(window.innerHeight * RENDER_SCALE));
-      buildScene();
-    };
-    resize();
-
-    let resizeTimer: number | undefined;
-    const onResize = () => {
-      window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(resize, 200);
-    };
-    window.addEventListener("resize", onResize);
-
-    let time = 0;
+    const time = 0;
 
     const drawCrossStar = (x: number, y: number, size: number, alpha: number) => {
       ctx.globalAlpha = alpha;
@@ -227,14 +167,7 @@ const StarryBackground = () => {
       ctx.stroke();
     };
 
-    let last = 0;
-    const animate = (now: number) => {
-      if (paused) return;
-      animationId = requestAnimationFrame(animate);
-      if (now - last < FRAME_INTERVAL) return;
-      last = now;
-
-      time += 0.05;
+    const renderScene = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (dustLayer) ctx.drawImage(dustLayer, 0, 0);
@@ -248,17 +181,24 @@ const StarryBackground = () => {
       for (const wisp of wisps) drawWisp(wisp);
     };
 
-    animationId = requestAnimationFrame(animate);
+    const resize = () => {
+      canvas.width = Math.max(1, Math.round(window.innerWidth * RENDER_SCALE));
+      canvas.height = Math.max(1, Math.round(window.innerHeight * RENDER_SCALE));
+      buildScene();
+      renderScene();
+    };
+    resize();
+
+    let resizeTimer: number | undefined;
+    const onResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(resize, 200);
+    };
+    window.addEventListener("resize", onResize);
 
     return () => {
-      if (animationId !== null) cancelAnimationFrame(animationId);
       window.clearTimeout(resizeTimer);
       window.removeEventListener("resize", onResize);
-      window.clearInterval(pollId);
-      document.removeEventListener("play", updatePauseState, true);
-      document.removeEventListener("pause", updatePauseState, true);
-      document.removeEventListener("ended", updatePauseState, true);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
