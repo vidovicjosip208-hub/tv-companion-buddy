@@ -63,7 +63,7 @@ interface SplashIntroProps {
   duration?: number;
 }
 
-const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
+const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
   const [revealed, setRevealed] = useState(false);
   const [loadedSourceCount, setLoadedSourceCount] = useState(0);
@@ -114,8 +114,11 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
         const context = canvas.getContext("2d");
         if (!context || !player.videoWidth || !player.videoHeight) return;
 
-        const targetWidth = Math.min(480, Math.max(160, Math.round(canvas.clientWidth)));
-        const targetHeight = Math.min(270, Math.max(90, Math.round(canvas.clientHeight)));
+        // Small backing store — the tiles are tiny on screen and TV boxes
+        // cannot afford 12 high-resolution canvas blits per frame.
+        const targetWidth = 192;
+        const targetHeight = 108;
+
         if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
           canvas.width = targetWidth;
           canvas.height = targetHeight;
@@ -146,13 +149,19 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
     drawFrames();
 
     void Promise.allSettled(players.map((player) => player.play())).then(() => {
-      const render = () => {
-        drawFrames();
+      // Throttle to ~15 fps: plenty for thumbnail previews, ~4x cheaper.
+      const FRAME_INTERVAL = 1000 / 15;
+      let last = 0;
+      const render = (now: number) => {
         animationFrame.current = window.requestAnimationFrame(render);
+        if (now - last < FRAME_INTERVAL) return;
+        last = now;
+        drawFrames();
       };
-      render();
+      animationFrame.current = window.requestAnimationFrame(render);
       setRevealed(true);
     });
+
 
     return () => {
       if (animationFrame.current !== null) window.cancelAnimationFrame(animationFrame.current);
@@ -164,6 +173,14 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
     const t = window.setTimeout(() => setVisible(false), duration);
     return () => window.clearTimeout(t);
   }, [duration, revealed]);
+
+  // Hard safety net: if the intro videos never load (slow/offline TV network),
+  // the splash must never block the app.
+  useEffect(() => {
+    const t = window.setTimeout(() => setVisible(false), duration + 2000);
+    return () => window.clearTimeout(t);
+  }, [duration]);
+
 
   const markSourceLoaded = (url: string) => {
     if (loadedSources.current.has(url)) return;

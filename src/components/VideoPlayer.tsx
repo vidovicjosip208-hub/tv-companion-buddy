@@ -1418,7 +1418,7 @@ const VideoPlayer = ({
                             width: "max-content",
                           }}
                         >
-                          <div className="p-1 bg-white/20 backdrop-blur-md rounded-lg border border-white/40 shadow-2xl">
+                          <div className="p-1 bg-white/20 rounded-lg border border-white/40 shadow-2xl">
                             <div className="w-56 aspect-video rounded overflow-hidden relative bg-black">
                               <img src={thumbnail} alt="preview" className="w-full h-full object-cover" />
                               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded text-[14px] font-bold text-white tabular-nums border border-white/10">
