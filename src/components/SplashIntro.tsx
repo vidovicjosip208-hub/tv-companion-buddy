@@ -174,6 +174,14 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     return () => window.clearTimeout(t);
   }, [duration, revealed]);
 
+  // Hard safety net: if the intro videos never load (slow/offline TV network),
+  // the splash must never block the app.
+  useEffect(() => {
+    const t = window.setTimeout(() => setVisible(false), duration + 2000);
+    return () => window.clearTimeout(t);
+  }, [duration]);
+
+
   const markSourceLoaded = (url: string) => {
     if (loadedSources.current.has(url)) return;
     loadedSources.current.add(url);
