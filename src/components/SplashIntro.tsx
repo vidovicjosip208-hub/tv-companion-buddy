@@ -152,12 +152,16 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
       });
 
       if (!tileTargets.length) buildTargets();
+      let drew = false;
       for (const target of tileTargets) {
         if (target.buf.t < 0 || target.buf.t === target.lastT) continue;
         target.lastT = target.buf.t;
         target.ctx.drawImage(target.buf.canvas, 0, 0);
+        drew = true;
       }
+      if (drew) setFramesReady(true);
     };
+
 
     players.forEach((player) => {
       player.currentTime = 0;
