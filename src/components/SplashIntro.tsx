@@ -149,13 +149,19 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
     drawFrames();
 
     void Promise.allSettled(players.map((player) => player.play())).then(() => {
-      const render = () => {
-        drawFrames();
+      // Throttle to ~15 fps: plenty for thumbnail previews, ~4x cheaper.
+      const FRAME_INTERVAL = 1000 / 15;
+      let last = 0;
+      const render = (now: number) => {
         animationFrame.current = window.requestAnimationFrame(render);
+        if (now - last < FRAME_INTERVAL) return;
+        last = now;
+        drawFrames();
       };
-      render();
+      animationFrame.current = window.requestAnimationFrame(render);
       setRevealed(true);
     });
+
 
     return () => {
       if (animationFrame.current !== null) window.cancelAnimationFrame(animationFrame.current);
