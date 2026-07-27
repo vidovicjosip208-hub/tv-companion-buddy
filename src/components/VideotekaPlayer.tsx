@@ -587,7 +587,13 @@ const FrozenHlsVideo = memo(
         onReady();
       };
       const onCanPlay = () => onReady();
-      const onTimeUpdate = () => onTimeSnapshot(Math.floor(video.currentTime));
+      let lastSnapshot = -1;
+      const onTimeUpdate = () => {
+        const sec = Math.floor(video.currentTime);
+        if (sec === lastSnapshot) return; // preskoči duplikate (timeupdate ide ~4x/s)
+        lastSnapshot = sec;
+        onTimeSnapshot(sec);
+      };
       const onPlay = () => {
         video.muted = false;
         video.volume = 1;
