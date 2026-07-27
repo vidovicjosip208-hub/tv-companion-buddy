@@ -38,23 +38,12 @@ const useSplashContent = () =>
         .eq("is_active", true)
         .order("position_order", { ascending: true });
       if (error) throw error;
-      const rows = (data ?? [])
+      // No HEAD pre-flight here: on TV networks each extra round trip delays the
+      // intro noticeably. Broken sources simply never fire onLoadedData.
+      return (data ?? [])
         .filter((r) => !!r.video_url)
         .map((r) => ({ video_url: r.video_url as string, poster_url: r.poster_url ?? null }));
 
-      const checkedRows = await Promise.all(
-        rows.map(async (row) => {
-          try {
-            const response = await fetch(row.video_url, { method: "HEAD", cache: "force-cache" });
-            const contentType = response.headers.get("content-type") ?? "";
-            return response.ok && contentType.startsWith("video/") ? row : null;
-          } catch {
-            return null;
-          }
-        }),
-      );
-
-      return checkedRows.filter((row): row is SplashTileData => row !== null);
     },
     staleTime: Infinity,
   });
