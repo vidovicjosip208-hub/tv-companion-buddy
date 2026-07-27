@@ -183,23 +183,31 @@ const StarryBackground = () => {
 
     const drawWisp = (wisp: Wisp) => {
       const phaseOffset = time * wisp.speed + wisp.phase;
+      const pts = wisp.points;
       ctx.beginPath();
 
-      for (let i = 0; i < wisp.points.length; i++) {
-        const p = wisp.points[i];
-        const t = i / wisp.points.length;
-        const ox = Math.sin(phaseOffset + t * 4) * 30;
-        const oy = Math.cos(phaseOffset * 0.8 + t * 3) * 15;
-        const px = p.x + ox;
-        const py = p.y + oy;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+      let prevX = 0;
+      let prevY = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        const t = i / pts.length;
+        const px = p.x + Math.sin(phaseOffset + t * 4) * 30;
+        const py = p.y + Math.cos(phaseOffset * 0.8 + t * 3) * 15;
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          // smooth the polyline with midpoint quadratics (cheap)
+          ctx.quadraticCurveTo(prevX, prevY, (prevX + px) / 2, (prevY + py) / 2);
+        }
+        prevX = px;
+        prevY = py;
       }
 
       ctx.strokeStyle = `rgba(180, 190, 220, ${wisp.alpha * 2})`;
       ctx.lineWidth = wisp.width;
       ctx.stroke();
     };
+
 
     let last = 0;
     const animate = (now: number) => {
