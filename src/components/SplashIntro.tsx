@@ -178,7 +178,8 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
 
 
     return () => {
-      if (animationFrame.current !== null) window.cancelAnimationFrame(animationFrame.current);
+      if (animationFrame.current !== null) window.clearInterval(animationFrame.current);
+      players.forEach((player) => player.pause());
     };
   }, [loadedSourceCount, uniqueVideos, videos]);
 
