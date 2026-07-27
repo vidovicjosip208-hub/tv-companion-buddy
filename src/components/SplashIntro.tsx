@@ -87,7 +87,10 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   }, []);
 
   useEffect(() => {
-    if (!uniqueVideos.length || loadedSourceCount !== uniqueVideos.length) return;
+    // Dovoljno je da je barem jedan izvor spreman — ne čekamo sve,
+    // inače jedan spori/neispravni video sakrije cijeli prsten okvira.
+    if (!uniqueVideos.length || loadedSourceCount === 0) return;
+
 
     const players = uniqueVideos
       .map((video) => sourceVideoRefs.current[video.video_url])
