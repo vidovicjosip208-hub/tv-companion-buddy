@@ -1973,7 +1973,7 @@ const VideotekaPlayer = ({
         <button
           type="button"
           onClick={() => setShowEpisodesPanel(true)}
-          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[160] px-4 py-2 rounded-md bg-black/60 hover:bg-black/80 text-white text-sm font-semibold border border-white/20 backdrop-blur"
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[160] px-4 py-2 rounded-md bg-black/60 hover:bg-black/80 text-white text-sm font-semibold border border-white/20"
         >
           Epizode
         </button>
@@ -1987,7 +1987,7 @@ const VideotekaPlayer = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 z-[170] flex bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 z-[170] flex bg-black/80"
           >
             {/* Seasons */}
             <div className="w-[280px] shrink-0 h-full overflow-y-auto p-6 border-r border-white/10">

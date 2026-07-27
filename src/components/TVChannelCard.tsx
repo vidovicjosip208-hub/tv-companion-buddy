@@ -84,7 +84,7 @@ const TVChannelCard = ({
       onClick={onClick}
       className={cn(
         "group relative rounded-2xl overflow-hidden transition-[box-shadow,border-color,filter] duration-200 ease-out",
-        "focus:outline-none bg-card/60 backdrop-blur-sm w-full border-2",
+        "focus:outline-none bg-card/60 w-full border-2",
         isFocused
           ? "border-white/60 shadow-[0_0_40px_10px_rgba(255,255,255,0.22)]"
           : "border-white/15 hover:brightness-110",

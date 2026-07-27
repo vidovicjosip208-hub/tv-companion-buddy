@@ -42,7 +42,7 @@ export function ChannelCard({
       onClick={onClick}
       className={cn(
         "group relative rounded-xl overflow-hidden transition-all duration-300",
-        "focus:outline-none bg-card/60 backdrop-blur-sm w-full h-full",
+        "focus:outline-none bg-card/60 w-full h-full",
         isFocused && "scale-105 z-10",
       )}
     >
