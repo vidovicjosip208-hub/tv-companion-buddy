@@ -38,23 +38,12 @@ const useSplashContent = () =>
         .eq("is_active", true)
         .order("position_order", { ascending: true });
       if (error) throw error;
-      const rows = (data ?? [])
+      // No HEAD pre-flight here: on TV networks each extra round trip delays the
+      // intro noticeably. Broken sources simply never fire onLoadedData.
+      return (data ?? [])
         .filter((r) => !!r.video_url)
         .map((r) => ({ video_url: r.video_url as string, poster_url: r.poster_url ?? null }));
 
-      const checkedRows = await Promise.all(
-        rows.map(async (row) => {
-          try {
-            const response = await fetch(row.video_url, { method: "HEAD", cache: "force-cache" });
-            const contentType = response.headers.get("content-type") ?? "";
-            return response.ok && contentType.startsWith("video/") ? row : null;
-          } catch {
-            return null;
-          }
-        }),
-      );
-
-      return checkedRows.filter((row): row is SplashTileData => row !== null);
     },
     staleTime: Infinity,
   });
@@ -73,13 +62,19 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   const animationFrame = useRef<number | null>(null);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
+  // Decoding a video is by far the most expensive part on TV boxes, so we keep
+  // at most a handful of distinct sources alive and cycle them across the tiles.
+  const MAX_SOURCES = 4;
   const uniqueVideos = useMemo(
     () =>
-      videos.filter(
-        (video, index, list) => list.findIndex((candidate) => candidate.video_url === video.video_url) === index,
-      ),
+      videos
+        .filter(
+          (video, index, list) => list.findIndex((candidate) => candidate.video_url === video.video_url) === index,
+        )
+        .slice(0, MAX_SOURCES),
     [videos],
   );
+
 
   // Try to go fullscreen immediately; retry on the first user gesture if blocked.
   useEffect(() => {
@@ -98,9 +93,12 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   }, []);
 
   useEffect(() => {
-    if (!uniqueVideos.length || loadedSourceCount !== uniqueVideos.length) return;
+    // Start as soon as the FIRST source is ready — waiting for every clip is
+    // what made the intro feel late on slow connections.
+    const readyVideos = uniqueVideos.filter((video) => loadedSources.current.has(video.video_url));
+    if (!readyVideos.length) return;
 
-    const players = uniqueVideos
+    const players = readyVideos
       .map((video) => sourceVideoRefs.current[video.video_url])
       .filter((player): player is HTMLVideoElement => player !== null);
 
@@ -110,12 +108,13 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     const BUF_W = 128;
     const BUF_H = 72;
     const buffers = new Map<string, { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number }>();
-    uniqueVideos.forEach((video) => {
+    readyVideos.forEach((video) => {
       const c = document.createElement("canvas");
       c.width = BUF_W;
       c.height = BUF_H;
-      buffers.set(video.video_url, { canvas: c, ctx: c.getContext("2d"), t: -1 });
+      buffers.set(video.video_url, { canvas: c, ctx: c.getContext("2d", { alpha: false }), t: -1 });
     });
+
 
     // Precomputed tile -> buffer mapping + cached 2d contexts (no per-frame lookups)
     const tileTargets: Array<{
@@ -128,7 +127,7 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     const buildTargets = () => {
       tileTargets.length = 0;
       TILES.forEach((_, index) => {
-        const item = videos[index % videos.length];
+        const item = readyVideos[index % readyVideos.length];
         const buf = item ? buffers.get(item.video_url) : undefined;
         const canvas = canvasRefs.current[index];
         if (!buf || !canvas) return;
@@ -182,15 +181,11 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     });
     drawFrames();
 
-    void Promise.allSettled(players.map((player) => player.play())).then(() => {
-      // ~10 fps is plenty for tiny thumbnail previews and very cheap on TV CPUs.
-      const FRAME_INTERVAL = 200;
-      const id = window.setInterval(drawFrames, FRAME_INTERVAL);
-      animationFrame.current = id;
-      setRevealed(true);
-    });
-
-
+    // Reveal right away; playback starts in the background.
+    const FRAME_INTERVAL = 200; // ~5 fps is plenty for tiny thumbnails
+    animationFrame.current = window.setInterval(drawFrames, FRAME_INTERVAL);
+    setRevealed(true);
+    void Promise.allSettled(players.map((player) => player.play()));
 
     return () => {
       if (animationFrame.current !== null) window.clearInterval(animationFrame.current);
@@ -198,7 +193,7 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
       players.forEach((player) => player.pause());
     };
 
-  }, [loadedSourceCount, uniqueVideos, videos]);
+  }, [loadedSourceCount, uniqueVideos]);
 
   useEffect(() => {
     if (!revealed) return;
