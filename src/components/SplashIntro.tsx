@@ -107,8 +107,8 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     // One small offscreen buffer per UNIQUE video source. Decoding/scaling a
     // <video> into a canvas is the expensive part, so we do it once per source
     // per frame and then cheaply blit the buffer into every tile that uses it.
-    const BUF_W = 160;
-    const BUF_H = 90;
+    const BUF_W = 128;
+    const BUF_H = 72;
     const buffers = new Map<string, { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number }>();
     uniqueVideos.forEach((video) => {
       const c = document.createElement("canvas");
@@ -165,7 +165,7 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
 
     void Promise.allSettled(players.map((player) => player.play())).then(() => {
       // ~10 fps is plenty for tiny thumbnail previews and very cheap on TV CPUs.
-      const FRAME_INTERVAL = 100;
+      const FRAME_INTERVAL = 200;
       const id = window.setInterval(drawFrames, FRAME_INTERVAL);
       animationFrame.current = id;
       setRevealed(true);
