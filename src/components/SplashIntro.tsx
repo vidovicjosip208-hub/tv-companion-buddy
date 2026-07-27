@@ -114,8 +114,11 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
         const context = canvas.getContext("2d");
         if (!context || !player.videoWidth || !player.videoHeight) return;
 
-        const targetWidth = Math.min(480, Math.max(160, Math.round(canvas.clientWidth)));
-        const targetHeight = Math.min(270, Math.max(90, Math.round(canvas.clientHeight)));
+        // Small backing store — the tiles are tiny on screen and TV boxes
+        // cannot afford 12 high-resolution canvas blits per frame.
+        const targetWidth = 192;
+        const targetHeight = 108;
+
         if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
           canvas.width = targetWidth;
           canvas.height = targetHeight;
