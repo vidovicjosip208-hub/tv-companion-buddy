@@ -49,6 +49,7 @@ interface SplashIntroProps {
 const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
   const [revealed, setRevealed] = useState(true);
+  const [framesReady, setFramesReady] = useState(false);
   const [loadedSourceCount, setLoadedSourceCount] = useState(0);
   const loadedSources = useRef(new Set<string>());
   const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
@@ -56,6 +57,7 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
   const animationFrame = useRef<number | null>(null);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
+
   const MAX_SOURCES = 2;
   const uniqueVideos = useMemo(
     () =>
@@ -150,12 +152,16 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
       });
 
       if (!tileTargets.length) buildTargets();
+      let drew = false;
       for (const target of tileTargets) {
         if (target.buf.t < 0 || target.buf.t === target.lastT) continue;
         target.lastT = target.buf.t;
         target.ctx.drawImage(target.buf.canvas, 0, 0);
+        drew = true;
       }
+      if (drew) setFramesReady(true);
     };
+
 
     players.forEach((player) => {
       player.currentTime = 0;
@@ -229,25 +235,41 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
             </div>
 
             <div className={`transition-opacity duration-1000 ${revealed ? "opacity-100" : "opacity-0"}`}>
-              {TILES.map((tile, i) => (
-                <div
-                  key={i}
-                  className="absolute overflow-hidden rounded-[3px] border border-border/60 bg-muted/30"
-                  style={{
-                    left: `${tile.left}%`,
-                    top: `${tile.top}%`,
-                    width: `${tile.w}%`,
-                    height: `${tile.h}%`,
-                  }}
-                >
-                  <canvas
-                    ref={(element) => {
-                      canvasRefs.current[i] = element;
+              {TILES.map((tile, i) => {
+                const poster = videos.length ? videos[i % videos.length].poster_url : null;
+                return (
+                  <div
+                    key={i}
+                    className="absolute overflow-hidden rounded-[3px] border border-border/60 bg-muted/30"
+                    style={{
+                      left: `${tile.left}%`,
+                      top: `${tile.top}%`,
+                      width: `${tile.w}%`,
+                      height: `${tile.h}%`,
                     }}
-                    className="h-full w-full rounded-sm"
-                  />
-                </div>
-              ))}
+                  >
+                    {poster && (
+                      <img
+                        src={poster}
+                        alt=""
+                        aria-hidden="true"
+                        loading="eager"
+                        decoding="async"
+                        className="absolute inset-0 h-full w-full object-cover rounded-sm"
+                      />
+                    )}
+                    <canvas
+                      ref={(element) => {
+                        canvasRefs.current[i] = element;
+                      }}
+                      className={`absolute inset-0 h-full w-full rounded-sm transition-opacity duration-500 ${
+                        framesReady ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                  </div>
+                );
+              })}
+
             </div>
 
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
