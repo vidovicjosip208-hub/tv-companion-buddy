@@ -49,6 +49,7 @@ interface SplashIntroProps {
 const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
   const [revealed, setRevealed] = useState(true);
+  const [framesReady, setFramesReady] = useState(false);
   const [loadedSourceCount, setLoadedSourceCount] = useState(0);
   const loadedSources = useRef(new Set<string>());
   const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
@@ -56,6 +57,7 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
   const animationFrame = useRef<number | null>(null);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
+
   const MAX_SOURCES = 2;
   const uniqueVideos = useMemo(
     () =>
