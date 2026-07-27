@@ -48,7 +48,7 @@ interface SplashIntroProps {
 
 const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
-  const [revealed, setRevealed] = useState(false);
+  const [revealed, setRevealed] = useState(true);
   const [loadedSourceCount, setLoadedSourceCount] = useState(0);
   const loadedSources = useRef(new Set<string>());
   const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
@@ -56,7 +56,7 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
   const animationFrame = useRef<number | null>(null);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
-  const MAX_SOURCES = 4;
+  const MAX_SOURCES = 2;
   const uniqueVideos = useMemo(
     () =>
       videos
@@ -125,6 +125,7 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
     };
 
     const drawFrames = () => {
+      if (document.hidden) return;
       buffers.forEach((buf, url) => {
         const player = sourceVideoRefs.current[url];
         if (!player || !buf.ctx || player.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
@@ -161,7 +162,7 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
     });
     drawFrames();
 
-    const FRAME_INTERVAL = 200;
+    const FRAME_INTERVAL = 500;
     animationFrame.current = window.setInterval(drawFrames, FRAME_INTERVAL);
     setRevealed(true);
     void Promise.allSettled(players.map((player) => player.play()));
