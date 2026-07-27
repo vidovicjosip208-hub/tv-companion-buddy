@@ -181,15 +181,11 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     });
     drawFrames();
 
-    void Promise.allSettled(players.map((player) => player.play())).then(() => {
-      // ~10 fps is plenty for tiny thumbnail previews and very cheap on TV CPUs.
-      const FRAME_INTERVAL = 200;
-      const id = window.setInterval(drawFrames, FRAME_INTERVAL);
-      animationFrame.current = id;
-      setRevealed(true);
-    });
-
-
+    // Reveal right away; playback starts in the background.
+    const FRAME_INTERVAL = 200; // ~5 fps is plenty for tiny thumbnails
+    animationFrame.current = window.setInterval(drawFrames, FRAME_INTERVAL);
+    setRevealed(true);
+    void Promise.allSettled(players.map((player) => player.play()));
 
     return () => {
       if (animationFrame.current !== null) window.clearInterval(animationFrame.current);
@@ -197,7 +193,7 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
       players.forEach((player) => player.pause());
     };
 
-  }, [loadedSourceCount, uniqueVideos, videos]);
+  }, [loadedSourceCount, uniqueVideos]);
 
   useEffect(() => {
     if (!revealed) return;
