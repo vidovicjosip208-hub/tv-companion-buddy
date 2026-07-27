@@ -9,8 +9,8 @@ import { useEffect, useRef } from "react";
  * - only the handful of bright cross stars are redrawn per frame
  * - the wisps are drawn in a single pass and the loop is throttled to ~24 fps
  */
-const RENDER_SCALE = 0.5;
-const FRAME_INTERVAL = 1000 / 24;
+const RENDER_SCALE = 0.4;
+const FRAME_INTERVAL = 1000 / 12;
 
 const StarryBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
