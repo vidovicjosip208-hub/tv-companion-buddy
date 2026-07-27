@@ -14,17 +14,17 @@ interface SplashTileData {
 const TILE_SIZE = { w: 11, h: 11 };
 const TILES = [
   { left: 44.5, top: 1.83, ...TILE_SIZE },   // 12 o'clock
-  { left: 56.5, top: 7.55, ...TILE_SIZE },   // 1
-  { left: 65.28, top: 23.17, ...TILE_SIZE }, // 2
-  { left: 68.5, top: 44.5, ...TILE_SIZE },   // 3
-  { left: 65.28, top: 65.83, ...TILE_SIZE }, // 4
-  { left: 56.5, top: 81.45, ...TILE_SIZE },  // 5
+  { left: 57.75, top: 7.55, ...TILE_SIZE },  // 1
+  { left: 67.45, top: 23.17, ...TILE_SIZE }, // 2
+  { left: 71, top: 44.5, ...TILE_SIZE },     // 3
+  { left: 67.45, top: 65.83, ...TILE_SIZE }, // 4
+  { left: 57.75, top: 81.45, ...TILE_SIZE }, // 5
   { left: 44.5, top: 87.17, ...TILE_SIZE },  // 6
-  { left: 32.5, top: 81.45, ...TILE_SIZE },  // 7
-  { left: 23.72, top: 65.83, ...TILE_SIZE }, // 8
-  { left: 20.5, top: 44.5, ...TILE_SIZE },   // 9
-  { left: 23.72, top: 23.17, ...TILE_SIZE }, // 10
-  { left: 32.5, top: 7.55, ...TILE_SIZE },   // 11
+  { left: 31.25, top: 81.45, ...TILE_SIZE }, // 7
+  { left: 21.55, top: 65.83, ...TILE_SIZE }, // 8
+  { left: 18, top: 44.5, ...TILE_SIZE },     // 9
+  { left: 21.55, top: 23.17, ...TILE_SIZE }, // 10
+  { left: 31.25, top: 7.55, ...TILE_SIZE },  // 11
 ];
 
 
