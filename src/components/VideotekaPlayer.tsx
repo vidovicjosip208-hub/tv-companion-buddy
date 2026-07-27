@@ -646,10 +646,10 @@ const Loader = ({ ready, onDone }: { ready: boolean; onDone: () => void }) => {
 
   useEffect(() => {
     const startTime = performance.now();
-    let raf = 0;
+    let timer = 0;
 
-    const tick = (now: number) => {
-      const elapsed = now - startTime;
+    const tick = () => {
+      const elapsed = performance.now() - startTime;
 
       if (ready || elapsed >= LOADER_MAX_DURATION) {
         setPercent(100);
@@ -662,13 +662,12 @@ const Loader = ({ ready, onDone }: { ready: boolean; onDone: () => void }) => {
 
       const raw = elapsed / LOADER_MIN_DURATION;
       const eased = 1 - Math.pow(1 - Math.min(raw, 1), 2);
-      const p = Math.min(90, Math.round(eased * 90));
-      setPercent(p);
-      raf = requestAnimationFrame(tick);
+      setPercent(Math.min(90, Math.round(eased * 90)));
+      timer = window.setTimeout(tick, 120);
     };
 
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    tick();
+    return () => window.clearTimeout(timer);
   }, [ready, onDone]);
 
   const dashOffset = CIRCUMFERENCE - (percent / 100) * CIRCUMFERENCE;
