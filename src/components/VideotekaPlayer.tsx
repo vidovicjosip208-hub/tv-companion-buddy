@@ -401,10 +401,11 @@ const FrozenHlsVideo = memo(
           // start nakon MANIFEST_PARSED na nekima od njih učita master manifest,
           // ali nikada ne zatraži level playlistu ni prvi segment.
           autoStartLoad: true,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60,
-          maxBufferSize: 60 * 1000 * 1000,
-          backBufferLength: 20,
+          // Manji bufferi = znatno manja potrošnja RAM-a i CPU-a na TV uređajima.
+          maxBufferLength: 16,
+          maxMaxBufferLength: 30,
+          maxBufferSize: 24 * 1000 * 1000,
+          backBufferLength: 8,
           maxBufferHole: 0.5,
           manifestLoadingTimeOut: 10000,
           manifestLoadingMaxRetry: 4,
