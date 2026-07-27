@@ -127,7 +127,7 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     const buildTargets = () => {
       tileTargets.length = 0;
       TILES.forEach((_, index) => {
-        const item = videos[index % videos.length];
+        const item = readyVideos[index % readyVideos.length];
         const buf = item ? buffers.get(item.video_url) : undefined;
         const canvas = canvasRefs.current[index];
         if (!buf || !canvas) return;
