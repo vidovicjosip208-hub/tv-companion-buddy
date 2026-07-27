@@ -9,23 +9,22 @@ interface SplashTileData {
   poster_url: string | null;
 }
 
-// Scattered, non-overlapping frame of tiles around the centered logo,
-// traced from the reference layout (percent of the 16:9 stage).
-// All 13 frames share the same 16:9 dimensions as the highlighted tile.
+// Circular ring of 12 tiles around the centered logo
+// (percent of the 16:9 stage). Each tile is 13% of the stage.
 const TILE_SIZE = { w: 13, h: 13 };
 const TILES = [
-  { left: 22, top: 8, ...TILE_SIZE },
-  { left: 38, top: 8, ...TILE_SIZE },
-  { left: 54, top: 8, ...TILE_SIZE },
-  { left: 4, top: 24, ...TILE_SIZE },
-  { left: 78, top: 24, ...TILE_SIZE },
-  { left: 4, top: 39, ...TILE_SIZE },
-  { left: 78, top: 39, ...TILE_SIZE },
-  { left: 4, top: 54, ...TILE_SIZE },
-  { left: 78, top: 54, ...TILE_SIZE },
-  { left: 19, top: 70, ...TILE_SIZE },
-  { left: 49, top: 70, ...TILE_SIZE },
-  { left: 64, top: 70, ...TILE_SIZE },
+  { left: 43.5, top: 9.5, ...TILE_SIZE },   // 12 o'clock
+  { left: 63.5, top: 14.1, ...TILE_SIZE },  // 1 o'clock
+  { left: 78.1, top: 26.5, ...TILE_SIZE },  // 2 o'clock
+  { left: 83.5, top: 43.5, ...TILE_SIZE },  // 3 o'clock
+  { left: 78.1, top: 60.5, ...TILE_SIZE },  // 4 o'clock
+  { left: 63.5, top: 72.9, ...TILE_SIZE },  // 5 o'clock
+  { left: 43.5, top: 77.5, ...TILE_SIZE },  // 6 o'clock
+  { left: 23.5, top: 72.9, ...TILE_SIZE },  // 7 o'clock
+  { left: 8.9, top: 60.5, ...TILE_SIZE },   // 8 o'clock
+  { left: 3.5, top: 43.5, ...TILE_SIZE },   // 9 o'clock
+  { left: 8.9, top: 26.5, ...TILE_SIZE },   // 10 o'clock
+  { left: 23.5, top: 14.1, ...TILE_SIZE },  // 11 o'clock
 ];
 
 const useSplashContent = () =>
@@ -207,6 +206,24 @@ const SplashIntro = ({ duration = 15000 }: SplashIntroProps) => {
                 />
               ))}
             </div>
+
+            {/* Subtle connecting ring between the circular tile frames */}
+            <svg
+              className="pointer-events-none absolute inset-0 h-full w-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <ellipse
+                cx="50"
+                cy="50"
+                rx="40"
+                ry="34"
+                fill="none"
+                stroke="rgba(255,255,255,0.12)"
+                strokeWidth="0.4"
+              />
+            </svg>
 
             {TILES.map((tile, i) => {
               return (
