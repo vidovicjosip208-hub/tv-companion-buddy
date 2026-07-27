@@ -139,7 +139,7 @@ const StarryBackground = () => {
 
           wisps.push({
             points,
-            alpha: 0.14 + Math.random() * 0.1,
+            alpha: 0.05 + Math.random() * 0.05,
             width: 0.8 + Math.random() * 3,
             speed: 0.15 + Math.random() * 0.35,
             phase: Math.random() * Math.PI * 2,
@@ -196,7 +196,7 @@ const StarryBackground = () => {
         else ctx.lineTo(px, py);
       }
 
-      ctx.strokeStyle = `rgba(180, 190, 220, ${wisp.alpha * 3})`;
+      ctx.strokeStyle = `rgba(180, 190, 220, ${wisp.alpha * 2})`;
       ctx.lineWidth = wisp.width;
       ctx.stroke();
     };
