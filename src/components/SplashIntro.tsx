@@ -9,8 +9,6 @@ interface SplashTileData {
   poster_url: string | null;
 }
 
-// 12 tiles evenly placed on a true visual circle around the centered logo.
-// Stage is 16:9, so the vertical radius (% of height) = horizontal radius * 16/9.
 const TILE_SIZE = { w: 11, h: 11 };
 const TILES = [
   { left: 44.5, top: 1.83, ...TILE_SIZE },   // 12 o'clock
@@ -27,7 +25,6 @@ const TILES = [
   { left: 31.25, top: 7.55, ...TILE_SIZE },  // 11
 ];
 
-
 const useSplashContent = () =>
   useQuery<SplashTileData[]>({
     queryKey: ["loading_thumbnails"],
@@ -38,12 +35,9 @@ const useSplashContent = () =>
         .eq("is_active", true)
         .order("position_order", { ascending: true });
       if (error) throw error;
-      // No HEAD pre-flight here: on TV networks each extra round trip delays the
-      // intro noticeably. Broken sources simply never fire onLoadedData.
       return (data ?? [])
         .filter((r) => !!r.video_url)
         .map((r) => ({ video_url: r.video_url as string, poster_url: r.poster_url ?? null }));
-
     },
     staleTime: Infinity,
   });
@@ -54,9 +48,7 @@ interface SplashIntroProps {
 
 const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
-  // The static splash shell must paint on the first React frame. Videos can
-  // populate its already-visible canvases later without leaving a black gap.
-  const [revealed, setRevealed] = useState(true);
+  const [revealed, setRevealed] = useState(false);
   const [loadedSourceCount, setLoadedSourceCount] = useState(0);
   const loadedSources = useRef(new Set<string>());
   const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
@@ -64,8 +56,6 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   const animationFrame = useRef<number | null>(null);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
-  // Decoding a video is by far the most expensive part on TV boxes, so we keep
-  // at most a handful of distinct sources alive and cycle them across the tiles.
   const MAX_SOURCES = 4;
   const uniqueVideos = useMemo(
     () =>
@@ -77,8 +67,6 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     [videos],
   );
 
-
-  // Try to go fullscreen immediately; retry on the first user gesture if blocked.
   useEffect(() => {
     const goFs = () => {
       const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
@@ -95,8 +83,6 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   }, []);
 
   useEffect(() => {
-    // Start as soon as the FIRST source is ready — waiting for every clip is
-    // what made the intro feel late on slow connections.
     const readyVideos = uniqueVideos.filter((video) => loadedSources.current.has(video.video_url));
     if (!readyVideos.length) return;
 
@@ -104,9 +90,6 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
       .map((video) => sourceVideoRefs.current[video.video_url])
       .filter((player): player is HTMLVideoElement => player !== null);
 
-    // One small offscreen buffer per UNIQUE video source. Decoding/scaling a
-    // <video> into a canvas is the expensive part, so we do it once per source
-    // per frame and then cheaply blit the buffer into every tile that uses it.
     const BUF_W = 128;
     const BUF_H = 72;
     const buffers = new Map<string, { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number }>();
@@ -117,8 +100,6 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
       buffers.set(video.video_url, { canvas: c, ctx: c.getContext("2d", { alpha: false }), t: -1 });
     });
 
-
-    // Precomputed tile -> buffer mapping + cached 2d contexts (no per-frame lookups)
     const tileTargets: Array<{
       buf: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number };
       canvas: HTMLCanvasElement;
@@ -144,7 +125,6 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     };
 
     const drawFrames = () => {
-      // 1) refresh each unique source buffer (only if its frame advanced)
       buffers.forEach((buf, url) => {
         const player = sourceVideoRefs.current[url];
         if (!player || !buf.ctx || player.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
@@ -168,7 +148,6 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
         );
       });
 
-      // 2) blit buffers into the tiles, skipping tiles whose frame did not change
       if (!tileTargets.length) buildTargets();
       for (const target of tileTargets) {
         if (target.buf.t < 0 || target.buf.t === target.lastT) continue;
@@ -177,14 +156,12 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
       }
     };
 
-
     players.forEach((player) => {
       player.currentTime = 0;
     });
     drawFrames();
 
-    // Reveal right away; playback starts in the background.
-    const FRAME_INTERVAL = 200; // ~5 fps is plenty for tiny thumbnails
+    const FRAME_INTERVAL = 200;
     animationFrame.current = window.setInterval(drawFrames, FRAME_INTERVAL);
     setRevealed(true);
     void Promise.allSettled(players.map((player) => player.play()));
@@ -194,7 +171,6 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
       animationFrame.current = null;
       players.forEach((player) => player.pause());
     };
-
   }, [loadedSourceCount, uniqueVideos]);
 
   useEffect(() => {
@@ -203,13 +179,10 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     return () => window.clearTimeout(t);
   }, [duration, revealed]);
 
-  // Hard safety net: if the intro videos never load (slow/offline TV network),
-  // the splash must never block the app.
   useEffect(() => {
     const t = window.setTimeout(() => setVisible(false), duration + 2000);
     return () => window.clearTimeout(t);
   }, [duration]);
-
 
   const markSourceLoaded = (url: string) => {
     if (loadedSources.current.has(url)) return;
@@ -227,7 +200,7 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
           className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
           <div
-            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 ${revealed ? "opacity-100" : "opacity-0"}`}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             style={{
               width: "100vw",
               height: "56.25vw",
@@ -254,8 +227,8 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
               ))}
             </div>
 
-            {TILES.map((tile, i) => {
-              return (
+            <div className={`transition-opacity duration-1000 ${revealed ? "opacity-100" : "opacity-0"}`}>
+              {TILES.map((tile, i) => (
                 <div
                   key={i}
                   className="absolute overflow-hidden rounded-[3px] border border-border/60 bg-muted/30"
@@ -273,19 +246,11 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
                     className="h-full w-full rounded-sm"
                   />
                 </div>
-
-              );
-            })}
+              ))}
+            </div>
 
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <img
-                src={logo}
-                alt="MAXovizija"
-                className="w-[34%] max-w-[620px]"
-                loading="eager"
-                decoding="sync"
-                fetchPriority="high"
-              />
+              <img src={logo} alt="MAXovizija" className="w-[34%] max-w-[620px]" />
             </div>
           </div>
         </motion.div>
