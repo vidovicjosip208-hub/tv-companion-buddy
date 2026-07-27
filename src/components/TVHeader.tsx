@@ -10,8 +10,16 @@ const TVHeader = () => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
+    let timer: number;
+    const updateAtNextMinute = () => {
+      const delay = 60_000 - (Date.now() % 60_000) + 50;
+      timer = window.setTimeout(() => {
+        setTime(new Date());
+        updateAtNextMinute();
+      }, delay);
+    };
+    updateAtNextMinute();
+    return () => window.clearTimeout(timer);
   }, []);
 
   const hours = time.getHours().toString().padStart(2, "0");
