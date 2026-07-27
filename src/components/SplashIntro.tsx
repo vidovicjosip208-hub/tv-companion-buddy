@@ -46,7 +46,7 @@ interface SplashIntroProps {
   duration?: number;
 }
 
-const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
+const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
   const [revealed, setRevealed] = useState(false);
   const [loadedSourceCount, setLoadedSourceCount] = useState(0);
