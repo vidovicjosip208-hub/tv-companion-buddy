@@ -104,42 +104,57 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
       .map((video) => sourceVideoRefs.current[video.video_url])
       .filter((player): player is HTMLVideoElement => player !== null);
 
+    // One small offscreen buffer per UNIQUE video source. Decoding/scaling a
+    // <video> into a canvas is the expensive part, so we do it once per source
+    // per frame and then cheaply blit the buffer into every tile that uses it.
+    const BUF_W = 160;
+    const BUF_H = 90;
+    const buffers = new Map<string, { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number }>();
+    uniqueVideos.forEach((video) => {
+      const c = document.createElement("canvas");
+      c.width = BUF_W;
+      c.height = BUF_H;
+      buffers.set(video.video_url, { canvas: c, ctx: c.getContext("2d"), t: -1 });
+    });
+
     const drawFrames = () => {
+      // 1) refresh each unique source buffer (only if its frame advanced)
+      buffers.forEach((buf, url) => {
+        const player = sourceVideoRefs.current[url];
+        if (!player || !buf.ctx || player.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+        if (!player.videoWidth || !player.videoHeight) return;
+        if (player.currentTime === buf.t) return;
+        buf.t = player.currentTime;
+
+        const scale = Math.max(BUF_W / player.videoWidth, BUF_H / player.videoHeight);
+        const sw = BUF_W / scale;
+        const sh = BUF_H / scale;
+        buf.ctx.drawImage(
+          player,
+          (player.videoWidth - sw) / 2,
+          (player.videoHeight - sh) / 2,
+          sw,
+          sh,
+          0,
+          0,
+          BUF_W,
+          BUF_H,
+        );
+      });
+
+      // 2) blit buffers into the tiles (canvas -> canvas, GPU cheap)
       TILES.forEach((_, index) => {
         const item = videos[index % videos.length];
-        const player = item ? sourceVideoRefs.current[item.video_url] : null;
+        const buf = item ? buffers.get(item.video_url) : undefined;
         const canvas = canvasRefs.current[index];
-        if (!player || !canvas || player.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
-
-        const context = canvas.getContext("2d");
-        if (!context || !player.videoWidth || !player.videoHeight) return;
-
-        // Small backing store — the tiles are tiny on screen and TV boxes
-        // cannot afford 12 high-resolution canvas blits per frame.
-        const targetWidth = 192;
-        const targetHeight = 108;
-
-        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
+        if (!buf || buf.t < 0 || !canvas) return;
+        if (canvas.width !== BUF_W || canvas.height !== BUF_H) {
+          canvas.width = BUF_W;
+          canvas.height = BUF_H;
         }
-
-        const scale = Math.max(targetWidth / player.videoWidth, targetHeight / player.videoHeight);
-        const sourceWidth = targetWidth / scale;
-        const sourceHeight = targetHeight / scale;
-        const sourceX = (player.videoWidth - sourceWidth) / 2;
-        const sourceY = (player.videoHeight - sourceHeight) / 2;
-        context.drawImage(
-          player,
-          sourceX,
-          sourceY,
-          sourceWidth,
-          sourceHeight,
-          0,
-          0,
-          targetWidth,
-          targetHeight,
-        );
+        const context = canvas.getContext("2d");
+        if (!context) return;
+        context.drawImage(buf.canvas, 0, 0);
       });
     };
 
@@ -149,23 +164,21 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     drawFrames();
 
     void Promise.allSettled(players.map((player) => player.play())).then(() => {
-      // Throttle to ~15 fps: plenty for thumbnail previews, ~4x cheaper.
-      const FRAME_INTERVAL = 1000 / 15;
-      let last = 0;
-      const render = (now: number) => {
-        animationFrame.current = window.requestAnimationFrame(render);
-        if (now - last < FRAME_INTERVAL) return;
-        last = now;
-        drawFrames();
-      };
-      animationFrame.current = window.requestAnimationFrame(render);
+      // ~10 fps is plenty for tiny thumbnail previews and very cheap on TV CPUs.
+      const FRAME_INTERVAL = 100;
+      const id = window.setInterval(drawFrames, FRAME_INTERVAL);
+      animationFrame.current = id;
       setRevealed(true);
     });
 
 
+
     return () => {
-      if (animationFrame.current !== null) window.cancelAnimationFrame(animationFrame.current);
+      if (animationFrame.current !== null) window.clearInterval(animationFrame.current);
+      animationFrame.current = null;
+      players.forEach((player) => player.pause());
     };
+
   }, [loadedSourceCount, uniqueVideos, videos]);
 
   useEffect(() => {
