@@ -38,12 +38,23 @@ const useSplashContent = () =>
         .eq("is_active", true)
         .order("position_order", { ascending: true });
       if (error) throw error;
-      // Bez HEAD provjere po URL-u: to je 12 dodatnih mrežnih zahtjeva na TV-u
-      // i tiho je izbacivalo okvire kad server ne dopušta HEAD/CORS.
-      return (data ?? [])
+      const rows = (data ?? [])
         .filter((r) => !!r.video_url)
         .map((r) => ({ video_url: r.video_url as string, poster_url: r.poster_url ?? null }));
 
+      const checkedRows = await Promise.all(
+        rows.map(async (row) => {
+          try {
+            const response = await fetch(row.video_url, { method: "HEAD", cache: "force-cache" });
+            const contentType = response.headers.get("content-type") ?? "";
+            return response.ok && contentType.startsWith("video/") ? row : null;
+          } catch {
+            return null;
+          }
+        }),
+      );
+
+      return checkedRows.filter((row): row is SplashTileData => row !== null);
     },
     staleTime: Infinity,
   });
@@ -87,53 +98,30 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
   }, []);
 
   useEffect(() => {
-    // Dovoljno je da je barem jedan izvor spreman — ne čekamo sve,
-    // inače jedan spori/neispravni video sakrije cijeli prsten okvira.
-    if (!uniqueVideos.length || loadedSourceCount === 0) return;
-
+    if (!uniqueVideos.length || loadedSourceCount !== uniqueVideos.length) return;
 
     const players = uniqueVideos
       .map((video) => sourceVideoRefs.current[video.video_url])
       .filter((player): player is HTMLVideoElement => player !== null);
 
-    // Context cache — getContext() svaki frame je nepotrebno skupo na TV-u.
-    const contexts = new Map<HTMLCanvasElement, CanvasRenderingContext2D>();
-    const getCtx = (canvas: HTMLCanvasElement) => {
-      let ctx = contexts.get(canvas);
-      if (!ctx) {
-        const created = canvas.getContext("2d", { alpha: false, desynchronized: true });
-        if (!created) return null;
-        created.imageSmoothingEnabled = false;
-        contexts.set(canvas, created);
-        ctx = created;
-      }
-      return ctx;
-    };
-
-    // Mali backing store — pločice su sitne na ekranu.
-    const targetWidth = 160;
-    const targetHeight = 90;
-    const lastDrawnTime = new Map<HTMLVideoElement, number>();
-
-    const drawFrames = (force = false) => {
+    const drawFrames = () => {
       TILES.forEach((_, index) => {
         const item = videos[index % videos.length];
         const player = item ? sourceVideoRefs.current[item.video_url] : null;
         const canvas = canvasRefs.current[index];
         if (!player || !canvas || player.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
-        if (!player.videoWidth || !player.videoHeight) return;
 
-        // Ako se izvorni frame nije promijenio, nema smisla ponovno crtati.
-        if (!force && lastDrawnTime.get(player) === player.currentTime) return;
-        lastDrawnTime.set(player, player.currentTime);
+        const context = canvas.getContext("2d");
+        if (!context || !player.videoWidth || !player.videoHeight) return;
 
-        const context = getCtx(canvas);
-        if (!context) return;
+        // Small backing store — the tiles are tiny on screen and TV boxes
+        // cannot afford 12 high-resolution canvas blits per frame.
+        const targetWidth = 192;
+        const targetHeight = 108;
 
         if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
           canvas.width = targetWidth;
           canvas.height = targetHeight;
-          context.imageSmoothingEnabled = false;
         }
 
         const scale = Math.max(targetWidth / player.videoWidth, targetHeight / player.videoHeight);
@@ -158,20 +146,25 @@ const SplashIntro = ({ duration = 6000 }: SplashIntroProps) => {
     players.forEach((player) => {
       player.currentTime = 0;
     });
-    drawFrames(true);
+    drawFrames();
 
     void Promise.allSettled(players.map((player) => player.play())).then(() => {
-      // 10 fps preko setInterval-a: ne budi rAF svaki frame (na TV-u ~60x/s).
-      const timer = window.setInterval(() => drawFrames(), 100);
-      animationFrame.current = timer;
+      // Throttle to ~15 fps: plenty for thumbnail previews, ~4x cheaper.
+      const FRAME_INTERVAL = 1000 / 15;
+      let last = 0;
+      const render = (now: number) => {
+        animationFrame.current = window.requestAnimationFrame(render);
+        if (now - last < FRAME_INTERVAL) return;
+        last = now;
+        drawFrames();
+      };
+      animationFrame.current = window.requestAnimationFrame(render);
       setRevealed(true);
     });
 
 
-
     return () => {
-      if (animationFrame.current !== null) window.clearInterval(animationFrame.current);
-      players.forEach((player) => player.pause());
+      if (animationFrame.current !== null) window.cancelAnimationFrame(animationFrame.current);
     };
   }, [loadedSourceCount, uniqueVideos, videos]);
 
