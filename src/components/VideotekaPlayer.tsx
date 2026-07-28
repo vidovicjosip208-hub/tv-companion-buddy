@@ -1518,7 +1518,7 @@ const VideotekaPlayer = ({
                         style={{
                           height: "clamp(120px, 18vw, 280px)",
                           position: "absolute",
-                          bottom: "clamp(70px, 8vw, 130px)",
+                          bottom: bottom: "clamp(30px, 4vw, 70px)"
                           opacity: isSeeking ? 0 : 1,
                         }}
                       />
