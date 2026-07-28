@@ -1441,8 +1441,12 @@ const VideotekaPlayer = ({
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/70" />
 
-            <div className="relative flex flex-col h-full pt-6 sm:pt-10 lg:pt-14 pb-3 sm:pb-5 lg:pb-6">
-              <div className="w-full max-w-5xl mx-auto flex flex-col h-full px-3 sm:px-4">
+            <div
+              className="relative flex flex-col h-full pt-6 sm:pt-10 lg:pt-14 pb-3 sm:pb-5 lg:pb-6"
+              style={{ transform: "scale(1.08)", transformOrigin: "center center" }}
+            >
+              <div className="w-full max-w-6xl mx-auto flex flex-col h-full px-3 sm:px-4">
+
                 {/* TOP AREA */}
                 <div className="flex-1 flex flex-col">
                   <div
