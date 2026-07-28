@@ -1496,20 +1496,18 @@ const VideotekaPlayer = ({
                   </div>
 
                   {/* Logo + naslov + like/dislike */}
-                  <div className="flex-1 flex flex-col justify-end items-center pb-4 sm:pb-6 lg:pb-8">
-                    <div className="relative w-full flex justify-center" style={{ height: 0 }}>
-                      <img
-                        src={logo}
-                        alt="Logo"
-                        className="w-auto pointer-events-none transition-opacity duration-300"
-                        style={{
-                          height: "clamp(120px, 18vw, 280px)",
-                          position: "absolute",
-                          bottom: "clamp(20px, 2.5vw, 45px)",
-                          opacity: isSeeking ? 0 : 1,
-                        }}
-                      />
-                    </div>
+                  <div className="flex-1 flex flex-col justify-center items-center pb-4 sm:pb-6 lg:pb-8">
+                    <img
+                      src={logo}
+                      alt="Logo"
+                      className="w-auto pointer-events-none transition-opacity duration-300"
+                      style={{
+                        height: "clamp(90px, 13vw, 190px)",
+                        marginBottom: "clamp(4px, 1vw, 16px)",
+                        opacity: isSeeking ? 0 : 1,
+                      }}
+                    />
+
                     <div
                       className={`transition-opacity duration-300 ${
                         isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"
