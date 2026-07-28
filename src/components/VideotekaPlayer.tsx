@@ -1442,7 +1442,7 @@ const VideotekaPlayer = ({
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/70" />
 
             <div
-              className="relative flex flex-col h-full pt-6 sm:pt-10 lg:pt-14 pb-3 sm:pb-5 lg:pb-6"
+              className="relative flex flex-col h-full pt-10 sm:pt-14 lg:pt-16 pb-6 sm:pb-10 lg:pb-12"
               style={{ transform: "scale(1.08)", transformOrigin: "center center" }}
             >
               <div className="w-full max-w-6xl mx-auto flex flex-col h-full px-3 sm:px-4">
@@ -1541,7 +1541,7 @@ const VideotekaPlayer = ({
                 {/* BOTTOM AREA */}
                 <div className="flex flex-col gap-3 sm:gap-4 pb-2 sm:pb-4 w-full">
                   {/* ── NOVO: Thumbnail strip s pravim frame capture-om ─────── */}
-                  <div className="h-20 sm:h-32 flex items-end justify-center">
+                  <div className="h-28 sm:h-44 flex items-end justify-center">
                     <AnimatePresence>
                       {isSeeking && (
                         <motion.div
@@ -1559,8 +1559,8 @@ const VideotekaPlayer = ({
                                 key={i}
                                 className={`relative overflow-hidden transition-all duration-200 ${
                                   isCentre
-                                    ? "w-28 h-16 sm:w-48 sm:h-28 z-10 scale-110 ring-1 ring-white"
-                                    : "w-20 h-12 sm:w-32 sm:h-20 opacity-50"
+                                    ? "w-32 h-20 sm:w-56 sm:h-32 z-10 scale-110 ring-1 ring-white"
+                                    : "w-24 h-16 sm:w-40 sm:h-24 opacity-50"
                                 }`}
                               >
                                 <img
