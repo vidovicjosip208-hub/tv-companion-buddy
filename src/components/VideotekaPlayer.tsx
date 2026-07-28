@@ -1515,7 +1515,7 @@ const VideotekaPlayer = ({
                         isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"
                       } flex flex-col items-center`}
                     >
-                      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight mb-4 sm:mb-6 uppercase leading-tight text-center">
+                      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight mb-2 sm:mb-3 uppercase leading-tight text-center">
                         {title}
                       </h1>
                       <div className="flex items-center gap-3">
