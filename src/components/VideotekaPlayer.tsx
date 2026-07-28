@@ -1448,7 +1448,7 @@ const VideotekaPlayer = ({
               <div className="w-full max-w-6xl mx-auto flex flex-col h-full px-3 sm:px-4">
 
                 {/* TOP AREA */}
-                <div className="flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col mt-3 sm:mt-4 lg:mt-5">
                   <div
                     className={`flex items-center justify-between transition-opacity duration-300 ${
                       isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"
