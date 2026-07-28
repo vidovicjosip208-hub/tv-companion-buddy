@@ -1541,7 +1541,7 @@ const VideotekaPlayer = ({
                 {/* BOTTOM AREA */}
                 <div className="flex flex-col gap-3 sm:gap-4 pb-2 sm:pb-4 w-full">
                   {/* ── NOVO: Thumbnail strip s pravim frame capture-om ─────── */}
-                  <div className="h-20 sm:h-32 flex items-end justify-center">
+                  <div className="h-28 sm:h-44 flex items-end justify-center">
                     <AnimatePresence>
                       {isSeeking && (
                         <motion.div
@@ -1559,8 +1559,8 @@ const VideotekaPlayer = ({
                                 key={i}
                                 className={`relative overflow-hidden transition-all duration-200 ${
                                   isCentre
-                                    ? "w-28 h-16 sm:w-48 sm:h-28 z-10 scale-110 ring-1 ring-white"
-                                    : "w-20 h-12 sm:w-32 sm:h-20 opacity-50"
+                                    ? "w-32 h-20 sm:w-56 sm:h-32 z-10 scale-110 ring-1 ring-white"
+                                    : "w-24 h-16 sm:w-40 sm:h-24 opacity-50"
                                 }`}
                               >
                                 <img
