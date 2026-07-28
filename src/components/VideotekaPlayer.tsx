@@ -1496,24 +1496,26 @@ const VideotekaPlayer = ({
                   </div>
 
                   {/* Logo + naslov + like/dislike */}
-                  <div className="flex-1 flex flex-col justify-center items-center pb-4 sm:pb-6 lg:pb-8">
-                    <img
-                      src={logo}
-                      alt="Logo"
-                      className="w-auto pointer-events-none transition-opacity duration-300"
-                      style={{
-                        height: "clamp(90px, 13vw, 190px)",
-                        marginBottom: "clamp(4px, 1vw, 16px)",
-                        opacity: isSeeking ? 0 : 1,
-                      }}
-                    />
-
+                  <div className="flex-1 flex flex-col justify-end items-center pb-10 sm:pb-14 lg:pb-20">
+                    <div className="relative w-full flex justify-center" style={{ height: 0 }}>
+                      <img
+                        src={logo}
+                        alt="Logo"
+                        className="w-auto pointer-events-none transition-opacity duration-300"
+                        style={{
+                          height: "clamp(120px, 18vw, 280px)",
+                          position: "absolute",
+                          bottom: "clamp(30px, 4vw, 70px)",
+                          opacity: isSeeking ? 0 : 1,
+                        }}
+                      />
+                    </div>
                     <div
                       className={`transition-opacity duration-300 ${
                         isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"
                       } flex flex-col items-center`}
                     >
-                      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight mb-2 sm:mb-3 uppercase leading-tight text-center">
+                      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight mb-4 sm:mb-6 uppercase leading-tight text-center">
                         {title}
                       </h1>
                       <div className="flex items-center gap-3">
