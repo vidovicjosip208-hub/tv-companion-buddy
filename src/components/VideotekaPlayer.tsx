@@ -1496,7 +1496,7 @@ const VideotekaPlayer = ({
                   </div>
 
                   {/* Logo + naslov + like/dislike */}
-                  <div className="flex-1 flex flex-col justify-end items-center pb-8 sm:pb-10 lg:pb-12">
+                  <div className="flex-1 flex flex-col justify-end items-center pb-12 sm:pb-16 lg:pb-20">
                     <div className="relative w-full flex justify-center" style={{ height: 0 }}>
                       <img
                         src={logo}
@@ -1505,7 +1505,7 @@ const VideotekaPlayer = ({
                         style={{
                           height: "clamp(120px, 18vw, 280px)",
                           position: "absolute",
-                          bottom: "clamp(-40px, -6vw, -90px)",
+                          bottom: "clamp(-10px, -2vw, -30px)",
                           opacity: isSeeking ? 0 : 1,
                         }}
                       />
