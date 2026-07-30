@@ -1522,7 +1522,7 @@ const VideotekaPlayer = ({
                              clamp(-40px, -6vw, -90px) što je nevažeći poredak (-40 > -90)
                              pa je vrijednost uvijek "zapinjala" na -40px (logo previsoko).
                              Sada je ispravno poredano; malo podignuto u odnosu na prijašnju verziju. */
-                          bottom: "clamp(-140px, -9vw, -50px)",
+                          bottom: "clamp(-150px, -9.5vw, -55px)",
                           opacity: isSeeking ? 0 : 1,
                         }}
                       />
@@ -1531,7 +1531,7 @@ const VideotekaPlayer = ({
                       className={`transition-opacity duration-300 ${
                         isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"
                       } flex flex-col items-center`}
-                      style={{ marginTop: "clamp(16px, 3vw, 40px)" }}
+                      style={{ marginTop: "clamp(24px, 3.5vw, 48px)" }}
                     >
                       <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight mb-4 sm:mb-6 uppercase leading-tight text-center">
                         {title}
