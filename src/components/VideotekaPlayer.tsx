@@ -729,6 +729,22 @@ const VideotekaPlayer = ({
   initialEpisodeId = null,
 }: VideotekaPlayerProps) => {
   const playerRootRef = useRef<HTMLDivElement | null>(null);
+
+  // HUD scaling: on large TV screens the fixed-size HUD looks tiny, so scale it
+  // up proportionally to the viewport while keeping laptop sizing unchanged.
+  const [hudScale, setHudScale] = useState(1.08);
+  useEffect(() => {
+    const update = () => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const factor = Math.min(Math.max(vw / 1280, vh / 720), 2);
+      setHudScale(1.08 * Math.min(Math.max(factor, 1), 1.7));
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
 
@@ -1457,7 +1473,7 @@ const VideotekaPlayer = ({
 
             <div
               className="relative flex flex-col h-full pt-10 sm:pt-14 lg:pt-16 pb-6 sm:pb-10 lg:pb-12"
-              style={{ transform: "scale(1.08)", transformOrigin: "center center" }}
+              style={{ transform: `scale(${hudScale})`, transformOrigin: "center center" }}
             >
               <div className="w-full max-w-6xl mx-auto flex flex-col h-full px-3 sm:px-4">
                 {/* TOP AREA */}
