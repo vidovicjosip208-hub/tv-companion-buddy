@@ -1457,7 +1457,7 @@ const VideotekaPlayer = ({
 
             <div
               className="relative flex flex-col h-full pt-10 sm:pt-14 lg:pt-16 pb-6 sm:pb-10 lg:pb-12"
-              style={{ transform: "scale(1.08)", transformOrigin: "center center" }}
+              style={{ transform: `scale(${hudScale})`, transformOrigin: "center center" }}
             >
               <div className="w-full max-w-6xl mx-auto flex flex-col h-full px-3 sm:px-4">
                 {/* TOP AREA */}
