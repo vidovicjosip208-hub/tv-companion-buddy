@@ -729,22 +729,6 @@ const VideotekaPlayer = ({
   initialEpisodeId = null,
 }: VideotekaPlayerProps) => {
   const playerRootRef = useRef<HTMLDivElement | null>(null);
-
-  // HUD scaling: on large TV screens the fixed-size HUD looks tiny, so scale it
-  // up proportionally to the viewport while keeping laptop sizing unchanged.
-  const [hudScale, setHudScale] = useState(1.08);
-  useEffect(() => {
-    const update = () => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const factor = Math.min(Math.max(vw / 1280, vh / 720), 2);
-      setHudScale(1.08 * Math.min(Math.max(factor, 1), 1.7));
-    };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
 
@@ -1473,7 +1457,7 @@ const VideotekaPlayer = ({
 
             <div
               className="relative flex flex-col h-full pt-10 sm:pt-14 lg:pt-16 pb-6 sm:pb-10 lg:pb-12"
-              style={{ transform: `scale(${hudScale})`, transformOrigin: "center center" }}
+              style={{ transform: "scale(1.08)", transformOrigin: "center center" }}
             >
               <div className="w-full max-w-6xl mx-auto flex flex-col h-full px-3 sm:px-4">
                 {/* TOP AREA */}
@@ -1532,12 +1516,13 @@ const VideotekaPlayer = ({
                         alt="Logo"
                         className="w-auto pointer-events-none transition-opacity duration-300"
                         style={{
-                          height: "clamp(120px, 18vw, 460px)",
+                          height: "clamp(120px, 18vw, 280px)",
                           position: "absolute",
-                          /* Veličina i pozicija loga prate širinu ekrana (vw), a gornje
-                             granice su dovoljno visoke da se na velikim TV ekranima logo
-                             ne "zaključa" na malu fiksnu vrijednost. */
-                          bottom: "clamp(-380px, -13.5vw, -95px)",
+                          /* FIX: clamp(min,pref,max) mora imati min < max. Prije je bilo
+                             clamp(-40px, -6vw, -90px) što je nevažeći poredak (-40 > -90)
+                             pa je vrijednost uvijek "zapinjala" na -40px (logo previsoko).
+                             Sada je ispravno poredano; malo podignuto u odnosu na prijašnju verziju. */
+                          bottom: "clamp(-230px, -13.5vw, -95px)",
                           opacity: isSeeking ? 0 : 1,
                         }}
                       />
@@ -1546,7 +1531,7 @@ const VideotekaPlayer = ({
                       className={`transition-opacity duration-300 ${
                         isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"
                       } flex flex-col items-center`}
-                      style={{ marginTop: "clamp(88px, 7.5vw, 190px)" }}
+                      style={{ marginTop: "clamp(88px, 7.5vw, 112px)" }}
                     >
                       <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight mb-4 sm:mb-6 uppercase leading-tight text-center">
                         {title}
