@@ -1041,11 +1041,7 @@ const VideotekaPlayer = ({
       if (!isSeekingRef.current) {
         wasPlayingBeforeSeekRef.current = video ? !video.paused : false;
         if (video && !video.paused) {
-          try {
-            video.pause();
-          } catch {
-            /* noop */
-          }
+          try { video.pause(); } catch { /* noop */ }
         }
       }
 
@@ -1079,11 +1075,7 @@ const VideotekaPlayer = ({
     // Nakon potvrde uvijek pokreni reprodukciju s odabrane pozicije.
     const video = videoRef.current;
     if (video) {
-      try {
-        video.play().catch(() => {});
-      } catch {
-        /* noop */
-      }
+      try { video.play().catch(() => {}); } catch { /* noop */ }
     }
     wasPlayingBeforeSeekRef.current = false;
   }, [commitSeek, updateProgressDom]);
@@ -1102,11 +1094,7 @@ const VideotekaPlayer = ({
     if (wasPlayingBeforeSeekRef.current) {
       const video = videoRef.current;
       if (video) {
-        try {
-          video.play().catch(() => {});
-        } catch {
-          /* noop */
-        }
+        try { video.play().catch(() => {}); } catch { /* noop */ }
       }
     }
     wasPlayingBeforeSeekRef.current = false;
@@ -1207,8 +1195,7 @@ const VideotekaPlayer = ({
             }
             if (focusedCol === 2 && onNextEpisode) onNextEpisode();
           } else if (focusedRow === 2) {
-            if (focusedCol === 0)
-              seekVideo((isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current) - 10);
+            if (focusedCol === 0) seekVideo((isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current) - 10);
             if (focusedCol === 1) {
               if (isSeeking) {
                 // OK potvrđuje seek preview i pokreće reprodukciju s odabrane pozicije.
@@ -1220,8 +1207,7 @@ const VideotekaPlayer = ({
                 pausePlayback();
               }
             }
-            if (focusedCol === 2)
-              seekVideo((isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current) + 10);
+            if (focusedCol === 2) seekVideo((isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current) + 10);
           } else if (focusedRow === 3) {
             if (focusedCol === 0) openSubtitleModal(DUMMY_SUBTITLES.findIndex((s) => s.code === selectedSubtitle));
             if (focusedCol === 1) openAudioModal(DUMMY_AUDIO_TRACKS.findIndex((a) => a.code === selectedAudio));
@@ -1460,6 +1446,7 @@ const VideotekaPlayer = ({
               style={{ transform: "scale(1.08)", transformOrigin: "center center" }}
             >
               <div className="w-full max-w-6xl mx-auto flex flex-col h-full px-3 sm:px-4">
+
                 {/* TOP AREA */}
                 <div className="flex-1 flex flex-col mt-3 sm:mt-4 lg:mt-5">
                   <div
@@ -1509,7 +1496,7 @@ const VideotekaPlayer = ({
                   </div>
 
                   {/* Logo + naslov + like/dislike */}
-                  <div className="flex-1 flex flex-col justify-end items-center pb-10 sm:pb-14 lg:pb-20">
+                  <div className="flex-1 flex flex-col justify-end items-center pb-4 sm:pb-6">
                     <div className="relative w-full flex justify-center" style={{ height: 0 }}>
                       <img
                         src={logo}
@@ -1518,7 +1505,7 @@ const VideotekaPlayer = ({
                         style={{
                           height: "clamp(120px, 18vw, 280px)",
                           position: "absolute",
-                          bottom: "clamp(70px, 8vw, 130px)",
+                          bottom: "clamp(-40px, -6vw, -90px)",
                           opacity: isSeeking ? 0 : 1,
                         }}
                       />
@@ -2047,8 +2034,13 @@ const VideotekaPlayer = ({
             {/* Episodes */}
             <div className="flex-1 h-full overflow-y-auto p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white text-xl font-bold">Sezona {seasons[epSeasonIdx]?.season_number ?? ""}</h3>
-                <button onClick={() => setShowEpisodesPanel(false)} className="text-white/60 hover:text-white text-sm">
+                <h3 className="text-white text-xl font-bold">
+                  Sezona {seasons[epSeasonIdx]?.season_number ?? ""}
+                </h3>
+                <button
+                  onClick={() => setShowEpisodesPanel(false)}
+                  className="text-white/60 hover:text-white text-sm"
+                >
                   Zatvori (Esc)
                 </button>
               </div>
@@ -2093,9 +2085,13 @@ const VideotekaPlayer = ({
                           <h4 className="text-white font-semibold truncate">
                             {ep.title ?? `Epizoda ${ep.episode_number}`}
                           </h4>
-                          {ep.duration && <span className="shrink-0 text-white/40 text-xs">{ep.duration}</span>}
+                          {ep.duration && (
+                            <span className="shrink-0 text-white/40 text-xs">{ep.duration}</span>
+                          )}
                         </div>
-                        {ep.description && <p className="text-white/50 text-xs line-clamp-2">{ep.description}</p>}
+                        {ep.description && (
+                          <p className="text-white/50 text-xs line-clamp-2">{ep.description}</p>
+                        )}
                       </div>
                     </button>
                   );
