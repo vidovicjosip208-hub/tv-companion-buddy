@@ -57,7 +57,7 @@ const TVCategoryMenu = ({ isVisible, focusedIndex, onItemClick }: TVCategoryMenu
         className="h-full flex flex-col mt-40"
         style={{
           width: `${menuWidth}px`,
-          height: "calc(100vh - 96px)",
+          height: "672px",
         }}
       >
         <nav className="flex-1 flex flex-col gap-0.5 px-3 pt-5 pb-6 overflow-y-auto scrollbar-hide">

@@ -148,7 +148,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
       />
       {searchOpen && <VideotekaSearch allItems={allContentItems} onClose={() => setSearchOpen(false)} />}
       {!hasContent ? (
-        <div className="flex h-[60vh] items-center justify-center text-white/60 text-base px-4 text-center">
+        <div className="flex h-[461px] items-center justify-center text-white/60 text-base px-4 text-center">
           {isLoading ? "Učitavanje sadržaja…" : "Nema sadržaja u Videoteci."}
         </div>
       ) : (
