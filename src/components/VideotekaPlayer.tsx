@@ -1469,7 +1469,7 @@ const VideotekaPlayer = ({
                   >
                     <div className="flex items-center gap-6">
                       <ArrowLeft
-                        className={`w-6 h-6 sm:w-8 sm:h-8 transition-all ${
+                        className={`w-8 h-8 transition-all ${
                           focusedRow === 0 && focusedCol === 0 ? "text-white scale-110" : "text-muted-foreground"
                         }`}
                       />
@@ -1538,14 +1538,14 @@ const VideotekaPlayer = ({
                       </h1>
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-full border border-white/20 bg-muted/40 transition-all ${
+                          className={`w-11 h-11 flex items-center justify-center rounded-full border-white/20 bg-muted/40 transition-all ${
                             focusedRow === 1 && focusedCol === 0 ? "bg-white text-black" : "text-white"
                           }`}
                         >
                           <ThumbsDown className="w-5 h-5" />
                         </div>
                         <div
-                          className={`w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-full border border-white/20 bg-muted/40 transition-all ${
+                          className={`w-11 h-11 flex items-center justify-center rounded-full border-white/20 bg-muted/40 transition-all ${
                             focusedRow === 1 && focusedCol === 1 ? "bg-white text-black" : "text-white"
                           }`}
                         >
@@ -1577,8 +1577,8 @@ const VideotekaPlayer = ({
                                 key={i}
                                 className={`relative overflow-hidden transition-all duration-200 ${
                                   isCentre
-                                    ? "w-32 h-20 sm:w-56 sm:h-32 z-10 scale-110 ring-1 ring-white"
-                                    : "w-24 h-16 sm:w-40 sm:h-24 opacity-50"
+                                    ? "w-56 h-32 z-10 scale-110 ring-white"
+                                    : "w-40 h-24 opacity-50"
                                 }`}
                               >
                                 <img
@@ -1694,17 +1694,17 @@ const VideotekaPlayer = ({
                               if (opt.label === "Aa")
                                 openFontModal(DUMMY_FONTS.findIndex((f) => f.code === selectedFont));
                             }}
-                            className={`w-24 sm:w-32 h-9 sm:h-10 flex items-center justify-center rounded-xl border border-white/20 bg-muted/40 transition-all cursor-pointer ${
+                            className={`w-32 h-10 flex items-center justify-center rounded-xl border-white/20 bg-muted/40 transition-all cursor-pointer ${
                               isFocused ? "bg-white scale-105" : ""
                             }`}
                           >
                             <div
-                              className={`flex items-center gap-1.5 sm:gap-2 font-bold transition-colors ${
+                              className={`flex items-center gap-2 font-bold transition-colors ${
                                 isFocused ? "text-black" : "text-white"
                               } text-xs`}
                             >
                               {opt.hasIcon && opt.icon && <opt.icon className="w-4 h-4" />}
-                              <span className={opt.label === "Aa" ? "text-sm sm:text-base" : ""}>{opt.label}</span>
+                              <span className={opt.label === "Aa" ? "text-base" : ""}>{opt.label}</span>
                             </div>
                           </div>
                         );
