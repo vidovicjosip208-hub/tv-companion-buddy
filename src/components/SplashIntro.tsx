@@ -44,9 +44,11 @@ const useSplashContent = () =>
 
 interface SplashIntroProps {
   duration?: number;
+  /** Called once the intro is fully finished so the parent can unmount it. */
+  onFinished?: () => void;
 }
 
-const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
+const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
   const [revealed, setRevealed] = useState(true);
   const [framesReady, setFramesReady] = useState(false);
