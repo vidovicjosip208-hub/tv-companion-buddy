@@ -1,37 +1,69 @@
-import { useEffect, useState, type ReactNode } from "react";
-
-// Exact reference canvas supplied by the user. It is deliberately stretched
-// to the available panel so the whole composition is always visible edge to
-// edge, regardless of the browser-reported aspect ratio.
-const BASE_WIDTH = 1624;
-const BASE_HEIGHT = 768;
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "@/lib/canvas";
 
 interface ScaleToFitProps {
   children: ReactNode;
 }
 
+/**
+ * Stretches the fixed reference canvas (CANVAS_WIDTH x CANVAS_HEIGHT) onto the
+ * real available area so the composition is always edge to edge — identical on
+ * a laptop, a phone or a TV.
+ *
+ * The available area is measured from the wrapper element itself (via
+ * ResizeObserver) instead of window.innerWidth/innerHeight, because TV browsers
+ * frequently report a wrong or stale window size (overscan, late viewport
+ * resolution, visualViewport differences), which is exactly what makes the UI
+ * appear zoomed in or shrunken there.
+ */
 const ScaleToFit = ({ children }: ScaleToFitProps) => {
+  const hostRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState({ x: 1, y: 1 });
 
   useEffect(() => {
-    const update = () => {
-      setScale({
-        x: window.innerWidth / BASE_WIDTH,
-        y: window.innerHeight / BASE_HEIGHT,
+    const host = hostRef.current;
+    if (!host) return;
+
+    const measure = () => {
+      const rect = host.getBoundingClientRect();
+      const w = rect.width || host.clientWidth || window.innerWidth;
+      const h = rect.height || host.clientHeight || window.innerHeight;
+      if (w < 1 || h < 1) return;
+      setScale((prev) => {
+        const next = { x: w / CANVAS_WIDTH, y: h / CANVAS_HEIGHT };
+        if (Math.abs(prev.x - next.x) < 0.0005 && Math.abs(prev.y - next.y) < 0.0005) return prev;
+        return next;
       });
     };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+
+    measure();
+
+    const ro = new ResizeObserver(measure);
+    ro.observe(host);
+
+    // TV browsers often settle on the final viewport a few frames late.
+    const timers = [50, 250, 800, 2000].map((ms) => window.setTimeout(measure, ms));
+
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+
+    return () => {
+      ro.disconnect();
+      timers.forEach(window.clearTimeout);
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-background">
+    <div ref={hostRef} className="fixed inset-0 overflow-hidden bg-background">
       <div
         className="scale-to-fit-canvas"
         style={{
-          width: `${BASE_WIDTH}px`,
-          height: `${BASE_HEIGHT}px`,
+          width: `${CANVAS_WIDTH}px`,
+          height: `${CANVAS_HEIGHT}px`,
           transform: `scale(${scale.x}, ${scale.y})`,
           transformOrigin: "top left",
         }}
