@@ -127,7 +127,8 @@ const ChannelItem = memo(({
       </span>
     </motion.button>
   );
-};
+});
+ChannelItem.displayName = "ChannelItem";
 
 const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; index: number; isFocused: boolean }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -196,7 +197,6 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              style={{ boxShadow: "0 0 8px 2px hsl(var(--accent) / 0.4)" }}
             />
           </div>
         )}
@@ -209,7 +209,8 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
       </span>
     </motion.div>
   );
-};
+});
+ProgramRow.displayName = "ProgramRow";
 
 const EPGGrid = ({
   channels,
