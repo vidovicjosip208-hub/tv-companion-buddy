@@ -85,7 +85,7 @@ const ChannelItem = ({
       onClick={onClick}
       onMouseEnter={onClick}
       className={cn(
-        "w-full flex items-center gap-3 px-3 sm:px-4 py-3 rounded-xl transition-all duration-300 text-left",
+        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-left",
         "border border-transparent",
         isFocused
           ? "bg-accent/15 border-accent/40 shadow-[0_0_16px_3px_hsl(var(--accent)/0.15)]"
@@ -94,7 +94,7 @@ const ChannelItem = ({
     >
       <div
         className={cn(
-          "w-12 sm:w-16 h-9 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
+          "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
           "bg-transparent",
         )}
       >
@@ -109,7 +109,7 @@ const ChannelItem = ({
         ) : (
           <span
             className={cn(
-              "text-xs sm:text-sm font-bold tracking-wide transition-colors",
+              "text-sm font-bold tracking-wide transition-colors",
               isFocused ? "text-accent" : "text-foreground/60",
             )}
           >
@@ -119,7 +119,7 @@ const ChannelItem = ({
       </div>
       <span
         className={cn(
-          "text-xs sm:text-sm font-medium truncate transition-colors",
+          "text-sm font-medium truncate transition-colors",
           isFocused ? "text-foreground" : "text-foreground/50",
         )}
       >
@@ -149,7 +149,7 @@ const ProgramRow = ({ program, index, isFocused }: { program: EPGProgram; index:
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
       className={cn(
-        "flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 rounded-lg transition-all duration-200",
+        "flex items-center gap-4 px-5 py-3 rounded-lg transition-all duration-200",
         isFocused
           ? "bg-accent/15 shadow-[0_0_12px_2px_hsl(var(--accent)/0.1)]"
           : program.isLive
@@ -159,7 +159,7 @@ const ProgramRow = ({ program, index, isFocused }: { program: EPGProgram; index:
     >
       <span
         className={cn(
-          "text-xs sm:text-sm font-mono w-12 sm:w-14 flex-shrink-0",
+          "text-sm font-mono w-14 flex-shrink-0",
           isFocused
             ? "text-accent font-semibold"
             : program.isLive
@@ -171,15 +171,15 @@ const ProgramRow = ({ program, index, isFocused }: { program: EPGProgram; index:
       </span>
 
       {program.isLive && (
-        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-          <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current text-accent-foreground" />
+        <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+          <Play className="w-3 h-3 fill-current text-accent-foreground" />
         </div>
       )}
 
       <div className="flex-1 min-w-0">
         <span
           className={cn(
-            "text-xs sm:text-sm block truncate",
+            "text-sm block truncate",
             isFocused
               ? "text-foreground font-semibold"
               : program.isLive
@@ -204,7 +204,7 @@ const ProgramRow = ({ program, index, isFocused }: { program: EPGProgram; index:
 
       <span className="text-xs text-muted-foreground flex-shrink-0">{program.endTime}</span>
 
-      <span className="hidden sm:block text-xs text-muted-foreground/60 flex-shrink-0 w-14 text-right">
+      <span className="hidden text-xs text-muted-foreground/60 flex-shrink-0 w-14 text-right">
         {program.date}
       </span>
     </motion.div>
@@ -242,11 +242,11 @@ const EPGGrid = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-xl gap-2"
+      className="flex flex-col flex-1 overflow-hidden rounded-xl gap-2"
     >
       {/* Left Column — Channel List */}
-      <div className={cn("w-full flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2", hideSchedule ? "lg:w-[35%]" : "lg:w-[21%]") }>
-        <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-4 pb-2">{t("epg.live")}</h2>
+      <div className={cn("w-full flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2", hideSchedule ? " w-[35%]" : " w-[21%]") }>
+        <h2 className="text-muted-foreground font-medium text-sm px-4 pb-2">{t("epg.live")}</h2>
         {channels.map((channel, index) => (
           <ChannelItem
             key={channel.id}
@@ -259,13 +259,13 @@ const EPGGrid = ({
       </div>
 
       {/* Gold Divider */}
-      <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
+      <div className="hidden w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
 
       {/* Middle Column — Program Guide */}
       {!hideSchedule && (
         <>
-          <div className="w-full lg:w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2">
-            <h2 className="text-muted-foreground font-medium text-sm px-3 sm:px-5 pb-2">{t("epg.schedule")}</h2>
+          <div className="w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2">
+            <h2 className="text-muted-foreground font-medium text-sm px-5 pb-2">{t("epg.schedule")}</h2>
             <AnimatePresence mode="wait">
               <motion.div
                 key={selectedChannel?.id}
@@ -275,8 +275,8 @@ const EPGGrid = ({
                 transition={{ duration: 0.25 }}
                 className="flex flex-col"
               >
-                <div className="flex items-center gap-3 px-3 sm:px-5 pb-3 mb-1 border-b border-border/20">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-transparent flex items-center justify-center overflow-hidden">
+                <div className="flex items-center gap-3 px-5 pb-3 mb-1 border-b border-border/20">
+                  <div className="w-10 h-10 rounded-lg bg-transparent flex items-center justify-center overflow-hidden">
                     {selectedChannel?.logoUrl ? (
                       <img
                         src={selectedChannel.logoUrl}
@@ -289,7 +289,7 @@ const EPGGrid = ({
                     )}
                   </div>
                   <div>
-                    <h3 className="text-sm sm:text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
+                    <h3 className="text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
                     <span className="text-xs text-muted-foreground">{t("epg.channel")} {selectedChannel?.number}</span>
                   </div>
                 </div>
@@ -309,11 +309,11 @@ const EPGGrid = ({
           </div>
 
           {/* Gold Divider */}
-          <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
+          <div className="hidden w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
         </>
       )}
       {/* Right Column — Program Details */}
-      <div className={cn("w-full flex flex-col justify-center py-2 px-3 overflow-hidden lg:h-full", hideSchedule ? "lg:flex-1 lg:items-center" : "lg:w-[31%]") }>
+      <div className={cn("w-full flex flex-col justify-center py-2 px-3 overflow-hidden h-full", hideSchedule ? " flex-1" : " w-[31%]") }>
         <AnimatePresence mode="wait">
           {selectedProgram && (isProgramFocused || hideSchedule) && (
             <motion.div
@@ -322,10 +322,10 @@ const EPGGrid = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25 }}
-              className={cn("rounded-2xl bg-card/60 border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 overflow-y-auto scrollbar-hide lg:h-[80%]", hideSchedule && "lg:max-w-md w-full")}
+              className={cn("rounded-2xl bg-card/60 border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-6 flex flex-col gap-4 overflow-y-auto scrollbar-hide h-[80%]", hideSchedule && "w-full")}
             >
               <div className="flex justify-center">
-                <div className="w-16 h-10 sm:w-20 sm:h-12 rounded-md bg-transparent flex items-center justify-center overflow-hidden">
+                <div className="w-20 h-12 rounded-md bg-transparent flex items-center justify-center overflow-hidden">
                   {selectedChannel?.logoUrl ? (
                     <img
                       src={selectedChannel.logoUrl}
@@ -334,16 +334,16 @@ const EPGGrid = ({
                       loading="lazy"
                     />
                   ) : (
-                    <span className="text-xs sm:text-sm font-bold text-accent tracking-wider">
+                    <span className="text-sm font-bold text-accent tracking-wider">
                       {selectedChannel?.abbreviation}
                     </span>
                   )}
                 </div>
               </div>
 
-              <h3 className="text-lg sm:text-2xl font-bold text-foreground leading-tight">{selectedProgram.title}</h3>
+              <h3 className="text-2xl font-bold text-foreground leading-tight">{selectedProgram.title}</h3>
 
-              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 {selectedProgram.isLive && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
                 <span>{selectedProgram.isLive ? t("epg.today") : selectedProgram.date}</span>
                 <span>|</span>
@@ -358,13 +358,13 @@ const EPGGrid = ({
                 )}
               </div>
 
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 {selectedProgram.description ??
                   t("epg.programDesc", { title: selectedProgram.title, channel: selectedChannel?.name })}
               </p>
 
-              <button className="mt-auto self-center flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-md transition-colors">
-                <Play className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
+              <button className="mt-auto self-center flex items-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-sm px-5 py-2.5 rounded-md transition-colors">
+                <Play className="w-4 h-4 fill-current" />
                 <span className="tracking-wide">{t(isRadio ? "epg.listen" : "epg.watch")}</span>
               </button>
             </motion.div>

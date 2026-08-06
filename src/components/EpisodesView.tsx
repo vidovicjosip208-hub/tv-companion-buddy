@@ -132,7 +132,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      className="absolute inset-0 z-[60] flex flex-col lg:flex-row overflow-hidden"
+      className="absolute inset-0 z-[60] flex flex-col overflow-hidden"
     >
       {/* Background */}
       <div className="absolute inset-0 z-0">
@@ -150,17 +150,17 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
       </div>
 
       {/* LEFT SIDEBAR */}
-      <div className="relative z-10 w-full lg:w-[42%] shrink-0 lg:h-full flex flex-col px-4 sm:px-8 lg:px-12 py-6 lg:py-12">
+      <div className="relative z-10 w-[42%] shrink-0 flex flex-col px-12 py-12 h-full">
         <motion.div
           initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6 lg:mb-10"
+          className="mb-10"
         >
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight mb-2">
+          <h2 className="text-4xl font-black text-white tracking-tight leading-tight mb-2">
             {details.title}
           </h2>
-          <p className="text-sm sm:text-base text-white/50">
+          <p className="text-base text-white/50">
             {details.year} · {details.episodes || "1 Season"}
           </p>
         </motion.div>
@@ -192,15 +192,17 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                   setFocusedEpisodeIndex(0);
                 }}
                 className={`
-                  flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 lg:py-5 rounded-xl text-left transition-colors w-full flex-shrink-0
+                  flex items-center justify-between px-6 py-5 rounded-xl text-left transition-colors w-full flex-shrink-0
                   ${isSelected ? "bg-white/15 text-white" : "text-white/50"}
+                  
                   ${isFocused ? "ring-2 ring-inset ring-white/40" : ""}
+                
                 `}
               >
-                <span className="font-semibold text-base sm:text-lg lg:text-xl">
+                <span className="font-semibold text-xl">
                   {t("videotekaDetail.season")} {season.season}
                 </span>
-                <span className="text-xs sm:text-sm text-white/40">
+                <span className="text-sm text-white/40">
                   {season.episodes.length} {t("videotekaDetail.episodes")}
                 </span>
               </button>
@@ -222,27 +224,29 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
               setFocusedEpisodeIndex(0);
             }}
             className={`
-              flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 lg:py-5 rounded-xl text-left transition-colors w-full flex-shrink-0
+              flex items-center justify-between px-6 py-5 rounded-xl text-left transition-colors w-full flex-shrink-0
               ${isTrailersSelected ? "bg-white/15 text-white" : "text-white/50"}
+              
               ${focusedArea === "seasons" && focusedSeasonIndex === seasons.length ? "ring-2 ring-inset ring-white/40" : ""}
+            
             `}
           >
-            <span className="font-semibold text-base sm:text-lg lg:text-xl">{t("videotekaDetail.trailersAndMore")}</span>
-            <span className="text-xs sm:text-sm text-white/40">9 {t("videotekaDetail.videos")}</span>
+            <span className="font-semibold text-xl">{t("videotekaDetail.trailersAndMore")}</span>
+            <span className="text-sm text-white/40">9 {t("videotekaDetail.videos")}</span>
           </button>
         </motion.nav>
       </div>
 
       {/* RIGHT — Episodes */}
-      <div className="relative z-10 flex-1 flex flex-col min-w-0 py-6 lg:py-12 px-4 sm:px-8 lg:px-12 overflow-hidden">
+      <div className="relative z-10 flex-1 flex flex-col min-w-0 py-12 px-12 overflow-hidden">
         <motion.div
           key={isTrailersSelected ? "trailers-header" : `season-header-${currentSeason?.season ?? 0}`}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="flex items-center gap-3 mb-5 lg:mb-7 shrink-0"
+          className="flex items-center gap-3 mb-7 shrink-0"
         >
-          <h3 className="text-xl sm:text-2xl font-bold text-white">
+          <h3 className="text-2xl font-bold text-white">
             {isTrailersSelected
               ? t("videotekaDetail.trailersAndMore")
               : currentSeason
@@ -250,7 +254,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                 : t("videotekaDetail.season")}
           </h3>
           {!isTrailersSelected && details.rating && (
-            <span className="px-2.5 py-1 border border-white/25 rounded text-xs sm:text-sm text-white/50 font-medium">
+            <span className="px-2.5 py-1 border border-white/25 rounded text-sm text-white/50 font-medium">
               {details.rating}
             </span>
           )}
@@ -264,7 +268,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center justify-center h-full"
               >
-                <p className="text-white/40 text-base sm:text-lg">Traileri trenutno nisu dostupni.</p>
+                <p className="text-white/40 text-lg">Traileri trenutno nisu dostupni.</p>
               </motion.div>
             ) : !currentSeason ? (
               <motion.div
@@ -272,7 +276,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                 animate={{ opacity: 1 }}
                 className="flex items-center justify-center h-full"
               >
-                <p className="text-white/40 text-base sm:text-lg">
+                <p className="text-white/40 text-lg">
                   {isLoading ? "Učitavanje..." : "Nema dostupnih epizoda."}
                 </p>
               </motion.div>
@@ -294,18 +298,20 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                       if (onPlayEpisode) onPlayEpisode(ep.id);
                     }}
                     className={`
-                      flex gap-3 sm:gap-5 rounded-xl px-3 sm:px-4 py-3 sm:py-4 cursor-pointer transition-colors flex-shrink-0
+                      flex gap-5 rounded-xl px-4 py-4 cursor-pointer transition-colors flex-shrink-0
                       ${isFocused ? "bg-white/12" : ""}
+                    
                     `}
                   >
                     <div
                       className={`
-                        relative w-[120px] sm:w-[200px] lg:w-[280px] shrink-0 aspect-video rounded-lg overflow-hidden bg-white/5
+                        relative w-[280px] shrink-0 aspect-video rounded-lg overflow-hidden bg-white/5
                         ${isFocused ? "ring-2 ring-white/70" : ""}
+                      
                       `}
                     >
                       <img src={ep.thumbnail} alt={ep.title} className="w-full h-full object-cover" />
-                      <span className="absolute bottom-2 left-2 bg-black/65 px-2 py-0.5 rounded text-[13px] sm:text-xs text-white font-medium">
+                      <span className="absolute bottom-2 left-2 bg-black/65 px-2 py-0.5 rounded text-xs text-white font-medium">
                         S{currentSeason.season}: E{ep.number}
                       </span>
                       {ep.progress !== undefined && ep.progress > 0 && (
@@ -315,14 +321,14 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                       )}
                     </div>
 
-                    <div className="flex flex-col justify-center flex-1 min-w-0 gap-1 sm:gap-2">
-                      <div className="flex items-baseline justify-between gap-2 sm:gap-3">
-                        <h4 className="text-white font-bold text-sm sm:text-base lg:text-lg leading-snug truncate">
+                    <div className="flex flex-col justify-center flex-1 min-w-0 gap-2">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <h4 className="text-white font-bold text-lg leading-snug truncate">
                           {ep.title}
                         </h4>
-                        <span className="shrink-0 text-white/40 text-xs sm:text-sm">({ep.duration})</span>
+                        <span className="shrink-0 text-white/40 text-sm">({ep.duration})</span>
                       </div>
-                      <p className="text-white/55 text-xs sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-3">
+                      <p className="text-white/55 text-sm leading-relaxed line-clamp-3">
                         {ep.description}
                       </p>
                     </div>

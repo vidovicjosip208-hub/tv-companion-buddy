@@ -104,8 +104,8 @@ const TVChannelCard = ({
           />
         </div>
       </div>
-      <div className="p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 bg-card/70">
-        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+      <div className="p-3 flex items-center gap-3 bg-card/70">
+        <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
           {logoUrl ? (
             <img
               src={logoUrl}
@@ -117,12 +117,12 @@ const TVChannelCard = ({
               }}
             />
           ) : (
-            <span className="text-[13px] sm:text-[14px] font-bold text-foreground">{getChannelAbbr(channelName)}</span>
+            <span className="text-[14px] font-bold text-foreground">{getChannelAbbr(channelName)}</span>
           )}
         </div>
         <div className="flex-1 text-left min-w-0">
-          <h3 className="text-xs sm:text-sm font-medium text-foreground truncate">{title}</h3>
-          <p className="text-[13px] sm:text-xs text-muted-foreground">{timeSlot}</p>
+          <h3 className="text-sm font-medium text-foreground truncate">{title}</h3>
+          <p className="text-xs text-muted-foreground">{timeSlot}</p>
         </div>
       </div>
     </motion.button>
@@ -375,7 +375,7 @@ export const TVChannelGrid = ({ channels, cardWidth }: TVChannelGridProps) => {
   return (
     <div
       ref={scrollRef}
-      className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+      className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
       style={{ scrollbarWidth: "none" }}
     >
       {channels.map((ch, i) => (

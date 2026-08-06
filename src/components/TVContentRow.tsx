@@ -35,12 +35,12 @@ const TVContentRow = ({ title, delay = 0, children, rows = 2, focusedIndex }: TV
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
-      className="mb-4 sm:mb-6"
+      className="mb-6"
     >
-      {title && <h2 className="text-foreground font-bold text-base sm:text-lg mb-2 sm:mb-3">{title}</h2>}
+      {title && <h2 className="text-foreground font-bold text-lg mb-3">{title}</h2>}
       <div
         ref={scrollRef}
-        className="grid gap-2 sm:gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden"
+        className="grid gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden"
         style={{
           gridAutoFlow: "column",
           gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,

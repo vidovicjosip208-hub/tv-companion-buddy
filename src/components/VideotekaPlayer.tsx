@@ -1400,7 +1400,7 @@ const VideotekaPlayer = ({
       {streamError && (
         <div className="absolute inset-0 z-[150] flex items-center justify-center bg-black/85">
           <div className="flex flex-col items-center gap-4 text-center px-6 max-w-md">
-            <p className="text-white text-base sm:text-lg">{streamError}</p>
+            <p className="text-white text-lg">{streamError}</p>
             <button
               onClick={onClose}
               className="px-6 py-3 rounded-md bg-white text-black font-semibold hover:bg-white/90 transition"
@@ -1456,20 +1456,20 @@ const VideotekaPlayer = ({
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/70" />
 
             <div
-              className="relative flex flex-col h-full pt-10 sm:pt-14 lg:pt-16 pb-6 sm:pb-10 lg:pb-12"
+              className="relative flex flex-col h-full pt-16 pb-12"
               style={{ transform: "scale(1.08)", transformOrigin: "center center" }}
             >
-              <div className="w-full max-w-6xl mx-auto flex flex-col h-full px-3 sm:px-4">
+              <div className="w-full max-w-6xl mx-auto flex flex-col h-full px-4">
                 {/* TOP AREA */}
-                <div className="flex-1 flex flex-col mt-3 sm:mt-4 lg:mt-5">
+                <div className="flex-1 flex flex-col mt-5">
                   <div
                     className={`flex items-center justify-between transition-opacity duration-300 ${
                       isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"
                     }`}
                   >
-                    <div className="flex items-center gap-3 sm:gap-6">
+                    <div className="flex items-center gap-6">
                       <ArrowLeft
-                        className={`w-6 h-6 sm:w-8 sm:h-8 transition-all ${
+                        className={`w-8 h-8 transition-all ${
                           focusedRow === 0 && focusedCol === 0 ? "text-white scale-110" : "text-muted-foreground"
                         }`}
                       />
@@ -1478,8 +1478,8 @@ const VideotekaPlayer = ({
                           focusedRow === 0 && focusedCol === 1 ? "text-white scale-110" : "text-muted-foreground"
                         }`}
                       >
-                        <RotateCcw className="w-7 h-7 sm:w-10 sm:h-10" />
-                        <Play className="absolute w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current ml-0.5" />
+                        <RotateCcw className="w-10 h-10" />
+                        <Play className="absolute w-3 h-3 fill-current ml-0.5" />
                       </div>
                       <div
                         onMouseEnter={() => setSkipHovered(true)}
@@ -1497,32 +1497,32 @@ const VideotekaPlayer = ({
                           justifyContent: "center",
                         }}
                       >
-                        <SkipForward className="w-7 h-7 sm:w-9 sm:h-9" />
+                        <SkipForward className="w-9 h-9" />
                       </div>
                     </div>
                     <div className="text-right text-white">
-                      <p className="text-xs sm:text-sm font-bold">{title}</p>
+                      <p className="text-sm font-bold">{title}</p>
                       {episodeInfo && (
-                        <p className="text-[13px] sm:text-xs text-muted-foreground mt-0.5">{episodeInfo}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{episodeInfo}</p>
                       )}
                     </div>
                   </div>
 
                   {/* Logo + naslov + like/dislike */}
-                  <div className="flex-1 flex flex-col justify-end items-center pb-4 sm:pb-6">
+                  <div className="flex-1 flex flex-col justify-end items-center pb-6">
                     <div className="relative w-full flex justify-center" style={{ height: 0 }}>
                       <img
                         src={logo}
                         alt="Logo"
                         className="w-auto pointer-events-none transition-opacity duration-300"
                         style={{
-                          height: "clamp(120px, 18vw, 280px)",
+                          height: "280px",
                           position: "absolute",
                           /* FIX: clamp(min,pref,max) mora imati min < max. Prije je bilo
                              clamp(-40px, -6vw, -90px) što je nevažeći poredak (-40 > -90)
                              pa je vrijednost uvijek "zapinjala" na -40px (logo previsoko).
                              Sada je ispravno poredano; malo podignuto u odnosu na prijašnju verziju. */
-                          bottom: "clamp(-230px, -13.5vw, -95px)",
+                          bottom: "-219px",
                           opacity: isSeeking ? 0 : 1,
                         }}
                       />
@@ -1531,25 +1531,25 @@ const VideotekaPlayer = ({
                       className={`transition-opacity duration-300 ${
                         isSeeking ? "opacity-0 pointer-events-none" : "opacity-100"
                       } flex flex-col items-center`}
-                      style={{ marginTop: "clamp(88px, 7.5vw, 112px)" }}
+                      style={{ marginTop: "112px" }}
                     >
-                      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight mb-4 sm:mb-6 uppercase leading-tight text-center">
+                      <h1 className="text-4xl font-black text-white tracking-tight mb-6 uppercase leading-tight text-center">
                         {title}
                       </h1>
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-full border border-white/20 bg-muted/40 transition-all ${
+                          className={`w-11 h-11 flex items-center justify-center rounded-full border border-white/20 bg-muted/40 transition-all ${
                             focusedRow === 1 && focusedCol === 0 ? "bg-white text-black" : "text-white"
                           }`}
                         >
-                          <ThumbsDown className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <ThumbsDown className="w-5 h-5" />
                         </div>
                         <div
-                          className={`w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-full border border-white/20 bg-muted/40 transition-all ${
+                          className={`w-11 h-11 flex items-center justify-center rounded-full border border-white/20 bg-muted/40 transition-all ${
                             focusedRow === 1 && focusedCol === 1 ? "bg-white text-black" : "text-white"
                           }`}
                         >
-                          <ThumbsUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <ThumbsUp className="w-5 h-5" />
                         </div>
                       </div>
                     </div>
@@ -1557,16 +1557,16 @@ const VideotekaPlayer = ({
                 </div>
 
                 {/* BOTTOM AREA */}
-                <div className="flex flex-col gap-3 sm:gap-4 pb-2 sm:pb-4 w-full">
+                <div className="flex flex-col gap-4 pb-4 w-full">
                   {/* ── NOVO: Thumbnail strip s pravim frame capture-om ─────── */}
-                  <div className="h-28 sm:h-44 flex items-end justify-center">
+                  <div className="h-44 flex items-end justify-center">
                     <AnimatePresence>
                       {isSeeking && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0 }}
-                          className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-4"
+                          className="flex items-center justify-center gap-2 mb-4"
                         >
                           {seekThumbnailTimes.map((t, i) => {
                             const isCentre = i === Math.floor(THUMBNAIL_COUNT / 2);
@@ -1577,8 +1577,8 @@ const VideotekaPlayer = ({
                                 key={i}
                                 className={`relative overflow-hidden transition-all duration-200 ${
                                   isCentre
-                                    ? "w-32 h-20 sm:w-56 sm:h-32 z-10 scale-110 ring-1 ring-white"
-                                    : "w-24 h-16 sm:w-40 sm:h-24 opacity-50"
+                                    ? "w-56 h-32 z-10 scale-110 ring-1 ring-white"
+                                    : "w-40 h-24 opacity-50"
                                 }`}
                               >
                                 <img
@@ -1590,7 +1590,7 @@ const VideotekaPlayer = ({
                                 />
                                 {isCentre && (
                                   <div className="absolute bottom-1 left-0 right-0 text-center">
-                                    <span className="text-[13px] sm:text-[15px] text-white font-bold font-mono drop-shadow">
+                                    <span className="text-[15px] text-white font-bold font-mono drop-shadow">
                                       {formatTime(t)}
                                     </span>
                                   </div>
@@ -1604,10 +1604,10 @@ const VideotekaPlayer = ({
                   </div>
 
                   {/* Progress bar */}
-                  <div className="flex items-center gap-2 sm:gap-4 w-full">
+                  <div className="flex items-center gap-4 w-full">
                     <span
                       ref={elapsedTextRef}
-                      className="text-xs sm:text-sm font-mono tabular-nums text-muted-foreground w-10 sm:w-12"
+                      className="text-sm font-mono tabular-nums text-muted-foreground w-12"
                     >
                       {elapsed}
                     </span>
@@ -1623,26 +1623,26 @@ const VideotekaPlayer = ({
                     </div>
                     <div
                       ref={remainingTextRef}
-                      className="min-w-[40px] sm:min-w-[50px] text-right text-xs sm:text-sm font-mono tabular-nums text-muted-foreground"
+                      className="min-w-[50px] text-right text-sm font-mono tabular-nums text-muted-foreground"
                     >
                       {remaining}
                     </div>
                   </div>
 
                   {/* Rewind | Play/Pause | FastForward */}
-                  <div className="flex justify-center items-center gap-3 sm:gap-4">
+                  <div className="flex justify-center items-center gap-4">
                     <div
-                      className="flex items-center justify-center w-[36px] h-[36px] sm:w-[42px] sm:h-[42px] transition-all duration-200 cursor-pointer"
+                      className="flex items-center justify-center w-[42px] h-[42px] transition-all duration-200 cursor-pointer"
                       style={{
                         color: GOLD,
                         transform: focusedRow === 2 && focusedCol === 0 ? "scale(1.2)" : "scale(1)",
                       }}
                       onClick={() => seekVideo(currentTimeRef.current - 10)}
                     >
-                      <Rewind className="w-5 h-5 sm:w-7 sm:h-7 fill-current" />
+                      <Rewind className="w-7 h-7 fill-current" />
                     </div>
 
-                    <div className="w-[44px] h-[44px] sm:w-[52px] sm:h-[52px]">
+                    <div className="w-[52px] h-[52px]">
                       <div
                         className="flex items-center justify-center rounded-full w-full h-full transition-all duration-200 cursor-pointer"
                         onClick={() => {
@@ -1658,29 +1658,29 @@ const VideotekaPlayer = ({
                         }}
                       >
                         {isPlaying ? (
-                          <Pause className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
+                          <Pause className="w-6 h-6 fill-current" />
                         ) : (
-                          <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current ml-0.5" />
+                          <Play className="w-6 h-6 fill-current ml-0.5" />
                         )}
                       </div>
                     </div>
 
                     <div
-                      className="flex items-center justify-center w-[36px] h-[36px] sm:w-[42px] sm:h-[42px] transition-all duration-200 cursor-pointer"
+                      className="flex items-center justify-center w-[42px] h-[42px] transition-all duration-200 cursor-pointer"
                       style={{
                         color: GOLD,
                         transform: focusedRow === 2 && focusedCol === 2 ? "scale(1.2)" : "scale(1)",
                       }}
                       onClick={() => seekVideo(currentTimeRef.current + 10)}
                     >
-                      <FastForward className="w-5 h-5 sm:w-7 sm:h-7 fill-current" />
+                      <FastForward className="w-7 h-7 fill-current" />
                     </div>
                   </div>
 
                   {/* Subtitle | Audio | Aa */}
                   <div className="flex w-full">
-                    <div className="min-w-[60px] sm:min-w-[136px]" />
-                    <div className="flex-1 flex justify-center items-center gap-2 sm:gap-4">
+                    <div className="min-w-[136px]" />
+                    <div className="flex-1 flex justify-center items-center gap-4">
                       {CONTROL_OPTIONS.map((opt, i) => {
                         const isFocused = focusedRow === 3 && focusedCol === i;
                         return (
@@ -1694,23 +1694,23 @@ const VideotekaPlayer = ({
                               if (opt.label === "Aa")
                                 openFontModal(DUMMY_FONTS.findIndex((f) => f.code === selectedFont));
                             }}
-                            className={`w-24 sm:w-32 h-9 sm:h-10 flex items-center justify-center rounded-xl border border-white/20 bg-muted/40 transition-all cursor-pointer ${
+                            className={`w-32 h-10 flex items-center justify-center rounded-xl border border-white/20 bg-muted/40 transition-all cursor-pointer ${
                               isFocused ? "bg-white scale-105" : ""
                             }`}
                           >
                             <div
-                              className={`flex items-center gap-1.5 sm:gap-2 font-bold transition-colors ${
+                              className={`flex items-center gap-2 font-bold transition-colors ${
                                 isFocused ? "text-black" : "text-white"
                               } text-xs`}
                             >
-                              {opt.hasIcon && opt.icon && <opt.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-                              <span className={opt.label === "Aa" ? "text-sm sm:text-base" : ""}>{opt.label}</span>
+                              {opt.hasIcon && opt.icon && <opt.icon className="w-4 h-4" />}
+                              <span className={opt.label === "Aa" ? "text-base" : ""}>{opt.label}</span>
                             </div>
                           </div>
                         );
                       })}
                     </div>
-                    <div className="min-w-[30px] sm:min-w-[66px]" />
+                    <div className="min-w-[66px]" />
                   </div>
                 </div>
               </div>
@@ -1745,16 +1745,16 @@ const VideotekaPlayer = ({
                 style={{
                   backgroundColor: "#0a0a0a",
                   border: "1px solid rgba(255,255,255,0.1)",
-                  maxWidth: "min(420px, 90vw)",
+                  maxWidth: "420px",
                 }}
               >
                 <div
-                  className="flex items-center px-5 sm:px-7 pt-5 sm:pt-7 pb-4 sm:pb-5"
+                  className="flex items-center px-7 pt-7 pb-5"
                   style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
                 >
-                  <h2 className="text-white font-bold text-lg sm:text-xl tracking-tight">Titlovi</h2>
+                  <h2 className="text-white font-bold text-xl tracking-tight">Titlovi</h2>
                 </div>
-                <div className="py-2 sm:py-3">
+                <div className="py-3">
                   {DUMMY_SUBTITLES.map((sub, idx) => {
                     const isActive = selectedSubtitle === sub.code;
                     const isFocused = subtitleFocusIdx === idx;
@@ -1765,7 +1765,7 @@ const VideotekaPlayer = ({
                           setSelectedSubtitle(sub.code);
                           closeSubtitleModal();
                         }}
-                        className="w-full flex items-center justify-between px-5 sm:px-7 py-3 sm:py-4 transition-all"
+                        className="w-full flex items-center justify-between px-7 py-4 transition-all"
                         style={{
                           background: "none",
                           border: "none",
@@ -1780,7 +1780,7 @@ const VideotekaPlayer = ({
                         }}
                       >
                         <span
-                          className="text-sm sm:text-base font-medium"
+                          className="text-base font-medium"
                           style={{ color: isActive ? GOLD : "#ffffff" }}
                         >
                           {sub.label}
@@ -1790,7 +1790,7 @@ const VideotekaPlayer = ({
                     );
                   })}
                 </div>
-                <div className="px-5 sm:px-7 py-3 sm:py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="px-7 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
                     Odabrani titl primjenjuje se samo na ovaj video.
                   </p>
@@ -1827,16 +1827,16 @@ const VideotekaPlayer = ({
                 style={{
                   backgroundColor: "#0a0a0a",
                   border: "1px solid rgba(255,255,255,0.1)",
-                  maxWidth: "min(420px, 90vw)",
+                  maxWidth: "420px",
                 }}
               >
                 <div
-                  className="flex items-center px-5 sm:px-7 pt-5 sm:pt-7 pb-4 sm:pb-5"
+                  className="flex items-center px-7 pt-7 pb-5"
                   style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
                 >
-                  <h2 className="text-white font-bold text-lg sm:text-xl tracking-tight">Audio</h2>
+                  <h2 className="text-white font-bold text-xl tracking-tight">Audio</h2>
                 </div>
-                <div className="py-2 sm:py-3">
+                <div className="py-3">
                   {DUMMY_AUDIO_TRACKS.map((track, idx) => {
                     const isActive = selectedAudio === track.code;
                     const isFocused = audioFocusIdx === idx;
@@ -1847,7 +1847,7 @@ const VideotekaPlayer = ({
                           setSelectedAudio(track.code);
                           closeAudioModal();
                         }}
-                        className="w-full flex items-center justify-between px-5 sm:px-7 py-3 sm:py-4 transition-all"
+                        className="w-full flex items-center justify-between px-7 py-4 transition-all"
                         style={{
                           background: "none",
                           border: "none",
@@ -1863,7 +1863,7 @@ const VideotekaPlayer = ({
                       >
                         <div className="flex flex-col items-start gap-0.5">
                           <span
-                            className="text-sm sm:text-base font-medium"
+                            className="text-base font-medium"
                             style={{ color: isActive ? GOLD : "#ffffff" }}
                           >
                             {track.label}
@@ -1882,7 +1882,7 @@ const VideotekaPlayer = ({
                     );
                   })}
                 </div>
-                <div className="px-5 sm:px-7 py-3 sm:py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="px-7 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
                     Odabrani audio jezik primjenjuje se samo na ovaj video.
                   </p>
@@ -1919,16 +1919,16 @@ const VideotekaPlayer = ({
                 style={{
                   backgroundColor: "#0a0a0a",
                   border: "1px solid rgba(255,255,255,0.1)",
-                  maxWidth: "min(420px, 90vw)",
+                  maxWidth: "420px",
                 }}
               >
                 <div
-                  className="flex items-center px-5 sm:px-7 pt-5 sm:pt-7 pb-4 sm:pb-5"
+                  className="flex items-center px-7 pt-7 pb-5"
                   style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
                 >
-                  <h2 className="text-white font-bold text-lg sm:text-xl tracking-tight">Font titlova</h2>
+                  <h2 className="text-white font-bold text-xl tracking-tight">Font titlova</h2>
                 </div>
-                <div className="py-2 sm:py-3">
+                <div className="py-3">
                   {DUMMY_FONTS.map((font, idx) => {
                     const isActive = selectedFont === font.code;
                     const isFocused = fontFocusIdx === idx;
@@ -1939,7 +1939,7 @@ const VideotekaPlayer = ({
                           setSelectedFont(font.code);
                           closeFontModal();
                         }}
-                        className="w-full flex items-center justify-between px-5 sm:px-7 py-3 sm:py-4 transition-all"
+                        className="w-full flex items-center justify-between px-7 py-4 transition-all"
                         style={{
                           background: "none",
                           border: "none",
@@ -1955,7 +1955,7 @@ const VideotekaPlayer = ({
                       >
                         <div className="flex flex-col items-start gap-0.5">
                           <span
-                            className="text-sm sm:text-base font-medium"
+                            className="text-base font-medium"
                             style={{
                               color: isActive ? GOLD : "#ffffff",
                               fontFamily:
@@ -1986,7 +1986,7 @@ const VideotekaPlayer = ({
                     );
                   })}
                 </div>
-                <div className="px-5 sm:px-7 py-3 sm:py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="px-7 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
                     Odabrani font primjenjuje se samo na titlove ovog videa.
                   </p>
@@ -2001,7 +2001,7 @@ const VideotekaPlayer = ({
         <button
           type="button"
           onClick={() => setShowEpisodesPanel(true)}
-          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[160] px-4 py-2 rounded-md bg-black/60 hover:bg-black/80 text-white text-sm font-semibold border border-white/20"
+          className="absolute top-6 right-6 z-[160] px-4 py-2 rounded-md bg-black/60 hover:bg-black/80 text-white text-sm font-semibold border border-white/20"
         >
           Epizode
         </button>

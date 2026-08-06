@@ -34,37 +34,37 @@ const TVHeader = () => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className="flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 pt-1 sm:pt-2 pb-0 border-b border-border/30 relative z-30"
+      className="flex items-center justify-between gap-4 px-8 pt-2 pb-0 border-b border-border/30 relative z-30"
     >
       {/* Left - Logo */}
-      <img src={logo} alt="Max Ovizija" className="h-16 sm:h-20 lg:h-28 xl:h-32 w-auto flex-shrink-0 -mt-3 sm:-mt-5" />
+      <img src={logo} alt="Max Ovizija" className="h-32 w-auto flex-shrink-0 -mt-5" />
 
       {/* Center - Subscription Notice */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border border-accent/40 flex items-center justify-center">
-          <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full border border-accent/40 flex items-center justify-center">
+          <Clock className="w-4 h-4 text-accent" />
         </div>
-        <span className="text-accent font-medium text-xs sm:text-sm hidden sm:block">
+        <span className="text-accent font-medium text-sm hidden">
           {t("header.subscriptionExpiring")}
         </span>
-        <span className="text-accent font-medium text-xs sm:hidden">{t("header.subscriptionShort")}</span>
+        <span className="text-accent font-medium text-xs">{t("header.subscriptionShort")}</span>
       </div>
 
 
       {/* Right - Time & Weather */}
-      <div className="flex items-center gap-3 sm:gap-6">
+      <div className="flex items-center gap-6">
         <div className="text-right">
-          <div className="text-foreground font-bold text-lg sm:text-xl lg:text-2xl leading-none">
+          <div className="text-foreground font-bold text-2xl leading-none">
             {hours}:{minutes}
           </div>
-          <div className="text-muted-foreground text-[13px] sm:text-xs">{dateStr}</div>
+          <div className="text-muted-foreground text-xs">{dateStr}</div>
         </div>
-        <div className="w-px h-6 sm:h-8 bg-border" />
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <CloudRain className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+        <div className="w-px h-8 bg-border" />
+        <div className="flex items-center gap-2">
+          <CloudRain className="w-5 h-5 text-muted-foreground" />
           <div className="text-right">
-            <div className="text-foreground font-semibold text-xs sm:text-sm">12°C</div>
-            <div className="text-muted-foreground text-[13px] sm:text-xs">{t("header.location")}</div>
+            <div className="text-foreground font-semibold text-sm">12°C</div>
+            <div className="text-muted-foreground text-xs">{t("header.location")}</div>
           </div>
         </div>
       </div>
