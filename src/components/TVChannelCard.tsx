@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
+import { CANVAS_WIDTH } from "@/lib/canvas";
 
 interface TVChannelCardProps {
   title: string;
@@ -341,8 +342,7 @@ export const TVChannelGrid = ({ channels, cardWidth }: TVChannelGridProps) => {
   const [focused, setFocused] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const responsiveCardWidth =
-    cardWidth ?? (typeof window !== "undefined" ? Math.min(280, window.innerWidth * 0.75) : 280);
+  const responsiveCardWidth = cardWidth ?? Math.min(280, CANVAS_WIDTH * 0.75);
 
   const moveFocus = useCallback(
     (delta: number) => {

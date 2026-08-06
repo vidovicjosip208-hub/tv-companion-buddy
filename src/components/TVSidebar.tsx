@@ -2,6 +2,7 @@ import { Home, Tv, Radio, Heart, Film, Cctv, User, Settings } from "lucide-react
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { CANVAS_WIDTH } from "@/lib/canvas";
 
 interface SidebarItem {
   id: string;
@@ -33,18 +34,12 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
   const { t } = useTranslation();
   const showLabels = isExpanded && !isMini;
 
-  const sidebarWidth =
-    typeof window !== "undefined"
-      ? isMini
-        ? Math.min(72, window.innerWidth * 0.12)
-        : isExpanded
-          ? Math.min(240, window.innerWidth * 0.4)
-          : Math.min(80, window.innerWidth * 0.14)
-      : isMini
-        ? 72
-        : isExpanded
-          ? 240
-          : 80;
+  // Sized against the fixed reference canvas — never the device viewport.
+  const sidebarWidth = isMini
+    ? Math.min(72, CANVAS_WIDTH * 0.12)
+    : isExpanded
+      ? Math.min(240, CANVAS_WIDTH * 0.4)
+      : Math.min(80, CANVAS_WIDTH * 0.14);
 
   return (
     <motion.aside
