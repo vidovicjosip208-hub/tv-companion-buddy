@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "@/lib/canvas";
 
 /**
  * Ambient starfield.
@@ -182,8 +183,13 @@ const StarryBackground = () => {
     };
 
     const resize = () => {
-      canvas.width = Math.max(1, Math.round(window.innerWidth * RENDER_SCALE));
-      canvas.height = Math.max(1, Math.round(window.innerHeight * RENDER_SCALE));
+      // The canvas lives inside the fixed reference canvas, so it must be
+      // sized against that — not the device viewport.
+      const host = canvas.parentElement;
+      const w = host?.clientWidth || CANVAS_WIDTH;
+      const h = host?.clientHeight || CANVAS_HEIGHT;
+      canvas.width = Math.max(1, Math.round(w * RENDER_SCALE));
+      canvas.height = Math.max(1, Math.round(h * RENDER_SCALE));
       buildScene();
       renderScene();
     };
