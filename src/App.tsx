@@ -8,7 +8,7 @@ import FullscreenBootstrap from "./components/FullscreenBootstrap.tsx";
 import RemoteBackKey from "./components/RemoteBackKey.tsx";
 import ExitAppDialog from "./components/ExitAppDialog.tsx";
 import ScaleToFit from "./components/ScaleToFit.tsx";
-import SplashIntro from "./components/SplashIntro.tsx";
+import SplashGate from "./components/SplashGate.tsx";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Videoteka = lazy(() => import("./pages/Videoteka.tsx"));
@@ -29,9 +29,9 @@ const App = () => (
         <FullscreenBootstrap />
         <RemoteBackKey />
         <ExitAppDialog />
-        <SplashIntro />
         <ScaleToFit>
           <BrowserRouter>
+            <SplashGate />
             <Suspense fallback={null}>
               <Routes>
                 <Route path="/" element={<Index />} />
