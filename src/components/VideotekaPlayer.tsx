@@ -1691,9 +1691,7 @@ const VideotekaPlayer = ({
                         style={{
                           backgroundColor: GOLD,
                           color: "#0d0d0d",
-                          transform: focusedRow === 2 && focusedCol === 1 ? "scale(1.15)" : "scale(1)",
-                          boxShadow:
-                            focusedRow === 2 && focusedCol === 1 ? "0 0 20px 5px rgba(245,197,24,0.4)" : "none",
+                          transform: focusedRow === 2 && focusedCol === 1 ? "translate3d(0,0,0) scale(1.15)" : "translate3d(0,0,0)",
                         }}
                       >
                         {isPlaying ? (
