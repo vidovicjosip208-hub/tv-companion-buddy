@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useMemo, useRef, useState, useEffect, useCallback } from "react";
+import { memo, useMemo, useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { CANVAS_WIDTH } from "@/lib/canvas";
 
@@ -386,4 +386,4 @@ export const TVChannelGrid = ({ channels, cardWidth }: TVChannelGridProps) => {
   );
 };
 
-export default TVChannelCard;
+export default memo(TVChannelCard);

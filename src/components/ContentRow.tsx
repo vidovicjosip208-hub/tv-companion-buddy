@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { CANVAS_WIDTH } from "@/lib/canvas";
 
@@ -145,4 +145,4 @@ const ContentRow = ({
   );
 };
 
-export default ContentRow;
+export default memo(ContentRow);

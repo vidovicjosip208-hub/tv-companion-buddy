@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, useState } from "react";
+import { memo, useMemo, useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -52,7 +52,7 @@ function calculateProgress(startTime: string, endTime: string): number {
   return Math.max(0, Math.min(100, ((current - start) / total) * 100));
 }
 
-const ChannelItem = ({
+const ChannelItem = memo(({
   channel,
   isFocused,
   onClick,
@@ -129,7 +129,7 @@ const ChannelItem = ({
   );
 };
 
-const ProgramRow = ({ program, index, isFocused }: { program: EPGProgram; index: number; isFocused: boolean }) => {
+const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; index: number; isFocused: boolean }) => {
   const ref = useRef<HTMLDivElement>(null);
   const progress = useMemo(
     () => (program.isLive ? calculateProgress(program.startTime, program.endTime) : 0),
@@ -375,4 +375,4 @@ const EPGGrid = ({
   );
 };
 
-export default EPGGrid;
+export default memo(EPGGrid);
