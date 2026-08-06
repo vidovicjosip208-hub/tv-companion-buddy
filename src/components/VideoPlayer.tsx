@@ -328,11 +328,6 @@ const ChannelCard = ({
           borderRadius: "6px",
           padding: "6px 8px 9px 8px",
           minHeight: "96px",
-          boxShadow: isFocused
-            ? `0 0 14px 4px rgba(245,197,24,0.28)`
-            : isActive
-              ? `0 0 6px 2px rgba(245,197,24,0.1)`
-              : "none",
         }}
       >
         <span
@@ -402,7 +397,7 @@ const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
     )}
     style={{
       backgroundColor: "rgba(10,10,10,1)",
-      boxShadow: isFocused ? `0 0 0 2px ${GOLD}, 0 0 16px 4px rgba(245,197,24,0.4)` : "none",
+      boxShadow: isFocused ? `0 0 0 2px ${GOLD}` : "none",
     }}
     onClick={onSelect}
   >
@@ -1476,8 +1471,7 @@ const VideoPlayer = ({
                               backgroundColor: isMain ? GOLD : isBtnFocused ? "rgba(245,197,24,0.15)" : "transparent",
                               color: isMain ? "#0d0d0d" : GOLD,
                               outline: isBtnFocused && !isMain ? "2px solid rgba(245,197,24,0.5)" : "none",
-                              transform: isBtnFocused ? "scale(1.12)" : "scale(1)",
-                              boxShadow: isMain ? "0 0 18px 4px rgba(245,197,24,0.35)" : "none",
+                              transform: isBtnFocused ? "translate3d(0,0,0) scale(1.12)" : "translate3d(0,0,0)",
                             }}
                           >
                             <Icon className={isMain ? "w-6 h-6" : "w-5 h-5"} />
