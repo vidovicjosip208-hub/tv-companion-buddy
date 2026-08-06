@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { CANVAS_WIDTH } from "@/lib/canvas";
 
 interface ContentItem {
   id: string;
@@ -38,15 +39,8 @@ const ContentRow = ({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const getResponsiveValues = () => {
-    if (typeof window === "undefined") {
-      return {
-        defaultW: portrait ? 140 : 280,
-        expandedW: portrait ? 300 : 650,
-        cardH: 350,
-        leftPad: 48,
-      };
-    }
-    const vw = window.innerWidth;
+    // Fixed reference canvas width, so the row looks identical on every screen.
+    const vw = CANVAS_WIDTH;
     return {
       defaultW: portrait ? Math.min(140, vw * 0.28) : Math.min(280, vw * 0.4),
       expandedW: portrait ? Math.min(300, vw * 0.55) : Math.min(650, vw * 0.75),
