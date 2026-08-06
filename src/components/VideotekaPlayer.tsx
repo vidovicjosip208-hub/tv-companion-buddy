@@ -215,22 +215,61 @@ function useSeekPreview(seekPreviewUrl: string | null) {
 
     const onSeeked = () => {
       video.removeEventListener("seeked", onSeeked);
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, SEEK_CANVAS_W, SEEK_CANVAS_H);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-        // Spremi u globalni cache
-        getCache().set(time, dataUrl);
-        pendingRef.current.delete(time);
-        // Triggeramo re-render
-        bumpVersion();
-      }
-      seekingRef.current = false;
-      processQueue();
+      void (async () => {
+        try {
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
+
+          ctx.clearRect(0, 0, SEEK_CANVAS_W, SEEK_CANVAS_H);
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+          // Neki TV pregledači (Tizen / WebOS / Android TV) vraćaju hardverski
+          // dekodirani video frame naopako kroz drawImage(video, ...).
+          // createImageBitmap je specifikacijom orijentacijski točan, pa ga
+          // koristimo kad postoji — inače pada na klasični drawImage.
+          let drawn = false;
+          if (typeof createImageBitmap === "function") {
+            try {
+              const bitmap = await createImageBitmap(video);
+              ctx.drawImage(bitmap, 0, 0, SEEK_CANVAS_W, SEEK_CANVAS_H);
+              bitmap.close?.();
+              drawn = true;
+            } catch {
+              drawn = false;
+            }
+          }
+          if (!drawn) {
+            ctx.drawImage(video, 0, 0, SEEK_CANVAS_W, SEEK_CANVAS_H);
+          }
+
+          // Preskoči potpuno prazne (crne) frameove — inače na TV-u ostanu
+          // prazne/slomljene sličice.
+          let isBlank = false;
+          try {
+            const sample = ctx.getImageData(0, 0, SEEK_CANVAS_W, SEEK_CANVAS_H).data;
+            let sum = 0;
+            for (let i = 0; i < sample.length; i += 4 * 64) sum += sample[i] + sample[i + 1] + sample[i + 2];
+            isBlank = sum === 0;
+          } catch {
+            isBlank = false;
+          }
+
+          if (!isBlank) {
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+            getCache().set(time, dataUrl);
+            bumpVersion();
+          }
+          pendingRef.current.delete(time);
+        } finally {
+          seekingRef.current = false;
+          processQueue();
+        }
+      })();
     };
 
     video.addEventListener("seeked", onSeeked);
   }, [getCache, bumpVersion]);
+
 
   const requestFrame = useCallback(
     (time: number) => {
