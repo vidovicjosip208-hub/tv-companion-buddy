@@ -350,8 +350,6 @@ const ChannelCard = ({
               alt={ch.label}
               className="max-h-[62px] max-w-full object-contain"
               style={{
-                filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
-                transition: "filter 0.18s",
               }}
               onError={() => setLogoError(true)}
             />
@@ -361,8 +359,7 @@ const ChannelCard = ({
                 width: 40,
                 height: 40,
                 color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
-                filter: isFocused ? `drop-shadow(0 0 4px rgba(245,197,24,0.55))` : "none",
-                transition: "color 0.18s, filter 0.18s",
+                transition: "color 0.18s",
               }}
             />
           )}
@@ -418,7 +415,6 @@ const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
           <path
             d="M10 1 L1 18 L10 35 Q7 18 10 1 Z"
             fill={GOLD}
-            style={{ filter: "drop-shadow(0 0 4px rgba(245,197,24,0.9))" }}
           />
         </svg>
       </div>
@@ -433,7 +429,6 @@ const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
           <path
             d="M2 1 L11 18 L2 35 Q5 18 2 1 Z"
             fill={GOLD}
-            style={{ filter: "drop-shadow(0 0 4px rgba(245,197,24,0.9))" }}
           />
         </svg>
       </div>

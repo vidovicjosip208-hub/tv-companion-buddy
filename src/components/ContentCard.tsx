@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 
 interface ChannelCardProps {
   title: string;
@@ -26,7 +26,7 @@ function calculateProgress(timeSlot: string): number {
   return Math.max(0, Math.min(100, ((effective - start) / total) * 100));
 }
 
-export function ChannelCard({
+function ChannelCardBase({
   title,
   channel,
   channelLogo,
@@ -52,8 +52,7 @@ export function ChannelCard({
           <div className="w-full bg-muted/70" style={{ height: "3px" }} />
           <div
             className={cn(
-              "absolute bottom-0 left-0 bg-primary transition-all duration-300",
-              isFocused && "shadow-[0_0_8px_2px_hsl(var(--primary)/0.6)]",
+              "absolute bottom-0 left-0 bg-primary",
             )}
             style={{ width: `${progress}%`, height: isFocused ? "5px" : "3px" }}
           />
@@ -77,3 +76,5 @@ export function ChannelCard({
     </button>
   );
 }
+
+export const ChannelCard = memo(ChannelCardBase);

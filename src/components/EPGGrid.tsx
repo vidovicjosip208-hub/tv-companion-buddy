@@ -88,7 +88,7 @@ const ChannelItem = ({
         "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-left",
         "border border-transparent",
         isFocused
-          ? "bg-accent/15 border-accent/40 shadow-[0_0_16px_3px_hsl(var(--accent)/0.15)]"
+          ? "bg-accent/15 border-accent/40"
           : "bg-transparent hover:bg-muted/20",
       )}
     >
@@ -151,7 +151,7 @@ const ProgramRow = ({ program, index, isFocused }: { program: EPGProgram; index:
       className={cn(
         "flex items-center gap-4 px-5 py-3 rounded-lg transition-all duration-200",
         isFocused
-          ? "bg-accent/15 shadow-[0_0_12px_2px_hsl(var(--accent)/0.1)]"
+          ? "bg-accent/15"
           : program.isLive
             ? "bg-accent/8"
             : "bg-transparent hover:bg-muted/10",
@@ -322,7 +322,7 @@ const EPGGrid = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25 }}
-              className={cn("rounded-2xl bg-card/60 border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-6 flex flex-col gap-4 overflow-y-auto scrollbar-hide h-[80%]", hideSchedule && "w-full")}
+              className={cn("rounded-2xl bg-card/60 border border-border/30 p-6 flex flex-col gap-4 overflow-y-auto scrollbar-hide h-[80%]", hideSchedule && "w-full")}
             >
               <div className="flex justify-center">
                 <div className="w-20 h-12 rounded-md bg-transparent flex items-center justify-center overflow-hidden">
