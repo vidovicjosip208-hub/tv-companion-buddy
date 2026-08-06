@@ -59,15 +59,15 @@ const ContentRow = ({
 
   return (
     <div className={cn("relative z-10 mb-2", peek && "opacity-60")}>
-      <h2 className="text-accent font-bold text-base sm:text-xl mb-4 px-4 sm:px-12">
+      <h2 className="text-accent font-bold text-xl mb-4 px-12">
         {title}
         {titleHighlight && (
-          <span className="text-accent italic ml-2 font-normal text-sm sm:text-base">{titleHighlight}</span>
+          <span className="text-accent italic ml-2 font-normal text-base">{titleHighlight}</span>
         )}
       </h2>
       <div className={cn("overflow-hidden", peek && "max-h-[100px]")}>
         <div
-          className={cn("flex transition-transform duration-500 ease-out", peek && "px-4 sm:px-12")}
+          className={cn("flex transition-transform duration-500 ease-out", peek && "px-12")}
           style={
             peek
               ? {
@@ -135,7 +135,7 @@ const ContentRow = ({
                   <h3
                     className={cn(
                       "font-black text-foreground tracking-tight drop-shadow-lg transition-all duration-500",
-                      isExpanded ? "text-base sm:text-xl" : "text-xs sm:text-sm",
+                      isExpanded ? "text-xl" : "text-sm",
                     )}
                   >
                     {item.title}

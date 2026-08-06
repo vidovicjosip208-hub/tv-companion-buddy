@@ -25,7 +25,7 @@ const ChannelCard = ({ channel, isFocused, onClick }: Props) => {
     <button
       onClick={onClick}
       className={cn(
-        "group relative flex aspect-video w-40 sm:w-48 lg:w-56 shrink-0 flex-col justify-end overflow-hidden rounded-xl border border-white/5 bg-gradient-to-br p-3 text-left transition-all",
+        "group relative flex aspect-video w-56 shrink-0 flex-col justify-end overflow-hidden rounded-xl border border-white/5 bg-gradient-to-br p-3 text-left transition-all",
         grad,
         isFocused
           ? "scale-105 ring-2 ring-amber-400 ring-offset-2 ring-offset-black"
@@ -42,11 +42,11 @@ const ChannelCard = ({ channel, isFocused, onClick }: Props) => {
         </span>
       </div>
       <div className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
-        <Play className="h-8 w-8 sm:h-10 sm:w-10 fill-white text-white drop-shadow-lg" />
+        <Play className="h-10 w-10 fill-white text-white drop-shadow-lg" />
       </div>
       <div className="relative z-10">
-        <div className="text-xs sm:text-sm font-bold text-white">{channel.name}</div>
-        <div className="truncate text-[13px] sm:text-[14px] text-white/70">{live?.title}</div>
+        <div className="text-sm font-bold text-white">{channel.name}</div>
+        <div className="truncate text-[14px] text-white/70">{live?.title}</div>
       </div>
     </button>
   );
