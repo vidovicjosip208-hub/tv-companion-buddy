@@ -284,9 +284,14 @@ function useSeekPreview(seekPreviewUrl: string | null) {
           }
 
           if (!isBlank) {
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-            getCache().set(time, dataUrl);
-            bumpVersion();
+            try {
+              const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+              getCache().set(time, dataUrl);
+              bumpVersion();
+            } catch {
+              // Tainted canvas (izvor bez CORS-a) — prelazimo na živi preview.
+              setCaptureBlocked(true);
+            }
           }
           pendingRef.current.delete(time);
         } finally {
@@ -316,7 +321,25 @@ function useSeekPreview(seekPreviewUrl: string | null) {
     [getCache, processQueue],
   );
 
-  return { frames, requestFrame };
+  // Živi preview: pomiče skriveni preview video na traženo vrijeme i vraća
+  // sam element kako bi ga UI mogao prikazati kao središnju sličicu.
+  const seekLive = useCallback((time: number) => {
+    const video = videoRef.current;
+    if (!video) return null;
+    const t = Math.max(0, Math.round(time));
+    if (Math.abs(video.currentTime - t) > 0.4) {
+      try {
+        video.currentTime = t;
+      } catch {
+        /* metadata još nije spremna */
+      }
+    }
+    return video;
+  }, []);
+
+  return { frames, requestFrame, captureBlocked, previewVideoRef: videoRef, seekLive };
+}
+
 }
 
 // ── FrozenHlsVideo ────────────────────────────────────────────────────────────
