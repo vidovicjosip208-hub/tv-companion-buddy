@@ -124,6 +124,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
   const details = detailsData[currentItem?.id || ""] || defaultDetails;
   const nextRow = focusedRow + 1 < rows.length ? focusedRow + 1 : null;
   const hasContent = !!currentRow && currentRow.items.length > 0;
+  const overlayActive = searchOpen || detailViewOpen;
 
   return (
     <motion.div
@@ -133,7 +134,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
       transition={{ duration: 0.6 }}
       className="h-screen overflow-hidden relative"
     >
-      <StarryBackground />
+      {!overlayActive && <StarryBackground />}
       <VideotekaHeader
         ref={headerRef}
         activeTab={activeTab}
@@ -145,7 +146,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
         onTabChange={handleTabChange}
       />
       {searchOpen && <VideotekaSearch allItems={allContentItems} onClose={() => setSearchOpen(false)} />}
-      {!hasContent ? (
+      {overlayActive ? null : !hasContent ? (
         <div className="flex h-[461px] items-center justify-center text-white/60 text-base px-4 text-center">
           {isLoading ? "Učitavanje sadržaja…" : "Nema sadržaja u Videoteci."}
         </div>
