@@ -312,11 +312,12 @@ const EPGGrid = ({
           </div>
 
           {/* Gold Divider */}
-          <div className="hidden w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
+          <div className="w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
         </>
       )}
       {/* Right Column — Program Details */}
-      <div className={cn("w-full flex flex-col justify-center py-2 px-3 overflow-hidden h-full", hideSchedule ? " flex-1" : " w-[31%]") }>
+      <div className={cn("flex flex-col justify-center py-2 px-3 overflow-hidden h-full", hideSchedule ? "flex-1" : "flex-1") }>
+
         <AnimatePresence mode="wait">
           {selectedProgram && (isProgramFocused || hideSchedule) && (
             <motion.div
