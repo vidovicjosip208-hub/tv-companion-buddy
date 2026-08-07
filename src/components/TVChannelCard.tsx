@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { memo, useMemo, useRef, useState, useEffect, useCallback } from "react";
+import { useZoneKeys } from "@/lib/focusZone";
 import { motion } from "framer-motion";
 import { CANVAS_WIDTH } from "@/lib/canvas";
 
@@ -350,8 +351,8 @@ export const TVChannelGrid = ({ channels, cardWidth }: TVChannelGridProps) => {
     [channels.length],
   );
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+  const handler = useCallback(
+    (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") {
         e.preventDefault();
         moveFocus(1);
@@ -359,10 +360,11 @@ export const TVChannelGrid = ({ channels, cardWidth }: TVChannelGridProps) => {
         e.preventDefault();
         moveFocus(-1);
       }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [moveFocus]);
+    },
+    [moveFocus],
+  );
+
+  useZoneKeys("tv-channel-grid", handler, true, 5);
 
   useEffect(() => {
     const container = scrollRef.current;
