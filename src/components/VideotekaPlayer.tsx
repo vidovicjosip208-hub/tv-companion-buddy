@@ -1703,8 +1703,10 @@ const VideotekaPlayer = ({
                         >
                           {seekThumbnailTimes.map((t, i) => {
                             const isCentre = i === Math.floor(THUMBNAIL_COUNT / 2);
+                            // Fiksne dimenzije po slotu — bez tranzicija i scale-a
+                            // da se sličice ne "skakuću" kad se strip pomiče.
                             const sizeCls = isCentre
-                              ? "w-56 h-32 z-10 scale-110 ring-1 ring-white"
+                              ? "w-64 h-36 z-10 ring-1 ring-white"
                               : "w-40 h-24 opacity-50";
                             if (t === null) {
                               // Rub filma — prazan slot, strip ostaje poravnat
@@ -1714,8 +1716,8 @@ const VideotekaPlayer = ({
                             const frameSrc = seekFrames.get(t) ?? thumbnail;
                             return (
                               <div
-                                key={t}
-                                className={`relative overflow-hidden transition-all duration-200 ${sizeCls}`}
+                                key={`slot-${i}`}
+                                className={`relative overflow-hidden ${sizeCls}`}
                               >
                                 <img
                                   src={frameSrc}
