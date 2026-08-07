@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useZoneKeys } from "@/lib/focusZone";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ContentDetailsData, getEpisodesForItem, allContentItems, type SeasonData } from "@/data/videotekaContent";
@@ -121,10 +122,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
     [focusedArea, focusedSeasonIndex, focusedEpisodeIndex, seasons.length, currentSeason, isTrailersSelected, onPlayEpisode, onClose],
   );
 
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown, true);
-    return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [handleKeyDown]);
+  useZoneKeys("episodes-view", handleKeyDown, true, 30);
 
   return (
     <motion.div
@@ -141,7 +139,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
             src={backdropImage}
             alt=""
             className="w-full h-full object-cover"
-            style={{ filter: "blur(7px) saturate(0.7)", transform: "scale(1.04)" }}
+            style={{ transform: "translate3d(0,0,0) scale(1.04)" }}
           />
         ) : (
           <div className="w-full h-full bg-zinc-900" />

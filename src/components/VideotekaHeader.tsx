@@ -1,5 +1,6 @@
 import { Home, Search } from "lucide-react";
-import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from "react";
+import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -80,10 +81,8 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       }, 100);
     };
 
-    useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (focusedIndex === null) return;
-
+    const handleKeyDown = useCallback(
+      (e: KeyboardEvent) => {
         switch (e.key) {
           case "ArrowRight":
             e.preventDefault();
@@ -119,11 +118,11 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
             }
             break;
         }
-      };
+      },
+      [focusedIndex, searchOpen, totalButtons, focusButton, onFocusChange],
+    );
 
-      window.addEventListener("keydown", handleKeyDown, true);
-      return () => window.removeEventListener("keydown", handleKeyDown, true);
-    }, [focusedIndex, searchOpen, totalButtons]);
+    useZoneKeys("videoteka-header", handleKeyDown, focusedIndex !== null, 10);
 
     return (
       <header className="relative z-10 px-12 -mt-[65px] pb-0">

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
-import { useMemo, useRef, useState, useEffect, useCallback } from "react";
+import { memo, useMemo, useRef, useState, useEffect, useCallback } from "react";
+import { useZoneKeys } from "@/lib/focusZone";
 import { motion } from "framer-motion";
 import { CANVAS_WIDTH } from "@/lib/canvas";
 
@@ -84,11 +85,11 @@ const TVChannelCard = ({
       transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.6) }}
       onClick={onClick}
       className={cn(
-        "group relative rounded-2xl overflow-hidden transition-[box-shadow,border-color,filter] duration-200 ease-out",
+        "group relative rounded-2xl overflow-hidden transition-colors duration-200 ease-out",
         "focus:outline-none bg-card/60 w-full border-2",
         isFocused
-          ? "border-white/60 shadow-[0_0_40px_10px_rgba(255,255,255,0.22)]"
-          : "border-white/15 hover:brightness-110",
+          ? "border-white/70"
+          : "border-white/15",
       )}
     >
       <div className="relative aspect-[16/9] overflow-hidden">
@@ -97,8 +98,7 @@ const TVChannelCard = ({
           <div className="w-full bg-muted/70" style={{ height: "3px" }} />
           <div
             className={cn(
-              "absolute bottom-0 left-0 bg-accent transition-all duration-300",
-              isFocused && "shadow-[0_0_8px_2px_hsl(var(--accent)/0.6)]",
+              "absolute bottom-0 left-0 bg-accent",
             )}
             style={{ width: `${progress}%`, height: isFocused ? "5px" : "3px" }}
           />
@@ -351,8 +351,8 @@ export const TVChannelGrid = ({ channels, cardWidth }: TVChannelGridProps) => {
     [channels.length],
   );
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+  const handler = useCallback(
+    (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") {
         e.preventDefault();
         moveFocus(1);
@@ -360,10 +360,11 @@ export const TVChannelGrid = ({ channels, cardWidth }: TVChannelGridProps) => {
         e.preventDefault();
         moveFocus(-1);
       }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [moveFocus]);
+    },
+    [moveFocus],
+  );
+
+  useZoneKeys("tv-channel-grid", handler, true, 5);
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -387,4 +388,4 @@ export const TVChannelGrid = ({ channels, cardWidth }: TVChannelGridProps) => {
   );
 };
 
-export default TVChannelCard;
+export default memo(TVChannelCard);

@@ -44,9 +44,11 @@ const useSplashContent = () =>
 
 interface SplashIntroProps {
   duration?: number;
+  /** Called once the intro is fully finished so the parent can unmount it. */
+  onFinished?: () => void;
 }
 
-const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
+const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
   const [visible, setVisible] = useState(true);
   const [revealed, setRevealed] = useState(true);
   const [framesReady, setFramesReady] = useState(false);
@@ -168,7 +170,7 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
     });
     drawFrames();
 
-    const FRAME_INTERVAL = 500;
+    const FRAME_INTERVAL = 1000;
     animationFrame.current = window.setInterval(drawFrames, FRAME_INTERVAL);
     setRevealed(true);
     void Promise.allSettled(players.map((player) => player.play()));
@@ -191,6 +193,30 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
     return () => window.clearTimeout(t);
   }, [duration]);
 
+  // Hard teardown: releases every decoder, canvas buffer and timer when this
+  // screen leaves the tree, so playback gets the full CPU/GPU budget.
+  useEffect(
+    () => () => {
+      if (animationFrame.current !== null) window.clearInterval(animationFrame.current);
+      animationFrame.current = null;
+      Object.values(sourceVideoRefs.current).forEach((player) => {
+        if (!player) return;
+        player.pause();
+        player.removeAttribute("src");
+        player.load();
+      });
+      sourceVideoRefs.current = {};
+      canvasRefs.current.forEach((canvas) => {
+        if (!canvas) return;
+        canvas.width = 0;
+        canvas.height = 0;
+      });
+      canvasRefs.current = [];
+      loadedSources.current.clear();
+    },
+    [],
+  );
+
   const markSourceLoaded = (url: string) => {
     if (loadedSources.current.has(url)) return;
     loadedSources.current.add(url);
@@ -198,7 +224,7 @@ const SplashIntro = ({ duration = 11000 }: SplashIntroProps) => {
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={() => onFinished?.()}>
       {visible && (
         <motion.div
           key="splash"

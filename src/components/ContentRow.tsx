@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { CANVAS_WIDTH } from "@/lib/canvas";
 
@@ -111,12 +111,7 @@ const ContentRow = ({
                       }
                 }
               >
-                <img
-                  src={item.thumbnail}
-                  alt=""
-                  aria-hidden="true"
-                  className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40"
-                />
+                <div className="absolute inset-0 bg-muted" aria-hidden="true" />
                 <img
                   src={item.thumbnail}
                   alt={item.title}
@@ -134,7 +129,7 @@ const ContentRow = ({
                 <div className="absolute bottom-3 left-3 right-3">
                   <h3
                     className={cn(
-                      "font-black text-foreground tracking-tight drop-shadow-lg transition-all duration-500",
+                      "font-black text-foreground tracking-tight",
                       isExpanded ? "text-xl" : "text-sm",
                     )}
                   >
@@ -150,4 +145,4 @@ const ContentRow = ({
   );
 };
 
-export default ContentRow;
+export default memo(ContentRow);

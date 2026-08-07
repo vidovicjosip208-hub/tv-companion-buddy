@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "@/lib/canvas";
 
 /**
@@ -216,4 +216,4 @@ const StarryBackground = () => {
   );
 };
 
-export default StarryBackground;
+export default memo(StarryBackground);

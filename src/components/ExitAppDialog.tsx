@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useZoneKeys } from "@/lib/focusZone";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
@@ -67,9 +68,8 @@ const ExitAppDialog = () => {
     }, 100);
   }, []);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
+  const onKey = useCallback(
+    (e: KeyboardEvent) => {
       switch (e.key) {
         case "ArrowLeft":
         case "ArrowRight":
@@ -91,10 +91,11 @@ const ExitAppDialog = () => {
           close();
           break;
       }
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [open, selected, close, exitApp]);
+    },
+    [selected, close, exitApp],
+  );
+
+  useZoneKeys("exit-dialog", onKey, open, 1000);
 
   if (!open) return null;
 
