@@ -1148,6 +1148,7 @@ const VideotekaPlayer = ({
 
   // Potvrda seeka (OK gumb) — sada stvarno pomakni video na odabranu poziciju.
   const confirmSeek = useCallback(() => {
+    isSeekingRef.current = false;
     const target = pendingSeekRef.current;
     pendingSeekRef.current = null;
     if (target === null) {
@@ -1172,6 +1173,7 @@ const VideotekaPlayer = ({
 
   // Otkazivanje seeka (Escape / promjena reda) — vrati UI na trenutnu poziciju videa.
   const cancelSeek = useCallback(() => {
+    isSeekingRef.current = false;
     pendingSeekRef.current = null;
     if (pendingSeekTimerRef.current) {
       clearTimeout(pendingSeekTimerRef.current);
