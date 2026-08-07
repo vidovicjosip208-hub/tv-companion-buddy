@@ -141,7 +141,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
             src={backdropImage}
             alt=""
             className="w-full h-full object-cover"
-            style={{ transform: "translate3d(0,0,0) scale(1.04)" }}
+            style={{ filter: "blur(7px) saturate(0.7)", transform: "scale(1.04)" }}
           />
         ) : (
           <div className="w-full h-full bg-zinc-900" />

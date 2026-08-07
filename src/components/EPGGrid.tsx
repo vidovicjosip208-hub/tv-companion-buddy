@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useEffect, useState } from "react";
+import { useMemo, useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -52,7 +52,7 @@ function calculateProgress(startTime: string, endTime: string): number {
   return Math.max(0, Math.min(100, ((current - start) / total) * 100));
 }
 
-const ChannelItem = memo(({
+const ChannelItem = ({
   channel,
   isFocused,
   onClick,
@@ -88,7 +88,7 @@ const ChannelItem = memo(({
         "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-left",
         "border border-transparent",
         isFocused
-          ? "bg-accent/15 border-accent/40"
+          ? "bg-accent/15 border-accent/40 shadow-[0_0_16px_3px_hsl(var(--accent)/0.15)]"
           : "bg-transparent hover:bg-muted/20",
       )}
     >
@@ -127,10 +127,9 @@ const ChannelItem = memo(({
       </span>
     </motion.button>
   );
-});
-ChannelItem.displayName = "ChannelItem";
+};
 
-const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; index: number; isFocused: boolean }) => {
+const ProgramRow = ({ program, index, isFocused }: { program: EPGProgram; index: number; isFocused: boolean }) => {
   const ref = useRef<HTMLDivElement>(null);
   const progress = useMemo(
     () => (program.isLive ? calculateProgress(program.startTime, program.endTime) : 0),
@@ -152,7 +151,7 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
       className={cn(
         "flex items-center gap-4 px-5 py-3 rounded-lg transition-all duration-200",
         isFocused
-          ? "bg-accent/15"
+          ? "bg-accent/15 shadow-[0_0_12px_2px_hsl(var(--accent)/0.1)]"
           : program.isLive
             ? "bg-accent/8"
             : "bg-transparent hover:bg-muted/10",
@@ -197,6 +196,7 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.8, ease: "easeOut" }}
+              style={{ boxShadow: "0 0 8px 2px hsl(var(--accent) / 0.4)" }}
             />
           </div>
         )}
@@ -209,8 +209,7 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
       </span>
     </motion.div>
   );
-});
-ProgramRow.displayName = "ProgramRow";
+};
 
 const EPGGrid = ({
   channels,
@@ -323,7 +322,7 @@ const EPGGrid = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25 }}
-              className={cn("rounded-2xl bg-card/60 border border-border/30 p-6 flex flex-col gap-4 overflow-y-auto scrollbar-hide h-[80%]", hideSchedule && "w-full")}
+              className={cn("rounded-2xl bg-card/60 border border-border/30 shadow-[0_8px_40px_-8px_hsl(var(--accent)/0.25)] p-6 flex flex-col gap-4 overflow-y-auto scrollbar-hide h-[80%]", hideSchedule && "w-full")}
             >
               <div className="flex justify-center">
                 <div className="w-20 h-12 rounded-md bg-transparent flex items-center justify-center overflow-hidden">
@@ -376,4 +375,4 @@ const EPGGrid = ({
   );
 };
 
-export default memo(EPGGrid);
+export default EPGGrid;

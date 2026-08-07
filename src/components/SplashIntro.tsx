@@ -170,7 +170,7 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
     });
     drawFrames();
 
-    const FRAME_INTERVAL = 1000;
+    const FRAME_INTERVAL = 500;
     animationFrame.current = window.setInterval(drawFrames, FRAME_INTERVAL);
     setRevealed(true);
     void Promise.allSettled(players.map((player) => player.play()));
