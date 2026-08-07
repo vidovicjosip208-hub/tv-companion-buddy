@@ -998,11 +998,15 @@ const VideotekaPlayer = ({
 
   const handleTimeSnapshot = useCallback(
     (time: number) => {
+      // Dok je seek preview aktivan, glavni video je zamrznut — ne ažuriraj poziciju
+      // niti timeline (UI prati isključivo pending seek vrijeme).
+      if (isSeekingRef.current) return;
       currentTimeRef.current = time;
-      if (!isSeekingRef.current) updateProgressDom(time);
+      updateProgressDom(time);
     },
     [updateProgressDom],
   );
+
 
   useEffect(() => {
     isSeekingRef.current = isSeeking;
