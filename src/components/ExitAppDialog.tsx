@@ -105,8 +105,8 @@ const ExitAppDialog = () => {
   const cancelLabel = t("exit.cancel", "Odustani");
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80">
-      <div className="mx-4 w-full max-w-md rounded-2xl border border-white/15 bg-[#0a0a12]/95 p-8 shadow-2xl">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black">
+      <div className="mx-4 w-full max-w-md rounded-2xl border border-white/15 bg-black p-8 shadow-2xl">
         <h2 className="text-2xl font-bold text-white text-center">{title}</h2>
         <p className="mt-3 text-center text-white/70">{message}</p>
         <div className="mt-8 flex items-center justify-center gap-4">
@@ -116,7 +116,7 @@ const ExitAppDialog = () => {
             className={cn(
               "min-w-[130px] rounded-xl border px-6 py-3 text-sm font-bold uppercase tracking-wide outline-none transition-all",
               selected === 0
-                ? "border-white bg-white text-black scale-105"
+                ? "border-[#F5C518] bg-[#F5C518] text-black scale-105"
                 : "border-white/20 bg-white/5 text-white/70 hover:text-white",
             )}
           >
@@ -128,7 +128,7 @@ const ExitAppDialog = () => {
             className={cn(
               "min-w-[130px] rounded-xl border px-6 py-3 text-sm font-bold uppercase tracking-wide outline-none transition-all",
               selected === 1
-                ? "border-white bg-white text-black scale-105"
+                ? "border-[#F5C518] bg-[#F5C518] text-black scale-105"
                 : "border-white/20 bg-white/5 text-white/70 hover:text-white",
             )}
           >
