@@ -41,9 +41,20 @@ const notify = () => {
   for (const l of listeners) l();
 };
 
+// Some TV remotes emit a back press more than once (native key + re-dispatched
+// Escape, or key repeats). Escape must move exactly one step back per press.
+let lastEscapeAt = 0;
+const ESCAPE_GUARD_MS = 250;
+
 const onWindowKeyDown = (e: KeyboardEvent) => {
   const zone = topZone();
   if (!zone) return;
+  if (e.key === "Escape" || e.key === "Backspace") {
+    if (e.repeat) return;
+    const now = Date.now();
+    if (now - lastEscapeAt < ESCAPE_GUARD_MS) return;
+    lastEscapeAt = now;
+  }
   zone.handlerRef.current(e);
 };
 
