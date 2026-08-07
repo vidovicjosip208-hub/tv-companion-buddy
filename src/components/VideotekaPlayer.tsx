@@ -1161,6 +1161,11 @@ const VideotekaPlayer = ({
     if (!isSeeking) return;
     const maxIndex = Math.max(0, Math.floor(totalDuration / SEEK_THUMB_STEP));
     const centreIndex = Math.min(maxIndex, Math.max(0, Math.round(seekTime / SEEK_THUMB_STEP)));
+    // Kada canvas capture nije moguć, koristimo živi frame iz istog videa.
+    if (seekCaptureBlocked) {
+      seekLive(centreIndex * SEEK_THUMB_STEP);
+      return;
+    }
     const half = Math.floor(THUMBNAIL_COUNT / 2);
     const wanted = new Set<number>();
     for (let i = -half - SEEK_PREFETCH; i <= half + SEEK_PREFETCH; i++) {
@@ -1169,7 +1174,27 @@ const VideotekaPlayer = ({
       wanted.add(idx * SEEK_THUMB_STEP);
     }
     wanted.forEach((t) => requestFrame(t));
-  }, [isSeeking, seekTime, totalDuration, requestFrame]);
+  }, [isSeeking, seekTime, totalDuration, requestFrame, seekCaptureBlocked, seekLive]);
+
+  // Ubacuje skriveni preview video u središnji slot stripa (živi preview).
+  const liveSlotRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      const video = previewVideoRef.current;
+      if (!video) return;
+      if (node) {
+        video.style.display = "block";
+        video.style.width = "100%";
+        video.style.height = "100%";
+        video.style.objectFit = "cover";
+        node.appendChild(video);
+      } else {
+        video.style.display = "none";
+        document.body.appendChild(video);
+      }
+    },
+    [previewVideoRef],
+  );
+
 
 
   // commitSeek — stvarno seekuje video, poziva se s debounceom
