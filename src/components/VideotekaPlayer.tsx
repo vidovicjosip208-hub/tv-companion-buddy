@@ -1083,20 +1083,35 @@ const VideotekaPlayer = ({
   const elapsed = formatTime(displayTime);
   const remaining = formatTime(Math.max(0, totalDuration - displayTime));
 
-  // ── NOVO: seek thumbnails su sada vremenski offseti + tražimo frame capture
+  // ── Seek thumbnails: FIKSNA vremenska mreža (svakih SEEK_THUMB_STEP sekundi).
+  // Sličice se generiraju samo jednom po točki mreže i zatim se ponovno koriste —
+  // pomicanjem seeka strip se samo pomiče (-3..+3 oko najbliže točke mreže),
+  // nema novog generiranja za već posjećena mjesta.
   const seekThumbnailTimes = useMemo(() => {
     const half = Math.floor(THUMBNAIL_COUNT / 2);
+    const maxIndex = Math.max(0, Math.floor(totalDuration / SEEK_THUMB_STEP));
+    const centreIndex = Math.min(maxIndex, Math.max(0, Math.round(seekTime / SEEK_THUMB_STEP)));
     return Array.from({ length: THUMBNAIL_COUNT }, (_, i) => {
-      const t = seekTime + (i - half) * 30;
-      return Math.max(0, Math.min(totalDuration, t));
+      const idx = Math.min(maxIndex, Math.max(0, centreIndex + i - half));
+      return idx * SEEK_THUMB_STEP;
     });
   }, [seekTime, totalDuration]);
 
-  // Kad se pokrene seeking, odmah zatraži sve frameove koji su nam potrebni
+  // Zatraži samo one točke mreže koje još nisu u cacheu (+ malo prefetcha oko njih)
   useEffect(() => {
     if (!isSeeking) return;
-    seekThumbnailTimes.forEach((t) => requestFrame(t));
-  }, [isSeeking, seekThumbnailTimes, requestFrame]);
+    const maxIndex = Math.max(0, Math.floor(totalDuration / SEEK_THUMB_STEP));
+    const centreIndex = Math.min(maxIndex, Math.max(0, Math.round(seekTime / SEEK_THUMB_STEP)));
+    const half = Math.floor(THUMBNAIL_COUNT / 2);
+    const wanted = new Set<number>();
+    for (let i = -half - SEEK_PREFETCH; i <= half + SEEK_PREFETCH; i++) {
+      const idx = centreIndex + i;
+      if (idx < 0 || idx > maxIndex) continue;
+      wanted.add(idx * SEEK_THUMB_STEP);
+    }
+    wanted.forEach((t) => requestFrame(t));
+  }, [isSeeking, seekTime, totalDuration, requestFrame]);
+
 
   // commitSeek — stvarno seekuje video, poziva se s debounceom
   const commitSeek = useCallback((time: number) => {
