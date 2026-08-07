@@ -1143,7 +1143,7 @@ const VideotekaPlayer = ({
         pendingSeekTimerRef.current = null;
       }
     },
-    [updateProgressDom],
+    [updateProgressDom, cancelHideTimer],
   );
 
   // Potvrda seeka (OK gumb) — sada stvarno pomakni video na odabranu poziciju.
