@@ -1703,16 +1703,19 @@ const VideotekaPlayer = ({
                         >
                           {seekThumbnailTimes.map((t, i) => {
                             const isCentre = i === Math.floor(THUMBNAIL_COUNT / 2);
-                            // Frame iz trajnog cachea (točke fiksne mreže); fallback na poster
-                            const frameSrc = seekFrames.get(Math.round(t)) ?? thumbnail;
+                            const sizeCls = isCentre
+                              ? "w-56 h-32 z-10 scale-110 ring-1 ring-white"
+                              : "w-40 h-24 opacity-50";
+                            if (t === null) {
+                              // Rub filma — prazan slot, strip ostaje poravnat
+                              return <div key={`empty-${i}`} className={`${sizeCls} opacity-0`} />;
+                            }
+                            // Frame iz trajnog cachea (fiksne točke mreže); fallback na poster
+                            const frameSrc = seekFrames.get(t) ?? thumbnail;
                             return (
                               <div
-                                key={`${t}-${i}`}
-                                className={`relative overflow-hidden transition-all duration-200 ${
-                                  isCentre
-                                    ? "w-56 h-32 z-10 scale-110 ring-1 ring-white"
-                                    : "w-40 h-24 opacity-50"
-                                }`}
+                                key={t}
+                                className={`relative overflow-hidden transition-all duration-200 ${sizeCls}`}
                               >
                                 <img
                                   src={frameSrc}
@@ -1724,7 +1727,7 @@ const VideotekaPlayer = ({
                                 {isCentre && (
                                   <div className="absolute bottom-1 left-0 right-0 text-center">
                                     <span className="text-[15px] text-white font-bold font-mono drop-shadow">
-                                      {formatTime(t)}
+                                      {formatTime(seekTime)}
                                     </span>
                                   </div>
                                 )}
