@@ -71,8 +71,12 @@ const FullscreenBootstrap = () => {
     document.addEventListener("webkitfullscreenchange", onFsChange);
 
     return () => {
+      autoTimers.forEach(window.clearTimeout);
       window.removeEventListener("keydown", onGesture);
       window.removeEventListener("pointerdown", onGesture);
+      window.removeEventListener("pointermove", onGesture);
+      window.removeEventListener("focus", onGesture);
+      document.removeEventListener("visibilitychange", onGesture);
       document.removeEventListener("fullscreenchange", onFsChange);
       document.removeEventListener("webkitfullscreenchange", onFsChange);
     };
