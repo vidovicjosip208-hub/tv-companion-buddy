@@ -45,8 +45,17 @@ const FullscreenBootstrap = () => {
     const onGesture = () => {
       void requestFs();
     };
+
+    // Try immediately on load (works on TV browsers / kiosk & app launchers where
+    // fullscreen doesn't require a user gesture). If the browser rejects it,
+    // the gesture listeners below take over.
+    const autoTimers = [0, 100, 500, 1500].map((ms) => window.setTimeout(() => void requestFs(), ms));
+
     window.addEventListener("keydown", onGesture);
     window.addEventListener("pointerdown", onGesture);
+    window.addEventListener("pointermove", onGesture, { once: true });
+    window.addEventListener("focus", onGesture);
+    document.addEventListener("visibilitychange", onGesture);
 
     const onFsChange = () => {
       if (isFullscreen()) {
@@ -62,8 +71,12 @@ const FullscreenBootstrap = () => {
     document.addEventListener("webkitfullscreenchange", onFsChange);
 
     return () => {
+      autoTimers.forEach(window.clearTimeout);
       window.removeEventListener("keydown", onGesture);
       window.removeEventListener("pointerdown", onGesture);
+      window.removeEventListener("pointermove", onGesture);
+      window.removeEventListener("focus", onGesture);
+      document.removeEventListener("visibilitychange", onGesture);
       document.removeEventListener("fullscreenchange", onFsChange);
       document.removeEventListener("webkitfullscreenchange", onFsChange);
     };
