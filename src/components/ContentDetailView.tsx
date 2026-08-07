@@ -47,9 +47,17 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
   }, []);
 
   const closePlayer = useCallback(() => {
+    // Player se demontira u cijelosti (video/HLS teardown), a fokus se vraća
+    // na prethodni korak: listu epizoda ako je reprodukcija krenula odande,
+    // inače na detalje sadržaja.
     setShowPlayer(false);
+    if (initialEpisodeId) {
+      setInitialEpisodeId(null);
+      setShowEpisodes(true);
+    }
     // Namjerno NE izlazimo iz fullscreena — cijela aplikacija ostaje u full screenu.
-  }, []);
+  }, [initialEpisodeId]);
+
 
   const handleSelect = useCallback((id: ButtonId) => {
     if (id === "resume" || id === "playFromBeginning") openPlayer();

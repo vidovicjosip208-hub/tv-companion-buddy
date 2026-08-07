@@ -1157,10 +1157,17 @@ const VideotekaPlayer = ({
       if (!loaderDone || !videoReady) return;
 
       if (!isVisible) {
+        // Escape/Back radi i kad je HUD skriven — odmah izlazi iz playera.
+        if (e.key === "Escape" || e.key === "Backspace") {
+          e.preventDefault();
+          onClose();
+          return;
+        }
         setIsVisible(true);
         startHideTimer();
         return;
       }
+
 
       startHideTimer();
 
@@ -1180,9 +1187,12 @@ const VideotekaPlayer = ({
           if (isSeeking) {
             cancelSeek();
           } else {
-            setIsVisible(false);
+            // Back/Escape zatvara player u cijelosti — komponenta se demontira,
+            // video/HLS se uništava i fokus se vraća na prethodni korak.
+            onClose();
           }
           break;
+
 
         case "ArrowRight":
           e.preventDefault();
