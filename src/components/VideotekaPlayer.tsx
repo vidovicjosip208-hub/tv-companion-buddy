@@ -1706,8 +1706,7 @@ const VideotekaPlayer = ({
                             const frameSrc = seekFrames.get(Math.round(t)) ?? thumbnail;
                             return (
                               <div
-                                key={t}
-                                key={i}
+                                key={`${t}-${i}`}
                                 className={`relative overflow-hidden transition-all duration-200 ${
                                   isCentre
                                     ? "w-56 h-32 z-10 scale-110 ring-1 ring-white"
