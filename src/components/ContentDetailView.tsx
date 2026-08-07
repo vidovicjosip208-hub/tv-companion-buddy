@@ -6,6 +6,7 @@ import { ContentDetailsData } from "@/data/videotekaContent";
 import EpisodesView from "@/components/EpisodesView";
 import VideotekaPlayer from "@/components/VideotekaPlayer";
 import logo from "@/assets/max-ovizija-videoteka-logo.png";
+import { useZoneKeys } from "@/lib/focusZone";
 
 interface ContentDetailViewProps {
   details: ContentDetailsData;
@@ -55,9 +56,8 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
     if (id === "episodesAndMore") setShowEpisodes(true);
   }, [openPlayer]);
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (showEpisodes || showPlayer) return;
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent) => {
 
       const moveMainFocus = (direction: -1 | 1) => {
         setFocusedIndex((currentFocus) => {
@@ -107,11 +107,11 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
         e.preventDefault();
         onClose();
       }
-    };
+    },
+    [focusedIndex, handleSelect, onClose],
+  );
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [focusedIndex, showEpisodes, showPlayer, handleSelect, onClose]);
+  useZoneKeys("content-detail", onKeyDown, !showEpisodes && !showPlayer, 20);
 
   const f = (id: ButtonId) => ALL_BUTTONS[focusedIndex] === id;
 
