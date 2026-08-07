@@ -873,7 +873,14 @@ const VideotekaPlayer = ({
   const seekPreviewUrl = seekPreviewUrlProp ?? effectiveStreamUrl;
 
   // ── NOVO: hook koji drži skriveni video + canvas za frame capture
-  const { frames: seekFrames, requestFrame } = useSeekPreview(seekPreviewUrl);
+  const {
+    frames: seekFrames,
+    requestFrame,
+    captureBlocked: seekCaptureBlocked,
+    previewVideoRef,
+    seekLive,
+  } = useSeekPreview(seekPreviewUrl);
+
 
   const [isVisible, setIsVisible] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
