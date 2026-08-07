@@ -1013,6 +1013,38 @@ const VideotekaPlayer = ({
     updateProgressDom(isSeeking ? seekTime : currentTimeRef.current);
   }, [isSeeking, seekTime, updateProgressDom]);
 
+  // Dok je seek preview aktivan, glavni player mora ostati zamrznut na trenutnom okviru:
+  // pauziramo ga i blokiramo svaki pokušaj automatskog nastavka reprodukcije.
+  useEffect(() => {
+    if (!isSeeking) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    const freeze = () => {
+      if (!isSeekingRef.current) return;
+      if (!video.paused) {
+        try {
+          video.pause();
+        } catch {
+          /* noop */
+        }
+      }
+    };
+
+    freeze();
+    setIsPlaying(false);
+    video.addEventListener("play", freeze);
+    video.addEventListener("playing", freeze);
+    video.addEventListener("canplay", freeze);
+
+    return () => {
+      video.removeEventListener("play", freeze);
+      video.removeEventListener("playing", freeze);
+      video.removeEventListener("canplay", freeze);
+    };
+  }, [isSeeking]);
+
+
   const handlePlayStateChange = useCallback((playing: boolean) => {
     setIsPlaying(playing);
   }, []);
