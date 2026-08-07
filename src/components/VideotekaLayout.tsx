@@ -61,9 +61,16 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
         return;
       }
 
+      if (e.key === "Escape" || e.key === "Backspace") {
+        e.preventDefault();
+        navigate("/");
+        return;
+      }
+
       if (headerFocused) {
         return;
       }
+
 
       switch (e.key) {
         case "ArrowRight":
