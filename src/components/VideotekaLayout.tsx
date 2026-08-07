@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import StarryBackground from "@/components/StarryBackground";
@@ -116,10 +117,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
     [focusedRow, navigate, rows, detailViewOpen, headerFocused],
   );
 
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
+  useZoneKeys("videoteka-rows", handleKeyDown, !searchOpen, 0);
 
   const currentRow = rows[focusedRow];
   const currentItem = currentRow?.items[focusedItems[focusedRow] ?? 0];
