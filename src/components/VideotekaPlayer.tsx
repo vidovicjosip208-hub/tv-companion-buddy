@@ -1234,12 +1234,16 @@ const VideotekaPlayer = ({
 
         case "ArrowRight":
           e.preventDefault();
+          // Dok je seek aktivan, strelice samo pomiču poziciju (bez promjene fokusa).
+          if (isSeeking) {
+            seekVideo((pendingSeekRef.current ?? seekTime) + SEEK_STEP);
+            break;
+          }
           if (focusedRow === 2) {
             if (focusedCol === 1) {
               setFocusedCol(2);
             } else if (focusedCol === 2) {
-              const base = isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current;
-              seekVideo(base + SEEK_STEP);
+              seekVideo(currentTimeRef.current + SEEK_STEP);
             } else {
               setFocusedCol((prev) => Math.min(prev + 1, ROW_SIZES[focusedRow] - 1));
             }
@@ -1250,12 +1254,15 @@ const VideotekaPlayer = ({
 
         case "ArrowLeft":
           e.preventDefault();
+          if (isSeeking) {
+            seekVideo((pendingSeekRef.current ?? seekTime) - SEEK_STEP);
+            break;
+          }
           if (focusedRow === 2) {
             if (focusedCol === 1) {
               setFocusedCol(0);
             } else if (focusedCol === 0) {
-              const base = isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current;
-              seekVideo(base - SEEK_STEP);
+              seekVideo(currentTimeRef.current - SEEK_STEP);
             } else {
               setFocusedCol((prev) => Math.max(prev - 1, 0));
             }
