@@ -118,6 +118,10 @@ function useSeekPreview(seekPreviewUrl: string | null) {
   const pendingRef = useRef<Set<number>>(new Set());
   const seekingRef = useRef(false);
   const queueRef = useRef<number[]>([]);
+  // Kada canvas capture nije moguć (CORS taint / TV dekoder), preview se
+  // prikazuje kao živi frame iz istog videa koji ide u playeru.
+  const [captureBlocked, setCaptureBlocked] = useState(false);
+
 
   // Dohvati ili kreiraj cache za ovaj URL
   const getCache = useCallback((): Map<number, string> => {
@@ -175,6 +179,23 @@ function useSeekPreview(seekPreviewUrl: string | null) {
       video.load();
     }
 
+    // Ako izvor ne dopušta CORS, video s crossOrigin="anonymous" se neće učitati.
+    // Tada jednom pokušamo bez crossOrigin — sličice se onda ne mogu čitati u
+    // canvas (taint), pa preview prelazi na živi frame iz istog videa.
+    let retriedWithoutCors = false;
+    const onMediaError = () => {
+      if (!retriedWithoutCors && video.crossOrigin) {
+        retriedWithoutCors = true;
+        video.removeAttribute("crossorigin");
+        if (!isHlsPreview) {
+          video.src = seekPreviewUrl;
+          video.load();
+        }
+        setCaptureBlocked(true);
+      }
+    };
+    video.addEventListener("error", onMediaError);
+
     const canvas = document.createElement("canvas");
     canvas.width = SEEK_CANVAS_W;
     canvas.height = SEEK_CANVAS_H;
@@ -184,6 +205,7 @@ function useSeekPreview(seekPreviewUrl: string | null) {
 
     return () => {
       // Zaustavi i ukloni video/canvas ali NE briši cache
+      video.removeEventListener("error", onMediaError);
       previewHls?.destroy();
       video.pause();
       video.removeAttribute("src");
@@ -198,6 +220,7 @@ function useSeekPreview(seekPreviewUrl: string | null) {
       seekingRef.current = false;
     };
   }, [seekPreviewUrl]);
+
 
   const processQueue = useCallback(() => {
     if (seekingRef.current) return;
@@ -261,9 +284,14 @@ function useSeekPreview(seekPreviewUrl: string | null) {
           }
 
           if (!isBlank) {
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-            getCache().set(time, dataUrl);
-            bumpVersion();
+            try {
+              const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+              getCache().set(time, dataUrl);
+              bumpVersion();
+            } catch {
+              // Tainted canvas (izvor bez CORS-a) — prelazimo na živi preview.
+              setCaptureBlocked(true);
+            }
           }
           pendingRef.current.delete(time);
         } finally {
@@ -293,8 +321,26 @@ function useSeekPreview(seekPreviewUrl: string | null) {
     [getCache, processQueue],
   );
 
-  return { frames, requestFrame };
+  // Živi preview: pomiče skriveni preview video na traženo vrijeme i vraća
+  // sam element kako bi ga UI mogao prikazati kao središnju sličicu.
+  const seekLive = useCallback((time: number) => {
+    const video = videoRef.current;
+    if (!video) return null;
+    const t = Math.max(0, Math.round(time));
+    if (Math.abs(video.currentTime - t) > 0.4) {
+      try {
+        video.currentTime = t;
+      } catch {
+        /* metadata još nije spremna */
+      }
+    }
+    return video;
+  }, []);
+
+  return { frames, requestFrame, captureBlocked, previewVideoRef: videoRef, seekLive };
 }
+
+
 
 // ── FrozenHlsVideo ────────────────────────────────────────────────────────────
 
@@ -827,7 +873,14 @@ const VideotekaPlayer = ({
   const seekPreviewUrl = seekPreviewUrlProp ?? effectiveStreamUrl;
 
   // ── NOVO: hook koji drži skriveni video + canvas za frame capture
-  const { frames: seekFrames, requestFrame } = useSeekPreview(seekPreviewUrl);
+  const {
+    frames: seekFrames,
+    requestFrame,
+    captureBlocked: seekCaptureBlocked,
+    previewVideoRef,
+    seekLive,
+  } = useSeekPreview(seekPreviewUrl);
+
 
   const [isVisible, setIsVisible] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -1108,6 +1161,11 @@ const VideotekaPlayer = ({
     if (!isSeeking) return;
     const maxIndex = Math.max(0, Math.floor(totalDuration / SEEK_THUMB_STEP));
     const centreIndex = Math.min(maxIndex, Math.max(0, Math.round(seekTime / SEEK_THUMB_STEP)));
+    // Kada canvas capture nije moguć, koristimo živi frame iz istog videa.
+    if (seekCaptureBlocked) {
+      seekLive(centreIndex * SEEK_THUMB_STEP);
+      return;
+    }
     const half = Math.floor(THUMBNAIL_COUNT / 2);
     const wanted = new Set<number>();
     for (let i = -half - SEEK_PREFETCH; i <= half + SEEK_PREFETCH; i++) {
@@ -1116,7 +1174,27 @@ const VideotekaPlayer = ({
       wanted.add(idx * SEEK_THUMB_STEP);
     }
     wanted.forEach((t) => requestFrame(t));
-  }, [isSeeking, seekTime, totalDuration, requestFrame]);
+  }, [isSeeking, seekTime, totalDuration, requestFrame, seekCaptureBlocked, seekLive]);
+
+  // Ubacuje skriveni preview video u središnji slot stripa (živi preview).
+  const liveSlotRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      const video = previewVideoRef.current;
+      if (!video) return;
+      if (node) {
+        video.style.display = "block";
+        video.style.width = "100%";
+        video.style.height = "100%";
+        video.style.objectFit = "cover";
+        node.appendChild(video);
+      } else {
+        video.style.display = "none";
+        document.body.appendChild(video);
+      }
+    },
+    [previewVideoRef],
+  );
+
 
 
   // commitSeek — stvarno seekuje video, poziva se s debounceom
@@ -1719,13 +1797,19 @@ const VideotekaPlayer = ({
                                 key={`slot-${i}`}
                                 className={`relative overflow-hidden ${sizeCls}`}
                               >
-                                <img
-                                  src={frameSrc}
-                                  className="w-full h-full object-cover"
-                                  alt="seek preview"
-                                  // crossOrigin potrebno za canvas taint ako src nije isti origin
-                                  crossOrigin="anonymous"
-                                />
+                                {isCentre && seekCaptureBlocked ? (
+                                  // Živi frame iz videa koji ide u playeru
+                                  <div ref={liveSlotRef} className="w-full h-full bg-black" />
+                                ) : (
+                                  <img
+                                    src={frameSrc}
+                                    className="w-full h-full object-cover"
+                                    alt="seek preview"
+                                    // crossOrigin potrebno za canvas taint ako src nije isti origin
+                                    crossOrigin="anonymous"
+                                  />
+                                )}
+
                                 {isCentre && (
                                   <div className="absolute bottom-1 left-0 right-0 text-center">
                                     <span className="text-[15px] text-white font-bold font-mono drop-shadow">
