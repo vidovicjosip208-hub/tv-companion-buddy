@@ -266,7 +266,8 @@ const EPGGrid = ({
       {/* Middle Column — Program Guide */}
       {!hideSchedule && (
         <>
-          <div className="w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2">
+          <div className="w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2 flex-shrink-0">
+
             <h2 className="text-muted-foreground font-medium text-sm px-5 pb-2">{t("epg.schedule")}</h2>
             <AnimatePresence mode="wait">
               <motion.div
