@@ -118,6 +118,10 @@ function useSeekPreview(seekPreviewUrl: string | null) {
   const pendingRef = useRef<Set<number>>(new Set());
   const seekingRef = useRef(false);
   const queueRef = useRef<number[]>([]);
+  // Kada canvas capture nije moguć (CORS taint / TV dekoder), preview se
+  // prikazuje kao živi frame iz istog videa koji ide u playeru.
+  const [captureBlocked, setCaptureBlocked] = useState(false);
+
 
   // Dohvati ili kreiraj cache za ovaj URL
   const getCache = useCallback((): Map<number, string> => {
