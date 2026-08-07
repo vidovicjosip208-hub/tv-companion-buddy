@@ -1,5 +1,5 @@
 import { Home, Search } from "lucide-react";
-import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
