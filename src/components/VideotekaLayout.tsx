@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import StarryBackground from "@/components/StarryBackground";
@@ -117,14 +116,16 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
     [focusedRow, navigate, rows, detailViewOpen, headerFocused],
   );
 
-  useZoneKeys("videoteka-rows", handleKeyDown, !searchOpen, 0);
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   const currentRow = rows[focusedRow];
   const currentItem = currentRow?.items[focusedItems[focusedRow] ?? 0];
   const details = detailsData[currentItem?.id || ""] || defaultDetails;
   const nextRow = focusedRow + 1 < rows.length ? focusedRow + 1 : null;
   const hasContent = !!currentRow && currentRow.items.length > 0;
-  const overlayActive = searchOpen || detailViewOpen;
 
   return (
     <motion.div
@@ -134,7 +135,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
       transition={{ duration: 0.6 }}
       className="h-screen overflow-hidden relative"
     >
-      {!overlayActive && <StarryBackground />}
+      <StarryBackground />
       <VideotekaHeader
         ref={headerRef}
         activeTab={activeTab}
@@ -146,7 +147,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
         onTabChange={handleTabChange}
       />
       {searchOpen && <VideotekaSearch allItems={allContentItems} onClose={() => setSearchOpen(false)} />}
-      {overlayActive ? null : !hasContent ? (
+      {!hasContent ? (
         <div className="flex h-[461px] items-center justify-center text-white/60 text-base px-4 text-center">
           {isLoading ? "Učitavanje sadržaja…" : "Nema sadržaja u Videoteci."}
         </div>

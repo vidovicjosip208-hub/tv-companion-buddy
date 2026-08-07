@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useZoneKeys } from "@/lib/focusZone";
 import { X, RotateCcw, AlertTriangle } from "lucide-react";
 import Hls from "hls.js";
 import videojs from "video.js";
@@ -240,14 +239,13 @@ const VODPlayer = ({ itemId, streamUrl: streamUrlProp, title, poster, onClose }:
   }, [streamUrl, fetchingStream, fetchError, retryToken, poster, hasHEVC, cleanup]);
 
   // Esc to close
-  const onKey = useCallback(
-    (e: KeyboardEvent) => {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-    },
-    [onClose],
-  );
-
-  useZoneKeys("vod-player", onKey, true, 40);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   return (
     <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center">

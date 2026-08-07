@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useZoneKeys } from "@/lib/focusZone";
 import { User, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -64,7 +63,10 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
     [focusArea, focusedIndex, totalItems, onBack],
   );
 
-  useZoneKeys("profile-selection", handleKeyDown, true, 20);
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   return (
     <motion.div

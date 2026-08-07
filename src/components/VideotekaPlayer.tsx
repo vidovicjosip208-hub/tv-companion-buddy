@@ -1,5 +1,4 @@
 import { memo, useState, useEffect, useCallback, useMemo, useRef, type MutableRefObject } from "react";
-import { useZoneKeys } from "@/lib/focusZone";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -1152,8 +1151,8 @@ const VideotekaPlayer = ({
     wasPlayingBeforeSeekRef.current = false;
   }, [updateProgressDom]);
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (!loaderDone || !videoReady) return;
 
       if (!isVisible) {
@@ -1269,8 +1268,11 @@ const VideotekaPlayer = ({
           }
           break;
       }
-    },
-    [
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
     loaderDone,
     isVisible,
     focusedRow,
@@ -1292,10 +1294,8 @@ const VideotekaPlayer = ({
     updateProgressDom,
   ]);
 
-  useZoneKeys("videoteka-player", handleKeyDown, true, 40);
-
-  const handleModalKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+  useEffect(() => {
+    const handleModalKeyDown = (e: KeyboardEvent) => {
       if (!subtitleModalRef.current && !audioModalRef.current && !fontModalRef.current) return;
       e.preventDefault();
       e.stopPropagation();
@@ -1355,20 +1355,16 @@ const VideotekaPlayer = ({
           closeFontModal();
         }
       }
-    },
-    [closeSubtitleModal, closeAudioModal, closeFontModal],
-  );
+    };
 
-  useZoneKeys(
-    "videoteka-player-modal",
-    handleModalKeyDown,
-    showSubtitleModal || showAudioModal || showFontModal,
-    50,
-  );
+    window.addEventListener("keydown", handleModalKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", handleModalKeyDown, { capture: true });
+  }, []);
 
   // ── Keyboard za episode panel ─────────────────────────────────────────────
-  const episodesPanelKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+  useEffect(() => {
+    if (!showEpisodesPanel) return;
+    const handler = (e: KeyboardEvent) => {
       e.preventDefault();
       e.stopPropagation();
       const currentSeason = seasons[epSeasonIdx];
@@ -1415,11 +1411,10 @@ const VideotekaPlayer = ({
           }
         }
       }
-    },
-    [epFocusArea, epSeasonIdx, epEpisodeIdx, seasons],
-  );
-
-  useZoneKeys("videoteka-player-episodes", episodesPanelKeyDown, showEpisodesPanel, 60);
+    };
+    window.addEventListener("keydown", handler, { capture: true });
+    return () => window.removeEventListener("keydown", handler, { capture: true });
+  }, [showEpisodesPanel, epFocusArea, epSeasonIdx, epEpisodeIdx, seasons]);
 
   const skipActive = skipHovered || (focusedRow === 0 && focusedCol === 2);
 

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useZoneKeys } from "@/lib/focusZone";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
@@ -1128,7 +1127,12 @@ const VideoPlayer = ({
     ],
   );
 
-  useZoneKeys("tv-player", handleKeyDown, isVisible, 40);
+  useEffect(() => {
+    if (isVisible) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [isVisible, handleKeyDown, resetHideTimer]);
 
   useEffect(() => {
     if (!isVisible) return;
