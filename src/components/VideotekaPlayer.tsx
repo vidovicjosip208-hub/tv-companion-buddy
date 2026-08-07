@@ -931,6 +931,8 @@ const VideotekaPlayer = ({
   }, []);
   const startHideTimer = useCallback(() => {
     cancelHideTimer();
+    // Dok je seek preview aktivan, HUD se NE smije sakriti — čeka potvrdu s OK.
+    if (isSeekingRef.current) return;
     hideTimerRef.current = setTimeout(() => setIsVisible(false), 3000);
   }, [cancelHideTimer]);
 
