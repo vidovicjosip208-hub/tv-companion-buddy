@@ -1131,7 +1131,11 @@ const VideotekaPlayer = ({
       pendingSeekRef.current = clamped;
       updateProgressDom(clamped);
       setSeekTime(clamped);
+      isSeekingRef.current = true;
       setIsSeeking(true);
+      // HUD + seek preview ostaju vidljivi do potvrde.
+      setIsVisible(true);
+      cancelHideTimer();
 
       // Očisti eventualni raniji debounce timer — više ne komitamo automatski.
       if (pendingSeekTimerRef.current) {
