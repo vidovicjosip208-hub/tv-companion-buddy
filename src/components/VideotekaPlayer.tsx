@@ -1702,10 +1702,11 @@ const VideotekaPlayer = ({
                         >
                           {seekThumbnailTimes.map((t, i) => {
                             const isCentre = i === Math.floor(THUMBNAIL_COUNT / 2);
-                            // Pokušaj dohvatiti stvarni frame; fallback na poster
+                            // Frame iz trajnog cachea (točke fiksne mreže); fallback na poster
                             const frameSrc = seekFrames.get(Math.round(t)) ?? thumbnail;
                             return (
                               <div
+                                key={t}
                                 key={i}
                                 className={`relative overflow-hidden transition-all duration-200 ${
                                   isCentre
