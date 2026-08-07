@@ -60,6 +60,11 @@ const ROW_SIZES = [3, 2, 3, CONTROL_OPTIONS.length];
 const TOTAL_DURATION = 55 * 60 + 48;
 const SEEK_STEP = 10;
 const THUMBNAIL_COUNT = 7;
+// Fiksna vremenska mreža za seek sličice — sličice se generiraju samo za
+// multiple ovog koraka i trajno se ponovno koriste (bez novih generiranja).
+const SEEK_THUMB_STEP = 30;
+// Koliko dodatnih točaka mreže unaprijed/unazad pripremiti izvan vidljivog stripa.
+const SEEK_PREFETCH = 2;
 const GOLD = "#F5C518";
 const LOADER_MIN_DURATION = 1200;
 const LOADER_MAX_DURATION = 5000;
@@ -1083,20 +1088,36 @@ const VideotekaPlayer = ({
   const elapsed = formatTime(displayTime);
   const remaining = formatTime(Math.max(0, totalDuration - displayTime));
 
-  // ── NOVO: seek thumbnails su sada vremenski offseti + tražimo frame capture
+  // ── Seek thumbnails: FIKSNA vremenska mreža (svakih SEEK_THUMB_STEP sekundi).
+  // Sličice se generiraju samo jednom po točki mreže i zatim se ponovno koriste —
+  // pomicanjem seeka strip se samo pomiče (-3..+3 oko najbliže točke mreže),
+  // nema novog generiranja za već posjećena mjesta.
   const seekThumbnailTimes = useMemo(() => {
     const half = Math.floor(THUMBNAIL_COUNT / 2);
+    const maxIndex = Math.max(0, Math.floor(totalDuration / SEEK_THUMB_STEP));
+    const centreIndex = Math.min(maxIndex, Math.max(0, Math.round(seekTime / SEEK_THUMB_STEP)));
     return Array.from({ length: THUMBNAIL_COUNT }, (_, i) => {
-      const t = seekTime + (i - half) * 30;
-      return Math.max(0, Math.min(totalDuration, t));
+      const idx = centreIndex + i - half;
+      if (idx < 0 || idx > maxIndex) return null;
+      return idx * SEEK_THUMB_STEP;
     });
   }, [seekTime, totalDuration]);
 
-  // Kad se pokrene seeking, odmah zatraži sve frameove koji su nam potrebni
+  // Zatraži samo one točke mreže koje još nisu u cacheu (+ malo prefetcha oko njih)
   useEffect(() => {
     if (!isSeeking) return;
-    seekThumbnailTimes.forEach((t) => requestFrame(t));
-  }, [isSeeking, seekThumbnailTimes, requestFrame]);
+    const maxIndex = Math.max(0, Math.floor(totalDuration / SEEK_THUMB_STEP));
+    const centreIndex = Math.min(maxIndex, Math.max(0, Math.round(seekTime / SEEK_THUMB_STEP)));
+    const half = Math.floor(THUMBNAIL_COUNT / 2);
+    const wanted = new Set<number>();
+    for (let i = -half - SEEK_PREFETCH; i <= half + SEEK_PREFETCH; i++) {
+      const idx = centreIndex + i;
+      if (idx < 0 || idx > maxIndex) continue;
+      wanted.add(idx * SEEK_THUMB_STEP);
+    }
+    wanted.forEach((t) => requestFrame(t));
+  }, [isSeeking, seekTime, totalDuration, requestFrame]);
+
 
   // commitSeek — stvarno seekuje video, poziva se s debounceom
   const commitSeek = useCallback((time: number) => {
@@ -1682,16 +1703,19 @@ const VideotekaPlayer = ({
                         >
                           {seekThumbnailTimes.map((t, i) => {
                             const isCentre = i === Math.floor(THUMBNAIL_COUNT / 2);
-                            // Pokušaj dohvatiti stvarni frame; fallback na poster
-                            const frameSrc = seekFrames.get(Math.round(t)) ?? thumbnail;
+                            const sizeCls = isCentre
+                              ? "w-56 h-32 z-10 scale-110 ring-1 ring-white"
+                              : "w-40 h-24 opacity-50";
+                            if (t === null) {
+                              // Rub filma — prazan slot, strip ostaje poravnat
+                              return <div key={`empty-${i}`} className={`${sizeCls} opacity-0`} />;
+                            }
+                            // Frame iz trajnog cachea (fiksne točke mreže); fallback na poster
+                            const frameSrc = seekFrames.get(t) ?? thumbnail;
                             return (
                               <div
-                                key={i}
-                                className={`relative overflow-hidden transition-all duration-200 ${
-                                  isCentre
-                                    ? "w-56 h-32 z-10 scale-110 ring-1 ring-white"
-                                    : "w-40 h-24 opacity-50"
-                                }`}
+                                key={t}
+                                className={`relative overflow-hidden transition-all duration-200 ${sizeCls}`}
                               >
                                 <img
                                   src={frameSrc}
@@ -1703,7 +1727,7 @@ const VideotekaPlayer = ({
                                 {isCentre && (
                                   <div className="absolute bottom-1 left-0 right-0 text-center">
                                     <span className="text-[15px] text-white font-bold font-mono drop-shadow">
-                                      {formatTime(t)}
+                                      {formatTime(seekTime)}
                                     </span>
                                   </div>
                                 )}
