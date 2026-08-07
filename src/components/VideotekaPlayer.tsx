@@ -179,6 +179,23 @@ function useSeekPreview(seekPreviewUrl: string | null) {
       video.load();
     }
 
+    // Ako izvor ne dopušta CORS, video s crossOrigin="anonymous" se neće učitati.
+    // Tada jednom pokušamo bez crossOrigin — sličice se onda ne mogu čitati u
+    // canvas (taint), pa preview prelazi na živi frame iz istog videa.
+    let retriedWithoutCors = false;
+    const onMediaError = () => {
+      if (!retriedWithoutCors && video.crossOrigin) {
+        retriedWithoutCors = true;
+        video.removeAttribute("crossorigin");
+        if (!isHlsPreview) {
+          video.src = seekPreviewUrl;
+          video.load();
+        }
+        setCaptureBlocked(true);
+      }
+    };
+    video.addEventListener("error", onMediaError);
+
     const canvas = document.createElement("canvas");
     canvas.width = SEEK_CANVAS_W;
     canvas.height = SEEK_CANVAS_H;
@@ -188,6 +205,7 @@ function useSeekPreview(seekPreviewUrl: string | null) {
 
     return () => {
       // Zaustavi i ukloni video/canvas ali NE briši cache
+      video.removeEventListener("error", onMediaError);
       previewHls?.destroy();
       video.pause();
       video.removeAttribute("src");
@@ -202,6 +220,7 @@ function useSeekPreview(seekPreviewUrl: string | null) {
       seekingRef.current = false;
     };
   }, [seekPreviewUrl]);
+
 
   const processQueue = useCallback(() => {
     if (seekingRef.current) return;
