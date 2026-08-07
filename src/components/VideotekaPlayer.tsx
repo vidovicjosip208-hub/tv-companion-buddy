@@ -62,7 +62,7 @@ const SEEK_STEP = 10;
 const THUMBNAIL_COUNT = 7;
 // Fiksna vremenska mreža za seek sličice — sličice se generiraju samo za
 // multiple ovog koraka i trajno se ponovno koriste (bez novih generiranja).
-const SEEK_THUMB_STEP = 30;
+const SEEK_THUMB_STEP = 10;
 // Koliko dodatnih točaka mreže unaprijed/unazad pripremiti izvan vidljivog stripa.
 const SEEK_PREFETCH = 2;
 const GOLD = "#F5C518";
