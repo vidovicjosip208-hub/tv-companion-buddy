@@ -103,7 +103,7 @@ const ChannelItem = memo(({
             src={channel.logoUrl}
             alt={channel.name}
             className="w-full h-full object-contain scale-125"
-            loading="lazy"
+            loading="eager"
             onError={() => setLogoError(true)}
           />
         ) : (
@@ -285,7 +285,7 @@ const EPGGrid = ({
                         src={selectedChannel.logoUrl}
                         alt={selectedChannel.name}
                         className="w-full h-full object-contain scale-125"
-                        loading="lazy"
+                        loading="eager"
                       />
                     ) : (
                       <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
@@ -335,7 +335,7 @@ const EPGGrid = ({
                       src={selectedChannel.logoUrl}
                       alt={selectedChannel.name}
                       className="w-full h-full object-contain scale-125"
-                      loading="lazy"
+                      loading="eager"
                     />
                   ) : (
                     <span className="text-sm font-bold text-accent tracking-wider">
