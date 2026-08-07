@@ -1797,13 +1797,19 @@ const VideotekaPlayer = ({
                                 key={`slot-${i}`}
                                 className={`relative overflow-hidden ${sizeCls}`}
                               >
-                                <img
-                                  src={frameSrc}
-                                  className="w-full h-full object-cover"
-                                  alt="seek preview"
-                                  // crossOrigin potrebno za canvas taint ako src nije isti origin
-                                  crossOrigin="anonymous"
-                                />
+                                {isCentre && seekCaptureBlocked ? (
+                                  // Živi frame iz videa koji ide u playeru
+                                  <div ref={liveSlotRef} className="w-full h-full bg-black" />
+                                ) : (
+                                  <img
+                                    src={frameSrc}
+                                    className="w-full h-full object-cover"
+                                    alt="seek preview"
+                                    // crossOrigin potrebno za canvas taint ako src nije isti origin
+                                    crossOrigin="anonymous"
+                                  />
+                                )}
+
                                 {isCentre && (
                                   <div className="absolute bottom-1 left-0 right-0 text-center">
                                     <span className="text-[15px] text-white font-bold font-mono drop-shadow">
