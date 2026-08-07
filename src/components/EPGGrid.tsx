@@ -243,10 +243,10 @@ const EPGGrid = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col flex-1 overflow-hidden rounded-xl gap-2"
+      className="flex flex-row flex-1 overflow-hidden rounded-xl gap-2"
     >
       {/* Left Column — Channel List */}
-      <div className={cn("w-full flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2", hideSchedule ? " w-[35%]" : " w-[21%]") }>
+      <div className={cn("flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2 flex-shrink-0", hideSchedule ? "w-[35%]" : "w-[21%]") }>
         <h2 className="text-muted-foreground font-medium text-sm px-4 pb-2">{t("epg.live")}</h2>
         {channels.map((channel, index) => (
           <ChannelItem
@@ -260,7 +260,8 @@ const EPGGrid = ({
       </div>
 
       {/* Gold Divider */}
-      <div className="hidden w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
+      <div className="w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
+
 
       {/* Middle Column — Program Guide */}
       {!hideSchedule && (
