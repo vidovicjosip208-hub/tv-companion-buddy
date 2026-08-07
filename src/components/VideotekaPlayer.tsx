@@ -1180,9 +1180,12 @@ const VideotekaPlayer = ({
           if (isSeeking) {
             cancelSeek();
           } else {
-            setIsVisible(false);
+            // Back/Escape zatvara player u cijelosti — komponenta se demontira,
+            // video/HLS se uništava i fokus se vraća na prethodni korak.
+            onClose();
           }
           break;
+
 
         case "ArrowRight":
           e.preventDefault();
