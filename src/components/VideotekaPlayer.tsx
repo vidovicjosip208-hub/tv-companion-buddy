@@ -340,7 +340,7 @@ function useSeekPreview(seekPreviewUrl: string | null) {
   return { frames, requestFrame, captureBlocked, previewVideoRef: videoRef, seekLive };
 }
 
-}
+
 
 // ── FrozenHlsVideo ────────────────────────────────────────────────────────────
 
