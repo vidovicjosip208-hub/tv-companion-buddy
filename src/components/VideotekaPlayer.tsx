@@ -1157,10 +1157,17 @@ const VideotekaPlayer = ({
       if (!loaderDone || !videoReady) return;
 
       if (!isVisible) {
+        // Escape/Back radi i kad je HUD skriven — odmah izlazi iz playera.
+        if (e.key === "Escape" || e.key === "Backspace") {
+          e.preventDefault();
+          onClose();
+          return;
+        }
         setIsVisible(true);
         startHideTimer();
         return;
       }
+
 
       startHideTimer();
 
