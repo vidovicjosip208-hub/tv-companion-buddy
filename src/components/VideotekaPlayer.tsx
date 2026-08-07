@@ -60,6 +60,11 @@ const ROW_SIZES = [3, 2, 3, CONTROL_OPTIONS.length];
 const TOTAL_DURATION = 55 * 60 + 48;
 const SEEK_STEP = 10;
 const THUMBNAIL_COUNT = 7;
+// Fiksna vremenska mreža za seek sličice — sličice se generiraju samo za
+// multiple ovog koraka i trajno se ponovno koriste (bez novih generiranja).
+const SEEK_THUMB_STEP = 30;
+// Koliko dodatnih točaka mreže unaprijed/unazad pripremiti izvan vidljivog stripa.
+const SEEK_PREFETCH = 2;
 const GOLD = "#F5C518";
 const LOADER_MIN_DURATION = 1200;
 const LOADER_MAX_DURATION = 5000;
