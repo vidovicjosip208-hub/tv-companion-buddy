@@ -1248,15 +1248,22 @@ const VideotekaPlayer = ({
   // Potvrda seeka (OK gumb) — sada stvarno pomakni video na odabranu poziciju.
   const confirmSeek = useCallback(() => {
     isSeekingRef.current = false;
-    const target = pendingSeekRef.current;
+    const raw = pendingSeekRef.current;
     pendingSeekRef.current = null;
-    if (target === null) {
+    if (raw === null) {
       setIsSeeking(false);
       return;
     }
+    // Kvantiziraj na istu mrežu na kojoj su seek sličice, kako bi video
+    // krenuo točno s pozicije koju prikazuje fokusirana (središnja) sličica.
+    const duration = totalDurationRef.current || 0;
+    const maxIndex = duration > 0 ? Math.max(0, Math.floor(duration / SEEK_THUMB_STEP)) : Infinity;
+    const centreIndex = Math.min(maxIndex, Math.max(0, Math.round(raw / SEEK_THUMB_STEP)));
+    const target = Math.min(duration > 0 ? duration : raw, centreIndex * SEEK_THUMB_STEP);
     currentTimeRef.current = target;
     updateProgressDom(target);
     commitSeek(target);
+
     setIsSeeking(false);
     // Nakon potvrde uvijek pokreni reprodukciju s odabrane pozicije.
     const video = videoRef.current;
