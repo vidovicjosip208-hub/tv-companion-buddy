@@ -1296,6 +1296,13 @@ const VideotekaPlayer = ({
 
         case "Enter":
           e.preventDefault();
+          // Dok je seek preview aktivan, OK ga uvijek potvrđuje i pokreće reprodukciju.
+          if (isSeeking) {
+            confirmSeek();
+            startPlayback(150);
+            break;
+          }
+
           if (focusedRow === 0) {
             if (focusedCol === 0) onClose();
             if (focusedCol === 1) {
