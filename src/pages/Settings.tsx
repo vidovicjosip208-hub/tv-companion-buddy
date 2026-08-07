@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShieldCheck, Wifi, Monitor, Languages, ChevronRight, Check } from "lucide-react";
@@ -102,10 +103,7 @@ const Settings = () => {
     [focusedIndex, navigate, view, langFocused, selectedLang],
   );
 
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
+  useZoneKeys("settings", handleKeyDown, true, 0);
 
   return (
     <motion.div

@@ -6,6 +6,7 @@ import { ContentDetailsData } from "@/data/videotekaContent";
 import EpisodesView from "@/components/EpisodesView";
 import VideotekaPlayer from "@/components/VideotekaPlayer";
 import logo from "@/assets/max-ovizija-videoteka-logo.png";
+import { useZoneKeys } from "@/lib/focusZone";
 
 interface ContentDetailViewProps {
   details: ContentDetailsData;
@@ -55,9 +56,8 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
     if (id === "episodesAndMore") setShowEpisodes(true);
   }, [openPlayer]);
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (showEpisodes || showPlayer) return;
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent) => {
 
       const moveMainFocus = (direction: -1 | 1) => {
         setFocusedIndex((currentFocus) => {
@@ -107,11 +107,11 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
         e.preventDefault();
         onClose();
       }
-    };
+    },
+    [focusedIndex, handleSelect, onClose],
+  );
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [focusedIndex, showEpisodes, showPlayer, handleSelect, onClose]);
+  useZoneKeys("content-detail", onKeyDown, !showEpisodes && !showPlayer, 20);
 
   const f = (id: ButtonId) => ALL_BUTTONS[focusedIndex] === id;
 
@@ -221,145 +221,149 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
       transition={{ duration: 0.4 }}
       className="absolute inset-0 z-50 flex"
     >
-      {/* Background image */}
-      <div className="absolute inset-0">
-        <img src={thumbnail} alt={details.title} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/60" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center px-12 w-full h-full text-center pb-[280px]">
-        {/* Logo */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mb-4 -mt-52"
-        >
-          <img src={logo} alt="Max Ovizija" className="h-[280px] w-auto" />
-        </motion.div>
-
-        {/* Title */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-6xl font-black text-foreground tracking-tight mb-5 -mt-24"
-        >
-          {details.title}
-        </motion.h1>
-
-        {/* Meta info */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex items-center gap-3 text-base mb-5 flex-wrap justify-center"
-        >
-          <span className="text-foreground">{details.year}</span>
-          <span className="text-muted-foreground">•</span>
-          <span className="text-foreground">{localizedGenre}</span>
-          {details.episodes && (
-            <>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-foreground">{details.episodes}</span>
-            </>
-          )}
-          <span className="px-1.5 py-0.5 border border-muted-foreground/40 rounded text-xs text-muted-foreground font-medium">
-            HD
-          </span>
-          <span className="px-1.5 py-0.5 border border-muted-foreground/40 rounded text-xs text-muted-foreground font-medium">
-            5.1
-          </span>
-          <span className="px-1.5 py-0.5 border border-muted-foreground/40 rounded text-xs text-muted-foreground font-medium">
-            {details.rating}
-          </span>
-        </motion.div>
-
-        {/* Description */}
-        <motion.p
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="text-muted-foreground text-lg leading-relaxed mb-10 line-clamp-5 max-w-[700px]"
-        >
-          {details.description}
-        </motion.p>
-
-        {/* Action buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="absolute bottom-32 left-0 right-0 flex flex-col items-center gap-3 px-0"
-        >
-          <div
-            className="flex flex-col items-center gap-3 w-auto"
-            style={{ minHeight: `${VISIBLE_COUNT * 56}px` }}
-          >
-            <AnimatePresence mode="popLayout">
-              {MAIN_BUTTONS.map((id, idx) => {
-                const visibleStart = scrollOffset;
-                const visibleEnd = scrollOffset + VISIBLE_COUNT;
-
-                if (idx < visibleStart || idx >= visibleEnd) return null;
-
-                const hasMoreAbove = visibleStart > 0;
-                const hasMoreBelow = visibleEnd < MAIN_BUTTONS.length;
-
-                const isPeekTop = idx === visibleStart && hasMoreAbove;
-                const isPeekBottom = idx === visibleEnd - 1 && hasMoreBelow;
-                const isPeek = isPeekTop || isPeekBottom;
-
-                return (
-                  <motion.div
-                    key={id}
-                    layout
-                    initial={{ opacity: 0, y: isPeekTop ? -20 : 20 }}
-                    animate={{
-                      opacity: isPeek ? 0.35 : 1,
-                      y: 0,
-                      scale: isPeek ? 0.9 : 1,
-                    }}
-                    exit={{ opacity: 0, y: isPeekTop ? -20 : 20 }}
-                    transition={{ duration: 0.25 }}
-                    className="w-auto"
-                  >
-                    {getButtonContent(id, f(id))}
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-
-        {/* Thumbs */}
-        <div className="absolute bottom-8 left-0 right-0 flex items-center justify-center gap-2">
-          <button
-            className={`flex items-center justify-center w-11 h-11 rounded-full border transition-all ${
-              f("thumbsUp")
-                ? "bg-white border-white"
-                : "border-muted-foreground/30 hover:bg-muted/30 hover:border-muted-foreground/50"
-            }`}
-          >
-            <ThumbsUp
-              className={`w-5 h-5 transition-colors ${f("thumbsUp") ? "text-black" : "text-muted-foreground"}`}
-            />
-          </button>
-          <button
-            className={`flex items-center justify-center w-11 h-11 rounded-full border transition-all ${
-              f("thumbsDown")
-                ? "bg-white border-white"
-                : "border-muted-foreground/30 hover:bg-muted/30 hover:border-muted-foreground/50"
-            }`}
-          >
-            <ThumbsDown
-              className={`w-5 h-5 transition-colors ${f("thumbsDown") ? "text-black" : "text-muted-foreground"}`}
-            />
-          </button>
+      {!showEpisodes && !showPlayer && (
+        <>
+        {/* Background image */}
+        <div className="absolute inset-0">
+          <img src={thumbnail} alt={details.title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
         </div>
-      </div>
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col items-center justify-center px-12 w-full h-full text-center pb-[280px]">
+          {/* Logo */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-4 -mt-52"
+          >
+            <img src={logo} alt="Max Ovizija" className="h-[280px] w-auto" />
+          </motion.div>
+
+          {/* Title */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-6xl font-black text-foreground tracking-tight mb-5 -mt-24"
+          >
+            {details.title}
+          </motion.h1>
+
+          {/* Meta info */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center gap-3 text-base mb-5 flex-wrap justify-center"
+          >
+            <span className="text-foreground">{details.year}</span>
+            <span className="text-muted-foreground">•</span>
+            <span className="text-foreground">{localizedGenre}</span>
+            {details.episodes && (
+              <>
+                <span className="text-muted-foreground">•</span>
+                <span className="text-foreground">{details.episodes}</span>
+              </>
+            )}
+            <span className="px-1.5 py-0.5 border border-muted-foreground/40 rounded text-xs text-muted-foreground font-medium">
+              HD
+            </span>
+            <span className="px-1.5 py-0.5 border border-muted-foreground/40 rounded text-xs text-muted-foreground font-medium">
+              5.1
+            </span>
+            <span className="px-1.5 py-0.5 border border-muted-foreground/40 rounded text-xs text-muted-foreground font-medium">
+              {details.rating}
+            </span>
+          </motion.div>
+
+          {/* Description */}
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-muted-foreground text-lg leading-relaxed mb-10 line-clamp-5 max-w-[700px]"
+          >
+            {details.description}
+          </motion.p>
+
+          {/* Action buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="absolute bottom-32 left-0 right-0 flex flex-col items-center gap-3 px-0"
+          >
+            <div
+              className="flex flex-col items-center gap-3 w-auto"
+              style={{ minHeight: `${VISIBLE_COUNT * 56}px` }}
+            >
+              <AnimatePresence mode="popLayout">
+                {MAIN_BUTTONS.map((id, idx) => {
+                  const visibleStart = scrollOffset;
+                  const visibleEnd = scrollOffset + VISIBLE_COUNT;
+
+                  if (idx < visibleStart || idx >= visibleEnd) return null;
+
+                  const hasMoreAbove = visibleStart > 0;
+                  const hasMoreBelow = visibleEnd < MAIN_BUTTONS.length;
+
+                  const isPeekTop = idx === visibleStart && hasMoreAbove;
+                  const isPeekBottom = idx === visibleEnd - 1 && hasMoreBelow;
+                  const isPeek = isPeekTop || isPeekBottom;
+
+                  return (
+                    <motion.div
+                      key={id}
+                      layout
+                      initial={{ opacity: 0, y: isPeekTop ? -20 : 20 }}
+                      animate={{
+                        opacity: isPeek ? 0.35 : 1,
+                        y: 0,
+                        scale: isPeek ? 0.9 : 1,
+                      }}
+                      exit={{ opacity: 0, y: isPeekTop ? -20 : 20 }}
+                      transition={{ duration: 0.25 }}
+                      className="w-auto"
+                    >
+                      {getButtonContent(id, f(id))}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+
+          {/* Thumbs */}
+          <div className="absolute bottom-8 left-0 right-0 flex items-center justify-center gap-2">
+            <button
+              className={`flex items-center justify-center w-11 h-11 rounded-full border transition-all ${
+                f("thumbsUp")
+                  ? "bg-white border-white"
+                  : "border-muted-foreground/30 hover:bg-muted/30 hover:border-muted-foreground/50"
+              }`}
+            >
+              <ThumbsUp
+                className={`w-5 h-5 transition-colors ${f("thumbsUp") ? "text-black" : "text-muted-foreground"}`}
+              />
+            </button>
+            <button
+              className={`flex items-center justify-center w-11 h-11 rounded-full border transition-all ${
+                f("thumbsDown")
+                  ? "bg-white border-white"
+                  : "border-muted-foreground/30 hover:bg-muted/30 hover:border-muted-foreground/50"
+              }`}
+            >
+              <ThumbsDown
+                className={`w-5 h-5 transition-colors ${f("thumbsDown") ? "text-black" : "text-muted-foreground"}`}
+              />
+            </button>
+          </div>
+        </div>
+        </>
+      )}
 
       {/* Episodes overlay */}
       <AnimatePresence>

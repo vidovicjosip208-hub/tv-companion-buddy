@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useZoneKeys } from "@/lib/focusZone";
 import { motion } from "framer-motion";
 import { Delete, Space, Search } from "lucide-react";
 import StarryBackground from "@/components/StarryBackground";
@@ -162,10 +163,7 @@ const VideotekaSearch = ({ allItems, onClose }: VideotekaSearchProps) => {
     [focusArea, kbRow, kbCol, resultRow, resultCol, totalResultRows, onClose, handleKeyPress, resultCols],
   );
 
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
+  useZoneKeys("videoteka-search", handleKeyDown, true, 30);
 
   return (
     <motion.div
