@@ -1097,7 +1097,8 @@ const VideotekaPlayer = ({
     const maxIndex = Math.max(0, Math.floor(totalDuration / SEEK_THUMB_STEP));
     const centreIndex = Math.min(maxIndex, Math.max(0, Math.round(seekTime / SEEK_THUMB_STEP)));
     return Array.from({ length: THUMBNAIL_COUNT }, (_, i) => {
-      const idx = Math.min(maxIndex, Math.max(0, centreIndex + i - half));
+      const idx = centreIndex + i - half;
+      if (idx < 0 || idx > maxIndex) return null;
       return idx * SEEK_THUMB_STEP;
     });
   }, [seekTime, totalDuration]);
