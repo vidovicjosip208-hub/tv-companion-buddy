@@ -931,6 +931,8 @@ const VideotekaPlayer = ({
   }, []);
   const startHideTimer = useCallback(() => {
     cancelHideTimer();
+    // Dok je seek preview aktivan, HUD se NE smije sakriti — čeka potvrdu s OK.
+    if (isSeekingRef.current) return;
     hideTimerRef.current = setTimeout(() => setIsVisible(false), 3000);
   }, [cancelHideTimer]);
 
@@ -1129,7 +1131,11 @@ const VideotekaPlayer = ({
       pendingSeekRef.current = clamped;
       updateProgressDom(clamped);
       setSeekTime(clamped);
+      isSeekingRef.current = true;
       setIsSeeking(true);
+      // HUD + seek preview ostaju vidljivi do potvrde.
+      setIsVisible(true);
+      cancelHideTimer();
 
       // Očisti eventualni raniji debounce timer — više ne komitamo automatski.
       if (pendingSeekTimerRef.current) {
@@ -1137,11 +1143,12 @@ const VideotekaPlayer = ({
         pendingSeekTimerRef.current = null;
       }
     },
-    [updateProgressDom],
+    [updateProgressDom, cancelHideTimer],
   );
 
   // Potvrda seeka (OK gumb) — sada stvarno pomakni video na odabranu poziciju.
   const confirmSeek = useCallback(() => {
+    isSeekingRef.current = false;
     const target = pendingSeekRef.current;
     pendingSeekRef.current = null;
     if (target === null) {
@@ -1166,6 +1173,7 @@ const VideotekaPlayer = ({
 
   // Otkazivanje seeka (Escape / promjena reda) — vrati UI na trenutnu poziciju videa.
   const cancelSeek = useCallback(() => {
+    isSeekingRef.current = false;
     pendingSeekRef.current = null;
     if (pendingSeekTimerRef.current) {
       clearTimeout(pendingSeekTimerRef.current);
@@ -1232,12 +1240,16 @@ const VideotekaPlayer = ({
 
         case "ArrowRight":
           e.preventDefault();
+          // Dok je seek aktivan, strelice samo pomiču poziciju (bez promjene fokusa).
+          if (isSeeking) {
+            seekVideo((pendingSeekRef.current ?? seekTime) + SEEK_STEP);
+            break;
+          }
           if (focusedRow === 2) {
             if (focusedCol === 1) {
               setFocusedCol(2);
             } else if (focusedCol === 2) {
-              const base = isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current;
-              seekVideo(base + SEEK_STEP);
+              seekVideo(currentTimeRef.current + SEEK_STEP);
             } else {
               setFocusedCol((prev) => Math.min(prev + 1, ROW_SIZES[focusedRow] - 1));
             }
@@ -1248,12 +1260,15 @@ const VideotekaPlayer = ({
 
         case "ArrowLeft":
           e.preventDefault();
+          if (isSeeking) {
+            seekVideo((pendingSeekRef.current ?? seekTime) - SEEK_STEP);
+            break;
+          }
           if (focusedRow === 2) {
             if (focusedCol === 1) {
               setFocusedCol(0);
             } else if (focusedCol === 0) {
-              const base = isSeeking ? (pendingSeekRef.current ?? seekTime) : currentTimeRef.current;
-              seekVideo(base - SEEK_STEP);
+              seekVideo(currentTimeRef.current - SEEK_STEP);
             } else {
               setFocusedCol((prev) => Math.max(prev - 1, 0));
             }
@@ -1283,6 +1298,13 @@ const VideotekaPlayer = ({
 
         case "Enter":
           e.preventDefault();
+          // Dok je seek preview aktivan, OK ga uvijek potvrđuje i pokreće reprodukciju.
+          if (isSeeking) {
+            confirmSeek();
+            startPlayback(150);
+            break;
+          }
+
           if (focusedRow === 0) {
             if (focusedCol === 0) onClose();
             if (focusedCol === 1) {
