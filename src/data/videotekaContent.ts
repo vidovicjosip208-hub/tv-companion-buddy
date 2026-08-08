@@ -2,6 +2,7 @@ export interface ContentItem {
   id: string;
   title: string;
   thumbnail: string;
+  backdrop?: string;
   progress?: number; // 0-100, indicates Continue Watching item
 }
 
