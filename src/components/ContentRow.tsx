@@ -114,11 +114,30 @@ const ContentRow = ({
                 }
               >
                 <div className="absolute inset-0 bg-muted" aria-hidden="true" />
-                <img
-                  src={isExpanded ? (item.backdrop ?? item.thumbnail) : item.thumbnail}
-                  alt={item.title}
-                  className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-300 ease-in-out"
-                />
+                {isExpanded && item.backdrop ? (
+                  <img
+                    src={item.backdrop}
+                    alt={item.title}
+                    loading="eager"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = item.thumbnail;
+                      (e.currentTarget as HTMLImageElement).className =
+                        "absolute inset-0 w-full h-full object-contain object-center";
+                    }}
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                  />
+                ) : (
+                  <img
+                    src={item.thumbnail}
+                    alt={item.title}
+                    loading="eager"
+                    className={cn(
+                      "absolute inset-0 w-full h-full object-center",
+                      isExpanded ? "object-contain" : "object-cover",
+                    )}
+                  />
+                )}
+
 
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
