@@ -68,7 +68,8 @@ const ContentRow = ({
       </h2>
       <div className={cn("overflow-hidden", peek && "max-h-[100px]")}>
         <div
-          className={cn("flex transition-transform duration-500 ease-out", peek && "px-12")}
+          className={cn("flex transition-all duration-300 ease-in-out", peek && "px-12")}
+
           style={
             peek
               ? {
@@ -93,7 +94,7 @@ const ContentRow = ({
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={cn(
-                  "relative rounded-lg overflow-hidden shrink-0 transition-all duration-500 ease-in-out",
+                  "relative rounded-lg overflow-hidden shrink-0 transition-all duration-300 ease-in-out",
                   !peek && "cursor-pointer",
                   peek && "flex-1",
                 )}
@@ -105,8 +106,8 @@ const ContentRow = ({
                       }
                     : {
                         width: isExpanded ? expandedW : defaultW,
-                        height: portrait && !isExpanded ? undefined : cardH,
-                        aspectRatio: portrait && !isExpanded ? "2/3" : undefined,
+                        height: portrait ? undefined : cardH,
+                        aspectRatio: portrait ? (isExpanded ? "16/9" : "2/3") : undefined,
                         flexGrow: 0,
                         borderBottom: "none",
                       }
@@ -116,11 +117,9 @@ const ContentRow = ({
                 <img
                   src={isExpanded ? (item.backdrop ?? item.thumbnail) : item.thumbnail}
                   alt={item.title}
-                  className={cn(
-                    "absolute inset-0 w-full h-full",
-                    isExpanded ? "object-cover" : "object-contain",
-                  )}
+                  className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-300 ease-in-out"
                 />
+
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 {!peek && (item.progress !== undefined || (isFocused && showIndicator)) && (
