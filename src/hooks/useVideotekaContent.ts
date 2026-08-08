@@ -32,8 +32,10 @@ export interface VideotekaData {
 const toItem = (r: VideotekaRecord): ContentItem => ({
   id: r.id,
   title: r.title ?? "Untitled",
+  // Portrait 2:3 for the normal state
   thumbnail: r.poster_url ?? r.thumbnail_url ?? r.backdrop_url ?? FALLBACK_THUMB,
-  backdrop: r.backdrop_url ?? r.thumbnail_url ?? undefined,
+  // Landscape 16:9 for the focused state; undefined -> poster fallback in UI
+  backdrop: r.backdrop_url ?? undefined,
 });
 
 const toDetails = (r: VideotekaRecord): ContentDetailsData => {
