@@ -6,6 +6,7 @@ interface ContentItem {
   id: string;
   title: string;
   thumbnail: string;
+  backdrop?: string;
   progress?: number;
 }
 
