@@ -114,26 +114,29 @@ const ContentRow = ({
                 }
               >
                 <div className="absolute inset-0 bg-muted" aria-hidden="true" />
-                {isExpanded && item.backdrop ? (
+                {/* Portrait poster: always mounted so the swap is instant */}
+                <img
+                  src={item.thumbnail}
+                  alt={item.title}
+                  loading="eager"
+                  className={cn(
+                    "absolute inset-0 w-full h-full object-cover object-center",
+                    isExpanded && item.backdrop && "opacity-0",
+                  )}
+                />
+                {/* Landscape backdrop: preloaded, revealed on focus */}
+                {item.backdrop && (
                   <img
                     src={item.backdrop}
-                    alt={item.title}
+                    alt=""
+                    aria-hidden="true"
                     loading="eager"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = item.thumbnail;
-                      (e.currentTarget as HTMLImageElement).className =
-                        "absolute inset-0 w-full h-full object-contain object-center";
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
                     }}
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                  />
-                ) : (
-                  <img
-                    src={item.thumbnail}
-                    alt={item.title}
-                    loading="eager"
                     className={cn(
-                      "absolute inset-0 w-full h-full object-center",
-                      isExpanded ? "object-contain" : "object-cover",
+                      "absolute inset-0 w-full h-full object-cover object-center",
+                      isExpanded ? "opacity-100" : "opacity-0",
                     )}
                   />
                 )}
