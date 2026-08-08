@@ -6,6 +6,7 @@ interface ContentItem {
   id: string;
   title: string;
   thumbnail: string;
+  backdrop?: string;
   progress?: number;
 }
 
@@ -104,8 +105,8 @@ const ContentRow = ({
                       }
                     : {
                         width: isExpanded ? expandedW : defaultW,
-                        height: portrait ? undefined : cardH,
-                        aspectRatio: portrait ? "2/3" : undefined,
+                        height: portrait && !isExpanded ? undefined : cardH,
+                        aspectRatio: portrait && !isExpanded ? "2/3" : undefined,
                         flexGrow: 0,
                         borderBottom: "none",
                       }
@@ -113,10 +114,14 @@ const ContentRow = ({
               >
                 <div className="absolute inset-0 bg-muted" aria-hidden="true" />
                 <img
-                  src={item.thumbnail}
+                  src={isExpanded ? (item.backdrop ?? item.thumbnail) : item.thumbnail}
                   alt={item.title}
-                  className="absolute inset-0 w-full h-full object-contain"
+                  className={cn(
+                    "absolute inset-0 w-full h-full",
+                    isExpanded ? "object-cover" : "object-contain",
+                  )}
                 />
+
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 {!peek && (item.progress !== undefined || (isFocused && showIndicator)) && (
                   <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-muted/50">

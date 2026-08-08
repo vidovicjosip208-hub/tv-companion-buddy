@@ -33,6 +33,7 @@ const toItem = (r: VideotekaRecord): ContentItem => ({
   id: r.id,
   title: r.title ?? "Untitled",
   thumbnail: r.poster_url ?? r.thumbnail_url ?? r.backdrop_url ?? FALLBACK_THUMB,
+  backdrop: r.backdrop_url ?? r.thumbnail_url ?? undefined,
 });
 
 const toDetails = (r: VideotekaRecord): ContentDetailsData => {
