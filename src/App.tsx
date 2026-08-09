@@ -17,6 +17,7 @@ const VideotekaMovies = lazy(() => import("./pages/VideotekaMovies.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const Settings = lazy(() => import("./pages/Settings.tsx"));
 const Player = lazy(() => import("./pages/Player.tsx"));
+const Auth = lazy(() => import("./pages/Auth.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/videoteka/movies" element={<VideotekaMovies />} />
                 <Route path="/player" element={<Player />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/auth" element={<Auth />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
