@@ -118,7 +118,7 @@ const ExitAppDialog = () => {
   const cancelLabel = t("exit.cancel", "Odustani");
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
       <div className="mx-4 w-full max-w-md rounded-2xl border border-white/15 bg-black p-8 shadow-2xl">
         <h2 className="text-2xl font-bold text-white text-center">{title}</h2>
         <p className="mt-3 text-center text-white/70">{message}</p>
