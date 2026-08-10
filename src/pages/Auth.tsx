@@ -132,11 +132,11 @@ const Auth = () => {
       {/* Content */}
       <div className="relative h-full flex flex-col items-center justify-center px-12">
         {/* Neprozirni popup kontejner */}
-        <div className="flex flex-col items-center bg-black rounded-3xl px-12 py-10 shadow-2xl border border-white/10">
+        <div className="flex flex-col items-center bg-black rounded-3xl px-12 pt-6 pb-10 shadow-2xl border border-white/10">
           <img src={logo} alt="Max Ovizija" className="h-[180px] w-auto rounded-3xl" loading="eager" />
 
-          <h1 className="mt-4 text-[27px] font-extrabold text-white">{s.signIn}</h1>
-          <div className="mt-5 flex flex-col items-center gap-3">
+          <h1 className="mt-2 text-[27px] font-extrabold text-white">{s.signIn}</h1>
+          <div className="mt-4 flex flex-col items-center gap-3">
             <input
               ref={(el) => (itemRefs.current[0] = el)}
               type="email"
