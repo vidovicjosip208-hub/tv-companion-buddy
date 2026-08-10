@@ -43,7 +43,7 @@ const ExitAppDialog = () => {
 
   useEffect(() => {
     const onReq = () => {
-      if (!isExitAllowed()) return;
+      if (!isExitAllowed) return;
       setSelected(1);
       setOpen(true);
     };
