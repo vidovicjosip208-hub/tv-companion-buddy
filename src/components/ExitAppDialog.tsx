@@ -53,12 +53,8 @@ const ExitAppDialog = () => {
 
   // Ako korisnik napusti / ili /auth dok je dialog otvoren, zatvori ga.
   useEffect(() => {
-    const onRouteChange = () => {
-      if (!isExitAllowed()) setOpen(false);
-    };
-    window.addEventListener("popstate", onRouteChange);
-    return () => window.removeEventListener("popstate", onRouteChange);
-  }, []);
+    if (!isExitAllowed) setOpen(false);
+  }, [isExitAllowed]);
 
   const close = useCallback(() => {
     setOpen(false);
