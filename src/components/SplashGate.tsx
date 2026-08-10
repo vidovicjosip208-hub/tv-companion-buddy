@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const SplashIntro = lazy(() => import("./SplashIntro.tsx"));
 
@@ -13,6 +13,7 @@ const SplashIntro = lazy(() => import("./SplashIntro.tsx"));
  */
 const SplashGate = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [done, setDone] = useState(false);
   const onPlayerRoute = location.pathname.startsWith("/player");
 
@@ -20,11 +21,16 @@ const SplashGate = () => {
     if (onPlayerRoute) setDone(true);
   }, [onPlayerRoute]);
 
+  const handleFinished = () => {
+    setDone(true);
+    navigate("/auth", { replace: true });
+  };
+
   if (done || onPlayerRoute) return null;
 
   return (
     <Suspense fallback={null}>
-      <SplashIntro onFinished={() => setDone(true)} />
+      <SplashIntro onFinished={handleFinished} />
     </Suspense>
   );
 };
