@@ -108,7 +108,7 @@ const ExitAppDialog = () => {
 
   useZoneKeys("exit-dialog", onKey, open, 1000);
 
-  if (!open || !isExitAllowed()) return null;
+  if (!open || !isExitAllowed) return null;
 
   const title = t("exit.title", "Izlaz iz aplikacije");
   const message = t("exit.message", "Jeste li sigurni da želite izaći iz aplikacije?");
