@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useVideotekaContent } from "@/hooks/useVideotekaContent";
 import { useZoneKeys } from "@/lib/focusZone";
+import { requestAppExit } from "@/components/ExitAppDialog";
 import { getAuthStrings } from "@/lib/authStrings";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-logo.png";
@@ -87,7 +88,6 @@ const Auth = () => {
           else setFocused((f) => Math.min(f + 1, count - 1));
           break;
         case "Escape":
-        case "Backspace":
         case "XF86Back":
           e.preventDefault();
           e.stopPropagation();
