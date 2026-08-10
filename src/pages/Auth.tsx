@@ -68,7 +68,6 @@ const Auth = () => {
     }
   }, [busy, email, password, navigate]);
 
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       switch (e.key) {
@@ -97,7 +96,6 @@ const Auth = () => {
     },
     [count, focused, submit],
   );
-
 
   useZoneKeys("auth", handleKeyDown, true, 60);
 
@@ -133,54 +131,50 @@ const Auth = () => {
 
       {/* Content */}
       <div className="relative h-full flex flex-col items-center justify-center px-12">
-        <img
-          src={logo}
-          alt="Max Ovizija"
-          className="h-[132px] w-auto rounded-3xl"
-          loading="eager"
-        />
+        {/* Neprozirni popup kontejner */}
+        <div className="flex flex-col items-center bg-black rounded-3xl px-12 py-10 shadow-2xl border border-white/10">
+          <img src={logo} alt="Max Ovizija" className="h-[132px] w-auto rounded-3xl" loading="eager" />
 
-        <h1 className="mt-4 text-[27px] font-extrabold text-white">{s.signIn}</h1>
-        <div className="mt-5 flex flex-col items-center gap-3">
-          <input
-            ref={(el) => (itemRefs.current[0] = el)}
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onFocus={() => setFocused(0)}
-            placeholder={s.email}
-            className={field(focused === 0)}
-          />
-          <input
-            ref={(el) => (itemRefs.current[1] = el)}
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onFocus={() => setFocused(1)}
-            placeholder={s.password}
-            className={field(focused === 1)}
-          />
-          <button
-            ref={(el) => (itemRefs.current[2] = el)}
-            onClick={submit}
-            onFocus={() => setFocused(2)}
-            disabled={busy}
-            className={cn(
-              "w-[560px] h-[64px] rounded-full text-[21px] font-bold outline-none border-2 flex items-center justify-center",
-              focused === 2
-                ? "bg-accent text-accent-foreground border-accent"
-                : "bg-accent/85 text-accent-foreground border-transparent",
-            )}
-          >
-            {busy ? s.loading : s.login}
-          </button>
+          <h1 className="mt-4 text-[27px] font-extrabold text-white">{s.signIn}</h1>
+          <div className="mt-5 flex flex-col items-center gap-3">
+            <input
+              ref={(el) => (itemRefs.current[0] = el)}
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onFocus={() => setFocused(0)}
+              placeholder={s.email}
+              className={field(focused === 0)}
+            />
+            <input
+              ref={(el) => (itemRefs.current[1] = el)}
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setFocused(1)}
+              placeholder={s.password}
+              className={field(focused === 1)}
+            />
+            <button
+              ref={(el) => (itemRefs.current[2] = el)}
+              onClick={submit}
+              onFocus={() => setFocused(2)}
+              disabled={busy}
+              className={cn(
+                "w-[560px] h-[64px] rounded-full text-[21px] font-bold outline-none border-2 flex items-center justify-center",
+                focused === 2
+                  ? "bg-accent text-accent-foreground border-accent"
+                  : "bg-accent/85 text-accent-foreground border-transparent",
+              )}
+            >
+              {busy ? s.loading : s.login}
+            </button>
+          </div>
+          {error && <p className="mt-3 text-[17px] max-w-[560px] text-center text-destructive">{error}</p>}
         </div>
-        {error && (
-          <p className="mt-3 text-[17px] max-w-[560px] text-center text-destructive">{error}</p>
-        )}
 
         <p className="absolute bottom-4 text-[15px] text-white/40">{s.hintKeys}</p>
       </div>
