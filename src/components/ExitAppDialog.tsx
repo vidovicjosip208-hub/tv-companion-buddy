@@ -1,7 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { useZoneKeys } from "@/lib/focusZone";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+
+const EXIT_ALLOWED_PATHS = ["/", "/auth"];
 
 type FSDoc = Document & {
   webkitFullscreenElement?: Element | null;
@@ -33,17 +36,25 @@ export const requestAppExit = () => {
 
 const ExitAppDialog = () => {
   const { t } = useTranslation();
+  const location = useLocation();
+  const isExitAllowed = EXIT_ALLOWED_PATHS.includes(location.pathname);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<0 | 1>(1); // 0 = exit, 1 = cancel (default safe)
 
   useEffect(() => {
     const onReq = () => {
+      if (!isExitAllowed) return;
       setSelected(1);
       setOpen(true);
     };
     window.addEventListener("app:request-exit", onReq as EventListener);
     return () => window.removeEventListener("app:request-exit", onReq as EventListener);
   }, []);
+
+  // Ako korisnik napusti / ili /auth dok je dialog otvoren, zatvori ga.
+  useEffect(() => {
+    if (!isExitAllowed) setOpen(false);
+  }, [isExitAllowed]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -97,7 +108,7 @@ const ExitAppDialog = () => {
 
   useZoneKeys("exit-dialog", onKey, open, 1000);
 
-  if (!open) return null;
+  if (!open || !isExitAllowed) return null;
 
   const title = t("exit.title", "Izlaz iz aplikacije");
   const message = t("exit.message", "Jeste li sigurni da želite izaći iz aplikacije?");
@@ -105,7 +116,7 @@ const ExitAppDialog = () => {
   const cancelLabel = t("exit.cancel", "Odustani");
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
       <div className="mx-4 w-full max-w-md rounded-2xl border border-white/15 bg-black p-8 shadow-2xl">
         <h2 className="text-2xl font-bold text-white text-center">{title}</h2>
         <p className="mt-3 text-center text-white/70">{message}</p>

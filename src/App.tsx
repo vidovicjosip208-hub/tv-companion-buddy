@@ -29,9 +29,9 @@ const App = () => (
         <Sonner />
         <FullscreenBootstrap />
         <RemoteBackKey />
-        <ExitAppDialog />
-        <ScaleToFit>
-          <BrowserRouter>
+        <BrowserRouter>
+          <ExitAppDialog />
+          <ScaleToFit>
             <SplashGate />
             <Suspense fallback={null}>
               <Routes>
@@ -45,8 +45,8 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
-          </BrowserRouter>
-        </ScaleToFit>
+          </ScaleToFit>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   </div>
