@@ -53,14 +53,20 @@ const Auth = () => {
     setBusy(true);
     setError(null);
     try {
-      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-      if (err) throw err;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : s.errorGeneric);
+      // Privremeno: prijava bez registracije. Ako korisnik postoji u Supabaseu
+      // radi se prava prijava, inače se ulazi lokalno (bez sesije).
+      if (email && password) {
+        const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+        if (!err) return; // onAuthStateChange preusmjerava
+      }
+      navigate("/", { replace: true });
+    } catch {
+      navigate("/", { replace: true });
     } finally {
       setBusy(false);
     }
-  }, [busy, email, password, s]);
+  }, [busy, email, password, navigate]);
+
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
