@@ -72,21 +72,32 @@ const Auth = () => {
     (e: KeyboardEvent) => {
       switch (e.key) {
         case "ArrowDown":
+        case "ArrowRight":
           e.preventDefault();
           setFocused((f) => Math.min(f + 1, count - 1));
           break;
         case "ArrowUp":
+        case "ArrowLeft":
           e.preventDefault();
           setFocused((f) => Math.max(f - 1, 0));
           break;
         case "Enter":
           e.preventDefault();
-          (itemRefs.current[focused] as HTMLElement | null)?.click();
+          if (focused === count - 1) submit();
+          else setFocused((f) => Math.min(f + 1, count - 1));
+          break;
+        case "Escape":
+        case "Backspace":
+        case "XF86Back":
+          e.preventDefault();
+          e.stopPropagation();
+          requestAppExit();
           break;
       }
     },
-    [count, focused],
+    [count, focused, submit],
   );
+
 
   useZoneKeys("auth", handleKeyDown, true, 60);
 
