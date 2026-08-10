@@ -3,6 +3,9 @@ import { useZoneKeys } from "@/lib/focusZone";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
+const EXIT_ALLOWED_PATHS = ["/", "/auth"];
+const isExitAllowed = () => EXIT_ALLOWED_PATHS.includes(window.location.pathname);
+
 type FSDoc = Document & {
   webkitFullscreenElement?: Element | null;
 };
