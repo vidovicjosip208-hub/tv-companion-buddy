@@ -41,11 +41,21 @@ const ExitAppDialog = () => {
 
   useEffect(() => {
     const onReq = () => {
+      if (!isExitAllowed()) return;
       setSelected(1);
       setOpen(true);
     };
     window.addEventListener("app:request-exit", onReq as EventListener);
     return () => window.removeEventListener("app:request-exit", onReq as EventListener);
+  }, []);
+
+  // Ako korisnik napusti / ili /auth dok je dialog otvoren, zatvori ga.
+  useEffect(() => {
+    const onRouteChange = () => {
+      if (!isExitAllowed()) setOpen(false);
+    };
+    window.addEventListener("popstate", onRouteChange);
+    return () => window.removeEventListener("popstate", onRouteChange);
   }, []);
 
   const close = useCallback(() => {
