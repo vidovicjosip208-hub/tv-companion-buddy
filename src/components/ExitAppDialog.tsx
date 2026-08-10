@@ -36,6 +36,8 @@ export const requestAppExit = () => {
 
 const ExitAppDialog = () => {
   const { t } = useTranslation();
+  const location = useLocation();
+  const isExitAllowed = EXIT_ALLOWED_PATHS.includes(location.pathname);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<0 | 1>(1); // 0 = exit, 1 = cancel (default safe)
 
