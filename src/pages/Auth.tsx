@@ -38,10 +38,16 @@ const Auth = () => {
   // Session listener first, then current user check.
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate("/", { replace: true });
+      if (session) {
+        markEntered();
+        navigate("/", { replace: true });
+      }
     });
     supabase.auth.getUser().then(({ data: u }) => {
-      if (u?.user) navigate("/", { replace: true });
+      if (u?.user) {
+        markEntered();
+        navigate("/", { replace: true });
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
@@ -59,10 +65,15 @@ const Auth = () => {
       // radi se prava prijava, inače se ulazi lokalno (bez sesije).
       if (email && password) {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-        if (!err) return; // onAuthStateChange preusmjerava
+        if (!err) {
+          markEntered();
+          return; // onAuthStateChange preusmjerava
+        }
       }
+      markEntered();
       navigate("/", { replace: true });
     } catch {
+      markEntered();
       navigate("/", { replace: true });
     } finally {
       setBusy(false);
