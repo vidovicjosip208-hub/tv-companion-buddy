@@ -5,26 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useVideotekaContent } from "@/hooks/useVideotekaContent";
 import { useZoneKeys } from "@/lib/focusZone";
 import { requestAppExit } from "@/components/ExitAppDialog";
-import { markEntered } from "@/lib/entry";
 import { getAuthStrings } from "@/lib/authStrings";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-logo.png";
-
-const COLLAGE_COLS = 8;
-const COLLAGE_ROWS = 4;
-const COLLAGE_SLOTS = COLLAGE_COLS * COLLAGE_ROWS;
+import posterWall from "@/assets/poster-wall.jpg";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const s = getAuthStrings(i18n.language);
-
-  const { data } = useVideotekaContent();
-  const posters = useMemo(() => {
-    const list = (data?.allItems ?? []).map((i) => i.thumbnail).filter(Boolean);
-    if (list.length === 0) return [];
-    return Array.from({ length: COLLAGE_SLOTS }, (_, i) => list[i % list.length]);
-  }, [data]);
 
   const [focused, setFocused] = useState(0);
   const [email, setEmail] = useState("");
@@ -38,16 +27,10 @@ const Auth = () => {
   // Session listener first, then current user check.
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) {
-        markEntered();
-        navigate("/", { replace: true });
-      }
+      if (session) navigate("/", { replace: true });
     });
     supabase.auth.getUser().then(({ data: u }) => {
-      if (u?.user) {
-        markEntered();
-        navigate("/", { replace: true });
-      }
+      if (u?.user) navigate("/", { replace: true });
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
@@ -65,15 +48,10 @@ const Auth = () => {
       // radi se prava prijava, inače se ulazi lokalno (bez sesije).
       if (email && password) {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-        if (!err) {
-          markEntered();
-          return; // onAuthStateChange preusmjerava
-        }
+        if (!err) return; // onAuthStateChange preusmjerava
       }
-      markEntered();
       navigate("/", { replace: true });
     } catch {
-      markEntered();
       navigate("/", { replace: true });
     } finally {
       setBusy(false);
@@ -119,26 +97,13 @@ const Auth = () => {
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-background">
-      {/* Poster collage background */}
-      <div
-        className="absolute inset-0 grid"
-        style={{
-          gridTemplateColumns: `repeat(${COLLAGE_COLS}, 1fr)`,
-          gridTemplateRows: `repeat(${COLLAGE_ROWS}, 1fr)`,
-        }}
+      {/* Static poster wall background */}
+      <img
+        src={posterWall}
+        alt=""
         aria-hidden="true"
-      >
-        {posters.map((src, i) => (
-          <img
-            key={`${src}-${i}`}
-            src={src}
-            alt=""
-            loading="eager"
-            decoding="async"
-            className="w-full h-full object-cover opacity-70"
-          />
-        ))}
-      </div>
+        className="absolute inset-0 w-full h-full object-cover opacity-70"
+      />
       <div className="absolute inset-0 bg-black/70" aria-hidden="true" />
 
       {/* Content */}
