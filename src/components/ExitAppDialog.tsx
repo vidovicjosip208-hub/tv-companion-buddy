@@ -64,6 +64,8 @@ const ExitAppDialog = () => {
 
   const exitApp = useCallback(() => {
     setOpen(false);
+    // Native TV app exit (Tizen / webOS) first, then browser fallbacks.
+    exitTvApp();
     try {
       window.close();
     } catch {
