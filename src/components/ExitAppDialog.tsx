@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useZoneKeys } from "@/lib/focusZone";
+import { exitTvApp } from "@/components/RemoteBackKey";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +65,8 @@ const ExitAppDialog = () => {
 
   const exitApp = useCallback(() => {
     setOpen(false);
+    // Native TV app exit (Tizen / webOS) first, then browser fallbacks.
+    exitTvApp();
     try {
       window.close();
     } catch {
