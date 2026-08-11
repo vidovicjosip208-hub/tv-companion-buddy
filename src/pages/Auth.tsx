@@ -2,28 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { useVideotekaContent } from "@/hooks/useVideotekaContent";
 import { useZoneKeys } from "@/lib/focusZone";
 import { requestAppExit } from "@/components/ExitAppDialog";
 import { getAuthStrings } from "@/lib/authStrings";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-logo.png";
-
-const COLLAGE_COLS = 8;
-const COLLAGE_ROWS = 4;
-const COLLAGE_SLOTS = COLLAGE_COLS * COLLAGE_ROWS;
+import posterWall from "@/assets/810pNoMdqIL._AC_UF894,1000_QL80_.jpg";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const s = getAuthStrings(i18n.language);
-
-  const { data } = useVideotekaContent();
-  const posters = useMemo(() => {
-    const list = (data?.allItems ?? []).map((i) => i.thumbnail).filter(Boolean);
-    if (list.length === 0) return [];
-    return Array.from({ length: COLLAGE_SLOTS }, (_, i) => list[i % list.length]);
-  }, [data]);
 
   const [focused, setFocused] = useState(0);
   const [email, setEmail] = useState("");
@@ -107,26 +96,13 @@ const Auth = () => {
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-background">
-      {/* Poster collage background */}
-      <div
-        className="absolute inset-0 grid"
-        style={{
-          gridTemplateColumns: `repeat(${COLLAGE_COLS}, 1fr)`,
-          gridTemplateRows: `repeat(${COLLAGE_ROWS}, 1fr)`,
-        }}
+      {/* Static poster wall background */}
+      <img
+        src={posterWall}
+        alt=""
         aria-hidden="true"
-      >
-        {posters.map((src, i) => (
-          <img
-            key={`${src}-${i}`}
-            src={src}
-            alt=""
-            loading="eager"
-            decoding="async"
-            className="w-full h-full object-cover opacity-70"
-          />
-        ))}
-      </div>
+        className="absolute inset-0 w-full h-full object-cover opacity-70"
+      />
       <div className="absolute inset-0 bg-black/70" aria-hidden="true" />
 
       {/* Content */}
