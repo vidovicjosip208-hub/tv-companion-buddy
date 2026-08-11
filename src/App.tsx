@@ -9,6 +9,7 @@ import RemoteBackKey from "./components/RemoteBackKey.tsx";
 import ExitAppDialog from "./components/ExitAppDialog.tsx";
 import ScaleToFit from "./components/ScaleToFit.tsx";
 import SplashGate from "./components/SplashGate.tsx";
+import RequireLogin from "./components/RequireLogin.tsx";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Videoteka = lazy(() => import("./pages/Videoteka.tsx"));
@@ -35,12 +36,12 @@ const App = () => (
             <SplashGate />
             <Suspense fallback={null}>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/videoteka" element={<Videoteka />} />
-                <Route path="/videoteka/shows" element={<VideotekaShows />} />
-                <Route path="/videoteka/movies" element={<VideotekaMovies />} />
-                <Route path="/player" element={<Player />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/" element={<RequireLogin><Index /></RequireLogin>} />
+                <Route path="/videoteka" element={<RequireLogin><Videoteka /></RequireLogin>} />
+                <Route path="/videoteka/shows" element={<RequireLogin><VideotekaShows /></RequireLogin>} />
+                <Route path="/videoteka/movies" element={<RequireLogin><VideotekaMovies /></RequireLogin>} />
+                <Route path="/player" element={<RequireLogin><Player /></RequireLogin>} />
+                <Route path="/settings" element={<RequireLogin><Settings /></RequireLogin>} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

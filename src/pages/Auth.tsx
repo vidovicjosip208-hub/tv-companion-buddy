@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useVideotekaContent } from "@/hooks/useVideotekaContent";
 import { useZoneKeys } from "@/lib/focusZone";
 import { requestAppExit } from "@/components/ExitAppDialog";
+import { markEntered } from "@/lib/entry";
 import { getAuthStrings } from "@/lib/authStrings";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-logo.png";
@@ -37,10 +38,16 @@ const Auth = () => {
   // Session listener first, then current user check.
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate("/", { replace: true });
+      if (session) {
+        markEntered();
+        navigate("/", { replace: true });
+      }
     });
     supabase.auth.getUser().then(({ data: u }) => {
-      if (u?.user) navigate("/", { replace: true });
+      if (u?.user) {
+        markEntered();
+        navigate("/", { replace: true });
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
@@ -58,10 +65,15 @@ const Auth = () => {
       // radi se prava prijava, inače se ulazi lokalno (bez sesije).
       if (email && password) {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-        if (!err) return; // onAuthStateChange preusmjerava
+        if (!err) {
+          markEntered();
+          return; // onAuthStateChange preusmjerava
+        }
       }
+      markEntered();
       navigate("/", { replace: true });
     } catch {
+      markEntered();
       navigate("/", { replace: true });
     } finally {
       setBusy(false);
