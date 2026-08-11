@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useVideotekaContent } from "@/hooks/useVideotekaContent";
 import { useZoneKeys } from "@/lib/focusZone";
 import { requestAppExit } from "@/components/ExitAppDialog";
+import { markEntered } from "@/lib/entry";
 import { getAuthStrings } from "@/lib/authStrings";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-logo.png";
