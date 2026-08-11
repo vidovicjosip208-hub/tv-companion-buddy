@@ -7,7 +7,7 @@ import { requestAppExit } from "@/components/ExitAppDialog";
 import { getAuthStrings } from "@/lib/authStrings";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-logo.png";
-import posterWall from "@/assets/810pNoMdqIL._AC_UF894,1000_QL80_.jpg";
+import posterWall from "@/assets/1786481622043.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -101,9 +101,10 @@ const Auth = () => {
         src={posterWall}
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover opacity-70"
+        className="absolute inset-0 w-full h-full object-cover opacity-80"
+        style={{ filter: "contrast(1.15) saturate(1.2)" }}
       />
-      <div className="absolute inset-0 bg-black/70" aria-hidden="true" />
+      <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
 
       {/* Content */}
       <div className="relative h-full flex flex-col items-center justify-center px-12">
