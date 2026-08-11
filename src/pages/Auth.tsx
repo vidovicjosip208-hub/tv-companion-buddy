@@ -8,12 +8,22 @@ import { requestAppExit } from "@/components/ExitAppDialog";
 import { getAuthStrings } from "@/lib/authStrings";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-logo.png";
-import posterWall from "@/assets/poster-wall.jpg";
+
+const COLLAGE_COLS = 8;
+const COLLAGE_ROWS = 4;
+const COLLAGE_SLOTS = COLLAGE_COLS * COLLAGE_ROWS;
 
 const Auth = () => {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const s = getAuthStrings(i18n.language);
+
+  const { data } = useVideotekaContent();
+  const posters = useMemo(() => {
+    const list = (data?.allItems ?? []).map((i) => i.thumbnail).filter(Boolean);
+    if (list.length === 0) return [];
+    return Array.from({ length: COLLAGE_SLOTS }, (_, i) => list[i % list.length]);
+  }, [data]);
 
   const [focused, setFocused] = useState(0);
   const [email, setEmail] = useState("");
@@ -97,13 +107,26 @@ const Auth = () => {
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-background">
-      {/* Static poster wall background */}
-      <img
-        src={posterWall}
-        alt=""
+      {/* Poster collage background */}
+      <div
+        className="absolute inset-0 grid"
+        style={{
+          gridTemplateColumns: `repeat(${COLLAGE_COLS}, 1fr)`,
+          gridTemplateRows: `repeat(${COLLAGE_ROWS}, 1fr)`,
+        }}
         aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover opacity-70"
-      />
+      >
+        {posters.map((src, i) => (
+          <img
+            key={`${src}-${i}`}
+            src={src}
+            alt=""
+            loading="eager"
+            decoding="async"
+            className="w-full h-full object-cover opacity-70"
+          />
+        ))}
+      </div>
       <div className="absolute inset-0 bg-black/70" aria-hidden="true" />
 
       {/* Content */}
