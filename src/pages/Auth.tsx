@@ -29,18 +29,9 @@ const Auth = () => {
   // Umjesto 100vh/100vw koristimo fiksnu početnu veličinu viewporta, pa
   // tipkovnica prelazi preko stranice umjesto da je smanjuje.
   useEffect(() => {
-    const measure = () => {
-      const w = window.visualViewport?.width ?? window.innerWidth;
-      const h = window.visualViewport?.height ?? window.innerHeight;
-      setViewportSize({ w, h });
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    window.visualViewport?.addEventListener("resize", measure);
-    return () => {
-      window.removeEventListener("resize", measure);
-      window.visualViewport?.removeEventListener("resize", measure);
-    };
+    const w = window.visualViewport?.width ?? window.innerWidth;
+    const h = window.visualViewport?.height ?? window.innerHeight;
+    setViewportSize({ w, h });
   }, []);
 
   useEffect(() => {
