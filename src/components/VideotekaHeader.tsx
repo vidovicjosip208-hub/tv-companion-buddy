@@ -29,7 +29,6 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
     const navigate = useNavigate();
     const { t } = useTranslation();
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-    const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
     useImperativeHandle(ref, () => ({
       focus: (index?: number) => {
