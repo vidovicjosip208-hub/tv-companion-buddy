@@ -1,4 +1,4 @@
-import { Home, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
@@ -28,8 +28,6 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
   ({ activeTab, onSearchOpen, onFocusChange, onTabChange }, ref) => {
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const [searchOpen, setSearchOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
     useImperativeHandle(ref, () => ({
@@ -41,7 +39,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
           setTimeout(() => buttonRefs.current[clamped]?.focus(), 0);
         } else {
           const activeIndex = navTabs.findIndex((t) => t.id === activeTab);
-          const idx = activeIndex >= 0 ? activeIndex + 1 : 1;
+          const idx = activeIndex >= 0 ? activeIndex : 0;
           setFocusedIndex(idx);
           onFocusChange?.(true);
           setTimeout(() => buttonRefs.current[idx]?.focus(), 0);
@@ -50,7 +48,12 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
     }));
 
     const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
-    const totalButtons = 1 + navTabs.length + 1;
+    const totalButtons = navTabs.length + 1;
+
+    const activateTab = (tabId: string) => {
+      if (tabId === "My List") navigate("/videoteka/my-list");
+      else onTabChange?.(tabId);
+    };
 
     const focusButton = (index: number) => {
       const clamped = Math.max(0, Math.min(index, totalButtons - 1));
@@ -58,8 +61,8 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       onFocusChange?.(true, clamped);
       buttonRefs.current[clamped]?.focus();
 
-      if (clamped >= 1 && clamped <= navTabs.length) {
-        onTabChange?.(navTabs[clamped - 1].id);
+      if (clamped < navTabs.length && navTabs[clamped].id !== "My List") {
+        onTabChange?.(navTabs[clamped].id);
       }
     };
 
@@ -67,10 +70,11 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       setFocusedIndex(index);
       onFocusChange?.(true, index);
 
-      if (index >= 1 && index <= navTabs.length) {
-        onTabChange?.(navTabs[index - 1].id);
+      if (index < navTabs.length && navTabs[index].id !== "My List") {
+        onTabChange?.(navTabs[index].id);
       }
     };
+
 
     const handleButtonBlur = () => {
       setTimeout(() => {
@@ -112,17 +116,12 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
           case "XF86Back":
             e.preventDefault();
             e.stopPropagation();
-            if (searchOpen) {
-              setSearchOpen(false);
-              setSearchQuery("");
-              focusButton(totalButtons - 1);
-            } else {
-              navigate("/");
-            }
+            navigate("/");
             break;
         }
       },
-      [focusedIndex, searchOpen, totalButtons, focusButton, onFocusChange, navigate],
+      [focusedIndex, totalButtons, focusButton, onFocusChange, navigate],
+
     );
 
 
@@ -138,36 +137,14 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
 
           {/* Navigation */}
           <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 flex-wrap justify-center">
-            {/* Home button — index 0 */}
-            <button
-              ref={(el) => (buttonRefs.current[0] = el)}
-              onClick={() => navigate("/")}
-              onFocus={() => handleButtonFocus(0)}
-              onBlur={handleButtonBlur}
-              className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
-                focusedIndex === 0
-                  ? "bg-white border-white/20 scale-105"
-                  : "border-white/20 bg-muted/40 hover:opacity-90",
-              )}
-            >
-              <Home
-                className={cn(
-                  "w-[18px] h-[18px]",
-                  focusedIndex === 0 ? "text-black" : "text-white",
-                )}
-              />
-            </button>
-
-            {/* Nav tabs — indeksi 1, 2, 3, 4 */}
-            {navTabs.map((tab, i) => {
-              const index = i + 1;
+            {/* Nav tabs — indeksi 0, 1, 2, 3 */}
+            {navTabs.map((tab, index) => {
               const isFocused = focusedIndex === index;
               return (
                 <button
                   key={tab.id}
                   ref={(el) => (buttonRefs.current[index] = el)}
-                  onClick={() => onTabChange?.(tab.id)}
+                  onClick={() => activateTab(tab.id)}
                   onFocus={() => handleButtonFocus(index)}
                   onBlur={handleButtonBlur}
                   className={cn(
@@ -185,22 +162,13 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
             })}
           </nav>
 
-          {/* Search — index 5 */}
+          {/* Search — index 4 */}
           <div className="ml-auto flex items-center gap-2">
-            {searchOpen && (
-              <input
-                autoFocus
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("videoteka.search")}
-                className="bg-white/10 border border-white/20 rounded-xl px-3 py-[7px] text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 w-48 transition-all"
-              />
-            )}
             <button
               ref={(el) => (buttonRefs.current[4] = el)}
               onClick={() => {
                 if (onSearchOpen) onSearchOpen();
-                else setSearchOpen((prev) => !prev);
+                else navigate("/videoteka/search");
               }}
               onFocus={() => handleButtonFocus(4)}
               onBlur={handleButtonBlur}

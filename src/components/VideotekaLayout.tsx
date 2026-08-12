@@ -7,7 +7,6 @@ import VideotekaHeader, { VideotekaHeaderHandle } from "@/components/VideotekaHe
 import ContentRow from "@/components/ContentRow";
 import ContentDetails from "@/components/ContentDetails";
 import ContentDetailView from "@/components/ContentDetailView";
-import VideotekaSearch from "@/components/VideotekaSearch";
 import { ContentRowData, defaultDetails } from "@/data/videotekaContent";
 import { useVideotekaContent } from "@/hooks/useVideotekaContent";
 
@@ -21,11 +20,10 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
   const { data: vt, isLoading } = useVideotekaContent();
   const tabRowsMap = vt?.rowsByTab ?? {};
   const detailsData = vt?.detailsById ?? {};
-  const allContentItems = vt?.allItems ?? [];
+  
   const navigate = useNavigate();
   const headerRef = useRef<VideotekaHeaderHandle>(null);
   const headerFocusedIndexRef = useRef<number | null>(null);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [focusedRow, setFocusedRow] = useState(0);
   const [headerFocused, setHeaderFocused] = useState(true);
@@ -124,14 +122,14 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
     [focusedRow, navigate, rows, detailViewOpen, headerFocused],
   );
 
-  useZoneKeys("videoteka-rows", handleKeyDown, !searchOpen, 0);
+  useZoneKeys("videoteka-rows", handleKeyDown, true, 0);
 
   const currentRow = rows[focusedRow];
   const currentItem = currentRow?.items[focusedItems[focusedRow] ?? 0];
   const details = detailsData[currentItem?.id || ""] || defaultDetails;
   const nextRow = focusedRow + 1 < rows.length ? focusedRow + 1 : null;
   const hasContent = !!currentRow && currentRow.items.length > 0;
-  const overlayActive = searchOpen || detailViewOpen;
+  const overlayActive = detailViewOpen;
 
   return (
     <motion.div
@@ -145,14 +143,13 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
       <VideotekaHeader
         ref={headerRef}
         activeTab={activeTab}
-        onSearchOpen={() => setSearchOpen(true)}
         onFocusChange={(focused, index) => {
           setHeaderFocused(focused);
           headerFocusedIndexRef.current = focused ? (index ?? null) : null;
         }}
         onTabChange={handleTabChange}
       />
-      {searchOpen && <VideotekaSearch allItems={allContentItems} onClose={() => setSearchOpen(false)} />}
+
       {overlayActive ? null : !hasContent ? (
         <div className="flex h-[461px] items-center justify-center text-white/60 text-base px-4 text-center">
           {isLoading ? "Učitavanje sadržaja…" : "Nema sadržaja u Videoteci."}

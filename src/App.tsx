@@ -15,6 +15,8 @@ const Index = lazy(() => import("./pages/Index.tsx"));
 const Videoteka = lazy(() => import("./pages/Videoteka.tsx"));
 const VideotekaShows = lazy(() => import("./pages/VideotekaShows.tsx"));
 const VideotekaMovies = lazy(() => import("./pages/VideotekaMovies.tsx"));
+const VideotekaMyList = lazy(() => import("./pages/VideotekaMyList.tsx"));
+const VideotekaSearchPage = lazy(() => import("./pages/VideotekaSearchPage.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const Settings = lazy(() => import("./pages/Settings.tsx"));
 const Player = lazy(() => import("./pages/Player.tsx"));
@@ -40,6 +42,8 @@ const App = () => (
                 <Route path="/videoteka" element={<RequireLogin><Videoteka /></RequireLogin>} />
                 <Route path="/videoteka/shows" element={<RequireLogin><VideotekaShows /></RequireLogin>} />
                 <Route path="/videoteka/movies" element={<RequireLogin><VideotekaMovies /></RequireLogin>} />
+                <Route path="/videoteka/my-list" element={<RequireLogin><VideotekaMyList /></RequireLogin>} />
+                <Route path="/videoteka/search" element={<RequireLogin><VideotekaSearchPage /></RequireLogin>} />
                 <Route path="/player" element={<RequireLogin><Player /></RequireLogin>} />
                 <Route path="/settings" element={<RequireLogin><Settings /></RequireLogin>} />
                 <Route path="/auth" element={<Auth />} />
