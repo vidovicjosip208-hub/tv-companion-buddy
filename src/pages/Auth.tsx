@@ -23,20 +23,14 @@ const Auth = () => {
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
   const count = 3;
 
-  // Session listener first, then current user check.
-  useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate("/", { replace: true });
-    });
-    supabase.auth.getUser().then(({ data: u }) => {
-      if (u?.user) navigate("/", { replace: true });
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [navigate]);
-
   useEffect(() => {
     itemRefs.current[focused]?.focus();
   }, [focused]);
+
+  const enter = useCallback(() => {
+    markEntered();
+    navigate("/", { replace: true });
+  }, [navigate]);
 
   const submit = useCallback(async () => {
     if (busy) return;
@@ -46,16 +40,16 @@ const Auth = () => {
       // Privremeno: prijava bez registracije. Ako korisnik postoji u Supabaseu
       // radi se prava prijava, inače se ulazi lokalno (bez sesije).
       if (email && password) {
-        const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-        if (!err) return; // onAuthStateChange preusmjerava
+        await supabase.auth.signInWithPassword({ email, password }).catch(() => null);
       }
-      navigate("/", { replace: true });
+      enter();
     } catch {
-      navigate("/", { replace: true });
+      enter();
     } finally {
       setBusy(false);
     }
-  }, [busy, email, password, navigate]);
+  }, [busy, email, password, enter]);
+
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
