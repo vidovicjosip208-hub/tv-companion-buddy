@@ -20,9 +20,28 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [viewportSize, setViewportSize] = useState<{ w: number; h: number } | null>(null);
 
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
   const count = 3;
+
+  // Spriječi sužavanje stranice kada se na TVu otvori virtualna tipkovnica.
+  // Umjesto 100vh/100vw koristimo fiksnu početnu veličinu viewporta, pa
+  // tipkovnica prelazi preko stranice umjesto da je smanjuje.
+  useEffect(() => {
+    const measure = () => {
+      const w = window.visualViewport?.width ?? window.innerWidth;
+      const h = window.visualViewport?.height ?? window.innerHeight;
+      setViewportSize({ w, h });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
+  }, []);
 
   useEffect(() => {
     itemRefs.current[focused]?.focus();
