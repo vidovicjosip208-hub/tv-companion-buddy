@@ -100,7 +100,15 @@ const Auth = () => {
     );
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-background">
+    <div
+      className="fixed inset-0 overflow-hidden bg-background"
+      style={{
+        width: viewportSize ? `${viewportSize.w}px` : "100vw",
+        height: viewportSize ? `${viewportSize.h}px` : "100vh",
+        minWidth: viewportSize ? `${viewportSize.w}px` : "100vw",
+        minHeight: viewportSize ? `${viewportSize.h}px` : "100vh",
+      }}
+    >
       {/* Static poster wall background */}
       <img
         src={posterWall}
