@@ -21,6 +21,13 @@ const Auth = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Zaključaj visinu/širinu na vrijednost pri prvom učitavanju,
+  // da otvaranje TV tipkovnice ne smanji/sužava layout.
+  const [viewportSize] = useState(() => ({
+    width: typeof window !== "undefined" ? window.innerWidth : undefined,
+    height: typeof window !== "undefined" ? window.innerHeight : undefined,
+  }));
+
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
   const count = 3;
 
@@ -89,7 +96,13 @@ const Auth = () => {
     );
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-background">
+    <div
+      className="fixed top-0 left-0 overflow-hidden bg-background"
+      style={{
+        width: viewportSize.width ? `${viewportSize.width}px` : "100vw",
+        height: viewportSize.height ? `${viewportSize.height}px` : "100vh",
+      }}
+    >
       {/* Static poster wall background */}
       <img
         src={posterWall}
