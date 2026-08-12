@@ -118,17 +118,12 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
           case "XF86Back":
             e.preventDefault();
             e.stopPropagation();
-            if (searchOpen) {
-              setSearchOpen(false);
-              setSearchQuery("");
-              focusButton(totalButtons - 1);
-            } else {
-              navigate("/");
-            }
+            navigate("/");
             break;
         }
       },
-      [focusedIndex, searchOpen, totalButtons, focusButton, onFocusChange, navigate],
+      [focusedIndex, totalButtons, focusButton, onFocusChange, navigate],
+
     );
 
 
