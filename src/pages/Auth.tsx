@@ -109,7 +109,7 @@ const Auth = () => {
       {/* Content */}
       <div className="relative h-full flex flex-col items-center justify-center px-12 -translate-y-10">
         {/* Neprozirni popup kontejner */}
-        <div className="flex flex-col items-center bg-black rounded-3xl px-12 pt-10 pb-8 shadow-2xl border border-white/10">
+        <div className="flex flex-col items-center bg-black rounded-3xl px-12 pt-6 pb-16 shadow-2xl border border-white/10">
           <img src={logo} alt="Max Ovizija" className="h-[180px] w-auto rounded-3xl" loading="eager" />
 
           <h1 className="mt-2 text-[27px] font-extrabold text-white">{s.signIn}</h1>
