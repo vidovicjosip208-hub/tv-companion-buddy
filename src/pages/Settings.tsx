@@ -109,7 +109,7 @@ const Settings = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-screen flex flex-col relative overflow-hidden"
+      className="h-screen flex flex-row relative overflow-hidden"
     >
       <StarryBackground />
 
@@ -126,7 +126,7 @@ const Settings = () => {
           alt="Settings gearbox"
           width={320}
           height={320}
-          className="mt-[-60px] w-[600px] h-auto object-fill hidden"
+          className="mt-[-60px] w-[600px] h-auto object-fill"
         />
       </div>
 
@@ -155,18 +155,10 @@ const Settings = () => {
                       : "text-muted-foreground hover:text-foreground hover:bg-white/5",
                   )}
                 >
-                  <Icon
-                    className={cn(
-                      "w-5 h-5 shrink-0",
-                      isFocused ? "text-accent" : "text-muted-foreground",
-                    )}
-                  />
+                  <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
                   <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
                   <ChevronRight
-                    className={cn(
-                      "w-4 h-4 shrink-0 transition-opacity",
-                      isFocused ? "opacity-100" : "opacity-40",
-                    )}
+                    className={cn("w-4 h-4 shrink-0 transition-opacity", isFocused ? "opacity-100" : "opacity-40")}
                   />
                 </button>
               );
@@ -196,15 +188,8 @@ const Settings = () => {
                         : "text-muted-foreground hover:text-foreground hover:bg-white/5",
                     )}
                   >
-                    <Check
-                      className={cn(
-                        "w-5 h-5 shrink-0",
-                        isSelected ? "text-accent opacity-100" : "opacity-0",
-                      )}
-                    />
-                    <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>
-                      {lang.label}
-                    </span>
+                    <Check className={cn("w-5 h-5 shrink-0", isSelected ? "text-accent opacity-100" : "opacity-0")} />
+                    <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{lang.label}</span>
                   </button>
                 );
               })}
