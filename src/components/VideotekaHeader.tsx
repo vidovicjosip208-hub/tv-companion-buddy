@@ -28,8 +28,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
   ({ activeTab, onSearchOpen, onFocusChange, onTabChange }, ref) => {
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const [searchOpen, setSearchOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
     useImperativeHandle(ref, () => ({
