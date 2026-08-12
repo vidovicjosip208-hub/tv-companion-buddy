@@ -41,7 +41,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
           setTimeout(() => buttonRefs.current[clamped]?.focus(), 0);
         } else {
           const activeIndex = navTabs.findIndex((t) => t.id === activeTab);
-          const idx = activeIndex >= 0 ? activeIndex + 1 : 1;
+          const idx = activeIndex >= 0 ? activeIndex : 0;
           setFocusedIndex(idx);
           onFocusChange?.(true);
           setTimeout(() => buttonRefs.current[idx]?.focus(), 0);
@@ -50,7 +50,12 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
     }));
 
     const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
-    const totalButtons = 1 + navTabs.length + 1;
+    const totalButtons = navTabs.length + 1;
+
+    const activateTab = (tabId: string) => {
+      if (tabId === "My List") navigate("/videoteka/my-list");
+      else onTabChange?.(tabId);
+    };
 
     const focusButton = (index: number) => {
       const clamped = Math.max(0, Math.min(index, totalButtons - 1));
@@ -58,8 +63,8 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       onFocusChange?.(true, clamped);
       buttonRefs.current[clamped]?.focus();
 
-      if (clamped >= 1 && clamped <= navTabs.length) {
-        onTabChange?.(navTabs[clamped - 1].id);
+      if (clamped < navTabs.length && navTabs[clamped].id !== "My List") {
+        onTabChange?.(navTabs[clamped].id);
       }
     };
 
@@ -67,10 +72,11 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
       setFocusedIndex(index);
       onFocusChange?.(true, index);
 
-      if (index >= 1 && index <= navTabs.length) {
-        onTabChange?.(navTabs[index - 1].id);
+      if (index < navTabs.length && navTabs[index].id !== "My List") {
+        onTabChange?.(navTabs[index].id);
       }
     };
+
 
     const handleButtonBlur = () => {
       setTimeout(() => {
