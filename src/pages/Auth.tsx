@@ -51,7 +51,6 @@ const Auth = () => {
     }
   }, [busy, email, password, enter]);
 
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       switch (e.key) {
@@ -90,7 +89,7 @@ const Auth = () => {
     );
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-background">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-background">
       {/* Static poster wall background */}
       <img
         src={posterWall}
