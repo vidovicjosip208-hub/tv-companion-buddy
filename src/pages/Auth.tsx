@@ -20,19 +20,9 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewportSize, setViewportSize] = useState<{ w: number; h: number } | null>(null);
 
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
   const count = 3;
-
-  // Spriječi sužavanje stranice kada se na TVu otvori virtualna tipkovnica.
-  // Umjesto 100vh/100vw koristimo fiksnu početnu veličinu viewporta, pa
-  // tipkovnica prelazi preko stranice umjesto da je smanjuje.
-  useEffect(() => {
-    const w = window.visualViewport?.width ?? window.innerWidth;
-    const h = window.visualViewport?.height ?? window.innerHeight;
-    setViewportSize({ w, h });
-  }, []);
 
   useEffect(() => {
     itemRefs.current[focused]?.focus();
@@ -100,15 +90,7 @@ const Auth = () => {
     );
 
   return (
-    <div
-      className="fixed inset-0 overflow-hidden bg-background"
-      style={{
-        width: viewportSize ? `${viewportSize.w}px` : "100vw",
-        height: viewportSize ? `${viewportSize.h}px` : "100vh",
-        minWidth: viewportSize ? `${viewportSize.w}px` : "100vw",
-        minHeight: viewportSize ? `${viewportSize.h}px` : "100vh",
-      }}
-    >
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-background">
       {/* Static poster wall background */}
       <img
         src={posterWall}
