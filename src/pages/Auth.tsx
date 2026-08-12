@@ -89,7 +89,7 @@ const Auth = () => {
     );
 
   return (
-    <div className="fixed top-0 left-0 overflow-hidden bg-background" style={{ width: "100vw", height: "100vh" }}>
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-background">
       {/* Static poster wall background */}
       <img
         src={posterWall}
