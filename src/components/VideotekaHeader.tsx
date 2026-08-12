@@ -179,9 +179,6 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
               }}
               onFocus={() => handleButtonFocus(4)}
               onBlur={handleButtonBlur}
-
-              onFocus={() => handleButtonFocus(4)}
-              onBlur={handleButtonBlur}
               className={cn(
                 "w-10 h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
                 focusedIndex === 4
