@@ -51,6 +51,7 @@ const Auth = () => {
     }
   }, [busy, email, password, enter]);
 
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       switch (e.key) {
