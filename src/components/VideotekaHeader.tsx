@@ -144,36 +144,14 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
 
           {/* Navigation */}
           <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 flex-wrap justify-center">
-            {/* Home button — index 0 */}
-            <button
-              ref={(el) => (buttonRefs.current[0] = el)}
-              onClick={() => navigate("/")}
-              onFocus={() => handleButtonFocus(0)}
-              onBlur={handleButtonBlur}
-              className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
-                focusedIndex === 0
-                  ? "bg-white border-white/20 scale-105"
-                  : "border-white/20 bg-muted/40 hover:opacity-90",
-              )}
-            >
-              <Home
-                className={cn(
-                  "w-[18px] h-[18px]",
-                  focusedIndex === 0 ? "text-black" : "text-white",
-                )}
-              />
-            </button>
-
-            {/* Nav tabs — indeksi 1, 2, 3, 4 */}
-            {navTabs.map((tab, i) => {
-              const index = i + 1;
+            {/* Nav tabs — indeksi 0, 1, 2, 3 */}
+            {navTabs.map((tab, index) => {
               const isFocused = focusedIndex === index;
               return (
                 <button
                   key={tab.id}
                   ref={(el) => (buttonRefs.current[index] = el)}
-                  onClick={() => onTabChange?.(tab.id)}
+                  onClick={() => activateTab(tab.id)}
                   onFocus={() => handleButtonFocus(index)}
                   onBlur={handleButtonBlur}
                   className={cn(
@@ -191,23 +169,17 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
             })}
           </nav>
 
-          {/* Search — index 5 */}
+          {/* Search — index 4 */}
           <div className="ml-auto flex items-center gap-2">
-            {searchOpen && (
-              <input
-                autoFocus
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("videoteka.search")}
-                className="bg-white/10 border border-white/20 rounded-xl px-3 py-[7px] text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 w-48 transition-all"
-              />
-            )}
             <button
               ref={(el) => (buttonRefs.current[4] = el)}
               onClick={() => {
                 if (onSearchOpen) onSearchOpen();
-                else setSearchOpen((prev) => !prev);
+                else navigate("/videoteka/search");
               }}
+              onFocus={() => handleButtonFocus(4)}
+              onBlur={handleButtonBlur}
+
               onFocus={() => handleButtonFocus(4)}
               onBlur={handleButtonBlur}
               className={cn(
