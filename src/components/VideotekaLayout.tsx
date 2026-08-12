@@ -145,14 +145,13 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
       <VideotekaHeader
         ref={headerRef}
         activeTab={activeTab}
-        onSearchOpen={() => setSearchOpen(true)}
         onFocusChange={(focused, index) => {
           setHeaderFocused(focused);
           headerFocusedIndexRef.current = focused ? (index ?? null) : null;
         }}
         onTabChange={handleTabChange}
       />
-      {searchOpen && <VideotekaSearch allItems={allContentItems} onClose={() => setSearchOpen(false)} />}
+
       {overlayActive ? null : !hasContent ? (
         <div className="flex h-[461px] items-center justify-center text-white/60 text-base px-4 text-center">
           {isLoading ? "Učitavanje sadržaja…" : "Nema sadržaja u Videoteci."}
