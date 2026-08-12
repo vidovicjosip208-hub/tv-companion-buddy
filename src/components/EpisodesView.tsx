@@ -119,7 +119,16 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
           break;
       }
     },
-    [focusedArea, focusedSeasonIndex, focusedEpisodeIndex, seasons.length, currentSeason, isTrailersSelected, onPlayEpisode, onClose],
+    [
+      focusedArea,
+      focusedSeasonIndex,
+      focusedEpisodeIndex,
+      seasons.length,
+      currentSeason,
+      isTrailersSelected,
+      onPlayEpisode,
+      onClose,
+    ],
   );
 
   useZoneKeys("episodes-view", handleKeyDown, true, 30);
@@ -130,7 +139,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      className="absolute inset-0 z-[60] flex flex-col overflow-hidden"
+      className="absolute inset-0 z-[60] flex flex-row overflow-hidden"
     >
       {/* Background */}
       <div className="absolute inset-0 z-0">
@@ -155,9 +164,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
           transition={{ delay: 0.1 }}
           className="mb-10"
         >
-          <h2 className="text-4xl font-black text-white tracking-tight leading-tight mb-2">
-            {details.title}
-          </h2>
+          <h2 className="text-4xl font-black text-white tracking-tight leading-tight mb-2">{details.title}</h2>
           <p className="text-base text-white/50">
             {details.year} · {details.episodes || "1 Season"}
           </p>
@@ -274,9 +281,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                 animate={{ opacity: 1 }}
                 className="flex items-center justify-center h-full"
               >
-                <p className="text-white/40 text-lg">
-                  {isLoading ? "Učitavanje..." : "Nema dostupnih epizoda."}
-                </p>
+                <p className="text-white/40 text-lg">{isLoading ? "Učitavanje..." : "Nema dostupnih epizoda."}</p>
               </motion.div>
             ) : (
               currentSeason.episodes.map((ep, index) => {
@@ -321,14 +326,10 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
 
                     <div className="flex flex-col justify-center flex-1 min-w-0 gap-2">
                       <div className="flex items-baseline justify-between gap-3">
-                        <h4 className="text-white font-bold text-lg leading-snug truncate">
-                          {ep.title}
-                        </h4>
+                        <h4 className="text-white font-bold text-lg leading-snug truncate">{ep.title}</h4>
                         <span className="shrink-0 text-white/40 text-sm">({ep.duration})</span>
                       </div>
-                      <p className="text-white/55 text-sm leading-relaxed line-clamp-3">
-                        {ep.description}
-                      </p>
+                      <p className="text-white/55 text-sm leading-relaxed line-clamp-3">{ep.description}</p>
                     </div>
                   </motion.div>
                 );
