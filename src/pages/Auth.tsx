@@ -51,7 +51,6 @@ const Auth = () => {
     }
   }, [busy, email, password, enter]);
 
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       switch (e.key) {
@@ -147,8 +146,6 @@ const Auth = () => {
           </div>
           {error && <p className="mt-3 text-[17px] max-w-[560px] text-center text-destructive">{error}</p>}
         </div>
-
-        <p className="absolute bottom-4 text-[15px] text-white/40">{s.hintKeys}</p>
       </div>
     </div>
   );
