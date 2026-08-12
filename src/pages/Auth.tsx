@@ -57,7 +57,6 @@ const Auth = () => {
     }
   }, [busy, email, password, navigate]);
 
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       switch (e.key) {
@@ -87,7 +86,6 @@ const Auth = () => {
     [count, focused, submit],
   );
 
-
   useZoneKeys("auth", handleKeyDown, true, 60);
 
   const field = (isFocused: boolean) =>
@@ -111,13 +109,8 @@ const Auth = () => {
       {/* Content */}
       <div className="relative h-full flex flex-col items-center justify-center px-12 -translate-y-10">
         {/* Neprozirni popup kontejner */}
-        <div className="flex flex-col items-center bg-black rounded-3xl px-12 py-8 shadow-2xl border border-white/10">
-          <img
-            src={logo}
-            alt="Max Ovizija"
-            className="h-[180px] w-auto rounded-3xl"
-            loading="eager"
-          />
+        <div className="flex flex-col items-center bg-black rounded-3xl px-12 pt-10 pb-8 shadow-2xl border border-white/10">
+          <img src={logo} alt="Max Ovizija" className="h-[180px] w-auto rounded-3xl" loading="eager" />
 
           <h1 className="mt-2 text-[27px] font-extrabold text-white">{s.signIn}</h1>
           <div className="mt-4 flex flex-col items-center gap-3">
@@ -157,9 +150,7 @@ const Auth = () => {
               {busy ? s.loading : s.login}
             </button>
           </div>
-          {error && (
-            <p className="mt-3 text-[17px] max-w-[560px] text-center text-destructive">{error}</p>
-          )}
+          {error && <p className="mt-3 text-[17px] max-w-[560px] text-center text-destructive">{error}</p>}
         </div>
 
         <p className="absolute bottom-4 text-[15px] text-white/40">{s.hintKeys}</p>
