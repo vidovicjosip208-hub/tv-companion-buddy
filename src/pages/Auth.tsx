@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useZoneKeys } from "@/lib/focusZone";
 import { requestAppExit } from "@/components/ExitAppDialog";
 import { getAuthStrings } from "@/lib/authStrings";
+import { markEntered } from "@/lib/entry";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-logo.png";
 import posterWall from "@/assets/1786481622043.png";
