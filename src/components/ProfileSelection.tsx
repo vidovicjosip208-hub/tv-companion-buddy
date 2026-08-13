@@ -102,13 +102,13 @@ const ProfileSelection = ({ onBack, onLogout }: ProfileSelectionProps) => {
                   setFocusedIndex(index);
                 }}
                 className={cn(
-                  "w-36 h-36 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
+                  "w-44 h-44 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
                   isFocused
                     ? "bg-primary border-primary ring-2 ring-primary/60 shadow-lg shadow-primary/30"
                     : "bg-muted/30 border-border/40 hover:border-border",
                 )}
               >
-                <User className={cn("w-16 h-16", isFocused ? "text-primary-foreground" : "text-muted-foreground")} />
+                <User className={cn("w-20 h-20", isFocused ? "text-primary-foreground" : "text-muted-foreground")} />
               </motion.button>
               <span
                 className={cn(
@@ -135,14 +135,14 @@ const ProfileSelection = ({ onBack, onLogout }: ProfileSelectionProps) => {
                   setFocusedIndex(addIndex);
                 }}
                 className={cn(
-                  "w-36 h-36 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
+                  "w-44 h-44 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
                   isFocused
                     ? "bg-muted border-border ring-2 ring-accent/40"
                     : "bg-muted/20 border-border/30 hover:border-border/60",
                 )}
               >
                 <div className="flex items-center">
-                  <User className="w-14 h-14 text-muted-foreground" />
+                  <User className="w-20 h-20 text-muted-foreground" />
                   <span className="text-2xl font-bold text-muted-foreground -ml-1">+</span>
                 </div>
               </motion.button>
