@@ -41,25 +41,15 @@ const notify = () => {
   for (const l of listeners) l();
 };
 
-// Some TV remotes emit a back press more than once (native key + re-dispatched
-// Escape, key repeats, or an extra history popstate). A back press must move
-// exactly ONE step back, so after a handled back we ignore every further back
-// event for a short window — no matter which zone became active meanwhile.
-let lastEscapeAt = 0;
-const ESCAPE_GUARD_MS = 700;
-
 const onWindowKeyDown = (e: KeyboardEvent) => {
   const zone = topZone();
   if (!zone) return;
   if (e.key === "Escape" || e.key === "Backspace") {
-    if (e.repeat) return;
-    const now = Date.now();
-    if (now - lastEscapeAt < ESCAPE_GUARD_MS) {
+    if (e.repeat) {
       e.preventDefault();
       e.stopPropagation();
       return;
     }
-    lastEscapeAt = now;
   }
   zone.handlerRef.current(e);
 };

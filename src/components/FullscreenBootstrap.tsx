@@ -61,10 +61,11 @@ const FullscreenBootstrap = () => {
       if (isFullscreen()) {
         wasFullscreenRef.current = true;
       } else if (wasFullscreenRef.current) {
-        // If we somehow leave fullscreen (e.g. OS-level gesture), try to re-enter
-        // on the next user gesture. Do NOT auto-open the exit popup here —
-        // the exit popup is driven exclusively by the app's back-navigation logic.
-        // requestFs will run again from the gesture listeners above.
+        // Android/Smart TV preglednici često potroše prvi Back samo na izlazak
+        // iz browser fullscreena i uopće ne pošalju keydown aplikaciji. Prevedi
+        // taj fullscreen izlaz u isti, deduplicirani aplikacijski Back događaj.
+        wasFullscreenRef.current = false;
+        window.dispatchEvent(new CustomEvent("app:fullscreen-back"));
       }
     };
     document.addEventListener("fullscreenchange", onFsChange);

@@ -31,8 +31,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <FullscreenBootstrap />
-        <RemoteBackKey />
         <BrowserRouter>
+          <RemoteBackKey />
           <ExitAppDialog />
           <ScaleToFit>
             <SplashGate />
