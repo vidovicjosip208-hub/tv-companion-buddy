@@ -94,30 +94,31 @@ const ProfileSelection = ({ onBack, onLogout }: ProfileSelectionProps) => {
         {profiles.map((profile, index) => {
           const isFocused = focusArea === "profiles" && focusedIndex === index;
           return (
-            <motion.button
-              key={profile.id}
-              whileHover={{ scale: 1.05 }}
-              onClick={() => {
-                setFocusArea("profiles");
-                setFocusedIndex(index);
-              }}
-              className={cn(
-                "w-44 h-48 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-200 border-2 overflow-hidden",
-                isFocused
-                  ? "bg-primary border-primary ring-2 ring-primary/60 shadow-lg shadow-primary/30"
-                  : "bg-muted/30 border-border/40 hover:border-border",
-              )}
-            >
-              <User className={cn("w-16 h-16", isFocused ? "text-primary-foreground" : "text-muted-foreground")} />
+            <div key={profile.id} className="flex flex-col items-center gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                onClick={() => {
+                  setFocusArea("profiles");
+                  setFocusedIndex(index);
+                }}
+                className={cn(
+                  "w-36 h-36 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
+                  isFocused
+                    ? "bg-primary border-primary ring-2 ring-primary/60 shadow-lg shadow-primary/30"
+                    : "bg-muted/30 border-border/40 hover:border-border",
+                )}
+              >
+                <User className={cn("w-16 h-16", isFocused ? "text-primary-foreground" : "text-muted-foreground")} />
+              </motion.button>
               <span
                 className={cn(
-                  "text-base font-medium px-4 py-1.5 rounded-md w-full text-center",
-                  isFocused ? "bg-primary-foreground/10 text-primary-foreground" : "text-muted-foreground",
+                  "text-base font-medium text-center",
+                  isFocused ? "text-foreground" : "text-muted-foreground",
                 )}
               >
                 {profile.name}
               </span>
-            </motion.button>
+            </div>
           );
         })}
 
@@ -126,25 +127,27 @@ const ProfileSelection = ({ onBack, onLogout }: ProfileSelectionProps) => {
           const addIndex = profiles.length;
           const isFocused = focusArea === "profiles" && focusedIndex === addIndex;
           return (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              onClick={() => {
-                setFocusArea("profiles");
-                setFocusedIndex(addIndex);
-              }}
-              className={cn(
-                "w-44 h-48 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-200 border-2 overflow-hidden",
-                isFocused
-                  ? "bg-muted border-border ring-2 ring-accent/40"
-                  : "bg-muted/20 border-border/30 hover:border-border/60",
-              )}
-            >
-              <div className="flex items-center">
-                <User className="w-14 h-14 text-muted-foreground" />
-                <span className="text-2xl font-bold text-muted-foreground -ml-1">+</span>
-              </div>
-              <span className="text-sm text-muted-foreground">+ Add account</span>
-            </motion.button>
+            <div className="flex flex-col items-center gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                onClick={() => {
+                  setFocusArea("profiles");
+                  setFocusedIndex(addIndex);
+                }}
+                className={cn(
+                  "w-36 h-36 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
+                  isFocused
+                    ? "bg-muted border-border ring-2 ring-accent/40"
+                    : "bg-muted/20 border-border/30 hover:border-border/60",
+                )}
+              >
+                <div className="flex items-center">
+                  <User className="w-14 h-14 text-muted-foreground" />
+                  <span className="text-2xl font-bold text-muted-foreground -ml-1">+</span>
+                </div>
+              </motion.button>
+              <span className="text-sm text-muted-foreground">Add account</span>
+            </div>
           );
         })()}
       </div>
