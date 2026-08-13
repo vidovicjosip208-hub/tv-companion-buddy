@@ -114,7 +114,7 @@ const Settings = () => {
       <StarryBackground />
 
       {/* Left side - Welcome */}
-      <div className="relative z-10 flex-1 flex flex-col justify-start pt-12 px-16">
+      <div className="relative z-10 flex-1 pt-16 px-16">
         <h1 className="text-4xl font-light text-foreground mb-3">
           {view === "language" ? t("settings.languageTitle") : t("settings.title")}
         </h1>
@@ -126,7 +126,7 @@ const Settings = () => {
           alt="Settings gearbox"
           width={320}
           height={320}
-          className="mt-[-60px] w-[600px] h-auto object-fill"
+          className="absolute left-16 top-[-30px] w-[600px] h-auto object-fill"
         />
       </div>
 
