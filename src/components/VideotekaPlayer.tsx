@@ -1304,6 +1304,13 @@ const VideotekaPlayer = ({
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      // Back mora raditi odmah, čak i dok se stream/loader još učitava. Na
+      // sporijem TV-u je prethodni early return progutao prvi Back pritisak.
+      if ((!loaderDone || !videoReady) && (e.key === "Escape" || e.key === "Backspace")) {
+        e.preventDefault();
+        onClose();
+        return;
+      }
       if (!loaderDone || !videoReady) return;
 
       if (!isVisible) {
