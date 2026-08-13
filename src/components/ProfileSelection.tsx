@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
-import { User, Settings } from "lucide-react";
+import { User, Settings, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -8,13 +8,14 @@ import logo from "@/assets/max-ovizija-logo.png";
 
 interface ProfileSelectionProps {
   onBack: () => void;
+  onLogout?: () => void;
 }
 
 const profiles = [{ id: "1", name: "Nomo", color: "bg-primary" }];
 
-type FocusArea = "profiles" | "manage";
+type FocusArea = "profiles" | "manage" | "logout";
 
-const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
+const ProfileSelection = ({ onBack, onLogout }: ProfileSelectionProps) => {
   const { t } = useTranslation();
   const [focusArea, setFocusArea] = useState<FocusArea>("profiles");
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -28,12 +29,16 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
           e.preventDefault();
           if (focusArea === "profiles") {
             setFocusedIndex((p) => Math.min(p + 1, totalItems - 1));
+          } else if (focusArea === "manage") {
+            setFocusArea("logout");
           }
           break;
         case "ArrowLeft":
           e.preventDefault();
           if (focusArea === "profiles") {
             setFocusedIndex((p) => Math.max(p - 1, 0));
+          } else if (focusArea === "logout") {
+            setFocusArea("manage");
           }
           break;
         case "ArrowDown":
@@ -44,7 +49,7 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
           break;
         case "ArrowUp":
           e.preventDefault();
-          if (focusArea === "manage") {
+          if (focusArea === "manage" || focusArea === "logout") {
             setFocusArea("profiles");
           }
           break;
@@ -57,11 +62,13 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
           e.preventDefault();
           if (focusArea === "profiles" && focusedIndex < profiles.length) {
             onBack();
+          } else if (focusArea === "logout") {
+            onLogout?.();
           }
           break;
       }
     },
-    [focusArea, focusedIndex, totalItems, onBack],
+    [focusArea, focusedIndex, totalItems, onBack, onLogout],
   );
 
   useZoneKeys("profile-selection", handleKeyDown, true, 20);
@@ -77,7 +84,6 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
       {/* Logo area */}
       <div className="flex flex-col items-center gap-2 mb-4">
         <img src={logo} alt="Max Ovizija" className="h-28 w-auto" />
-        <span className="text-xs font-semibold tracking-widest text-accent uppercase">{t("profile.brand")}</span>
       </div>
 
       {/* Title */}
@@ -102,12 +108,7 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
                   : "bg-muted/30 border-border/40 hover:border-border",
               )}
             >
-              <User
-                className={cn(
-                  "w-16 h-16",
-                  isFocused ? "text-primary-foreground" : "text-muted-foreground",
-                )}
-              />
+              <User className={cn("w-16 h-16", isFocused ? "text-primary-foreground" : "text-muted-foreground")} />
               <span
                 className={cn(
                   "text-base font-medium px-4 py-1.5 rounded-md w-full text-center",
@@ -148,20 +149,39 @@ const ProfileSelection = ({ onBack }: ProfileSelectionProps) => {
         })()}
       </div>
 
-      {/* Manage accounts button */}
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        onClick={() => setFocusArea("manage")}
-        className={cn(
-          "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200 mt-8",
-          focusArea === "manage"
-            ? "bg-muted border border-border ring-2 ring-accent/40"
-            : "bg-muted/40 border border-border/30 hover:bg-muted/60",
-        )}
-      >
-        <Settings className="w-5 h-5 text-muted-foreground" />
-        <span className="text-sm font-medium text-foreground">Manage accounts</span>
-      </motion.button>
+      {/* Manage accounts / Logout buttons */}
+      <div className="flex items-center gap-4 mt-8">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          onClick={() => setFocusArea("manage")}
+          className={cn(
+            "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+            focusArea === "manage"
+              ? "bg-muted border border-border ring-2 ring-accent/40"
+              : "bg-muted/40 border border-border/30 hover:bg-muted/60",
+          )}
+        >
+          <Settings className="w-5 h-5 text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">Manage accounts</span>
+        </motion.button>
+
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          onClick={() => {
+            setFocusArea("logout");
+            onLogout?.();
+          }}
+          className={cn(
+            "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+            focusArea === "logout"
+              ? "bg-muted border border-border ring-2 ring-accent/40"
+              : "bg-muted/40 border border-border/30 hover:bg-muted/60",
+          )}
+        >
+          <LogOut className="w-5 h-5 text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">Logout</span>
+        </motion.button>
+      </div>
     </motion.div>
   );
 };
