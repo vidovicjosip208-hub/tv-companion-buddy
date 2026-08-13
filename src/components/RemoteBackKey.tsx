@@ -25,14 +25,20 @@ const RemoteBackKey = () => {
 
   useEffect(() => {
     let lastBackAt = 0;
+    let dispatchingEscape = false;
 
     const fireEscape = () => {
       const now = Date.now();
       if (now - lastBackAt < REPRESS_GUARD_MS) return;
       lastBackAt = now;
-      window.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true, cancelable: true }),
-      );
+      dispatchingEscape = true;
+      try {
+        window.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true, cancelable: true }),
+        );
+      } finally {
+        dispatchingEscape = false;
+      }
     };
 
     const swallow = (e: Event) => {
@@ -42,7 +48,12 @@ const RemoteBackKey = () => {
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") return;
+      if (e.key === "Escape") {
+        // Neki daljinski za isti fizički Back pošalju i svoj hardware kod i
+        // pravi Escape. Propusti naš sintetički Escape, ali progutaj taj duplikat.
+        if (!dispatchingEscape && Date.now() - lastBackAt < REPRESS_GUARD_MS) swallow(e);
+        return;
+      }
       if (!isBackEvent(e)) return;
       swallow(e);
       if (e.repeat) return;
