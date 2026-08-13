@@ -83,7 +83,7 @@ const ProfileSelection = ({ onBack, onLogout }: ProfileSelectionProps) => {
     >
       {/* Logo area */}
       <div className="flex flex-col items-center gap-2 mb-4">
-        <img src={logo} alt="Max Ovizija" className="h-28 w-auto" />
+        <img src={logo} alt="Max Ovizija" className="h-56 w-auto" />
       </div>
 
       {/* Title */}
