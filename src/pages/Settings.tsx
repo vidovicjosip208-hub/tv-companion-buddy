@@ -126,7 +126,7 @@ const Settings = () => {
           alt="Settings gearbox"
           width={320}
           height={320}
-          className="absolute left-16 top-[220px] w-[600px] h-auto object-fill"
+          className="absolute left-16 top-[100px] w-[600px] h-auto object-fill"
         />
       </div>
 
