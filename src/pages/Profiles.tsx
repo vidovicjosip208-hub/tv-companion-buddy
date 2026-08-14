@@ -22,6 +22,12 @@ const Profiles = () => {
     try {
       await supabase.auth.signOut();
     } catch {
+      // ignore — lokalni signOut je već očistio sve zastavice i tokene
+    }
+    // Reinicijaliziraj Supabase klijent da ne drži staru sesiju u memoriji
+    try {
+      await supabase.auth.refreshSession();
+    } catch {
       // ignore
     }
     navigate("/auth", { replace: true });
