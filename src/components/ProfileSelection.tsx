@@ -8,6 +8,7 @@ import logo from "@/assets/max-ovizija-logo.png";
 
 interface ProfileSelectionProps {
   onBack: () => void;
+  onSelect?: () => void;
   onLogout?: () => void;
 }
 
@@ -15,7 +16,7 @@ const profiles = [{ id: "1", name: "Nomo", color: "bg-primary" }];
 
 type FocusArea = "profiles" | "manage" | "logout";
 
-const ProfileSelection = ({ onBack, onLogout }: ProfileSelectionProps) => {
+const ProfileSelection = ({ onBack, onSelect, onLogout }: ProfileSelectionProps) => {
   const { t } = useTranslation();
   const [focusArea, setFocusArea] = useState<FocusArea>("profiles");
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -61,14 +62,14 @@ const ProfileSelection = ({ onBack, onLogout }: ProfileSelectionProps) => {
         case "Enter":
           e.preventDefault();
           if (focusArea === "profiles" && focusedIndex < profiles.length) {
-            onBack();
+            (onSelect ?? onBack)();
           } else if (focusArea === "logout") {
             onLogout?.();
           }
           break;
       }
     },
-    [focusArea, focusedIndex, totalItems, onBack, onLogout],
+    [focusArea, focusedIndex, totalItems, onBack, onSelect, onLogout],
   );
 
   useZoneKeys("profile-selection", handleKeyDown, true, 20);
@@ -100,6 +101,7 @@ const ProfileSelection = ({ onBack, onLogout }: ProfileSelectionProps) => {
                 onClick={() => {
                   setFocusArea("profiles");
                   setFocusedIndex(index);
+                  onSelect?.();
                 }}
                 className={cn(
                   "w-44 h-44 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { isSignedIn } from "@/lib/entry";
 
 const SplashIntro = lazy(() => import("./SplashIntro.tsx"));
 
@@ -23,7 +24,7 @@ const SplashGate = () => {
 
   const handleFinished = () => {
     setDone(true);
-    navigate("/auth", { replace: true });
+    navigate(isSignedIn() ? "/profiles" : "/auth", { replace: true });
   };
 
   if (done || onPlayerRoute) return null;

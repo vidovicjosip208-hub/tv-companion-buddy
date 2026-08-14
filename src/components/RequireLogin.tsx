@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import { hasEntered } from "@/lib/entry";
+import { hasEntered, isSignedIn } from "@/lib/entry";
 
 /**
  * Zaštićene stranice se prikazuju isključivo nakon završenog logina u ovoj
@@ -8,7 +8,7 @@ import { hasEntered } from "@/lib/entry";
  * stranica nikada ne "bljesne" prije login ekrana — ni na TV pretraživaču.
  */
 const RequireLogin = ({ children }: { children: ReactNode }) => {
-  if (!hasEntered()) return <Navigate to="/auth" replace />;
+  if (!hasEntered()) return <Navigate to={isSignedIn() ? "/profiles" : "/auth"} replace />;
   return <>{children}</>;
 };
 

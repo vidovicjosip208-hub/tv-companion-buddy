@@ -21,6 +21,7 @@ const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const Settings = lazy(() => import("./pages/Settings.tsx"));
 const Player = lazy(() => import("./pages/Player.tsx"));
 const Auth = lazy(() => import("./pages/Auth.tsx"));
+const Profiles = lazy(() => import("./pages/Profiles.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
                 <Route path="/player" element={<RequireLogin><Player /></RequireLogin>} />
                 <Route path="/settings" element={<RequireLogin><Settings /></RequireLogin>} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/profiles" element={<Profiles />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

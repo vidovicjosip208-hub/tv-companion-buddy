@@ -38,3 +38,34 @@ export const clearEntered = () => {
     // ignore
   }
 };
+
+/**
+ * Trajna prijava: preživi zatvaranje aplikacije. Dok je postavljena, ulazak u
+ * aplikaciju vodi na odabir profila umjesto na login. Briše se samo logoutom.
+ */
+const SIGNED_IN_KEY = "app:signedIn";
+
+export const setSignedIn = () => {
+  try {
+    localStorage.setItem(SIGNED_IN_KEY, "1");
+  } catch {
+    // ignore
+  }
+};
+
+export const isSignedIn = () => {
+  try {
+    return localStorage.getItem(SIGNED_IN_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+export const signOut = () => {
+  clearEntered();
+  try {
+    localStorage.removeItem(SIGNED_IN_KEY);
+  } catch {
+    // ignore
+  }
+};
