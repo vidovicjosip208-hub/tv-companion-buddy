@@ -15,7 +15,7 @@ interface ProfileSelectionProps {
 
 const profiles = [{ id: "1", name: "Nomo", color: "bg-primary" }];
 
-type FocusArea = "profiles" | "manage" | "logout";
+type FocusArea = "profiles" | "edit" | "manage" | "logout";
 
 const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: ProfileSelectionProps) => {
   const { t } = useTranslation();
@@ -31,6 +31,8 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
           e.preventDefault();
           if (focusArea === "profiles") {
             setFocusedIndex((p) => Math.min(p + 1, totalItems - 1));
+          } else if (focusArea === "edit") {
+            setFocusedIndex((p) => Math.min(p + 1, profiles.length - 1));
           } else if (focusArea === "manage") {
             setFocusArea("logout");
           }
@@ -39,6 +41,8 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
           e.preventDefault();
           if (focusArea === "profiles") {
             setFocusedIndex((p) => Math.max(p - 1, 0));
+          } else if (focusArea === "edit") {
+            setFocusedIndex((p) => Math.max(p - 1, 0));
           } else if (focusArea === "logout") {
             setFocusArea("manage");
           }
@@ -46,13 +50,25 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
         case "ArrowDown":
           e.preventDefault();
           if (focusArea === "profiles") {
+            if (focusedIndex < profiles.length) {
+              setFocusArea("edit");
+            } else {
+              setFocusArea("manage");
+            }
+          } else if (focusArea === "edit") {
             setFocusArea("manage");
           }
           break;
         case "ArrowUp":
           e.preventDefault();
-          if (focusArea === "manage" || focusArea === "logout") {
+          if (focusArea === "edit") {
             setFocusArea("profiles");
+          } else if (focusArea === "manage" || focusArea === "logout") {
+            if (focusedIndex < profiles.length) {
+              setFocusArea("edit");
+            } else {
+              setFocusArea("profiles");
+            }
           }
           break;
         case "Escape":
@@ -64,13 +80,15 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
           e.preventDefault();
           if (focusArea === "profiles" && focusedIndex < profiles.length) {
             (onSelect ?? onBack)();
+          } else if (focusArea === "edit") {
+            onEditProfile?.(profiles[focusedIndex]?.id);
           } else if (focusArea === "logout") {
             onLogout?.();
           }
           break;
       }
     },
-    [focusArea, focusedIndex, totalItems, onBack, onSelect, onLogout],
+    [focusArea, focusedIndex, totalItems, onBack, onSelect, onLogout, onEditProfile],
   );
 
   useZoneKeys("profile-selection", handleKeyDown, true, 20);
@@ -125,10 +143,17 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
                 whileHover={{ scale: 1.1 }}
                 onClick={(e) => {
                   e.stopPropagation();
+                  setFocusArea("edit");
+                  setFocusedIndex(index);
                   onEditProfile?.(profile.id);
                 }}
                 aria-label={`Edit ${profile.name}`}
-                className="flex items-center justify-center w-8 h-8 rounded-full border border-border/40 bg-muted/30 text-muted-foreground hover:text-foreground hover:border-border transition-colors duration-200"
+                className={cn(
+                  "flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-200",
+                  focusArea === "edit" && focusedIndex === index
+                    ? "border-accent ring-2 ring-accent/60 bg-muted text-foreground"
+                    : "border-border/40 bg-muted/30 text-muted-foreground hover:text-foreground hover:border-border",
+                )}
               >
                 <Pencil className="w-4 h-4" />
               </motion.button>
