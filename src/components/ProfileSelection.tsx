@@ -62,14 +62,14 @@ const ProfileSelection = ({ onBack, onSelect, onLogout }: ProfileSelectionProps)
         case "Enter":
           e.preventDefault();
           if (focusArea === "profiles" && focusedIndex < profiles.length) {
-            onBack();
+            (onSelect ?? onBack)();
           } else if (focusArea === "logout") {
             onLogout?.();
           }
           break;
       }
     },
-    [focusArea, focusedIndex, totalItems, onBack, onLogout],
+    [focusArea, focusedIndex, totalItems, onBack, onSelect, onLogout],
   );
 
   useZoneKeys("profile-selection", handleKeyDown, true, 20);
