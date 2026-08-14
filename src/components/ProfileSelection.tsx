@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
-import { User, Settings, LogOut, Pencil } from "lucide-react";
+import { User, Settings, LogOut, Pencil, ArrowLeft, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -15,16 +15,27 @@ interface ProfileSelectionProps {
 
 const profiles = [{ id: "1", name: "Nomo", color: "bg-primary" }];
 
+type View = "grid" | "editProfile";
 type FocusArea = "profiles" | "edit" | "manage" | "logout";
+type EditFocusArea = "back" | "save";
 
 const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: ProfileSelectionProps) => {
   const { t } = useTranslation();
+  const [view, setView] = useState<View>("grid");
   const [focusArea, setFocusArea] = useState<FocusArea>("profiles");
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
+  const [editFocusArea, setEditFocusArea] = useState<EditFocusArea>("back");
 
   const totalItems = profiles.length + 1;
 
-  const handleKeyDown = useCallback(
+  const exitEditView = useCallback(() => {
+    setView("grid");
+    setEditingProfileId(null);
+    setFocusArea("edit");
+  }, []);
+
+  const handleGridKeyDown = useCallback(
     (e: KeyboardEvent) => {
       switch (e.key) {
         case "ArrowRight":
@@ -81,17 +92,123 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
           if (focusArea === "profiles" && focusedIndex < profiles.length) {
             (onSelect ?? onBack)();
           } else if (focusArea === "edit") {
-            onEditProfile?.(profiles[focusedIndex]?.id);
+            const profile = profiles[focusedIndex];
+            if (profile) {
+              setEditingProfileId(profile.id);
+              setEditFocusArea("back");
+              setView("editProfile");
+            }
           } else if (focusArea === "logout") {
             onLogout?.();
           }
           break;
       }
     },
-    [focusArea, focusedIndex, totalItems, onBack, onSelect, onLogout, onEditProfile],
+    [focusArea, focusedIndex, totalItems, onBack, onSelect, onLogout],
+  );
+
+  const handleEditKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowLeft":
+        case "ArrowRight":
+          e.preventDefault();
+          setEditFocusArea((p) => (p === "back" ? "save" : "back"));
+          break;
+        case "Escape":
+        case "Backspace":
+          e.preventDefault();
+          exitEditView();
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (editFocusArea === "back") {
+            exitEditView();
+          } else if (editFocusArea === "save" && editingProfileId) {
+            onEditProfile?.(editingProfileId);
+            exitEditView();
+          }
+          break;
+      }
+    },
+    [editFocusArea, editingProfileId, onEditProfile, exitEditView],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (view === "editProfile") {
+        handleEditKeyDown(e);
+      } else {
+        handleGridKeyDown(e);
+      }
+    },
+    [view, handleEditKeyDown, handleGridKeyDown],
   );
 
   useZoneKeys("profile-selection", handleKeyDown, true, 20);
+
+  const editingProfile = profiles.find((p) => p.id === editingProfileId);
+
+  if (view === "editProfile" && editingProfile) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+        className="h-screen w-screen bg-transparent relative z-10 flex flex-col items-center justify-center gap-8 px-4"
+      >
+        {/* Logo area */}
+        <div className="flex flex-col items-center gap-2 mb-4">
+          <img src={logo} alt="Max Ovizija" className="h-56 w-auto" />
+        </div>
+
+        <h1 className="text-2xl font-light text-muted-foreground">Uredi profil</h1>
+
+        {/* Editable profile preview */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-44 h-44 rounded-full flex items-center justify-center border-2 bg-accent border-accent shadow-lg shadow-accent/30">
+            <User className="w-20 h-20 text-black" />
+          </div>
+          <span className="text-lg font-medium text-foreground">{editingProfile.name}</span>
+        </div>
+
+        {/* Back / Save actions */}
+        <div className="flex items-center gap-4 mt-8">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            onClick={exitEditView}
+            className={cn(
+              "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+              editFocusArea === "back"
+                ? "bg-muted border border-border ring-2 ring-accent/40"
+                : "bg-muted/40 border border-border/30 hover:bg-muted/60",
+            )}
+          >
+            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Natrag</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            onClick={() => {
+              onEditProfile?.(editingProfile.id);
+              exitEditView();
+            }}
+            className={cn(
+              "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+              editFocusArea === "save"
+                ? "bg-muted border border-border ring-2 ring-accent/40"
+                : "bg-muted/40 border border-border/30 hover:bg-muted/60",
+            )}
+          >
+            <Check className="w-5 h-5 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Spremi</span>
+          </motion.button>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -145,7 +262,9 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
                   e.stopPropagation();
                   setFocusArea("edit");
                   setFocusedIndex(index);
-                  onEditProfile?.(profile.id);
+                  setEditingProfileId(profile.id);
+                  setEditFocusArea("back");
+                  setView("editProfile");
                 }}
                 aria-label={`Edit ${profile.name}`}
                 className={cn(
