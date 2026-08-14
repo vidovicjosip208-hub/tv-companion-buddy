@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, Pencil } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -8,15 +8,15 @@ import logo from "@/assets/max-ovizija-logo.png";
 
 interface ProfileSelectionProps {
   onBack: () => void;
-  onSelect?: () => void;
   onLogout?: () => void;
+  onEditProfile?: (profileId: string) => void;
 }
 
 const profiles = [{ id: "1", name: "Nomo", color: "bg-primary" }];
 
 type FocusArea = "profiles" | "manage" | "logout";
 
-const ProfileSelection = ({ onBack, onSelect, onLogout }: ProfileSelectionProps) => {
+const ProfileSelection = ({ onBack, onLogout, onEditProfile }: ProfileSelectionProps) => {
   const { t } = useTranslation();
   const [focusArea, setFocusArea] = useState<FocusArea>("profiles");
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -62,14 +62,14 @@ const ProfileSelection = ({ onBack, onSelect, onLogout }: ProfileSelectionProps)
         case "Enter":
           e.preventDefault();
           if (focusArea === "profiles" && focusedIndex < profiles.length) {
-            (onSelect ?? onBack)();
+            onBack();
           } else if (focusArea === "logout") {
             onLogout?.();
           }
           break;
       }
     },
-    [focusArea, focusedIndex, totalItems, onBack, onSelect, onLogout],
+    [focusArea, focusedIndex, totalItems, onBack, onLogout],
   );
 
   useZoneKeys("profile-selection", handleKeyDown, true, 20);
@@ -101,7 +101,6 @@ const ProfileSelection = ({ onBack, onSelect, onLogout }: ProfileSelectionProps)
                 onClick={() => {
                   setFocusArea("profiles");
                   setFocusedIndex(index);
-                  onSelect?.();
                 }}
                 className={cn(
                   "w-44 h-44 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
@@ -120,6 +119,17 @@ const ProfileSelection = ({ onBack, onSelect, onLogout }: ProfileSelectionProps)
               >
                 {profile.name}
               </span>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditProfile?.(profile.id);
+                }}
+                aria-label={`Edit ${profile.name}`}
+                className="flex items-center justify-center w-8 h-8 rounded-full border border-border/40 bg-muted/30 text-muted-foreground hover:text-foreground hover:border-border transition-colors duration-200"
+              >
+                <Pencil className="w-4 h-4" />
+              </motion.button>
             </div>
           );
         })}
