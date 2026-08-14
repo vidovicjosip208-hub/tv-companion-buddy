@@ -8,7 +8,7 @@ import { hasEntered, isSignedIn } from "@/lib/entry";
  * stranica nikada ne "bljesne" prije login ekrana — ni na TV pretraživaču.
  */
 const RequireLogin = ({ children }: { children: ReactNode }) => {
-  if (!hasEntered()) return <Navigate to="/auth" replace />;
+  if (!hasEntered()) return <Navigate to={isSignedIn() ? "/profiles" : "/auth"} replace />;
   return <>{children}</>;
 };
 
