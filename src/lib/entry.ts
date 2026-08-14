@@ -68,4 +68,14 @@ export const signOut = () => {
   } catch {
     // ignore
   }
+  // Ukloni i sve Supabase auth tokene iz localStorage — signOut() na klijentu
+  // ponekad ne uspije (npr. s placeholder URL-om), pa bi stara sesija ostala.
+  try {
+    const keys = Object.keys(localStorage).filter(
+      (k) => k.startsWith("sb-") && k.endsWith("-auth-token"),
+    );
+    keys.forEach((k) => localStorage.removeItem(k));
+  } catch {
+    // ignore
+  }
 };

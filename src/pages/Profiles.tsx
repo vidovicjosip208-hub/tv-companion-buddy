@@ -22,7 +22,7 @@ const Profiles = () => {
     try {
       await supabase.auth.signOut();
     } catch {
-      // ignore
+      // ignore — lokalni signOut je već očistio sve zastavice i tokene
     }
     navigate("/auth", { replace: true });
   }, [navigate]);
