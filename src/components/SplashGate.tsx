@@ -23,7 +23,7 @@ const SplashGate = () => {
 
   const handleFinished = () => {
     setDone(true);
-    navigate("/auth", { replace: true });
+    navigate(isSignedIn() ? "/profiles" : "/auth", { replace: true });
   };
 
   if (done || onPlayerRoute) return null;
