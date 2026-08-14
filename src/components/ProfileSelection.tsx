@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
-import { User, Settings, LogOut, Pencil, ArrowLeft, Check } from "lucide-react";
+import { User, Settings, LogOut, Pencil, ImagePlus, Trash2, Check, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -11,27 +11,74 @@ interface ProfileSelectionProps {
   onSelect?: () => void;
   onLogout?: () => void;
   onEditProfile?: (profileId: string) => void;
+  onAddProfile?: () => void;
+  onRemoveProfile?: (profileId: string) => void;
+  onChangeAvatar?: (profileId: string) => void;
 }
 
-const profiles = [{ id: "1", name: "Nomo", color: "bg-primary" }];
+interface Profile {
+  id: string;
+  name: string;
+  color: string;
+  avatarUrl?: string;
+}
+
+const profiles: Profile[] = [{ id: "1", name: "Nomo", color: "bg-primary" }];
 
 type View = "grid" | "editProfile";
 type FocusArea = "profiles" | "edit" | "manage" | "logout";
-type EditFocusArea = "back" | "save";
 
-const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: ProfileSelectionProps) => {
+const ProfileSelection = ({
+  onBack,
+  onSelect,
+  onLogout,
+  onEditProfile,
+  onAddProfile,
+  onRemoveProfile,
+  onChangeAvatar,
+}: ProfileSelectionProps) => {
   const { t } = useTranslation();
   const [view, setView] = useState<View>("grid");
   const [focusArea, setFocusArea] = useState<FocusArea>("profiles");
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
-  const [editFocusArea, setEditFocusArea] = useState<EditFocusArea>("back");
+  const [isNewProfile, setIsNewProfile] = useState(false);
+  const [editRow, setEditRow] = useState(0);
+  const [editCol, setEditCol] = useState(0);
 
   const totalItems = profiles.length + 1;
+
+  const editingProfile = profiles.find((p) => p.id === editingProfileId);
+
+  // Row layout for the edit/add screen, depends on whether we're editing an
+  // existing profile (Remove + Save) or creating a new one (Add only).
+  const editRows: string[][] = isNewProfile
+    ? [["name", "avatar"], ["add"]]
+    : [
+        ["name", "avatar"],
+        ["remove", "save"],
+      ];
+
+  const openEditView = useCallback((profileId: string) => {
+    setEditingProfileId(profileId);
+    setIsNewProfile(false);
+    setEditRow(0);
+    setEditCol(0);
+    setView("editProfile");
+  }, []);
+
+  const openAddView = useCallback(() => {
+    setEditingProfileId(null);
+    setIsNewProfile(true);
+    setEditRow(0);
+    setEditCol(0);
+    setView("editProfile");
+  }, []);
 
   const exitEditView = useCallback(() => {
     setView("grid");
     setEditingProfileId(null);
+    setIsNewProfile(false);
     setFocusArea("edit");
   }, []);
 
@@ -91,47 +138,86 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
           e.preventDefault();
           if (focusArea === "profiles" && focusedIndex < profiles.length) {
             (onSelect ?? onBack)();
+          } else if (focusArea === "profiles" && focusedIndex === profiles.length) {
+            openAddView();
           } else if (focusArea === "edit") {
             const profile = profiles[focusedIndex];
-            if (profile) {
-              setEditingProfileId(profile.id);
-              setEditFocusArea("back");
-              setView("editProfile");
-            }
+            if (profile) openEditView(profile.id);
           } else if (focusArea === "logout") {
             onLogout?.();
           }
           break;
       }
     },
-    [focusArea, focusedIndex, totalItems, onBack, onSelect, onLogout],
+    [focusArea, focusedIndex, totalItems, onBack, onSelect, onLogout, openEditView, openAddView],
   );
 
   const handleEditKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      const currentRow = editRows[editRow] ?? editRows[0];
+
       switch (e.key) {
-        case "ArrowLeft":
         case "ArrowRight":
           e.preventDefault();
-          setEditFocusArea((p) => (p === "back" ? "save" : "back"));
+          setEditCol((c) => Math.min(c + 1, currentRow.length - 1));
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          setEditCol((c) => Math.max(c - 1, 0));
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          setEditRow((r) => {
+            const nextRow = Math.min(r + 1, editRows.length - 1);
+            setEditCol((c) => Math.min(c, editRows[nextRow].length - 1));
+            return nextRow;
+          });
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setEditRow((r) => {
+            const nextRow = Math.max(r - 1, 0);
+            setEditCol((c) => Math.min(c, editRows[nextRow].length - 1));
+            return nextRow;
+          });
           break;
         case "Escape":
         case "Backspace":
           e.preventDefault();
           exitEditView();
           break;
-        case "Enter":
+        case "Enter": {
           e.preventDefault();
-          if (editFocusArea === "back") {
+          const action = currentRow[editCol];
+          if (action === "name") {
+            // TODO: wire up name editing
+          } else if (action === "avatar") {
+            if (editingProfileId) onChangeAvatar?.(editingProfileId);
+          } else if (action === "remove") {
+            if (editingProfileId) onRemoveProfile?.(editingProfileId);
             exitEditView();
-          } else if (editFocusArea === "save" && editingProfileId) {
-            onEditProfile?.(editingProfileId);
+          } else if (action === "save") {
+            if (editingProfileId) onEditProfile?.(editingProfileId);
+            exitEditView();
+          } else if (action === "add") {
+            onAddProfile?.();
             exitEditView();
           }
           break;
+        }
       }
     },
-    [editFocusArea, editingProfileId, onEditProfile, exitEditView],
+    [
+      editRow,
+      editCol,
+      editRows,
+      editingProfileId,
+      onChangeAvatar,
+      onRemoveProfile,
+      onEditProfile,
+      onAddProfile,
+      exitEditView,
+    ],
   );
 
   const handleKeyDown = useCallback(
@@ -147,9 +233,10 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
 
   useZoneKeys("profile-selection", handleKeyDown, true, 20);
 
-  const editingProfile = profiles.find((p) => p.id === editingProfileId);
+  if (view === "editProfile") {
+    const isFocused = (key: string) => editRows[editRow]?.[editCol] === key;
+    const hasAvatar = Boolean(editingProfile?.avatarUrl);
 
-  if (view === "editProfile" && editingProfile) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -158,53 +245,108 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
         transition={{ duration: 0.4 }}
         className="h-screen w-screen bg-transparent relative z-10 flex flex-col items-center justify-center gap-8 px-4"
       >
-        {/* Logo area */}
-        <div className="flex flex-col items-center gap-2 mb-4">
-          <img src={logo} alt="Max Ovizija" className="h-56 w-auto" />
-        </div>
+        {/* Heading */}
+        <h1 className="text-3xl font-bold text-foreground">Uredi profil</h1>
 
-        <h1 className="text-2xl font-light text-muted-foreground">Uredi profil</h1>
-
-        {/* Editable profile preview */}
+        {/* Profile preview */}
         <div className="flex flex-col items-center gap-3">
           <div className="w-44 h-44 rounded-full flex items-center justify-center border-2 bg-accent border-accent shadow-lg shadow-accent/30">
             <User className="w-20 h-20 text-black" />
           </div>
-          <span className="text-lg font-medium text-foreground">{editingProfile.name}</span>
+          <span className="text-lg font-medium text-foreground">{editingProfile?.name ?? "Novi profil"}</span>
         </div>
 
-        {/* Back / Save actions */}
-        <div className="flex items-center gap-4 mt-8">
+        {/* Name / Avatar row */}
+        <div className="grid grid-cols-2 gap-4 w-full max-w-md">
           <motion.button
             whileHover={{ scale: 1.02 }}
-            onClick={exitEditView}
             className={cn(
-              "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
-              editFocusArea === "back"
-                ? "bg-muted border border-border ring-2 ring-accent/40"
-                : "bg-muted/40 border border-border/30 hover:bg-muted/60",
+              "flex flex-col items-start gap-1 px-6 py-4 rounded-xl border transition-all duration-200 text-left",
+              isFocused("name")
+                ? "bg-muted border-accent ring-2 ring-accent/40"
+                : "bg-muted/30 border-border/40 hover:border-border",
             )}
           >
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">Natrag</span>
+            <span className="text-xs text-muted-foreground">Ime profila</span>
+            <span className="text-base font-medium text-foreground">{editingProfile?.name ?? "Novi profil"}</span>
           </motion.button>
 
           <motion.button
             whileHover={{ scale: 1.02 }}
-            onClick={() => {
-              onEditProfile?.(editingProfile.id);
-              exitEditView();
-            }}
+            onClick={() => editingProfileId && onChangeAvatar?.(editingProfileId)}
             className={cn(
-              "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
-              editFocusArea === "save"
-                ? "bg-muted border border-border ring-2 ring-accent/40"
-                : "bg-muted/40 border border-border/30 hover:bg-muted/60",
+              "flex flex-col items-start gap-1 px-6 py-4 rounded-xl border transition-all duration-200 text-left",
+              isFocused("avatar")
+                ? "bg-muted border-accent ring-2 ring-accent/40"
+                : "bg-muted/30 border-border/40 hover:border-border",
             )}
           >
-            <Check className="w-5 h-5 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">Spremi</span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <ImagePlus className="w-3.5 h-3.5" />
+              Avatar
+            </span>
+            <span className="text-base font-medium text-foreground">
+              {hasAvatar ? "Zamijeni Avatar" : "Dodaj Avatar"}
+            </span>
           </motion.button>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-4 mt-2">
+          {isNewProfile ? (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              onClick={() => {
+                onAddProfile?.();
+                exitEditView();
+              }}
+              className={cn(
+                "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+                isFocused("add")
+                  ? "bg-muted border border-border ring-2 ring-accent/40"
+                  : "bg-muted/40 border border-border/30 hover:bg-muted/60",
+              )}
+            >
+              <Plus className="w-5 h-5 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Dodaj Profil</span>
+            </motion.button>
+          ) : (
+            <>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                onClick={() => {
+                  if (editingProfileId) onRemoveProfile?.(editingProfileId);
+                  exitEditView();
+                }}
+                className={cn(
+                  "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+                  isFocused("remove")
+                    ? "bg-muted border border-border ring-2 ring-accent/40"
+                    : "bg-muted/40 border border-border/30 hover:bg-muted/60",
+                )}
+              >
+                <Trash2 className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">Ukloni Profil</span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                onClick={() => {
+                  if (editingProfileId) onEditProfile?.(editingProfileId);
+                  exitEditView();
+                }}
+                className={cn(
+                  "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+                  isFocused("save")
+                    ? "bg-muted border border-border ring-2 ring-accent/40"
+                    : "bg-muted/40 border border-border/30 hover:bg-muted/60",
+                )}
+              >
+                <Check className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">Spremi promjene</span>
+              </motion.button>
+            </>
+          )}
         </div>
       </motion.div>
     );
@@ -262,9 +404,7 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
                   e.stopPropagation();
                   setFocusArea("edit");
                   setFocusedIndex(index);
-                  setEditingProfileId(profile.id);
-                  setEditFocusArea("back");
-                  setView("editProfile");
+                  openEditView(profile.id);
                 }}
                 aria-label={`Edit ${profile.name}`}
                 className={cn(
@@ -291,6 +431,7 @@ const ProfileSelection = ({ onBack, onSelect, onLogout, onEditProfile }: Profile
                 onClick={() => {
                   setFocusArea("profiles");
                   setFocusedIndex(addIndex);
+                  openAddView();
                 }}
                 className={cn(
                   "w-44 h-44 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
