@@ -8,6 +8,7 @@ import logo from "@/assets/max-ovizija-logo.png";
 
 interface ProfileSelectionProps {
   onBack: () => void;
+  onSelect?: () => void;
   onLogout?: () => void;
 }
 
