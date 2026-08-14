@@ -48,6 +48,7 @@ const App = () => (
                 <Route path="/player" element={<RequireLogin><Player /></RequireLogin>} />
                 <Route path="/settings" element={<RequireLogin><Settings /></RequireLogin>} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/profiles" element={<Profiles />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
