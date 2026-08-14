@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useZoneKeys } from "@/lib/focusZone";
 import { requestAppExit } from "@/components/ExitAppDialog";
 import { getAuthStrings } from "@/lib/authStrings";
-import { setSignedIn } from "@/lib/entry";
+import { isSignedIn, setSignedIn } from "@/lib/entry";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/max-ovizija-logo.png";
 import posterWall from "@/assets/1786481622043.png";
@@ -81,6 +81,10 @@ const Auth = () => {
   );
 
   useZoneKeys("auth", handleKeyDown, true, 60);
+
+  // TV preglednik često ponovno otvori zadnju rutu (/auth). Ako trajna
+  // prijava još vrijedi, preusmjeri prije nego što se login forma renderira.
+  if (isSignedIn()) return <Navigate to="/profiles" replace />;
 
   const field = (isFocused: boolean) =>
     cn(
