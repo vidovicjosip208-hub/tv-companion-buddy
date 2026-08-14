@@ -101,6 +101,7 @@ const ProfileSelection = ({ onBack, onSelect, onLogout }: ProfileSelectionProps)
                 onClick={() => {
                   setFocusArea("profiles");
                   setFocusedIndex(index);
+                  onSelect?.();
                 }}
                 className={cn(
                   "w-44 h-44 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
