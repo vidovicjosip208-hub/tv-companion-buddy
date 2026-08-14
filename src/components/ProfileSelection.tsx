@@ -16,7 +16,7 @@ const profiles = [{ id: "1", name: "Nomo", color: "bg-primary" }];
 
 type FocusArea = "profiles" | "manage" | "logout";
 
-const ProfileSelection = ({ onBack, onLogout }: ProfileSelectionProps) => {
+const ProfileSelection = ({ onBack, onSelect, onLogout }: ProfileSelectionProps) => {
   const { t } = useTranslation();
   const [focusArea, setFocusArea] = useState<FocusArea>("profiles");
   const [focusedIndex, setFocusedIndex] = useState(0);
