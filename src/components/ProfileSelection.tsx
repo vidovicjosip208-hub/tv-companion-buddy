@@ -23,7 +23,7 @@ interface Profile {
   avatarUrl?: string;
 }
 
-const profiles: Profile[] = [{ id: "1", name: "Nomo", color: "bg-primary" }];
+const initialProfiles: Profile[] = [{ id: "1", name: "Nomo", color: "bg-primary" }];
 
 type View = "grid" | "editProfile";
 type FocusArea = "profiles" | "edit" | "manage" | "logout";
@@ -38,6 +38,7 @@ const ProfileSelection = ({
   onChangeAvatar,
 }: ProfileSelectionProps) => {
   const { t } = useTranslation();
+  const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
   const [view, setView] = useState<View>("grid");
   const [focusArea, setFocusArea] = useState<FocusArea>("profiles");
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -81,6 +82,30 @@ const ProfileSelection = ({
     setIsNewProfile(false);
     setFocusArea("edit");
   }, []);
+
+  // Stvarno uklanjanje profila iz state-a
+  const handleRemoveProfile = useCallback(
+    (profileId: string) => {
+      setProfiles((prev) => prev.filter((p) => p.id !== profileId));
+      setFocusedIndex(0);
+      onRemoveProfile?.(profileId);
+    },
+    [onRemoveProfile],
+  );
+
+  // Stvarno dodavanje profila u state
+  const handleAddProfile = useCallback(() => {
+    setProfiles((prev) => {
+      const newProfile: Profile = {
+        id: Date.now().toString(),
+        name: `Profil ${prev.length + 1}`,
+        color: "bg-primary",
+      };
+      return [...prev, newProfile];
+    });
+    setFocusedIndex(0);
+    onAddProfile?.();
+  }, [onAddProfile]);
 
   const handleGridKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -149,7 +174,7 @@ const ProfileSelection = ({
           break;
       }
     },
-    [focusArea, focusedIndex, totalItems, onBack, onSelect, onLogout, openEditView, openAddView],
+    [focusArea, focusedIndex, totalItems, profiles, onBack, onSelect, onLogout, openEditView, openAddView],
   );
 
   const handleEditKeyDown = useCallback(
@@ -194,13 +219,13 @@ const ProfileSelection = ({
           } else if (action === "avatar") {
             if (editingProfileId) onChangeAvatar?.(editingProfileId);
           } else if (action === "remove") {
-            if (editingProfileId) onRemoveProfile?.(editingProfileId);
+            if (editingProfileId) handleRemoveProfile(editingProfileId);
             exitEditView();
           } else if (action === "save") {
             if (editingProfileId) onEditProfile?.(editingProfileId);
             exitEditView();
           } else if (action === "add") {
-            onAddProfile?.();
+            handleAddProfile();
             exitEditView();
           }
           break;
@@ -213,9 +238,9 @@ const ProfileSelection = ({
       editRows,
       editingProfileId,
       onChangeAvatar,
-      onRemoveProfile,
+      handleRemoveProfile,
       onEditProfile,
-      onAddProfile,
+      handleAddProfile,
       exitEditView,
     ],
   );
@@ -297,7 +322,7 @@ const ProfileSelection = ({
             <motion.button
               whileHover={{ scale: 1.02 }}
               onClick={() => {
-                onAddProfile?.();
+                handleAddProfile();
                 exitEditView();
               }}
               className={cn(
@@ -315,7 +340,7 @@ const ProfileSelection = ({
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 onClick={() => {
-                  if (editingProfileId) onRemoveProfile?.(editingProfileId);
+                  if (editingProfileId) handleRemoveProfile(editingProfileId);
                   exitEditView();
                 }}
                 className={cn(
