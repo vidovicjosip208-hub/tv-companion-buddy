@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { isSignedIn } from "@/lib/entry";
 
 const SplashIntro = lazy(() => import("./SplashIntro.tsx"));
 
