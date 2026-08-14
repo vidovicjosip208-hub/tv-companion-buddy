@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import { hasEntered } from "@/lib/entry";
+import { hasEntered, isSignedIn } from "@/lib/entry";
 
 /**
  * Zaštićene stranice se prikazuju isključivo nakon završenog logina u ovoj
