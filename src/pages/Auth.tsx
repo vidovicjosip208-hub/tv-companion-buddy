@@ -29,8 +29,8 @@ const Auth = () => {
   }, [focused]);
 
   const enter = useCallback(() => {
-    markEntered();
-    navigate("/", { replace: true });
+    setSignedIn();
+    navigate("/profiles", { replace: true });
   }, [navigate]);
 
   const submit = useCallback(async () => {
