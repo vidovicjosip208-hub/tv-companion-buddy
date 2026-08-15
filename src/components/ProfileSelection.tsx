@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { User, Settings, LogOut, Pencil, ImagePlus, Trash2, Check, Plus } from "lucide-react";
 import { motion } from "framer-motion";
@@ -47,6 +47,11 @@ const ProfileSelection = ({
   const [editRow, setEditRow] = useState(0);
   const [editCol, setEditCol] = useState(0);
 
+  // Naziv profila koji se trenutno uređuje (draft) i je li input aktivan
+  const [nameDraft, setNameDraft] = useState("");
+  const [isEditingName, setIsEditingName] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
   const totalItems = profiles.length + 1;
 
   const editingProfile = profiles.find((p) => p.id === editingProfileId);
@@ -60,19 +65,27 @@ const ProfileSelection = ({
         ["remove", "save"],
       ];
 
-  const openEditView = useCallback((profileId: string) => {
-    setEditingProfileId(profileId);
-    setIsNewProfile(false);
-    setEditRow(0);
-    setEditCol(0);
-    setView("editProfile");
-  }, []);
+  const openEditView = useCallback(
+    (profileId: string) => {
+      const profile = profiles.find((p) => p.id === profileId);
+      setEditingProfileId(profileId);
+      setIsNewProfile(false);
+      setEditRow(0);
+      setEditCol(0);
+      setNameDraft(profile?.name ?? "");
+      setIsEditingName(false);
+      setView("editProfile");
+    },
+    [profiles],
+  );
 
   const openAddView = useCallback(() => {
     setEditingProfileId(null);
     setIsNewProfile(true);
     setEditRow(0);
     setEditCol(0);
+    setNameDraft("Novi profil");
+    setIsEditingName(false);
     setView("editProfile");
   }, []);
 
@@ -80,6 +93,7 @@ const ProfileSelection = ({
     setView("grid");
     setEditingProfileId(null);
     setIsNewProfile(false);
+    setIsEditingName(false);
     setFocusArea("edit");
   }, []);
 
@@ -93,19 +107,52 @@ const ProfileSelection = ({
     [onRemoveProfile],
   );
 
-  // Stvarno dodavanje profila u state
+  // Sprema uneseno ime za postojeći profil
+  const handleSaveProfile = useCallback(() => {
+    if (!editingProfileId) return;
+    const trimmed = nameDraft.trim();
+    setProfiles((prev) => prev.map((p) => (p.id === editingProfileId ? { ...p, name: trimmed || p.name } : p)));
+    onEditProfile?.(editingProfileId);
+  }, [editingProfileId, nameDraft, onEditProfile]);
+
+  // Stvarno dodavanje profila u state, s unesenim imenom
   const handleAddProfile = useCallback(() => {
+    const trimmed = nameDraft.trim();
     setProfiles((prev) => {
       const newProfile: Profile = {
         id: Date.now().toString(),
-        name: `Profil ${prev.length + 1}`,
+        name: trimmed || `Profil ${prev.length + 1}`,
         color: "bg-primary",
       };
       return [...prev, newProfile];
     });
     setFocusedIndex(0);
     onAddProfile?.();
-  }, [onAddProfile]);
+  }, [nameDraft, onAddProfile]);
+
+  // Ulazak u način unosa imena (fokusira input)
+  const startEditingName = useCallback(() => {
+    setIsEditingName(true);
+  }, []);
+
+  // Potvrda unosa imena (Enter u inputu)
+  const confirmNameEdit = useCallback(() => {
+    setIsEditingName(false);
+  }, []);
+
+  // Otkazivanje unosa imena (Escape u inputu) - vraća prijašnju vrijednost
+  const cancelNameEdit = useCallback(() => {
+    const fallback = isNewProfile ? "Novi profil" : (editingProfile?.name ?? "");
+    setNameDraft(fallback);
+    setIsEditingName(false);
+  }, [isNewProfile, editingProfile]);
+
+  useEffect(() => {
+    if (isEditingName) {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }
+  }, [isEditingName]);
 
   const handleGridKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -179,6 +226,18 @@ const ProfileSelection = ({
 
   const handleEditKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      // Dok se tipka ime, ne presrećemo tipke za navigaciju - samo Enter/Escape
+      if (isEditingName) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          confirmNameEdit();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          cancelNameEdit();
+        }
+        return;
+      }
+
       const currentRow = editRows[editRow] ?? editRows[0];
 
       switch (e.key) {
@@ -215,14 +274,14 @@ const ProfileSelection = ({
           e.preventDefault();
           const action = currentRow[editCol];
           if (action === "name") {
-            // TODO: wire up name editing
+            startEditingName();
           } else if (action === "avatar") {
             if (editingProfileId) onChangeAvatar?.(editingProfileId);
           } else if (action === "remove") {
             if (editingProfileId) handleRemoveProfile(editingProfileId);
             exitEditView();
           } else if (action === "save") {
-            if (editingProfileId) onEditProfile?.(editingProfileId);
+            handleSaveProfile();
             exitEditView();
           } else if (action === "add") {
             handleAddProfile();
@@ -233,14 +292,18 @@ const ProfileSelection = ({
       }
     },
     [
+      isEditingName,
+      confirmNameEdit,
+      cancelNameEdit,
       editRow,
       editCol,
       editRows,
       editingProfileId,
       onChangeAvatar,
       handleRemoveProfile,
-      onEditProfile,
+      handleSaveProfile,
       handleAddProfile,
+      startEditingName,
       exitEditView,
     ],
   );
@@ -278,13 +341,16 @@ const ProfileSelection = ({
           <div className="w-44 h-44 rounded-full flex items-center justify-center border-2 bg-accent border-accent shadow-lg shadow-accent/30">
             <User className="w-20 h-20 text-black" />
           </div>
-          <span className="text-lg font-medium text-foreground">{editingProfile?.name ?? "Novi profil"}</span>
+          <span className="text-lg font-medium text-foreground">
+            {nameDraft || editingProfile?.name || "Novi profil"}
+          </span>
         </div>
 
         {/* Name / Avatar row */}
         <div className="grid grid-cols-2 gap-4 w-full max-w-md">
           <motion.button
             whileHover={{ scale: 1.02 }}
+            onClick={startEditingName}
             className={cn(
               "flex flex-col items-start gap-1 px-6 py-4 rounded-xl border transition-all duration-200 text-left",
               isFocused("name")
@@ -293,7 +359,20 @@ const ProfileSelection = ({
             )}
           >
             <span className="text-xs text-muted-foreground">Ime profila</span>
-            <span className="text-base font-medium text-foreground">{editingProfile?.name ?? "Novi profil"}</span>
+            {isEditingName ? (
+              <input
+                ref={nameInputRef}
+                type="text"
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                onBlur={confirmNameEdit}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-transparent text-base font-medium text-foreground outline-none border-b border-accent w-full"
+                maxLength={30}
+              />
+            ) : (
+              <span className="text-base font-medium text-foreground">{nameDraft || "Novi profil"}</span>
+            )}
           </motion.button>
 
           <motion.button
@@ -357,7 +436,7 @@ const ProfileSelection = ({
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 onClick={() => {
-                  if (editingProfileId) onEditProfile?.(editingProfileId);
+                  handleSaveProfile();
                   exitEditView();
                 }}
                 className={cn(
