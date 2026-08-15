@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, Wifi, Monitor, Languages, ChevronRight, Check } from "lucide-react";
+import { ShieldCheck, Wifi, Monitor, Languages, ListOrdered, ChevronRight, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import StarryBackground from "@/components/StarryBackground";
 import { cn } from "@/lib/utils";
