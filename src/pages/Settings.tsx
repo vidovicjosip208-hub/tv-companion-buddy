@@ -81,11 +81,19 @@ const Settings = () => {
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setFocusedIndex((prev) => Math.min(prev + 1, menuItems.length - 1));
+          setFocusedIndex((prev) => {
+            const next = Math.min(prev + 1, menuItems.length - 1);
+            setMenuScrollStart((s) => (next >= s + VISIBLE_COUNT ? next - VISIBLE_COUNT + 1 : s));
+            return next;
+          });
           break;
         case "ArrowUp":
           e.preventDefault();
-          setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          setFocusedIndex((prev) => {
+            const next = Math.max(prev - 1, 0);
+            setMenuScrollStart((s) => (next < s ? next : s));
+            return next;
+          });
           break;
         case "Backspace":
         case "Escape":
