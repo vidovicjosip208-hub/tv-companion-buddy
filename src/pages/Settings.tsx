@@ -19,8 +19,8 @@ import {
   Server,
   Power,
   Timer,
-  Remote,
-  Broom,
+  Gamepad2,
+  Sparkles,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import StarryBackground from "@/components/StarryBackground";
@@ -62,8 +62,8 @@ const internetItems = [
 const deviceItems = [
   { icon: Power, label: "Startup Action", key: "startupAction" },
   { icon: Timer, label: "Auto Sleep Timer", key: "autoSleepTimer" },
-  { icon: Remote, label: "Remote Controls", key: "remoteControls" },
-  { icon: Broom, label: "Storage & Cache", key: "storageCache" },
+  { icon: Gamepad2, label: "Remote Controls", key: "remoteControls" },
+  { icon: Sparkles, label: "Storage & Cache", key: "storageCache" },
 ];
 
 // ─────────────────────────────────────────────────────────────
