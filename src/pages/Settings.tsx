@@ -22,6 +22,7 @@ const Settings = () => {
     { icon: Wifi, label: t("settings.internet"), key: "internet" },
     { icon: Monitor, label: t("settings.device"), key: "device" },
     { icon: Languages, label: t("settings.language"), key: "language" },
+    { icon: ListOrdered, label: t("settings.changeList"), key: "changeList" },
   ];
 
   const initialLangIdx = Math.max(
@@ -33,6 +34,7 @@ const Settings = () => {
   const [langFocused, setLangFocused] = useState(initialLangIdx);
   const [selectedLang, setSelectedLang] = useState(initialLangIdx);
   const [scrollStart, setScrollStart] = useState(0);
+  const [menuScrollStart, setMenuScrollStart] = useState(0);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const applyLang = (idx: number) => {
