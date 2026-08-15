@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, Wifi, Monitor, Languages, ChevronRight, Check } from "lucide-react";
+import { ShieldCheck, Wifi, Monitor, Languages, ListOrdered, ChevronRight, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import StarryBackground from "@/components/StarryBackground";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,7 @@ const Settings = () => {
     { icon: Wifi, label: t("settings.internet"), key: "internet" },
     { icon: Monitor, label: t("settings.device"), key: "device" },
     { icon: Languages, label: t("settings.language"), key: "language" },
+    { icon: ListOrdered, label: t("settings.changeList"), key: "changeList" },
   ];
 
   const initialLangIdx = Math.max(
@@ -33,6 +34,7 @@ const Settings = () => {
   const [langFocused, setLangFocused] = useState(initialLangIdx);
   const [selectedLang, setSelectedLang] = useState(initialLangIdx);
   const [scrollStart, setScrollStart] = useState(0);
+  const [menuScrollStart, setMenuScrollStart] = useState(0);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const applyLang = (idx: number) => {
@@ -79,11 +81,19 @@ const Settings = () => {
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setFocusedIndex((prev) => Math.min(prev + 1, menuItems.length - 1));
+          setFocusedIndex((prev) => {
+            const next = Math.min(prev + 1, menuItems.length - 1);
+            setMenuScrollStart((s) => (next >= s + VISIBLE_COUNT ? next - VISIBLE_COUNT + 1 : s));
+            return next;
+          });
           break;
         case "ArrowUp":
           e.preventDefault();
-          setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          setFocusedIndex((prev) => {
+            const next = Math.max(prev - 1, 0);
+            setMenuScrollStart((s) => (next < s ? next : s));
+            return next;
+          });
           break;
         case "Backspace":
         case "Escape":
@@ -133,37 +143,44 @@ const Settings = () => {
       {/* Right side */}
       <div className="relative z-10 flex-1 flex flex-col justify-center px-10 pr-16 pl-8">
         {view === "menu" ? (
-          <div className="flex flex-col gap-1">
-            {menuItems.map((item, index) => {
-              const Icon = item.icon;
-              const isFocused = focusedIndex === index;
-              return (
-                <button
-                  key={item.key}
-                  onClick={() => {
-                    setFocusedIndex(index);
-                    if (item.key === "language") {
-                      setView("language");
-                      setLangFocused(selectedLang);
-                      setScrollStart(Math.max(0, Math.min(selectedLang, languages.length - VISIBLE_COUNT)));
-                    }
-                  }}
-                  className={cn(
-                    "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left group",
-                    isFocused
-                      ? "bg-white/10 text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-white/5",
-                  )}
-                >
-                  <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
-                  <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
-                  <ChevronRight
-                    className={cn("w-4 h-4 shrink-0 transition-opacity", isFocused ? "opacity-100" : "opacity-40")}
-                  />
-                </button>
-              );
-            })}
+          <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
+            <div
+              className="flex flex-col gap-1 transition-transform duration-200"
+              style={{ transform: `translateY(-${menuScrollStart * 56}px)` }}
+            >
+              {menuItems.map((item, index) => {
+                const Icon = item.icon;
+                const isFocused = focusedIndex === index;
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      setFocusedIndex(index);
+                      setMenuScrollStart(Math.max(0, Math.min(index, menuItems.length - VISIBLE_COUNT)));
+                      if (item.key === "language") {
+                        setView("language");
+                        setLangFocused(selectedLang);
+                        setScrollStart(Math.max(0, Math.min(selectedLang, languages.length - VISIBLE_COUNT)));
+                      }
+                    }}
+                    className={cn(
+                      "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left group h-[52px]",
+                      isFocused
+                        ? "bg-white/10 text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                    )}
+                  >
+                    <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
+                    <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
+                    <ChevronRight
+                      className={cn("w-4 h-4 shrink-0 transition-opacity", isFocused ? "opacity-100" : "opacity-40")}
+                    />
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
         ) : (
           <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
             <div
