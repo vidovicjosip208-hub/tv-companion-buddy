@@ -326,10 +326,7 @@ const EPGGrid = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25 }}
-              className={cn(
-                "rounded-2xl bg-card border border-border/40 p-6 flex flex-col gap-4 overflow-y-auto scrollbar-hide h-[80%] w-[448px] max-w-full self-center",
-                hideSchedule && "w-full",
-              )}
+              className="rounded-2xl bg-card border border-border/40 p-6 flex flex-col gap-4 overflow-y-auto scrollbar-hide h-[80%] w-[448px] max-w-full self-center"
             >
               <div className="flex justify-center">
                 <div className="w-20 h-12 rounded-md bg-transparent flex items-center justify-center overflow-hidden">
