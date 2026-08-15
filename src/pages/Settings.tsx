@@ -2,7 +2,22 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, Wifi, Monitor, Languages, ListOrdered, ChevronRight, Check, Lock, Delete, X } from "lucide-react";
+import {
+  ShieldCheck,
+  Wifi,
+  Monitor,
+  Languages,
+  ListOrdered,
+  ChevronRight,
+  Check,
+  Lock,
+  Delete,
+  X,
+  Gauge,
+  Activity,
+  Globe,
+  Server,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import StarryBackground from "@/components/StarryBackground";
 import { cn } from "@/lib/utils";
@@ -30,6 +45,14 @@ const PIN_KEYS: { label: string; type: "digit" | "back" | "empty" }[] = [
   { label: "back", type: "back" },
 ];
 const PIN_GRID_COLS = 3;
+
+// Stavke pod "Internet Settings" popisom
+const internetItems = [
+  { icon: Gauge, label: "Speed test", key: "speedTest" },
+  { icon: Activity, label: "Network Status", key: "networkStatus" },
+  { icon: Globe, label: "Proxy/VPN postavke", key: "proxyVpn" },
+  { icon: Server, label: "DNS postavke", key: "dns" },
+];
 
 // ─────────────────────────────────────────────────────────────
 // TODO: Zamijeni ova tri placeholdera stvarnim pozivima prema Supabase
@@ -75,12 +98,16 @@ const Settings = () => {
     languages.findIndex((l) => l.code === i18n.language),
   );
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [view, setView] = useState<"menu" | "language">("menu");
+  const [view, setView] = useState<"menu" | "language" | "internet">("menu");
   const [langFocused, setLangFocused] = useState(initialLangIdx);
   const [selectedLang, setSelectedLang] = useState(initialLangIdx);
   const [scrollStart, setScrollStart] = useState(0);
   const [menuScrollStart, setMenuScrollStart] = useState(0);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Internet Settings podizbornik
+  const [internetFocused, setInternetFocused] = useState(0);
+  const [internetScrollStart, setInternetScrollStart] = useState(0);
 
   // PIN modal state
   const [showPinModal, setShowPinModal] = useState(false);
@@ -98,6 +125,17 @@ const Settings = () => {
     setSelectedLang(idx);
     i18n.changeLanguage(languages[idx].code);
   };
+
+  const handleInternetItemSelect = useCallback((key: string) => {
+    // TODO: poveži sa stvarnom akcijom/rutom za svaku stavku
+    // npr. navigate(`/settings/internet/${key}`) ili otvori odgovarajući modal
+  }, []);
+
+  const openInternetSettings = useCallback(() => {
+    setView("internet");
+    setInternetFocused(0);
+    setInternetScrollStart(0);
+  }, []);
 
   const closePinModal = useCallback(() => {
     setShowPinModal(false);
@@ -225,6 +263,37 @@ const Settings = () => {
         return;
       }
 
+      if (view === "internet") {
+        switch (e.key) {
+          case "ArrowDown":
+            e.preventDefault();
+            setInternetFocused((prev) => {
+              const next = Math.min(prev + 1, internetItems.length - 1);
+              setInternetScrollStart((s) => (next >= s + VISIBLE_COUNT ? next - VISIBLE_COUNT + 1 : s));
+              return next;
+            });
+            break;
+          case "ArrowUp":
+            e.preventDefault();
+            setInternetFocused((prev) => {
+              const next = Math.max(prev - 1, 0);
+              setInternetScrollStart((s) => (next < s ? next : s));
+              return next;
+            });
+            break;
+          case "Backspace":
+          case "Escape":
+            e.preventDefault();
+            setView("menu");
+            break;
+          case "Enter":
+            e.preventDefault();
+            handleInternetItemSelect(internetItems[internetFocused].key);
+            break;
+        }
+        return;
+      }
+
       if (view === "language") {
         switch (e.key) {
           case "ArrowDown":
@@ -289,6 +358,8 @@ const Settings = () => {
             setScrollStart(Math.max(0, Math.min(selectedLang, languages.length - VISIBLE_COUNT)));
           } else if (menuItems[focusedIndex].key === "parental") {
             openParentalControls();
+          } else if (menuItems[focusedIndex].key === "internet") {
+            openInternetSettings();
           }
           break;
       }
@@ -299,6 +370,9 @@ const Settings = () => {
       view,
       langFocused,
       selectedLang,
+      internetFocused,
+      handleInternetItemSelect,
+      openInternetSettings,
       showPinModal,
       pinSuccess,
       isPinBusy,
@@ -325,10 +399,18 @@ const Settings = () => {
       {/* Left side - Welcome */}
       <div className="relative z-10 flex-1 pt-16 px-16">
         <h1 className="text-4xl font-light text-foreground mb-3">
-          {view === "language" ? t("settings.languageTitle") : t("settings.title")}
+          {view === "language"
+            ? t("settings.languageTitle")
+            : view === "internet"
+              ? "Internet postavke"
+              : t("settings.title")}
         </h1>
         <p className="text-muted-foreground text-base leading-relaxed max-w-sm">
-          {view === "language" ? t("settings.languageSubtitle") : t("settings.subtitle")}
+          {view === "language"
+            ? t("settings.languageSubtitle")
+            : view === "internet"
+              ? "Provjerite brzinu i status mreže te upravljajte naprednim postavkama."
+              : t("settings.subtitle")}
         </p>
         <img
           src={settingsGearbox}
@@ -362,10 +444,45 @@ const Settings = () => {
                         setScrollStart(Math.max(0, Math.min(selectedLang, languages.length - VISIBLE_COUNT)));
                       } else if (item.key === "parental") {
                         openParentalControls();
+                      } else if (item.key === "internet") {
+                        openInternetSettings();
                       }
                     }}
                     className={cn(
                       "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left group h-[52px]",
+                      isFocused
+                        ? "bg-white/10 text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                    )}
+                  >
+                    <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
+                    <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
+                    <ChevronRight
+                      className={cn("w-4 h-4 shrink-0 transition-opacity", isFocused ? "opacity-100" : "opacity-40")}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : view === "internet" ? (
+          <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
+            <div
+              className="flex flex-col gap-1 transition-transform duration-200"
+              style={{ transform: `translateY(-${internetScrollStart * 56}px)` }}
+            >
+              {internetItems.map((item, index) => {
+                const Icon = item.icon;
+                const isFocused = internetFocused === index;
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      setInternetFocused(index);
+                      handleInternetItemSelect(item.key);
+                    }}
+                    className={cn(
+                      "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
                       isFocused
                         ? "bg-white/10 text-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-white/5",
