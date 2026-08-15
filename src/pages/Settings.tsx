@@ -31,9 +31,36 @@ const PIN_KEYS: { label: string; type: "digit" | "back" | "empty" }[] = [
 ];
 const PIN_GRID_COLS = 3;
 
+// ─────────────────────────────────────────────────────────────
+// TODO: Zamijeni ova tri placeholdera stvarnim pozivima prema Supabase
+// kad povežeš bazu putem Lovable chata (tablica npr. profiles.parental_pin_hash).
+// currentProfile bi trebao doći iz auth/profile konteksta aplikacije.
+// ─────────────────────────────────────────────────────────────
+
+async function hasPinSet(currentProfile: string | null): Promise<boolean> {
+  // TODO: dohvati iz Supabase je li parental_pin_hash postavljen za currentProfile
+  // npr: const { data } = await supabase.from('profiles').select('parental_pin_hash').eq('id', currentProfile).single();
+  // return Boolean(data?.parental_pin_hash);
+  return false;
+}
+
+async function checkAccess(enteredPin: string, currentProfile: string | null): Promise<boolean> {
+  // Funkcija provjerava uneseni PIN s onim iz profila
+  // TODO: pozovi Supabase (npr. supabase.rpc('check_parental_pin', { pin: enteredPin, profile_id: currentProfile }))
+  return false;
+}
+
+async function savePin(newPin: string, currentProfile: string | null): Promise<void> {
+  // TODO: spremi (hashirano) u Supabase
+  // npr: await supabase.from('profiles').update({ parental_pin_hash: hash(newPin) }).eq('id', currentProfile);
+}
+
 const Settings = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+
+  // TODO: zamijeni pravim ID-em trenutnog profila iz auth/profile konteksta
+  const currentProfile: string | null = null;
 
   const menuItems = [
     { icon: ShieldCheck, label: t("settings.parental"), key: "parental" },
@@ -60,6 +87,12 @@ const Settings = () => {
   const [pinValue, setPinValue] = useState("");
   const [pinFocusedKey, setPinFocusedKey] = useState(0);
   const [pinSuccess, setPinSuccess] = useState(false);
+  // "loading" dok provjeravamo ima li profil već postavljen PIN,
+  // "verify" traži postojeći PIN prije nego dopusti promjenu,
+  // "set" je korak upisa novog PIN-a
+  const [pinStage, setPinStage] = useState<"loading" | "verify" | "set">("loading");
+  const [pinError, setPinError] = useState("");
+  const [isPinBusy, setIsPinBusy] = useState(false);
 
   const applyLang = (idx: number) => {
     setSelectedLang(idx);
@@ -71,25 +104,25 @@ const Settings = () => {
     setPinValue("");
     setPinFocusedKey(0);
     setPinSuccess(false);
+    setPinStage("loading");
+    setPinError("");
+    setIsPinBusy(false);
   }, []);
 
-  const appendPinDigit = useCallback(
-    (digit: string) => {
-      setPinValue((prev) => {
-        if (prev.length >= PIN_LENGTH) return prev;
-        const next = prev + digit;
-        if (next.length === PIN_LENGTH) {
-          // PIN postavljen - prikaži potvrdu pa zatvori popup
-          setPinSuccess(true);
-          window.setTimeout(() => {
-            closePinModal();
-          }, 900);
-        }
-        return next;
-      });
-    },
-    [closePinModal],
-  );
+  const openParentalControls = useCallback(async () => {
+    setShowPinModal(true);
+    setPinValue("");
+    setPinFocusedKey(0);
+    setPinSuccess(false);
+    setPinError("");
+    setPinStage("loading");
+    const alreadySet = await hasPinSet(currentProfile);
+    setPinStage(alreadySet ? "verify" : "set");
+  }, [currentProfile]);
+
+  const appendPinDigit = useCallback((digit: string) => {
+    setPinValue((prev) => (prev.length >= PIN_LENGTH ? prev : prev + digit));
+  }, []);
 
   const removePinDigit = useCallback(() => {
     setPinValue((prev) => prev.slice(0, -1));
@@ -97,21 +130,61 @@ const Settings = () => {
 
   const handlePinKeyPress = useCallback(
     (key: { label: string; type: "digit" | "back" | "empty" }) => {
-      if (pinSuccess) return;
+      if (pinSuccess || isPinBusy || pinStage === "loading") return;
       if (key.type === "digit") {
         appendPinDigit(key.label);
       } else if (key.type === "back") {
         removePinDigit();
       }
     },
-    [pinSuccess, appendPinDigit, removePinDigit],
+    [pinSuccess, isPinBusy, pinStage, appendPinDigit, removePinDigit],
   );
+
+  // Kad se skupi puni PIN, provjeri (stage "verify") ili spremi novi (stage "set")
+  useEffect(() => {
+    if (pinValue.length !== PIN_LENGTH || pinStage === "loading" || pinSuccess) return;
+
+    let cancelled = false;
+
+    const process = async () => {
+      setIsPinBusy(true);
+      setPinError("");
+
+      if (pinStage === "verify") {
+        // Bez unosa ispravnog starog PIN-a se ne može ići dalje na postavljanje novog
+        const isPinCorrect = await checkAccess(pinValue, currentProfile);
+        if (cancelled) return;
+        if (isPinCorrect) {
+          setPinStage("set");
+          setPinValue("");
+        } else {
+          setPinError("Pogrešan PIN, pokušajte ponovno.");
+          setPinValue("");
+        }
+      } else if (pinStage === "set") {
+        await savePin(pinValue, currentProfile);
+        if (cancelled) return;
+        setPinSuccess(true);
+        window.setTimeout(() => {
+          if (!cancelled) closePinModal();
+        }, 900);
+      }
+
+      if (!cancelled) setIsPinBusy(false);
+    };
+
+    process();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pinValue, pinStage, pinSuccess, currentProfile, closePinModal]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       // PIN popup ima prioritet nad ostalom navigacijom
       if (showPinModal) {
-        if (pinSuccess) return;
+        if (pinSuccess || isPinBusy || pinStage === "loading") return;
 
         if (/^[0-9]$/.test(e.key)) {
           e.preventDefault();
@@ -215,10 +288,7 @@ const Settings = () => {
             setLangFocused(selectedLang);
             setScrollStart(Math.max(0, Math.min(selectedLang, languages.length - VISIBLE_COUNT)));
           } else if (menuItems[focusedIndex].key === "parental") {
-            setShowPinModal(true);
-            setPinValue("");
-            setPinFocusedKey(0);
-            setPinSuccess(false);
+            openParentalControls();
           }
           break;
       }
@@ -231,11 +301,14 @@ const Settings = () => {
       selectedLang,
       showPinModal,
       pinSuccess,
+      isPinBusy,
+      pinStage,
       pinFocusedKey,
       appendPinDigit,
       removePinDigit,
       closePinModal,
       handlePinKeyPress,
+      openParentalControls,
     ],
   );
 
@@ -288,10 +361,7 @@ const Settings = () => {
                         setLangFocused(selectedLang);
                         setScrollStart(Math.max(0, Math.min(selectedLang, languages.length - VISIBLE_COUNT)));
                       } else if (item.key === "parental") {
-                        setShowPinModal(true);
-                        setPinValue("");
-                        setPinFocusedKey(0);
-                        setPinSuccess(false);
+                        openParentalControls();
                       }
                     }}
                     className={cn(
@@ -377,12 +447,20 @@ const Settings = () => {
               </div>
 
               <h2 className="text-xl font-bold text-foreground mb-1.5">Roditeljska kontrola</h2>
-              <p className="text-sm text-muted-foreground text-center mb-6">
-                {pinSuccess ? "PIN uspješno postavljen" : "Postavite četveroznamenkasti PIN kod"}
+              <p className="text-sm text-muted-foreground text-center mb-2">
+                {pinSuccess
+                  ? "PIN uspješno postavljen"
+                  : pinStage === "loading"
+                    ? "Provjera..."
+                    : pinStage === "verify"
+                      ? "Unesite trenutni PIN kod"
+                      : "Postavite novi četveroznamenkasti PIN kod"}
               </p>
 
+              {pinError && !pinSuccess && <p className="text-sm text-red-400 text-center mb-2">{pinError}</p>}
+
               {/* PIN dots */}
-              <div className="flex items-center gap-4 mb-8">
+              <div className="flex items-center gap-4 mb-8 mt-2">
                 {Array.from({ length: PIN_LENGTH }).map((_, i) => {
                   const filled = i < pinValue.length;
                   return (
@@ -392,11 +470,7 @@ const Settings = () => {
                       transition={{ duration: 0.15 }}
                       className={cn(
                         "w-4 h-4 rounded-full border-2 transition-colors duration-150",
-                        pinSuccess
-                          ? "bg-accent border-accent"
-                          : filled
-                            ? "bg-accent border-accent"
-                            : "bg-transparent border-border/60",
+                        pinSuccess || filled ? "bg-accent border-accent" : "bg-transparent border-border/60",
                       )}
                     />
                   );
@@ -408,7 +482,12 @@ const Settings = () => {
                   <Check className="w-8 h-8 text-accent" />
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-3">
+                <div
+                  className={cn(
+                    "grid grid-cols-3 gap-3",
+                    (isPinBusy || pinStage === "loading") && "opacity-50 pointer-events-none",
+                  )}
+                >
                   {PIN_KEYS.map((key, index) => {
                     if (key.type === "empty") {
                       return <div key={index} className="w-16 h-16" />;
