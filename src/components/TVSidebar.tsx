@@ -88,7 +88,7 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
       </nav>
 
       {/* Profile Button */}
-      <div className="px-2 mt-auto pt-4 border-t border-sidebar-border mx-2">
+      <div className="px-2 mt-auto pt-4 mx-2">
         <motion.button
           onClick={() => onItemClick(PROFILE_INDEX)}
           onMouseEnter={() => onItemClick(PROFILE_INDEX)}
