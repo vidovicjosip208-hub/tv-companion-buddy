@@ -27,7 +27,7 @@ const hr: Bundle = {
   settings: {
     title: "Podešavanja", subtitle: "Pritisnite opciju za upravljanje postavkama vašeg uređaja.",
     languageTitle: "Jezik", languageSubtitle: "Odaberite željeni jezik sučelja.",
-    parental: "Roditeljski nadzor", internet: "Internet postavke", device: "Postavke uređaja", language: "Jezik",
+    parental: "Roditeljski nadzor", internet: "Internet postavke", device: "Postavke uređaja", language: "Jezik", changeList: "Promijeni listu",
   },
   home: { camerasLive: "Kamere uživo", favoriteChannels: "Omiljeni kanali", radioStations: "Radio stanice", liveLabel: "UŽIVO" },
   tvCategories: {
@@ -62,7 +62,7 @@ const hr: Bundle = {
 
 const en: Bundle = {
   sidebar: { home: "Home", tv: "TV Channels", radio: "Radio Stations", favorites: "Favorites", videoteka: "Library", cameras: "Live Cameras", settings: "Settings", profile: "Profile" },
-  settings: { title: "Settings", subtitle: "Press an option to manage your device settings.", languageTitle: "Language", languageSubtitle: "Choose your preferred interface language.", parental: "Parental Controls", internet: "Internet Settings", device: "Device Controls", language: "Language" },
+  settings: { title: "Settings", subtitle: "Press an option to manage your device settings.", languageTitle: "Language", languageSubtitle: "Choose your preferred interface language.", parental: "Parental Controls", internet: "Internet Settings", device: "Device Controls", language: "Language", changeList: "Change list" },
   home: { camerasLive: "Live Cameras", favoriteChannels: "Favorite Channels", radioStations: "Radio Stations", liveLabel: "LIVE" },
   tvCategories: { documentary: "Documentary", kids: "Kids", film: "Movies", sports: "Sports", entertainment: "Entertainment", "4k": "4K/UHD", local: "Local Channels", international: "International FTA", adult: "Adult Channels", youtube: "YouTube" },
   tvFilters: { live: "Live", schedule: "TV Schedule" },
@@ -79,7 +79,7 @@ const en: Bundle = {
 
 const de: Bundle = {
   sidebar: { home: "Startseite", tv: "TV-Kanäle", radio: "Radiosender", favorites: "Favoriten", videoteka: "Videothek", cameras: "Live-Kameras", settings: "Einstellungen", profile: "Profil" },
-  settings: { title: "Einstellungen", subtitle: "Wählen Sie eine Option, um Ihre Geräteeinstellungen zu verwalten.", languageTitle: "Sprache", languageSubtitle: "Wählen Sie Ihre bevorzugte Sprache.", parental: "Kindersicherung", internet: "Internet-Einstellungen", device: "Geräteeinstellungen", language: "Sprache" },
+  settings: { title: "Einstellungen", subtitle: "Wählen Sie eine Option, um Ihre Geräteeinstellungen zu verwalten.", languageTitle: "Sprache", languageSubtitle: "Wählen Sie Ihre bevorzugte Sprache.", parental: "Kindersicherung", internet: "Internet-Einstellungen", device: "Geräteeinstellungen", language: "Sprache", changeList: "Liste ändern" },
   home: { camerasLive: "Live-Kameras", favoriteChannels: "Lieblingskanäle", radioStations: "Radiosender", liveLabel: "LIVE" },
   tvCategories: { documentary: "Dokumentation", kids: "Kinder", film: "Filme", sports: "Sport", entertainment: "Unterhaltung", "4k": "4K/UHD", local: "Lokale Kanäle", international: "Internationale FTA", adult: "Erwachsene", youtube: "YouTube" },
   tvFilters: { live: "Live", schedule: "TV-Programm" },
@@ -96,7 +96,7 @@ const de: Bundle = {
 
 const fr: Bundle = {
   sidebar: { home: "Accueil", tv: "Chaînes TV", radio: "Radios", favorites: "Favoris", videoteka: "Vidéothèque", cameras: "Caméras en direct", settings: "Paramètres", profile: "Profil" },
-  settings: { title: "Paramètres", subtitle: "Appuyez sur une option pour gérer les paramètres de votre appareil.", languageTitle: "Langue", languageSubtitle: "Choisissez votre langue préférée.", parental: "Contrôle parental", internet: "Paramètres Internet", device: "Paramètres de l'appareil", language: "Langue" },
+  settings: { title: "Paramètres", subtitle: "Appuyez sur une option pour gérer les paramètres de votre appareil.", languageTitle: "Langue", languageSubtitle: "Choisissez votre langue préférée.", parental: "Contrôle parental", internet: "Paramètres Internet", device: "Paramètres de l'appareil", language: "Langue", changeList: "Changer de liste" },
   home: { camerasLive: "Caméras en direct", favoriteChannels: "Chaînes favorites", radioStations: "Stations radio", liveLabel: "EN DIRECT" },
   tvCategories: { documentary: "Documentaire", kids: "Enfants", film: "Films", sports: "Sport", entertainment: "Divertissement", "4k": "4K/UHD", local: "Chaînes locales", international: "FTA Internationales", adult: "Adultes", youtube: "YouTube" },
   tvFilters: { live: "En direct", schedule: "Programme TV" },
@@ -113,7 +113,7 @@ const fr: Bundle = {
 
 const es: Bundle = {
   sidebar: { home: "Inicio", tv: "Canales TV", radio: "Radios", favorites: "Favoritos", videoteka: "Videoteca", cameras: "Cámaras en vivo", settings: "Ajustes", profile: "Perfil" },
-  settings: { title: "Ajustes", subtitle: "Pulse una opción para gestionar los ajustes del dispositivo.", languageTitle: "Idioma", languageSubtitle: "Elija su idioma preferido.", parental: "Control parental", internet: "Ajustes de Internet", device: "Ajustes del dispositivo", language: "Idioma" },
+  settings: { title: "Ajustes", subtitle: "Pulse una opción para gestionar los ajustes del dispositivo.", languageTitle: "Idioma", languageSubtitle: "Elija su idioma preferido.", parental: "Control parental", internet: "Ajustes de Internet", device: "Ajustes del dispositivo", language: "Idioma", changeList: "Cambiar lista" },
   home: { camerasLive: "Cámaras en vivo", favoriteChannels: "Canales favoritos", radioStations: "Emisoras de radio", liveLabel: "EN VIVO" },
   tvCategories: { documentary: "Documental", kids: "Infantil", film: "Películas", sports: "Deportes", entertainment: "Entretenimiento", "4k": "4K/UHD", local: "Canales locales", international: "FTA Internacionales", adult: "Adultos", youtube: "YouTube" },
   tvFilters: { live: "En vivo", schedule: "Programación" },
@@ -130,7 +130,7 @@ const es: Bundle = {
 
 const it: Bundle = {
   sidebar: { home: "Home", tv: "Canali TV", radio: "Radio", favorites: "Preferiti", videoteka: "Videoteca", cameras: "Telecamere live", settings: "Impostazioni", profile: "Profilo" },
-  settings: { title: "Impostazioni", subtitle: "Premi un'opzione per gestire le impostazioni del dispositivo.", languageTitle: "Lingua", languageSubtitle: "Scegli la tua lingua preferita.", parental: "Controllo genitori", internet: "Impostazioni Internet", device: "Impostazioni dispositivo", language: "Lingua" },
+  settings: { title: "Impostazioni", subtitle: "Premi un'opzione per gestire le impostazioni del dispositivo.", languageTitle: "Lingua", languageSubtitle: "Scegli la tua lingua preferita.", parental: "Controllo genitori", internet: "Impostazioni Internet", device: "Impostazioni dispositivo", language: "Lingua", changeList: "Cambia lista" },
   home: { camerasLive: "Telecamere live", favoriteChannels: "Canali preferiti", radioStations: "Stazioni radio", liveLabel: "LIVE" },
   tvCategories: { documentary: "Documentari", kids: "Bambini", film: "Film", sports: "Sport", entertainment: "Intrattenimento", "4k": "4K/UHD", local: "Canali locali", international: "FTA Internazionali", adult: "Adulti", youtube: "YouTube" },
   tvFilters: { live: "Live", schedule: "Palinsesto" },
