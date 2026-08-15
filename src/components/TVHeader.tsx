@@ -34,7 +34,7 @@ const TVHeader = () => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className="flex items-center justify-between gap-4 px-8 pt-2 pb-0 border-b border-border/30 relative z-30"
+      className="flex items-center justify-between gap-4 px-8 pt-2 pb-0 relative z-30"
     >
       {/* Left - Logo */}
       <img src={logo} alt="Max Ovizija" className="h-32 w-auto flex-shrink-0 -mt-5" />
