@@ -17,6 +17,10 @@ import {
   Activity,
   Globe,
   Server,
+  Power,
+  Timer,
+  Remote,
+  Broom,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import StarryBackground from "@/components/StarryBackground";
@@ -52,6 +56,14 @@ const internetItems = [
   { icon: Activity, label: "Network Status", key: "networkStatus" },
   { icon: Globe, label: "Proxy/VPN postavke", key: "proxyVpn" },
   { icon: Server, label: "DNS postavke", key: "dns" },
+];
+
+// Stavke pod "Device Controls" popisom
+const deviceItems = [
+  { icon: Power, label: "Startup Action", key: "startupAction" },
+  { icon: Timer, label: "Auto Sleep Timer", key: "autoSleepTimer" },
+  { icon: Remote, label: "Remote Controls", key: "remoteControls" },
+  { icon: Broom, label: "Storage & Cache", key: "storageCache" },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -98,7 +110,7 @@ const Settings = () => {
     languages.findIndex((l) => l.code === i18n.language),
   );
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [view, setView] = useState<"menu" | "language" | "internet">("menu");
+  const [view, setView] = useState<"menu" | "language" | "internet" | "device">("menu");
   const [langFocused, setLangFocused] = useState(initialLangIdx);
   const [selectedLang, setSelectedLang] = useState(initialLangIdx);
   const [scrollStart, setScrollStart] = useState(0);
@@ -108,6 +120,10 @@ const Settings = () => {
   // Internet Settings podizbornik
   const [internetFocused, setInternetFocused] = useState(0);
   const [internetScrollStart, setInternetScrollStart] = useState(0);
+
+  // Device Controls podizbornik
+  const [deviceFocused, setDeviceFocused] = useState(0);
+  const [deviceScrollStart, setDeviceScrollStart] = useState(0);
 
   // PIN modal state
   const [showPinModal, setShowPinModal] = useState(false);
@@ -131,10 +147,21 @@ const Settings = () => {
     // npr. navigate(`/settings/internet/${key}`) ili otvori odgovarajući modal
   }, []);
 
+  const handleDeviceItemSelect = useCallback((key: string) => {
+    // TODO: poveži sa stvarnom akcijom/rutom za svaku stavku
+    // npr. navigate(`/settings/device/${key}`) ili otvori odgovarajući modal
+  }, []);
+
   const openInternetSettings = useCallback(() => {
     setView("internet");
     setInternetFocused(0);
     setInternetScrollStart(0);
+  }, []);
+
+  const openDeviceControls = useCallback(() => {
+    setView("device");
+    setDeviceFocused(0);
+    setDeviceScrollStart(0);
   }, []);
 
   const closePinModal = useCallback(() => {
@@ -294,6 +321,37 @@ const Settings = () => {
         return;
       }
 
+      if (view === "device") {
+        switch (e.key) {
+          case "ArrowDown":
+            e.preventDefault();
+            setDeviceFocused((prev) => {
+              const next = Math.min(prev + 1, deviceItems.length - 1);
+              setDeviceScrollStart((s) => (next >= s + VISIBLE_COUNT ? next - VISIBLE_COUNT + 1 : s));
+              return next;
+            });
+            break;
+          case "ArrowUp":
+            e.preventDefault();
+            setDeviceFocused((prev) => {
+              const next = Math.max(prev - 1, 0);
+              setDeviceScrollStart((s) => (next < s ? next : s));
+              return next;
+            });
+            break;
+          case "Backspace":
+          case "Escape":
+            e.preventDefault();
+            setView("menu");
+            break;
+          case "Enter":
+            e.preventDefault();
+            handleDeviceItemSelect(deviceItems[deviceFocused].key);
+            break;
+        }
+        return;
+      }
+
       if (view === "language") {
         switch (e.key) {
           case "ArrowDown":
@@ -360,6 +418,8 @@ const Settings = () => {
             openParentalControls();
           } else if (menuItems[focusedIndex].key === "internet") {
             openInternetSettings();
+          } else if (menuItems[focusedIndex].key === "device") {
+            openDeviceControls();
           }
           break;
       }
@@ -373,6 +433,9 @@ const Settings = () => {
       internetFocused,
       handleInternetItemSelect,
       openInternetSettings,
+      deviceFocused,
+      handleDeviceItemSelect,
+      openDeviceControls,
       showPinModal,
       pinSuccess,
       isPinBusy,
@@ -403,14 +466,18 @@ const Settings = () => {
             ? t("settings.languageTitle")
             : view === "internet"
               ? "Internet postavke"
-              : t("settings.title")}
+              : view === "device"
+                ? "Postavke uređaja"
+                : t("settings.title")}
         </h1>
         <p className="text-muted-foreground text-base leading-relaxed max-w-sm">
           {view === "language"
             ? t("settings.languageSubtitle")
             : view === "internet"
               ? "Provjerite brzinu i status mreže te upravljajte naprednim postavkama."
-              : t("settings.subtitle")}
+              : view === "device"
+                ? "Upravljajte pokretanjem, uštedom energije, daljinskim upravljačem i memorijom."
+                : t("settings.subtitle")}
         </p>
         <img
           src={settingsGearbox}
@@ -446,6 +513,8 @@ const Settings = () => {
                         openParentalControls();
                       } else if (item.key === "internet") {
                         openInternetSettings();
+                      } else if (item.key === "device") {
+                        openDeviceControls();
                       }
                     }}
                     className={cn(
@@ -480,6 +549,39 @@ const Settings = () => {
                     onClick={() => {
                       setInternetFocused(index);
                       handleInternetItemSelect(item.key);
+                    }}
+                    className={cn(
+                      "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
+                      isFocused
+                        ? "bg-white/10 text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                    )}
+                  >
+                    <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
+                    <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
+                    <ChevronRight
+                      className={cn("w-4 h-4 shrink-0 transition-opacity", isFocused ? "opacity-100" : "opacity-40")}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : view === "device" ? (
+          <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
+            <div
+              className="flex flex-col gap-1 transition-transform duration-200"
+              style={{ transform: `translateY(-${deviceScrollStart * 56}px)` }}
+            >
+              {deviceItems.map((item, index) => {
+                const Icon = item.icon;
+                const isFocused = deviceFocused === index;
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      setDeviceFocused(index);
+                      handleDeviceItemSelect(item.key);
                     }}
                     className={cn(
                       "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
