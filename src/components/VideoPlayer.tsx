@@ -1266,7 +1266,75 @@ const VideoPlayer = ({
       className="absolute inset-0 z-50 overflow-hidden"
       style={{ backgroundColor: "#0d0d0d" }}
     >
+      {pinOpen && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div
+            style={{
+              width: 420,
+              padding: "36px 40px",
+              backgroundColor: "#000",
+              border: `3px solid ${GOLD}`,
+              borderRadius: 16,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 22,
+            }}
+          >
+            <svg width="72" height="72" viewBox="0 0 24 24" fill="none">
+              <defs>
+                <mask id="pin-lock-mask">
+                  <rect x="4" y="10" width="16" height="11" rx="2" fill="white" />
+                  <circle cx="12" cy="15.3" r="1.7" fill="black" />
+                  <rect x="11.2" y="15.3" width="1.6" height="3" fill="black" />
+                </mask>
+              </defs>
+              <path d="M7 10V7a5 5 0 0 1 10 0v3" stroke={GOLD} strokeWidth="2.4" fill="none" strokeLinecap="round" />
+              <rect x="4" y="10" width="16" height="11" rx="2" fill={GOLD} mask="url(#pin-lock-mask)" />
+            </svg>
+
+            <div style={{ display: "flex", gap: 18 }}>
+              {Array.from({ length: PIN_LEN }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: 34,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: 34,
+                  }}
+                >
+                  {pinValue.length > i ? (
+                    <div style={{ width: 16, height: 16, borderRadius: 999, backgroundColor: GOLD }} />
+                  ) : (
+                    <div style={{ width: 30, height: 5, borderRadius: 3, backgroundColor: GOLD }} />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 15, textAlign: "center", margin: 0 }}>
+              Unesite PIN i potvrdite s OK
+            </p>
+            {pinError && (
+              <p style={{ color: "#ff6b6b", fontSize: 14, textAlign: "center", margin: 0 }}>{pinError}</p>
+            )}
+          </div>
+        </div>
+      )}
       <div className="relative w-full h-full overflow-hidden">
+
         {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
         {streamUrl && (
           <div
