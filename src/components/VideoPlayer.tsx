@@ -1540,7 +1540,10 @@ const VideoPlayer = ({
                       onMouseDown={(e) => {
                         e.preventDefault();
                         setFocusedControl(3);
-                        setIsLocked((p) => !p);
+                        setPinValue("");
+                        setPinError("");
+                        setPinOpen(true);
+
                       }}
                       title={isLocked ? "Otključaj program" : "Zaključaj program"}
                       style={{
