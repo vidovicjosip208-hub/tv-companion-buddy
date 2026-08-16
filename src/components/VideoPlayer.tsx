@@ -1491,7 +1491,7 @@ const VideoPlayer = ({
                         borderRadius: 6,
                         cursor: "pointer",
                         transition: "all 0.2s",
-                        opacity: focusedControl === 3 && !epgMode && !isProgressFocused ? 1 : 0.55,
+                        opacity: isLocked || (focusedControl === 3 && !epgMode && !isProgressFocused) ? 1 : 0.55,
                         transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.08)" : "scale(1)",
                       }}
                     >
