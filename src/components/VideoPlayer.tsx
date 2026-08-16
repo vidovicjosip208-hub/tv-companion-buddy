@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw, RotateCw, Heart, Tv, Lock } from "lucide-react";
+import { Play, Pause, RotateCcw, RotateCw, Heart, Tv, LockKeyhole } from "lucide-react";
 import Hls from "hls.js";
 import { useDwSchedule, type DwScheduleItem } from "@/hooks/useChannels";
 
@@ -1490,12 +1490,11 @@ const VideoPlayer = ({
                         transition: "all 0.2s",
                       }}
                     >
-                      <Lock
+                      <LockKeyhole
                         className="w-5 h-5"
                         style={{
                           color: isLocked ? GOLD : "rgba(255,255,255,0.6)",
-                          fill: isLocked ? GOLD : "none",
-                          transition: "color 0.2s, fill 0.2s",
+                          transition: "color 0.2s",
                         }}
                       />
                     </button>
