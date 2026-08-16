@@ -611,6 +611,11 @@ const VideoPlayer = ({
   const [videoNativeAR, setVideoNativeAR] = useState<number | null>(null);
   // Zaključavanje programa — kada je true, gumb za zaključavanje je označen zlatnom bojom
   const [isLocked, setIsLocked] = useState<boolean>(false);
+  // PIN potvrda prije (ot)ključavanja programa
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pinValue, setPinValue] = useState("");
+  const [pinError, setPinError] = useState("");
+
 
   // Detektiramo native aspect ratio streama čim metadata bude dostupna
   useEffect(() => {
