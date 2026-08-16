@@ -1140,7 +1140,12 @@ const VideoPlayer = ({
           if (focusedControl === 0) openEpgMode();
           if (focusedControl === 1) setIsPlaying((p) => !p);
           if (focusedControl === 2) goLive();
-          if (focusedControl === 3) setIsLocked((p) => !p);
+          if (focusedControl === 3) {
+            setPinValue("");
+            setPinError("");
+            setPinOpen(true);
+          }
+
           if (focusedControl === 4) cycleAspectRatio();
           if (focusedControl === 5) onToggleFavorite?.();
           break;
