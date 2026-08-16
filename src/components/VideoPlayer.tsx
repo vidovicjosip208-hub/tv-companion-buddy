@@ -1072,7 +1072,7 @@ const VideoPlayer = ({
         case "ArrowRight":
           e.preventDefault();
           resetHideTimer();
-          if (focusedControl < 4) setFocusedControl((p) => p + 1);
+          if (focusedControl < 5) setFocusedControl((p) => p + 1);
           break;
         case "ArrowDown":
           e.preventDefault();
@@ -1084,8 +1084,9 @@ const VideoPlayer = ({
           if (focusedControl === 0) openEpgMode();
           if (focusedControl === 1) setIsPlaying((p) => !p);
           if (focusedControl === 2) goLive();
-          if (focusedControl === 3) cycleAspectRatio();
-          if (focusedControl === 4) onToggleFavorite?.();
+          if (focusedControl === 3) setIsLocked((p) => !p);
+          if (focusedControl === 4) cycleAspectRatio();
+          if (focusedControl === 5) onToggleFavorite?.();
           break;
         case "Escape":
         case "Backspace":
@@ -1474,6 +1475,7 @@ const VideoPlayer = ({
                     <button
                       onMouseDown={(e) => {
                         e.preventDefault();
+                        setFocusedControl(3);
                         setIsLocked((p) => !p);
                       }}
                       title={isLocked ? "Otključaj program" : "Zaključaj program"}
@@ -1483,11 +1485,14 @@ const VideoPlayer = ({
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        background: "none",
-                        border: "none",
+                        background:
+                          focusedControl === 3 && !epgMode && !isProgressFocused ? "rgba(245,197,24,0.15)" : "none",
+                        border: `1.5px solid ${focusedControl === 3 && !epgMode && !isProgressFocused ? GOLD : "transparent"}`,
                         borderRadius: 6,
                         cursor: "pointer",
                         transition: "all 0.2s",
+                        opacity: focusedControl === 3 && !epgMode && !isProgressFocused ? 1 : 0.55,
+                        transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.08)" : "scale(1)",
                       }}
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1528,7 +1533,7 @@ const VideoPlayer = ({
                     <button
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        setFocusedControl(3);
+                        setFocusedControl(4);
                         cycleAspectRatio();
                       }}
                       title={`Aspect ratio: ${aspectRatioMode}`}
@@ -1540,13 +1545,13 @@ const VideoPlayer = ({
                         gap: 2,
                         padding: "4px 10px",
                         background:
-                          focusedControl === 3 && !epgMode && !isProgressFocused ? "rgba(245,197,24,0.15)" : "none",
-                        border: `1.5px solid ${focusedControl === 3 && !epgMode && !isProgressFocused ? GOLD : "transparent"}`,
+                          focusedControl === 4 && !epgMode && !isProgressFocused ? "rgba(245,197,24,0.15)" : "none",
+                        border: `1.5px solid ${focusedControl === 4 && !epgMode && !isProgressFocused ? GOLD : "transparent"}`,
                         borderRadius: 6,
                         cursor: "pointer",
                         transition: "all 0.2s",
-                        opacity: focusedControl === 3 && !epgMode && !isProgressFocused ? 1 : 0.55,
-                        transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.08)" : "scale(1)",
+                        opacity: focusedControl === 4 && !epgMode && !isProgressFocused ? 1 : 0.55,
+                        transform: focusedControl === 4 && !epgMode && !isProgressFocused ? "scale(1.08)" : "scale(1)",
                       }}
                     >
                       <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
@@ -1648,9 +1653,9 @@ const VideoPlayer = ({
                         flexShrink: 0,
                         transition: "all 0.2s",
                         width: "fit-content",
-                        opacity: isFavoriteProp || focusedControl === 4 ? 1 : 0.55,
+                        opacity: isFavoriteProp || focusedControl === 5 ? 1 : 0.55,
                         outline:
-                          focusedControl === 4 && !epgMode && !isProgressFocused
+                          focusedControl === 5 && !epgMode && !isProgressFocused
                             ? `2px solid rgba(245,197,24,0.5)`
                             : "2px solid transparent",
                         outlineOffset: "4px",
@@ -1659,11 +1664,11 @@ const VideoPlayer = ({
                         border: "none",
                         cursor: "pointer",
                         padding: "4px 8px",
-                        transform: focusedControl === 4 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
+                        transform: focusedControl === 5 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
                       }}
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        setFocusedControl(4);
+                        setFocusedControl(5);
                         onToggleFavorite?.();
                       }}
                     >
