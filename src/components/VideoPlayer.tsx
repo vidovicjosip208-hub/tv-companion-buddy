@@ -1491,7 +1491,12 @@ const VideoPlayer = ({
                       }}
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="4" y="10" width="16" height="11" rx="2" stroke={GOLD} strokeWidth="2" fill="none" />
+                        <defs>
+                          <mask id="lock-keyhole-mask">
+                            <rect x="4" y="10" width="16" height="11" rx="2" fill="white" />
+                            <circle cx="12" cy="15.5" r="1.8" fill="black" />
+                          </mask>
+                        </defs>
                         <path
                           d="M7 10V7a5 5 0 0 1 10 0v3"
                           stroke={GOLD}
@@ -1499,15 +1504,23 @@ const VideoPlayer = ({
                           fill="none"
                           strokeLinecap="round"
                         />
-                        <circle
-                          cx="12"
-                          cy="15.5"
-                          r="1.8"
-                          fill={isLocked ? GOLD : "none"}
-                          stroke={GOLD}
-                          strokeWidth="1.4"
-                          style={{ transition: "fill 0.2s" }}
-                        />
+                        {isLocked ? (
+                          <rect x="4" y="10" width="16" height="11" rx="2" fill={GOLD} mask="url(#lock-keyhole-mask)" />
+                        ) : (
+                          <>
+                            <rect
+                              x="4"
+                              y="10"
+                              width="16"
+                              height="11"
+                              rx="2"
+                              stroke={GOLD}
+                              strokeWidth="2"
+                              fill="none"
+                            />
+                            <circle cx="12" cy="15.5" r="1.8" stroke={GOLD} strokeWidth="1.4" fill="none" />
+                          </>
+                        )}
                       </svg>
                     </button>
 
