@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw, RotateCw, Heart, Tv, LockKeyhole } from "lucide-react";
+import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
 import Hls from "hls.js";
 import { useDwSchedule, type DwScheduleItem } from "@/hooks/useChannels";
 
@@ -1470,7 +1470,7 @@ const VideoPlayer = ({
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 8, flexShrink: 0 }}>
-                    {/* Zaključaj program — mali lokot, klikom postaje zlatan kao srce kod omiljenih */}
+                    {/* Zaključaj program — obris uvijek zlatan, rupica (ključanica) prozirna dok nije zaključano, puna zlatna kad jeste */}
                     <button
                       onMouseDown={(e) => {
                         e.preventDefault();
@@ -1490,13 +1490,25 @@ const VideoPlayer = ({
                         transition: "all 0.2s",
                       }}
                     >
-                      <LockKeyhole
-                        className="w-5 h-5"
-                        style={{
-                          color: isLocked ? GOLD : "rgba(255,255,255,0.6)",
-                          transition: "color 0.2s",
-                        }}
-                      />
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="10" width="16" height="11" rx="2" stroke={GOLD} strokeWidth="2" fill="none" />
+                        <path
+                          d="M7 10V7a5 5 0 0 1 10 0v3"
+                          stroke={GOLD}
+                          strokeWidth="2"
+                          fill="none"
+                          strokeLinecap="round"
+                        />
+                        <circle
+                          cx="12"
+                          cy="15.5"
+                          r="1.8"
+                          fill={isLocked ? GOLD : "none"}
+                          stroke={GOLD}
+                          strokeWidth="1.4"
+                          style={{ transition: "fill 0.2s" }}
+                        />
+                      </svg>
                     </button>
 
                     {/* Aspect Ratio gumb */}
