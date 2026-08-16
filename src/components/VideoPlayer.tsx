@@ -899,6 +899,46 @@ const VideoPlayer = ({
     (e: KeyboardEvent) => {
       if (!isVisible) return;
 
+      // PIN popup ima prioritet nad ostalom navigacijom playera
+      if (pinOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (/^\d$/.test(e.key)) {
+          setPinError("");
+          setPinValue((p) => (p.length >= PIN_LEN ? p : p + e.key));
+          return;
+        }
+        if (e.key === "Enter" || e.key === " ") {
+          if (pinValue.length !== PIN_LEN) {
+            setPinError("Unesite 4-cifreni PIN.");
+            return;
+          }
+          if (pinValue === getParentalPin()) {
+            setIsLocked((p) => !p);
+            setPinOpen(false);
+            setPinValue("");
+            setPinError("");
+          } else {
+            setPinError("Pogrešan PIN, pokušajte ponovno.");
+            setPinValue("");
+          }
+          return;
+        }
+        if (e.key === "Escape" || e.key === "Backspace" || e.key === "XF86Back") {
+          if (e.key === "Backspace" && pinValue.length > 0) {
+            setPinValue((p) => p.slice(0, -1));
+            return;
+          }
+          setPinOpen(false);
+          setPinValue("");
+          setPinError("");
+          return;
+        }
+        return;
+      }
+
+
+
       if (/^\d$/.test(e.key)) {
         e.preventDefault();
         const newInput = channelInput + e.key;
