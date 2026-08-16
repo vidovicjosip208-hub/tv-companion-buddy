@@ -1179,7 +1179,10 @@ const VideoPlayer = ({
       channelLookup,
       onSwitchChannel,
       showHud,
+      pinOpen,
+      pinValue,
     ],
+
   );
 
   useZoneKeys("tv-player", handleKeyDown, isVisible, 40);
