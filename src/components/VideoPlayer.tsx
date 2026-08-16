@@ -247,6 +247,17 @@ const sidebarChannels: SidebarChannel[] = [
 const AUTO_HIDE_MS = 4500;
 const GOLD = "#F5C518";
 
+// Roditeljski PIN za zaključavanje programa (privremeno lokalno, do baze)
+const PIN_LEN = 4;
+const getParentalPin = () => {
+  try {
+    return localStorage.getItem("parental_pin") || "0000";
+  } catch {
+    return "0000";
+  }
+};
+
+
 // Broj kartica vidljivih u sidebaru istovremeno (uvijek neparan da je fokusirana u sredini)
 const SIDEBAR_VISIBLE = 5;
 const SIDEBAR_HALF = Math.floor(SIDEBAR_VISIBLE / 2);
