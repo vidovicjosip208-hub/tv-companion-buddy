@@ -257,7 +257,6 @@ const getParentalPin = () => {
   }
 };
 
-
 // Broj kartica vidljivih u sidebaru istovremeno (uvijek neparan da je fokusirana u sredini)
 const SIDEBAR_VISIBLE = 5;
 const SIDEBAR_HALF = Math.floor(SIDEBAR_VISIBLE / 2);
@@ -627,7 +626,6 @@ const VideoPlayer = ({
   const [pinValue, setPinValue] = useState("");
   const [pinError, setPinError] = useState("");
 
-
   // Detektiramo native aspect ratio streama čim metadata bude dostupna
   useEffect(() => {
     const video = videoRef.current;
@@ -953,8 +951,6 @@ const VideoPlayer = ({
         return;
       }
 
-
-
       if (/^\d$/.test(e.key)) {
         e.preventDefault();
         const newInput = channelInput + e.key;
@@ -1182,7 +1178,6 @@ const VideoPlayer = ({
       pinOpen,
       pinValue,
     ],
-
   );
 
   useZoneKeys("tv-player", handleKeyDown, isVisible, 40);
@@ -1327,14 +1322,23 @@ const VideoPlayer = ({
             <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 15, textAlign: "center", margin: 0 }}>
               Unesite PIN i potvrdite s OK
             </p>
-            {pinError && (
-              <p style={{ color: "#ff6b6b", fontSize: 14, textAlign: "center", margin: 0 }}>{pinError}</p>
-            )}
+            <p
+              style={{
+                color: "#ff6b6b",
+                fontSize: 14,
+                textAlign: "center",
+                margin: 0,
+                height: 18,
+                lineHeight: "18px",
+                visibility: pinError ? "visible" : "hidden",
+              }}
+            >
+              {pinError || "\u00A0"}
+            </p>
           </div>
         </div>
       )}
       <div className="relative w-full h-full overflow-hidden">
-
         {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
         {streamUrl && (
           <div
@@ -1611,7 +1615,6 @@ const VideoPlayer = ({
                         setPinValue("");
                         setPinError("");
                         setPinOpen(true);
-
                       }}
                       title={isLocked ? "Otključaj program" : "Zaključaj program"}
                       style={{
