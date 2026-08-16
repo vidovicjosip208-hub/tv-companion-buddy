@@ -1072,7 +1072,7 @@ const VideoPlayer = ({
         case "ArrowRight":
           e.preventDefault();
           resetHideTimer();
-          if (focusedControl < 4) setFocusedControl((p) => p + 1);
+          if (focusedControl < 5) setFocusedControl((p) => p + 1);
           break;
         case "ArrowDown":
           e.preventDefault();
@@ -1084,8 +1084,9 @@ const VideoPlayer = ({
           if (focusedControl === 0) openEpgMode();
           if (focusedControl === 1) setIsPlaying((p) => !p);
           if (focusedControl === 2) goLive();
-          if (focusedControl === 3) cycleAspectRatio();
-          if (focusedControl === 4) onToggleFavorite?.();
+          if (focusedControl === 3) setIsLocked((p) => !p);
+          if (focusedControl === 4) cycleAspectRatio();
+          if (focusedControl === 5) onToggleFavorite?.();
           break;
         case "Escape":
         case "Backspace":
