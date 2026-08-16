@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
+import { Play, Pause, RotateCcw, RotateCw, Heart, Tv, Lock } from "lucide-react";
 import Hls from "hls.js";
 import { useDwSchedule, type DwScheduleItem } from "@/hooks/useChannels";
 
@@ -181,8 +181,7 @@ const buildMiniChannelsFromEPG = (
   return programs.map((p) => {
     const start = new Date(p.start_time);
     const end = new Date(p.end_time);
-    const fmt = (d: Date) =>
-      `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const fmt = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
     const dayStart = new Date(start);
     dayStart.setHours(0, 0, 0, 0);
     const diffDays = Math.round((dayStart.getTime() - startOfToday.getTime()) / 86400000);
@@ -211,8 +210,7 @@ const buildMiniChannelsFromDw = (rows: DwScheduleItem[], fallbackThumb: string):
   return rows.map((r, idx) => {
     const start = new Date(r.start_time);
     const end = new Date(r.end_time);
-    const fmt = (d: Date) =>
-      `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const fmt = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
     const dayStart = new Date(start);
     dayStart.setHours(0, 0, 0, 0);
     const diffDays = Math.round((dayStart.getTime() - startOfToday.getTime()) / 86400000);
@@ -235,7 +233,6 @@ const buildMiniChannelsFromDw = (rows: DwScheduleItem[], fallbackThumb: string):
     };
   });
 };
-
 
 const sidebarChannels: SidebarChannel[] = [
   { id: "s1", num: 4, label: "federalna", sub: "ODIVIZIJA" },
@@ -345,8 +342,7 @@ const ChannelCard = ({
               src={logoUrl}
               alt={ch.label}
               className="max-h-[62px] max-w-full object-contain"
-              style={{
-              }}
+              style={{}}
               onError={() => setLogoError(true)}
             />
           ) : (
@@ -408,10 +404,7 @@ const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
         style={{ left: -15, top: 0, bottom: "2.5rem", width: 15, pointerEvents: "none" }}
       >
         <svg width="15" height="42" viewBox="0 0 12 36" fill="none">
-          <path
-            d="M10 1 L1 18 L10 35 Q7 18 10 1 Z"
-            fill={GOLD}
-          />
+          <path d="M10 1 L1 18 L10 35 Q7 18 10 1 Z" fill={GOLD} />
         </svg>
       </div>
     )}
@@ -422,10 +415,7 @@ const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
         style={{ right: -15, top: 0, bottom: "2.5rem", width: 15, pointerEvents: "none" }}
       >
         <svg width="15" height="42" viewBox="0 0 12 36" fill="none">
-          <path
-            d="M2 1 L11 18 L2 35 Q5 18 2 1 Z"
-            fill={GOLD}
-          />
+          <path d="M2 1 L11 18 L2 35 Q5 18 2 1 Z" fill={GOLD} />
         </svg>
       </div>
     )}
@@ -619,6 +609,8 @@ const VideoPlayer = ({
   const [progress, setProgress] = useState(42);
   const [aspectRatioMode, setAspectRatioMode] = useState<"original" | "fill" | "4:3" | "16:9">("fill");
   const [videoNativeAR, setVideoNativeAR] = useState<number | null>(null);
+  // Zaključavanje programa — kada je true, gumb za zaključavanje je označen zlatnom bojom
+  const [isLocked, setIsLocked] = useState<boolean>(false);
 
   // Detektiramo native aspect ratio streama čim metadata bude dostupna
   useEffect(() => {
@@ -1478,6 +1470,36 @@ const VideoPlayer = ({
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 8, flexShrink: 0 }}>
+                    {/* Zaključaj program — mali lokot, klikom postaje zlatan kao srce kod omiljenih */}
+                    <button
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setIsLocked((p) => !p);
+                      }}
+                      title={isLocked ? "Otključaj program" : "Zaključaj program"}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 36,
+                        height: 36,
+                        background: "none",
+                        border: "none",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <Lock
+                        className="w-5 h-5"
+                        style={{
+                          color: isLocked ? GOLD : "rgba(255,255,255,0.6)",
+                          fill: isLocked ? GOLD : "none",
+                          transition: "color 0.2s, fill 0.2s",
+                        }}
+                      />
+                    </button>
+
                     {/* Aspect Ratio gumb */}
                     <button
                       onMouseDown={(e) => {
@@ -1494,9 +1516,7 @@ const VideoPlayer = ({
                         gap: 2,
                         padding: "4px 10px",
                         background:
-                          focusedControl === 3 && !epgMode && !isProgressFocused
-                            ? "rgba(245,197,24,0.15)"
-                            : "none",
+                          focusedControl === 3 && !epgMode && !isProgressFocused ? "rgba(245,197,24,0.15)" : "none",
                         border: `1.5px solid ${focusedControl === 3 && !epgMode && !isProgressFocused ? GOLD : "transparent"}`,
                         borderRadius: 6,
                         cursor: "pointer",
@@ -1504,7 +1524,6 @@ const VideoPlayer = ({
                         opacity: focusedControl === 3 && !epgMode && !isProgressFocused ? 1 : 0.55,
                         transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.08)" : "scale(1)",
                       }}
-
                     >
                       <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
                         {aspectRatioMode === "original" && (
