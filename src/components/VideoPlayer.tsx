@@ -1475,6 +1475,7 @@ const VideoPlayer = ({
                     <button
                       onMouseDown={(e) => {
                         e.preventDefault();
+                        setFocusedControl(3);
                         setIsLocked((p) => !p);
                       }}
                       title={isLocked ? "Otključaj program" : "Zaključaj program"}
@@ -1484,11 +1485,14 @@ const VideoPlayer = ({
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        background: "none",
-                        border: "none",
+                        background:
+                          focusedControl === 3 && !epgMode && !isProgressFocused ? "rgba(245,197,24,0.15)" : "none",
+                        border: `1.5px solid ${focusedControl === 3 && !epgMode && !isProgressFocused ? GOLD : "transparent"}`,
                         borderRadius: 6,
                         cursor: "pointer",
                         transition: "all 0.2s",
+                        opacity: focusedControl === 3 && !epgMode && !isProgressFocused ? 1 : 0.55,
+                        transform: focusedControl === 3 && !epgMode && !isProgressFocused ? "scale(1.08)" : "scale(1)",
                       }}
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
