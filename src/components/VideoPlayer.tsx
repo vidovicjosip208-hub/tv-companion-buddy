@@ -247,6 +247,17 @@ const sidebarChannels: SidebarChannel[] = [
 const AUTO_HIDE_MS = 4500;
 const GOLD = "#F5C518";
 
+// Roditeljski PIN za zaključavanje programa (privremeno lokalno, do baze)
+const PIN_LEN = 4;
+const getParentalPin = () => {
+  try {
+    return localStorage.getItem("parental_pin") || "0000";
+  } catch {
+    return "0000";
+  }
+};
+
+
 // Broj kartica vidljivih u sidebaru istovremeno (uvijek neparan da je fokusirana u sredini)
 const SIDEBAR_VISIBLE = 5;
 const SIDEBAR_HALF = Math.floor(SIDEBAR_VISIBLE / 2);
@@ -611,6 +622,11 @@ const VideoPlayer = ({
   const [videoNativeAR, setVideoNativeAR] = useState<number | null>(null);
   // Zaključavanje programa — kada je true, gumb za zaključavanje je označen zlatnom bojom
   const [isLocked, setIsLocked] = useState<boolean>(false);
+  // PIN potvrda prije (ot)ključavanja programa
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pinValue, setPinValue] = useState("");
+  const [pinError, setPinError] = useState("");
+
 
   // Detektiramo native aspect ratio streama čim metadata bude dostupna
   useEffect(() => {
@@ -899,6 +915,46 @@ const VideoPlayer = ({
     (e: KeyboardEvent) => {
       if (!isVisible) return;
 
+      // PIN popup ima prioritet nad ostalom navigacijom playera
+      if (pinOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (/^\d$/.test(e.key)) {
+          setPinError("");
+          setPinValue((p) => (p.length >= PIN_LEN ? p : p + e.key));
+          return;
+        }
+        if (e.key === "Enter" || e.key === " ") {
+          if (pinValue.length !== PIN_LEN) {
+            setPinError("Unesite 4-cifreni PIN.");
+            return;
+          }
+          if (pinValue === getParentalPin()) {
+            setIsLocked((p) => !p);
+            setPinOpen(false);
+            setPinValue("");
+            setPinError("");
+          } else {
+            setPinError("Pogrešan PIN, pokušajte ponovno.");
+            setPinValue("");
+          }
+          return;
+        }
+        if (e.key === "Escape" || e.key === "Backspace" || e.key === "XF86Back") {
+          if (e.key === "Backspace" && pinValue.length > 0) {
+            setPinValue((p) => p.slice(0, -1));
+            return;
+          }
+          setPinOpen(false);
+          setPinValue("");
+          setPinError("");
+          return;
+        }
+        return;
+      }
+
+
+
       if (/^\d$/.test(e.key)) {
         e.preventDefault();
         const newInput = channelInput + e.key;
@@ -1084,7 +1140,12 @@ const VideoPlayer = ({
           if (focusedControl === 0) openEpgMode();
           if (focusedControl === 1) setIsPlaying((p) => !p);
           if (focusedControl === 2) goLive();
-          if (focusedControl === 3) setIsLocked((p) => !p);
+          if (focusedControl === 3) {
+            setPinValue("");
+            setPinError("");
+            setPinOpen(true);
+          }
+
           if (focusedControl === 4) cycleAspectRatio();
           if (focusedControl === 5) onToggleFavorite?.();
           break;
@@ -1118,7 +1179,10 @@ const VideoPlayer = ({
       channelLookup,
       onSwitchChannel,
       showHud,
+      pinOpen,
+      pinValue,
     ],
+
   );
 
   useZoneKeys("tv-player", handleKeyDown, isVisible, 40);
@@ -1202,7 +1266,75 @@ const VideoPlayer = ({
       className="absolute inset-0 z-50 overflow-hidden"
       style={{ backgroundColor: "#0d0d0d" }}
     >
+      {pinOpen && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div
+            style={{
+              width: 420,
+              padding: "36px 40px",
+              backgroundColor: "#000",
+              border: `3px solid ${GOLD}`,
+              borderRadius: 16,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 22,
+            }}
+          >
+            <svg width="72" height="72" viewBox="0 0 24 24" fill="none">
+              <defs>
+                <mask id="pin-lock-mask">
+                  <rect x="4" y="10" width="16" height="11" rx="2" fill="white" />
+                  <circle cx="12" cy="15.3" r="1.7" fill="black" />
+                  <rect x="11.2" y="15.3" width="1.6" height="3" fill="black" />
+                </mask>
+              </defs>
+              <path d="M7 10V7a5 5 0 0 1 10 0v3" stroke={GOLD} strokeWidth="2.4" fill="none" strokeLinecap="round" />
+              <rect x="4" y="10" width="16" height="11" rx="2" fill={GOLD} mask="url(#pin-lock-mask)" />
+            </svg>
+
+            <div style={{ display: "flex", gap: 18 }}>
+              {Array.from({ length: PIN_LEN }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: 34,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: 34,
+                  }}
+                >
+                  {pinValue.length > i ? (
+                    <div style={{ width: 16, height: 16, borderRadius: 999, backgroundColor: GOLD }} />
+                  ) : (
+                    <div style={{ width: 30, height: 5, borderRadius: 3, backgroundColor: GOLD }} />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 15, textAlign: "center", margin: 0 }}>
+              Unesite PIN i potvrdite s OK
+            </p>
+            {pinError && (
+              <p style={{ color: "#ff6b6b", fontSize: 14, textAlign: "center", margin: 0 }}>{pinError}</p>
+            )}
+          </div>
+        </div>
+      )}
       <div className="relative w-full h-full overflow-hidden">
+
         {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
         {streamUrl && (
           <div
@@ -1476,7 +1608,10 @@ const VideoPlayer = ({
                       onMouseDown={(e) => {
                         e.preventDefault();
                         setFocusedControl(3);
-                        setIsLocked((p) => !p);
+                        setPinValue("");
+                        setPinError("");
+                        setPinOpen(true);
+
                       }}
                       title={isLocked ? "Otključaj program" : "Zaključaj program"}
                       style={{
