@@ -21,6 +21,12 @@ import {
   Timer,
   Gamepad2,
   Sparkles,
+  ArrowLeft,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Radio,
+  RefreshCw,
+  LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import StarryBackground from "@/components/StarryBackground";
@@ -90,6 +96,29 @@ async function savePin(newPin: string, currentProfile: string | null): Promise<v
   // npr: await supabase.from('profiles').update({ parental_pin_hash: hash(newPin) }).eq('id', currentProfile);
 }
 
+// ─────────────────────────────────────────────────────────────
+// Speed test — simulacija (zamijeni stvarnim mjerenjem kad bude dostupno,
+// npr. pozivom prema vlastitom /speedtest endpointu ili nekom servisu).
+// ─────────────────────────────────────────────────────────────
+
+type SpeedTestPhase = "idle" | "ping" | "download" | "upload" | "done";
+
+interface SpeedTestResult {
+  ping: number;
+  download: number;
+  upload: number;
+}
+
+const SPEED_TEST_MAX_MBPS = 500;
+
+const SPEED_PHASE_LABELS: Record<SpeedTestPhase, string> = {
+  idle: "Spreman za testiranje brzine",
+  ping: "Mjerenje odziva (ping)...",
+  download: "Mjerenje brzine preuzimanja...",
+  upload: "Mjerenje brzine slanja...",
+  done: "Test završen",
+};
+
 const Settings = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -110,7 +139,7 @@ const Settings = () => {
     languages.findIndex((l) => l.code === i18n.language),
   );
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [view, setView] = useState<"menu" | "language" | "internet" | "device">("menu");
+  const [view, setView] = useState<"menu" | "language" | "internet" | "device" | "speedtest">("menu");
   const [langFocused, setLangFocused] = useState(initialLangIdx);
   const [selectedLang, setSelectedLang] = useState(initialLangIdx);
   const [scrollStart, setScrollStart] = useState(0);
@@ -137,15 +166,103 @@ const Settings = () => {
   const [pinError, setPinError] = useState("");
   const [isPinBusy, setIsPinBusy] = useState(false);
 
+  // Speed test state
+  const [stPhase, setStPhase] = useState<SpeedTestPhase>("idle");
+  const [stLive, setStLive] = useState(0);
+  const [stResult, setStResult] = useState<SpeedTestResult>({ ping: 0, download: 0, upload: 0 });
+  const stTimeoutsRef = useRef<number[]>([]);
+  const stRunIdRef = useRef(0);
+
   const applyLang = (idx: number) => {
     setSelectedLang(idx);
     i18n.changeLanguage(languages[idx].code);
   };
 
-  const handleInternetItemSelect = useCallback((key: string) => {
-    // TODO: poveži sa stvarnom akcijom/rutom za svaku stavku
-    // npr. navigate(`/settings/internet/${key}`) ili otvori odgovarajući modal
+  const clearSpeedTestTimers = useCallback(() => {
+    stTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+    stTimeoutsRef.current = [];
   }, []);
+
+  const animateSpeedValue = useCallback((target: number, durationMs: number, runId: number, onDone: () => void) => {
+    const startTime = performance.now();
+    const step = (now: number) => {
+      if (stRunIdRef.current !== runId) return; // test je otkazan/napušten, prekini animaciju
+      const t = Math.min((now - startTime) / durationMs, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const jitter = t < 1 ? (Math.random() - 0.5) * target * 0.05 : 0;
+      setStLive(Math.max(0, eased * target + jitter));
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        setStLive(target);
+        onDone();
+      }
+    };
+    requestAnimationFrame(step);
+  }, []);
+
+  const startSpeedTest = useCallback(() => {
+    clearSpeedTestTimers();
+    const runId = ++stRunIdRef.current;
+    setStResult({ ping: 0, download: 0, upload: 0 });
+    setStLive(0);
+    setStPhase("ping");
+
+    const pingValue = Math.round(8 + Math.random() * 24); // 8–32 ms
+    const downloadValue = Math.round(60 + Math.random() * 340); // 60–400 Mb/s
+    const uploadValue = Math.round(15 + Math.random() * 120); // 15–135 Mb/s
+
+    const pingTimeout = window.setTimeout(() => {
+      if (stRunIdRef.current !== runId) return;
+      setStResult((r) => ({ ...r, ping: pingValue }));
+      setStPhase("download");
+      setStLive(0);
+      animateSpeedValue(downloadValue, 2600, runId, () => {
+        if (stRunIdRef.current !== runId) return;
+        setStResult((r) => ({ ...r, download: downloadValue }));
+        setStPhase("upload");
+        setStLive(0);
+        animateSpeedValue(uploadValue, 2200, runId, () => {
+          if (stRunIdRef.current !== runId) return;
+          setStResult((r) => ({ ...r, upload: uploadValue }));
+          setStPhase("done");
+        });
+      });
+    }, 900);
+    stTimeoutsRef.current.push(pingTimeout);
+  }, [animateSpeedValue, clearSpeedTestTimers]);
+
+  const resetSpeedTest = useCallback(() => {
+    clearSpeedTestTimers();
+    stRunIdRef.current += 1; // poništi sve rAF petlje u tijeku
+    setStPhase("idle");
+    setStLive(0);
+  }, [clearSpeedTestTimers]);
+
+  const openSpeedTest = useCallback(() => {
+    resetSpeedTest();
+    setStResult({ ping: 0, download: 0, upload: 0 });
+    setView("speedtest");
+  }, [resetSpeedTest]);
+
+  useEffect(() => {
+    return () => {
+      clearSpeedTestTimers();
+      stRunIdRef.current += 1;
+    };
+  }, [clearSpeedTestTimers]);
+
+  const handleInternetItemSelect = useCallback(
+    (key: string) => {
+      if (key === "speedTest") {
+        openSpeedTest();
+        return;
+      }
+      // TODO: poveži ostale stavke sa stvarnom akcijom/rutom
+      // npr. navigate(`/settings/internet/${key}`) ili otvori odgovarajući modal
+    },
+    [openSpeedTest],
+  );
 
   const handleDeviceItemSelect = useCallback((key: string) => {
     // TODO: poveži sa stvarnom akcijom/rutom za svaku stavku
@@ -285,6 +402,22 @@ const Settings = () => {
           case "Escape":
             e.preventDefault();
             closePinModal();
+            break;
+        }
+        return;
+      }
+
+      if (view === "speedtest") {
+        switch (e.key) {
+          case "Enter":
+            e.preventDefault();
+            if (stPhase === "idle" || stPhase === "done") startSpeedTest();
+            break;
+          case "Backspace":
+          case "Escape":
+            e.preventDefault();
+            resetSpeedTest();
+            setView("internet");
             break;
         }
         return;
@@ -446,6 +579,9 @@ const Settings = () => {
       closePinModal,
       handlePinKeyPress,
       openParentalControls,
+      stPhase,
+      startSpeedTest,
+      resetSpeedTest,
     ],
   );
 
@@ -459,180 +595,208 @@ const Settings = () => {
     >
       <StarryBackground />
 
-      {/* Left side - Welcome */}
-      <div className="relative z-10 flex-1 pt-16 px-16">
-        <h1 className="text-4xl font-light text-foreground mb-3">
-          {view === "language"
-            ? t("settings.languageTitle")
-            : view === "internet"
-              ? "Internet postavke"
-              : view === "device"
-                ? "Postavke uređaja"
-                : t("settings.title")}
-        </h1>
-        <p className="text-muted-foreground text-base leading-relaxed max-w-sm">
-          {view === "language"
-            ? t("settings.languageSubtitle")
-            : view === "internet"
-              ? "Provjerite brzinu i status mreže te upravljajte naprednim postavkama."
-              : view === "device"
-                ? "Upravljajte pokretanjem, uštedom energije, daljinskim upravljačem i memorijom."
-                : t("settings.subtitle")}
-        </p>
-        <img
-          src={settingsGearbox}
-          alt="Settings gearbox"
-          width={320}
-          height={320}
-          className="absolute left-16 top-[-30px] w-[600px] h-auto object-fill"
+      {view === "speedtest" ? (
+        <SpeedTestView
+          phase={stPhase}
+          liveValue={stLive}
+          result={stResult}
+          onBack={() => {
+            resetSpeedTest();
+            setView("internet");
+          }}
+          onStart={startSpeedTest}
         />
-      </div>
+      ) : (
+        <>
+          {/* Left side - Welcome */}
+          <div className="relative z-10 flex-1 pt-16 px-16">
+            <h1 className="text-4xl font-light text-foreground mb-3">
+              {view === "language"
+                ? t("settings.languageTitle")
+                : view === "internet"
+                  ? "Internet postavke"
+                  : view === "device"
+                    ? "Postavke uređaja"
+                    : t("settings.title")}
+            </h1>
+            <p className="text-muted-foreground text-base leading-relaxed max-w-sm">
+              {view === "language"
+                ? t("settings.languageSubtitle")
+                : view === "internet"
+                  ? "Provjerite brzinu i status mreže te upravljajte naprednim postavkama."
+                  : view === "device"
+                    ? "Upravljajte pokretanjem, uštedom energije, daljinskim upravljačem i memorijom."
+                    : t("settings.subtitle")}
+            </p>
+            <img
+              src={settingsGearbox}
+              alt="Settings gearbox"
+              width={320}
+              height={320}
+              className="absolute left-16 top-[-30px] w-[600px] h-auto object-fill"
+            />
+          </div>
 
-      {/* Right side */}
-      <div className="relative z-10 flex-1 flex flex-col justify-center px-10 pr-16 pl-8">
-        {view === "menu" ? (
-          <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
-            <div
-              className="flex flex-col gap-1 transition-transform duration-200"
-              style={{ transform: `translateY(-${menuScrollStart * 56}px)` }}
-            >
-              {menuItems.map((item, index) => {
-                const Icon = item.icon;
-                const isFocused = focusedIndex === index;
-                return (
-                  <button
-                    key={item.key}
-                    onClick={() => {
-                      setFocusedIndex(index);
-                      setMenuScrollStart(Math.max(0, Math.min(index, menuItems.length - VISIBLE_COUNT)));
-                      if (item.key === "language") {
-                        setView("language");
-                        setLangFocused(selectedLang);
-                        setScrollStart(Math.max(0, Math.min(selectedLang, languages.length - VISIBLE_COUNT)));
-                      } else if (item.key === "parental") {
-                        openParentalControls();
-                      } else if (item.key === "internet") {
-                        openInternetSettings();
-                      } else if (item.key === "device") {
-                        openDeviceControls();
-                      }
-                    }}
-                    className={cn(
-                      "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left group h-[52px]",
-                      isFocused
-                        ? "bg-white/10 text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/5",
-                    )}
-                  >
-                    <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
-                    <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
-                    <ChevronRight
-                      className={cn("w-4 h-4 shrink-0 transition-opacity", isFocused ? "opacity-100" : "opacity-40")}
-                    />
-                  </button>
-                );
-              })}
-            </div>
+          {/* Right side */}
+          <div className="relative z-10 flex-1 flex flex-col justify-center px-10 pr-16 pl-8">
+            {view === "menu" ? (
+              <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
+                <div
+                  className="flex flex-col gap-1 transition-transform duration-200"
+                  style={{ transform: `translateY(-${menuScrollStart * 56}px)` }}
+                >
+                  {menuItems.map((item, index) => {
+                    const Icon = item.icon;
+                    const isFocused = focusedIndex === index;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => {
+                          setFocusedIndex(index);
+                          setMenuScrollStart(Math.max(0, Math.min(index, menuItems.length - VISIBLE_COUNT)));
+                          if (item.key === "language") {
+                            setView("language");
+                            setLangFocused(selectedLang);
+                            setScrollStart(Math.max(0, Math.min(selectedLang, languages.length - VISIBLE_COUNT)));
+                          } else if (item.key === "parental") {
+                            openParentalControls();
+                          } else if (item.key === "internet") {
+                            openInternetSettings();
+                          } else if (item.key === "device") {
+                            openDeviceControls();
+                          }
+                        }}
+                        className={cn(
+                          "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left group h-[52px]",
+                          isFocused
+                            ? "bg-white/10 text-foreground"
+                            : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                        )}
+                      >
+                        <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
+                        <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
+                        <ChevronRight
+                          className={cn(
+                            "w-4 h-4 shrink-0 transition-opacity",
+                            isFocused ? "opacity-100" : "opacity-40",
+                          )}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : view === "internet" ? (
+              <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
+                <div
+                  className="flex flex-col gap-1 transition-transform duration-200"
+                  style={{ transform: `translateY(-${internetScrollStart * 56}px)` }}
+                >
+                  {internetItems.map((item, index) => {
+                    const Icon = item.icon;
+                    const isFocused = internetFocused === index;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => {
+                          setInternetFocused(index);
+                          handleInternetItemSelect(item.key);
+                        }}
+                        className={cn(
+                          "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
+                          isFocused
+                            ? "bg-white/10 text-foreground"
+                            : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                        )}
+                      >
+                        <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
+                        <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
+                        <ChevronRight
+                          className={cn(
+                            "w-4 h-4 shrink-0 transition-opacity",
+                            isFocused ? "opacity-100" : "opacity-40",
+                          )}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : view === "device" ? (
+              <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
+                <div
+                  className="flex flex-col gap-1 transition-transform duration-200"
+                  style={{ transform: `translateY(-${deviceScrollStart * 56}px)` }}
+                >
+                  {deviceItems.map((item, index) => {
+                    const Icon = item.icon;
+                    const isFocused = deviceFocused === index;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => {
+                          setDeviceFocused(index);
+                          handleDeviceItemSelect(item.key);
+                        }}
+                        className={cn(
+                          "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
+                          isFocused
+                            ? "bg-white/10 text-foreground"
+                            : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                        )}
+                      >
+                        <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
+                        <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
+                        <ChevronRight
+                          className={cn(
+                            "w-4 h-4 shrink-0 transition-opacity",
+                            isFocused ? "opacity-100" : "opacity-40",
+                          )}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
+                <div
+                  className="flex flex-col gap-1 transition-transform duration-200"
+                  style={{ transform: `translateY(-${scrollStart * 56}px)` }}
+                >
+                  {languages.map((lang, index) => {
+                    const isFocused = langFocused === index;
+                    const isSelected = selectedLang === index;
+                    return (
+                      <button
+                        key={lang.code}
+                        ref={(el) => {
+                          itemRefs.current[index] = el;
+                        }}
+                        onClick={() => {
+                          setLangFocused(index);
+                          applyLang(index);
+                        }}
+                        className={cn(
+                          "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
+                          isFocused
+                            ? "bg-white/10 text-foreground"
+                            : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                        )}
+                      >
+                        <Check
+                          className={cn("w-5 h-5 shrink-0", isSelected ? "text-accent opacity-100" : "opacity-0")}
+                        />
+                        <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{lang.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-        ) : view === "internet" ? (
-          <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
-            <div
-              className="flex flex-col gap-1 transition-transform duration-200"
-              style={{ transform: `translateY(-${internetScrollStart * 56}px)` }}
-            >
-              {internetItems.map((item, index) => {
-                const Icon = item.icon;
-                const isFocused = internetFocused === index;
-                return (
-                  <button
-                    key={item.key}
-                    onClick={() => {
-                      setInternetFocused(index);
-                      handleInternetItemSelect(item.key);
-                    }}
-                    className={cn(
-                      "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
-                      isFocused
-                        ? "bg-white/10 text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/5",
-                    )}
-                  >
-                    <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
-                    <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
-                    <ChevronRight
-                      className={cn("w-4 h-4 shrink-0 transition-opacity", isFocused ? "opacity-100" : "opacity-40")}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : view === "device" ? (
-          <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
-            <div
-              className="flex flex-col gap-1 transition-transform duration-200"
-              style={{ transform: `translateY(-${deviceScrollStart * 56}px)` }}
-            >
-              {deviceItems.map((item, index) => {
-                const Icon = item.icon;
-                const isFocused = deviceFocused === index;
-                return (
-                  <button
-                    key={item.key}
-                    onClick={() => {
-                      setDeviceFocused(index);
-                      handleDeviceItemSelect(item.key);
-                    }}
-                    className={cn(
-                      "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
-                      isFocused
-                        ? "bg-white/10 text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/5",
-                    )}
-                  >
-                    <Icon className={cn("w-5 h-5 shrink-0", isFocused ? "text-accent" : "text-muted-foreground")} />
-                    <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{item.label}</span>
-                    <ChevronRight
-                      className={cn("w-4 h-4 shrink-0 transition-opacity", isFocused ? "opacity-100" : "opacity-40")}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-hidden" style={{ maxHeight: `${VISIBLE_COUNT * 56}px` }}>
-            <div
-              className="flex flex-col gap-1 transition-transform duration-200"
-              style={{ transform: `translateY(-${scrollStart * 56}px)` }}
-            >
-              {languages.map((lang, index) => {
-                const isFocused = langFocused === index;
-                const isSelected = selectedLang === index;
-                return (
-                  <button
-                    key={lang.code}
-                    ref={(el) => (itemRefs.current[index] = el)}
-                    onClick={() => {
-                      setLangFocused(index);
-                      applyLang(index);
-                    }}
-                    className={cn(
-                      "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all text-left h-[52px]",
-                      isFocused
-                        ? "bg-white/10 text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/5",
-                    )}
-                  >
-                    <Check className={cn("w-5 h-5 shrink-0", isSelected ? "text-accent opacity-100" : "opacity-0")} />
-                    <span className={cn("flex-1 text-[18px]", isFocused && "font-medium")}>{lang.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* PIN Modal */}
       <AnimatePresence>
@@ -739,6 +903,144 @@ const Settings = () => {
         )}
       </AnimatePresence>
     </motion.div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+// Speed test — prezentacijske komponente
+// ─────────────────────────────────────────────────────────────
+
+interface SpeedTestViewProps {
+  phase: SpeedTestPhase;
+  liveValue: number;
+  result: SpeedTestResult;
+  onBack: () => void;
+  onStart: () => void;
+}
+
+const SpeedGauge = ({ value, max, unit }: { value: number; max: number; unit: string }) => {
+  const clamped = Math.min(Math.max(value, 0), max);
+  const arcDegrees = 270;
+  const radius = 120;
+  const fullCircumference = 2 * Math.PI * radius;
+  const arcLength = (arcDegrees / 360) * fullCircumference;
+  const progressLength = (clamped / max) * arcLength;
+
+  return (
+    <svg viewBox="0 0 320 320" className="w-[280px] h-[280px] md:w-[320px] md:h-[320px]">
+      <g transform="translate(160,160) rotate(135)">
+        <circle
+          r={radius}
+          fill="none"
+          strokeWidth={18}
+          strokeLinecap="round"
+          className="stroke-white/10"
+          strokeDasharray={`${arcLength} ${fullCircumference}`}
+        />
+        <circle
+          r={radius}
+          fill="none"
+          strokeWidth={18}
+          strokeLinecap="round"
+          className="stroke-accent"
+          strokeDasharray={`${progressLength} ${fullCircumference}`}
+        />
+      </g>
+      <text x="160" y="152" textAnchor="middle" className="fill-foreground" style={{ fontSize: 54, fontWeight: 300 }}>
+        {clamped < 10 ? clamped.toFixed(1) : Math.round(clamped)}
+      </text>
+      <text x="160" y="182" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 16 }}>
+        {unit}
+      </text>
+    </svg>
+  );
+};
+
+const StatPill = ({
+  icon: Icon,
+  label,
+  value,
+  active,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  active: boolean;
+}) => (
+  <div
+    className={cn(
+      "flex flex-col items-center gap-1.5 py-4 rounded-xl border transition-colors",
+      active ? "border-accent/60 bg-accent/10" : "border-border/30 bg-white/5",
+    )}
+  >
+    <Icon className={cn("w-4 h-4", active ? "text-accent" : "text-muted-foreground")} />
+    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+    <span className={cn("text-sm font-medium", active ? "text-foreground" : "text-muted-foreground")}>{value}</span>
+  </div>
+);
+
+const SpeedTestView = ({ phase, liveValue, result, onBack, onStart }: SpeedTestViewProps) => {
+  const isRunning = phase === "ping" || phase === "download" || phase === "upload";
+  const gaugeValue = phase === "download" || phase === "upload" ? liveValue : phase === "done" ? result.download : 0;
+
+  return (
+    <div className="relative z-10 flex-1 h-full flex flex-col items-center justify-center px-16">
+      <button
+        onClick={onBack}
+        className="absolute top-10 left-16 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Natrag na internet postavke
+      </button>
+
+      <span className="text-xs tracking-[3px] text-muted-foreground uppercase mb-2">Test brzine interneta</span>
+      <h1 className="text-2xl font-light text-foreground mb-8">{SPEED_PHASE_LABELS[phase]}</h1>
+
+      <SpeedGauge value={gaugeValue} max={SPEED_TEST_MAX_MBPS} unit="Mb/s" />
+
+      <div className="grid grid-cols-3 gap-4 mt-10 w-full max-w-md">
+        <StatPill icon={Radio} label="Ping" value={result.ping ? `${result.ping} ms` : "—"} active={phase === "ping"} />
+        <StatPill
+          icon={ArrowDownToLine}
+          label="Preuzimanje"
+          value={result.download ? `${result.download} Mb/s` : "—"}
+          active={phase === "download"}
+        />
+        <StatPill
+          icon={ArrowUpFromLine}
+          label="Slanje"
+          value={result.upload ? `${result.upload} Mb/s` : "—"}
+          active={phase === "upload"}
+        />
+      </div>
+
+      <button
+        onClick={onStart}
+        disabled={isRunning}
+        className={cn(
+          "mt-10 flex items-center gap-2 px-8 py-3.5 rounded-full text-base font-medium transition-all border",
+          isRunning
+            ? "opacity-40 pointer-events-none border-border/40 text-muted-foreground"
+            : "bg-accent text-black border-accent hover:brightness-110 shadow-lg shadow-accent/20",
+        )}
+      >
+        {phase === "done" ? (
+          <>
+            <RefreshCw className="w-4 h-4" />
+            Ponovi test
+          </>
+        ) : isRunning ? (
+          "Testiranje u tijeku..."
+        ) : (
+          <>
+            <Gauge className="w-4 h-4" />
+            Pokreni test
+          </>
+        )}
+      </button>
+
+      <p className="text-xs text-muted-foreground mt-4">Enter pokreće test · Escape/Natrag se vraća</p>
+    </div>
   );
 };
 
