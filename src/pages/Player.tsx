@@ -7,7 +7,7 @@ import { useChannels } from "@/hooks/useChannels";
 const Player = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { favorites, toggleFavorite, isFavorite, favoriteNumber } = useFavorites();
   const { data: channels = [] } = useChannels();
 
   const channelName = searchParams.get("channel") || "Pink";
@@ -20,7 +20,7 @@ const Player = () => {
       favorites.map((favName: string, idx: number) => {
         const ch = channels.find((c) => c.name === favName);
         return {
-          number: idx + 1,
+          number: favoriteNumber(favName) || idx + 1,
           channelName: favName,
           showTitle: favName,
           timeRange: "00:00 - 00:00",
@@ -29,7 +29,7 @@ const Player = () => {
           logoUrl: ch?.logo_url ?? null,
         };
       }),
-    [favorites, channels],
+    [favorites, channels, favoriteNumber],
   );
 
   const currentChannel = useMemo(() => channels.find((c) => c.name === channelName), [channels, channelName]);

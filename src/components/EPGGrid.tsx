@@ -35,6 +35,7 @@ interface EPGGridProps {
   onChannelClick?: (index: number) => void;
   hideSchedule?: boolean;
   isRadio?: boolean;
+  showNumbers?: boolean;
 }
 
 function calculateProgress(startTime: string, endTime: string): number {
@@ -57,11 +58,13 @@ const ChannelItem = memo(({
   isFocused,
   onClick,
   index,
+  showNumber = false,
 }: {
   channel: EPGChannel;
   isFocused: boolean;
   onClick?: () => void;
   index: number;
+  showNumber?: boolean;
 }) => {
   const ref = useRef<HTMLButtonElement>(null);
   const [logoError, setLogoError] = useState(false);
@@ -125,6 +128,16 @@ const ChannelItem = memo(({
       >
         {channel.name}
       </span>
+      {showNumber && (
+        <span
+          className={cn(
+            "ml-auto flex-shrink-0 min-w-[28px] text-center text-sm font-bold tabular-nums px-1.5 py-0.5 rounded-md border transition-colors",
+            isFocused ? "text-accent border-accent/60 bg-accent/10" : "text-foreground/50 border-border/40",
+          )}
+        >
+          {channel.number}
+        </span>
+      )}
     </motion.button>
   );
 });
@@ -221,6 +234,7 @@ const EPGGrid = ({
   onChannelClick,
   hideSchedule = false,
   isRadio = false,
+  showNumbers = false,
 }: EPGGridProps) => {
   const { t } = useTranslation();
   const selectedChannel = isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
@@ -255,6 +269,7 @@ const EPGGrid = ({
             isFocused={isFocusActive && focusedIndex === index}
             onClick={() => onChannelClick?.(index)}
             index={index}
+            showNumber={showNumbers}
           />
         ))}
       </div>
