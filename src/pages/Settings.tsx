@@ -19,7 +19,6 @@ import {
   Server,
   Power,
   Timer,
-  Remote,
   Brush,
   ArrowLeft,
   ArrowDownToLine,
@@ -27,6 +26,8 @@ import {
   Radio,
   RefreshCw,
   LucideIcon,
+  createLucideIcon,
+  type IconNode,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import StarryBackground from "@/components/StarryBackground";
