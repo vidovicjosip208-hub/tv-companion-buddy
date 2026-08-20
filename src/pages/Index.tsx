@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -445,6 +445,36 @@ const Index = () => {
   const { favorites, toggleFavorite, isFavorite, favoriteNumber, setFavoriteNumber } = useFavorites();
   // Dodjela vlastitog broja omiljenom kanalu (unos brojevima daljinskog)
   const [numberEditor, setNumberEditor] = useState<{ name: string; value: string; error?: string } | null>(null);
+  /** Dugi pritisak OK/Enter na omiljenom kanalu otvara uređivanje broja; kratki pokreće program. */
+  const enterHoldTimerRef = useRef<number | null>(null);
+  const enterHoldConsumedRef = useRef(false);
+  const enterShortPressRef = useRef<(() => void) | null>(null);
+  const clearEnterHold = useCallback(() => {
+    if (enterHoldTimerRef.current !== null) {
+      window.clearTimeout(enterHoldTimerRef.current);
+      enterHoldTimerRef.current = null;
+      return true;
+    }
+    return false;
+  }, []);
+  useEffect(() => {
+    const onUp = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      const wasPending = clearEnterHold();
+      if (wasPending && !enterHoldConsumedRef.current) {
+        enterShortPressRef.current?.();
+      }
+      enterShortPressRef.current = null;
+      enterHoldConsumedRef.current = false;
+    };
+    window.addEventListener("keyup", onUp);
+    return () => {
+      window.removeEventListener("keyup", onUp);
+      clearEnterHold();
+    };
+  }, [clearEnterHold]);
+
+
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [focusZone, setFocusZone] = useState<FocusZone>("cards");
@@ -806,6 +836,7 @@ const Index = () => {
           return;
         }
         if (e.key === "Enter") {
+          if (e.repeat) return;
           const num = parseInt(numberEditor.value, 10);
           if (isNaN(num) || num <= 0) {
             setNumberEditor(null);
@@ -1018,6 +1049,30 @@ const Index = () => {
 
         case "Enter":
           e.preventDefault();
+          if (focusZone === "epg" && showFavorites) {
+            const favCh = activeEpgChannels[epgIndex];
+            if (favCh) {
+              if (e.repeat) {
+                if (!enterHoldConsumedRef.current && enterHoldTimerRef.current !== null) {
+                  clearEnterHold();
+                  enterHoldConsumedRef.current = true;
+                  enterShortPressRef.current = null;
+                  setNumberEditor({ name: favCh.name, value: "" });
+                }
+                break;
+              }
+              if (enterHoldTimerRef.current !== null || enterHoldConsumedRef.current) break;
+              enterShortPressRef.current = () => openPlayerFromEPG(epgIndex);
+              enterHoldConsumedRef.current = false;
+              enterHoldTimerRef.current = window.setTimeout(() => {
+                enterHoldTimerRef.current = null;
+                enterHoldConsumedRef.current = true;
+                enterShortPressRef.current = null;
+                setNumberEditor({ name: favCh.name, value: "" });
+              }, 650);
+              break;
+            }
+          }
           if (focusZone === "sidebar") {
             handleSidebarAction(sidebarIndex);
           } else if (focusZone === "categories") {
@@ -1069,6 +1124,7 @@ const Index = () => {
       }
     },
     [
+      clearEnterHold,
       focusZone,
       sidebarIndex,
       epgIndex,
