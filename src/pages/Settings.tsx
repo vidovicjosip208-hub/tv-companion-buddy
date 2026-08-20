@@ -68,8 +68,8 @@ const internetItems = [
 const deviceItems = [
   { icon: Power, label: "Startup Action", key: "startupAction" },
   { icon: Timer, label: "Auto Sleep Timer", key: "autoSleepTimer" },
-  { icon: Gamepad2, label: "Remote Controls", key: "remoteControls" },
-  { icon: Sparkles, label: "Storage & Cache", key: "storageCache" },
+  { icon: Remote, label: "Remote Controls", key: "remoteControls" },
+  { icon: Brush, label: "Storage & Cache", key: "storageCache" },
 ];
 
 // ─────────────────────────────────────────────────────────────
