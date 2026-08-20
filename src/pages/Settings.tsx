@@ -1169,16 +1169,13 @@ const NetworkStatusView = ({ loading, data, onBack }: NetworkStatusViewProps) =>
     <div className="relative z-10 flex-1 h-full flex flex-col items-center justify-center px-16">
       <button
         onClick={onBack}
-        className="absolute top-10 left-16 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+        aria-label="Natrag na internet postavke"
+        className="absolute top-10 left-16 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
-        Natrag na internet postavke
+        <ArrowLeft className="w-5 h-5" />
       </button>
 
-      <span className="text-xs tracking-[3px] text-muted-foreground uppercase mb-2">Status mreže</span>
-      <h1 className="text-2xl font-light text-foreground mb-8">
-        {loading ? "Dohvaćanje mrežnih podataka..." : "Podaci o mrežnoj vezi"}
-      </h1>
+      <h1 className="text-2xl font-bold text-foreground mb-8">Status mreže</h1>
 
       <div className="grid grid-cols-1 gap-3 w-full max-w-md">
         <NetworkInfoRow icon={Fingerprint} label="MAC adresa" value={loading || !data ? placeholder : data.mac} />
@@ -1195,8 +1192,6 @@ const NetworkStatusView = ({ loading, data, onBack }: NetworkStatusViewProps) =>
           value={loading || !data ? placeholder : connectionLabel}
         />
       </div>
-
-      <p className="text-xs text-muted-foreground mt-6">Escape/Natrag se vraća</p>
     </div>
   );
 };
