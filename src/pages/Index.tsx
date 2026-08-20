@@ -444,7 +444,7 @@ const Index = () => {
   const { t } = useTranslation();
   const { favorites, toggleFavorite, isFavorite, favoriteNumber, setFavoriteNumber } = useFavorites();
   // Dodjela vlastitog broja omiljenom kanalu (unos brojevima daljinskog)
-  const [numberEditor, setNumberEditor] = useState<{ name: string; value: string } | null>(null);
+  const [numberEditor, setNumberEditor] = useState<{ name: string; value: string; error?: string } | null>(null);
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [focusZone, setFocusZone] = useState<FocusZone>("cards");
