@@ -1437,6 +1437,20 @@ const Index = () => {
       </div>
       </div>
 
+      {/* Popup za dodjelu broja omiljenom kanalu */}
+      {numberEditor && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/60">
+          <div className="w-[360px] rounded-2xl border-2 border-accent bg-card/95 px-6 py-6 text-center">
+            <p className="text-sm text-muted-foreground mb-1">{t("home.assignNumber")}</p>
+            <p className="text-base font-semibold text-foreground mb-4 truncate">{numberEditor.name}</p>
+            <div className="text-4xl font-bold tabular-nums text-accent tracking-widest mb-4">
+              {numberEditor.value || "—"}
+            </div>
+            <p className="text-xs text-muted-foreground">{t("home.assignNumberHint")}</p>
+          </div>
+        </div>
+      )}
+
     </motion.div>
   );
 };
