@@ -799,13 +799,26 @@ const Index = () => {
         e.stopPropagation();
         if (/^\d$/.test(e.key)) {
           setNumberEditor((prev) =>
-            prev ? { ...prev, value: (prev.value + e.key).replace(/^0+/, "").slice(0, 3) } : prev,
+            prev
+              ? { ...prev, error: "", value: (prev.value + e.key).replace(/^0+/, "").slice(0, 3) }
+              : prev,
           );
           return;
         }
         if (e.key === "Enter") {
           const num = parseInt(numberEditor.value, 10);
-          if (!isNaN(num) && num > 0) setFavoriteNumber(numberEditor.name, num);
+          if (isNaN(num) || num <= 0) {
+            setNumberEditor(null);
+            return;
+          }
+          const taken = favorites.find((n) => n !== numberEditor.name && favoriteNumber(n) === num);
+          if (taken) {
+            setNumberEditor((prev) =>
+              prev ? { ...prev, value: "", error: t("home.numberTaken", { channel: taken }) } : prev,
+            );
+            return;
+          }
+          setFavoriteNumber(numberEditor.name, num);
           setNumberEditor(null);
           return;
         }
@@ -819,6 +832,7 @@ const Index = () => {
         }
         return;
       }
+
 
       // U listi omiljenih: pritisak na cifru otvara dodjelu broja fokusiranom kanalu
       if (focusZone === "epg" && showFavorites && /^\d$/.test(e.key)) {
