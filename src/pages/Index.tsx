@@ -445,6 +445,25 @@ const Index = () => {
   const { favorites, toggleFavorite, isFavorite, favoriteNumber, setFavoriteNumber } = useFavorites();
   // Dodjela vlastitog broja omiljenom kanalu (unos brojevima daljinskog)
   const [numberEditor, setNumberEditor] = useState<{ name: string; value: string; error?: string } | null>(null);
+  /** Dugi pritisak OK/Enter na omiljenom kanalu otvara uređivanje broja; kratki pokreće program. */
+  const enterHoldTimerRef = useRef<number | null>(null);
+  const enterHoldConsumedRef = useRef(false);
+  const clearEnterHold = useCallback(() => {
+    if (enterHoldTimerRef.current !== null) {
+      window.clearTimeout(enterHoldTimerRef.current);
+      enterHoldTimerRef.current = null;
+    }
+  }, []);
+  useEffect(() => {
+    const onUp = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      clearEnterHold();
+      enterHoldConsumedRef.current = false;
+    };
+    window.addEventListener("keyup", onUp);
+    return () => window.removeEventListener("keyup", onUp);
+  }, [clearEnterHold]);
+
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [focusZone, setFocusZone] = useState<FocusZone>("cards");
