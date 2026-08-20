@@ -836,6 +836,7 @@ const Index = () => {
           return;
         }
         if (e.key === "Enter") {
+          if (e.repeat) return;
           const num = parseInt(numberEditor.value, 10);
           if (isNaN(num) || num <= 0) {
             setNumberEditor(null);
