@@ -25,6 +25,10 @@ import {
   ArrowUpFromLine,
   Radio,
   RefreshCw,
+  Fingerprint,
+  Home,
+  Router,
+  Cable,
   LucideIcon,
   createLucideIcon,
   type IconNode,
@@ -132,6 +136,39 @@ const SPEED_PHASE_LABELS: Record<SpeedTestPhase, string> = {
   done: "Test završen",
 };
 
+// ─────────────────────────────────────────────────────────────
+// Network status — dohvat mrežnih podataka o uređaju.
+// Preglednik (web) nema pristup MAC adresi / gateway-u / lokalnoj IP adresi,
+// pa se ovi podaci u pravoj implementaciji moraju dohvatiti sa strane
+// uređaja/OS-a (npr. Electron/Tizen/WebOS native most ili backend servis
+// koji čita mrežno sučelje). Do tada vraćamo simulirane podatke kako bi UI
+// bio potpuno funkcionalan.
+// ─────────────────────────────────────────────────────────────
+
+type ConnectionType = "ethernet" | "wifi";
+
+interface NetworkStatusInfo {
+  mac: string;
+  localIp: string;
+  publicIp: string;
+  gateway: string;
+  connectionType: ConnectionType;
+}
+
+async function fetchNetworkStatus(): Promise<NetworkStatusInfo> {
+  // TODO: zamijeni stvarnim sustavskim/native pozivom koji čita mrežno sučelje uređaja
+  // (MAC, lokalna IP, gateway, tip veze). Javna IP adresa se realno može dohvatiti
+  // i s klijenta (npr. poziv prema vanjskom "what is my ip" servisu).
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  return {
+    mac: "A4:5E:60:3B:2C:19",
+    localIp: "192.168.1.15",
+    publicIp: "93.142.xxx.xxx",
+    gateway: "192.168.1.1",
+    connectionType: "ethernet",
+  };
+}
+
 const Settings = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -152,7 +189,7 @@ const Settings = () => {
     languages.findIndex((l) => l.code === i18n.language),
   );
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [view, setView] = useState<"menu" | "language" | "internet" | "device" | "speedtest">("menu");
+  const [view, setView] = useState<"menu" | "language" | "internet" | "device" | "speedtest" | "networkstatus">("menu");
   const [langFocused, setLangFocused] = useState(initialLangIdx);
   const [selectedLang, setSelectedLang] = useState(initialLangIdx);
   const [scrollStart, setScrollStart] = useState(0);
@@ -185,6 +222,11 @@ const Settings = () => {
   const [stResult, setStResult] = useState<SpeedTestResult>({ ping: 0, download: 0, upload: 0 });
   const stTimeoutsRef = useRef<number[]>([]);
   const stRunIdRef = useRef(0);
+
+  // Network status state
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatusInfo | null>(null);
+  const [networkStatusLoading, setNetworkStatusLoading] = useState(false);
+  const nsRunIdRef = useRef(0);
 
   const applyLang = (idx: number) => {
     setSelectedLang(idx);
@@ -258,10 +300,23 @@ const Settings = () => {
     setView("speedtest");
   }, [resetSpeedTest]);
 
+  const openNetworkStatus = useCallback(() => {
+    const runId = ++nsRunIdRef.current;
+    setView("networkstatus");
+    setNetworkStatus(null);
+    setNetworkStatusLoading(true);
+    fetchNetworkStatus().then((data) => {
+      if (nsRunIdRef.current !== runId) return; // prikaz je napušten u međuvremenu
+      setNetworkStatus(data);
+      setNetworkStatusLoading(false);
+    });
+  }, []);
+
   useEffect(() => {
     return () => {
       clearSpeedTestTimers();
       stRunIdRef.current += 1;
+      nsRunIdRef.current += 1;
     };
   }, [clearSpeedTestTimers]);
 
@@ -271,10 +326,14 @@ const Settings = () => {
         openSpeedTest();
         return;
       }
+      if (key === "networkStatus") {
+        openNetworkStatus();
+        return;
+      }
       // TODO: poveži ostale stavke sa stvarnom akcijom/rutom
       // npr. navigate(`/settings/internet/${key}`) ili otvori odgovarajući modal
     },
-    [openSpeedTest],
+    [openSpeedTest, openNetworkStatus],
   );
 
   const handleDeviceItemSelect = useCallback((key: string) => {
@@ -430,6 +489,18 @@ const Settings = () => {
           case "Escape":
             e.preventDefault();
             resetSpeedTest();
+            setView("internet");
+            break;
+        }
+        return;
+      }
+
+      if (view === "networkstatus") {
+        switch (e.key) {
+          case "Backspace":
+          case "Escape":
+            e.preventDefault();
+            nsRunIdRef.current += 1;
             setView("internet");
             break;
         }
@@ -618,6 +689,15 @@ const Settings = () => {
             setView("internet");
           }}
           onStart={startSpeedTest}
+        />
+      ) : view === "networkstatus" ? (
+        <NetworkStatusView
+          loading={networkStatusLoading}
+          data={networkStatus}
+          onBack={() => {
+            nsRunIdRef.current += 1;
+            setView("internet");
+          }}
         />
       ) : (
         <>
@@ -1053,6 +1133,70 @@ const SpeedTestView = ({ phase, liveValue, result, onBack, onStart }: SpeedTestV
       </button>
 
       <p className="text-xs text-muted-foreground mt-4">Enter pokreće test · Escape/Natrag se vraća</p>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+// Network status — prezentacijske komponente
+// ─────────────────────────────────────────────────────────────
+
+interface NetworkStatusViewProps {
+  loading: boolean;
+  data: NetworkStatusInfo | null;
+  onBack: () => void;
+}
+
+const NetworkInfoRow = ({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) => (
+  <div className="flex items-center gap-4 px-5 py-4 rounded-xl border border-border/30 bg-white/5">
+    <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/40 flex items-center justify-center shrink-0">
+      <Icon className="w-4.5 h-4.5 text-accent" />
+    </div>
+    <div className="flex flex-col min-w-0">
+      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-base font-medium text-foreground truncate">{value}</span>
+    </div>
+  </div>
+);
+
+const NetworkStatusView = ({ loading, data, onBack }: NetworkStatusViewProps) => {
+  const isWifi = data?.connectionType === "wifi";
+  const ConnectionIcon = isWifi ? Wifi : Cable;
+  const connectionLabel = isWifi ? "Bežično (Wi-Fi)" : "Žično (Ethernet)";
+  const placeholder = "—";
+
+  return (
+    <div className="relative z-10 flex-1 h-full flex flex-col items-center justify-center px-16">
+      <button
+        onClick={onBack}
+        className="absolute top-10 left-16 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Natrag na internet postavke
+      </button>
+
+      <span className="text-xs tracking-[3px] text-muted-foreground uppercase mb-2">Status mreže</span>
+      <h1 className="text-2xl font-light text-foreground mb-8">
+        {loading ? "Dohvaćanje mrežnih podataka..." : "Podaci o mrežnoj vezi"}
+      </h1>
+
+      <div className="grid grid-cols-1 gap-3 w-full max-w-md">
+        <NetworkInfoRow icon={Fingerprint} label="MAC adresa" value={loading || !data ? placeholder : data.mac} />
+        <NetworkInfoRow icon={Home} label="Lokalna IP adresa" value={loading || !data ? placeholder : data.localIp} />
+        <NetworkInfoRow icon={Globe} label="Javna IP adresa" value={loading || !data ? placeholder : data.publicIp} />
+        <NetworkInfoRow
+          icon={Router}
+          label="Gateway (Router IP)"
+          value={loading || !data ? placeholder : data.gateway}
+        />
+        <NetworkInfoRow
+          icon={ConnectionIcon}
+          label="Status veze"
+          value={loading || !data ? placeholder : connectionLabel}
+        />
+      </div>
+
+      <p className="text-xs text-muted-foreground mt-6">Escape/Natrag se vraća</p>
     </div>
   );
 };
