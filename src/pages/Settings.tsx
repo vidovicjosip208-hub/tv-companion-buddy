@@ -19,20 +19,33 @@ import {
   Server,
   Power,
   Timer,
-  Gamepad2,
-  Sparkles,
+  Brush,
   ArrowLeft,
   ArrowDownToLine,
   ArrowUpFromLine,
   Radio,
   RefreshCw,
   LucideIcon,
+  createLucideIcon,
+  type IconNode,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import StarryBackground from "@/components/StarryBackground";
 import { cn } from "@/lib/utils";
 import settingsGearbox from "@/assets/settings-gearbox.png";
 import { LANGUAGE_OPTIONS } from "@/i18n";
+
+// Prilagođena ikona daljinskog upravljača (lucide nema ugrađenu "Remote" ikonu)
+const remoteIconNode: IconNode = [
+  ["rect", { x: "7", y: "2", width: "10", height: "20", rx: "3" }],
+  ["path", { d: "M12 6.5h.01" }],
+  ["path", { d: "M9.5 10h.01" }],
+  ["path", { d: "M14.5 10h.01" }],
+  ["path", { d: "M12 13h.01" }],
+  ["path", { d: "M9.5 16h.01" }],
+  ["path", { d: "M14.5 16h.01" }],
+];
+const Remote = createLucideIcon("remote", remoteIconNode);
 
 const languages = LANGUAGE_OPTIONS;
 
@@ -68,8 +81,8 @@ const internetItems = [
 const deviceItems = [
   { icon: Power, label: "Startup Action", key: "startupAction" },
   { icon: Timer, label: "Auto Sleep Timer", key: "autoSleepTimer" },
-  { icon: Gamepad2, label: "Remote Controls", key: "remoteControls" },
-  { icon: Sparkles, label: "Storage & Cache", key: "storageCache" },
+  { icon: Remote, label: "Remote Controls", key: "remoteControls" },
+  { icon: Brush, label: "Storage & Cache", key: "storageCache" },
 ];
 
 // ─────────────────────────────────────────────────────────────
