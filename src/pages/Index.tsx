@@ -1081,8 +1081,6 @@ const Index = () => {
             openPlayerFromEPG(epgIndex);
           } else if (focusZone === "epgPrograms") {
             openPlayerFromEPG(epgIndex);
-          } else if (focusZone === "epgPrograms") {
-            openPlayerFromEPG(epgIndex);
           } else if (focusZone === "cards") {
             openPlayerFromCard(liveChannelCards[cardIndex]);
           } else if (focusZone === "cameraHeaders") {
