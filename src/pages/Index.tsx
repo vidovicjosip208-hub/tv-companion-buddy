@@ -1460,7 +1460,11 @@ const Index = () => {
             <div className="text-4xl font-bold tabular-nums text-accent tracking-widest mb-4">
               {numberEditor.value || "—"}
             </div>
-            <p className="text-xs text-muted-foreground">{t("home.assignNumberHint")}</p>
+            {numberEditor.error ? (
+              <p className="text-xs text-destructive">{numberEditor.error}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t("home.assignNumberHint")}</p>
+            )}
           </div>
         </div>
       )}
