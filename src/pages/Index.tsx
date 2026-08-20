@@ -1099,6 +1099,9 @@ const Index = () => {
       liveChannelCards,
       numberEditor,
       setFavoriteNumber,
+      favorites,
+      favoriteNumber,
+      t,
     ],
   );
 
