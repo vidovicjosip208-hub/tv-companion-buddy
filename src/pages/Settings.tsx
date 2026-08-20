@@ -35,6 +35,18 @@ import { cn } from "@/lib/utils";
 import settingsGearbox from "@/assets/settings-gearbox.png";
 import { LANGUAGE_OPTIONS } from "@/i18n";
 
+// Prilagođena ikona daljinskog upravljača (lucide nema ugrađenu "Remote" ikonu)
+const remoteIconNode: IconNode = [
+  ["rect", { x: "7", y: "2", width: "10", height: "20", rx: "3" }],
+  ["path", { d: "M12 6.5h.01" }],
+  ["path", { d: "M9.5 10h.01" }],
+  ["path", { d: "M14.5 10h.01" }],
+  ["path", { d: "M12 13h.01" }],
+  ["path", { d: "M9.5 16h.01" }],
+  ["path", { d: "M14.5 16h.01" }],
+];
+const Remote = createLucideIcon("remote", remoteIconNode);
+
 const languages = LANGUAGE_OPTIONS;
 
 const VISIBLE_COUNT = 4;
