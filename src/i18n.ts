@@ -29,7 +29,7 @@ const hr: Bundle = {
     languageTitle: "Jezik", languageSubtitle: "Odaberite željeni jezik sučelja.",
     parental: "Roditeljski nadzor", internet: "Internet postavke", device: "Postavke uređaja", language: "Jezik", changeList: "Promijeni listu",
   },
-  home: { camerasLive: "Kamere uživo", favoriteChannels: "Omiljeni kanali", radioStations: "Radio stanice", assignNumber: "Dodijeli broj kanala", assignNumberHint: "Unesite broj brojevima daljinskog · OK potvrda · Back izlaz", liveLabel: "UŽIVO" },
+  home: { camerasLive: "Kamere uživo", favoriteChannels: "Omiljeni kanali", radioStations: "Radio stanice", assignNumber: "Dodijeli broj kanala", assignNumberHint: "Unesite broj brojevima daljinskog · OK potvrda · Back izlaz", numberTaken: "Broj {{channel}} je već zauzet. Uklonite ili izmijenite stari kanal.", liveLabel: "UŽIVO" },
   tvCategories: {
     documentary: "Dokumentarni", kids: "Dječji", film: "Filmski", sports: "Sportski",
     entertainment: "Zabavni", "4k": "4K/UHD", local: "Lokalni kanali", international: "Međunarodni FTA",
@@ -63,7 +63,7 @@ const hr: Bundle = {
 const en: Bundle = {
   sidebar: { home: "Home", tv: "TV Channels", radio: "Radio Stations", favorites: "Favorites", videoteka: "Library", cameras: "Live Cameras", settings: "Settings", profile: "Profile" },
   settings: { title: "Settings", subtitle: "Press an option to manage your device settings.", languageTitle: "Language", languageSubtitle: "Choose your preferred interface language.", parental: "Parental Controls", internet: "Internet Settings", device: "Device Controls", language: "Language", changeList: "Change list" },
-  home: { camerasLive: "Live Cameras", favoriteChannels: "Favorite Channels", radioStations: "Radio Stations", assignNumber: "Assign channel number", assignNumberHint: "Enter a number with the remote · OK to confirm · Back to exit", liveLabel: "LIVE" },
+  home: { camerasLive: "Live Cameras", favoriteChannels: "Favorite Channels", radioStations: "Radio Stations", assignNumber: "Assign channel number", assignNumberHint: "Enter a number with the remote · OK to confirm · Back to exit", numberTaken: "Number already used by {{channel}}. Remove or change it first.", liveLabel: "LIVE" },
   tvCategories: { documentary: "Documentary", kids: "Kids", film: "Movies", sports: "Sports", entertainment: "Entertainment", "4k": "4K/UHD", local: "Local Channels", international: "International FTA", adult: "Adult Channels", youtube: "YouTube" },
   tvFilters: { live: "Live", schedule: "TV Schedule" },
   videoteka: { home: "Home", shows: "Shows", movies: "Movies", myList: "My List", search: "Search..." },
@@ -80,7 +80,7 @@ const en: Bundle = {
 const de: Bundle = {
   sidebar: { home: "Startseite", tv: "TV-Kanäle", radio: "Radiosender", favorites: "Favoriten", videoteka: "Videothek", cameras: "Live-Kameras", settings: "Einstellungen", profile: "Profil" },
   settings: { title: "Einstellungen", subtitle: "Wählen Sie eine Option, um Ihre Geräteeinstellungen zu verwalten.", languageTitle: "Sprache", languageSubtitle: "Wählen Sie Ihre bevorzugte Sprache.", parental: "Kindersicherung", internet: "Internet-Einstellungen", device: "Geräteeinstellungen", language: "Sprache", changeList: "Liste ändern" },
-  home: { camerasLive: "Live-Kameras", favoriteChannels: "Lieblingskanäle", radioStations: "Radiosender", assignNumber: "Kanalnummer zuweisen", assignNumberHint: "Nummer mit der Fernbedienung eingeben · OK bestätigen · Back beenden", liveLabel: "LIVE" },
+  home: { camerasLive: "Live-Kameras", favoriteChannels: "Lieblingskanäle", radioStations: "Radiosender", assignNumber: "Kanalnummer zuweisen", assignNumberHint: "Nummer mit der Fernbedienung eingeben · OK bestätigen · Back beenden", numberTaken: "Nummer bereits von {{channel}} belegt. Zuerst entfernen oder ändern.", liveLabel: "LIVE" },
   tvCategories: { documentary: "Dokumentation", kids: "Kinder", film: "Filme", sports: "Sport", entertainment: "Unterhaltung", "4k": "4K/UHD", local: "Lokale Kanäle", international: "Internationale FTA", adult: "Erwachsene", youtube: "YouTube" },
   tvFilters: { live: "Live", schedule: "TV-Programm" },
   videoteka: { home: "Start", shows: "Serien", movies: "Filme", myList: "Meine Liste", search: "Suchen..." },
@@ -97,7 +97,7 @@ const de: Bundle = {
 const fr: Bundle = {
   sidebar: { home: "Accueil", tv: "Chaînes TV", radio: "Radios", favorites: "Favoris", videoteka: "Vidéothèque", cameras: "Caméras en direct", settings: "Paramètres", profile: "Profil" },
   settings: { title: "Paramètres", subtitle: "Appuyez sur une option pour gérer les paramètres de votre appareil.", languageTitle: "Langue", languageSubtitle: "Choisissez votre langue préférée.", parental: "Contrôle parental", internet: "Paramètres Internet", device: "Paramètres de l'appareil", language: "Langue", changeList: "Changer de liste" },
-  home: { camerasLive: "Caméras en direct", favoriteChannels: "Chaînes favorites", radioStations: "Stations radio", assignNumber: "Attribuer un numéro", assignNumberHint: "Saisissez un numéro avec la télécommande · OK pour confirmer · Retour pour quitter", liveLabel: "EN DIRECT" },
+  home: { camerasLive: "Caméras en direct", favoriteChannels: "Chaînes favorites", radioStations: "Stations radio", assignNumber: "Attribuer un numéro", assignNumberHint: "Saisissez un numéro avec la télécommande · OK pour confirmer · Retour pour quitter", numberTaken: "Numéro déjà utilisé par {{channel}}. Supprimez-le ou modifiez-le.", liveLabel: "EN DIRECT" },
   tvCategories: { documentary: "Documentaire", kids: "Enfants", film: "Films", sports: "Sport", entertainment: "Divertissement", "4k": "4K/UHD", local: "Chaînes locales", international: "FTA Internationales", adult: "Adultes", youtube: "YouTube" },
   tvFilters: { live: "En direct", schedule: "Programme TV" },
   videoteka: { home: "Accueil", shows: "Séries", movies: "Films", myList: "Ma liste", search: "Rechercher..." },
@@ -114,7 +114,7 @@ const fr: Bundle = {
 const es: Bundle = {
   sidebar: { home: "Inicio", tv: "Canales TV", radio: "Radios", favorites: "Favoritos", videoteka: "Videoteca", cameras: "Cámaras en vivo", settings: "Ajustes", profile: "Perfil" },
   settings: { title: "Ajustes", subtitle: "Pulse una opción para gestionar los ajustes del dispositivo.", languageTitle: "Idioma", languageSubtitle: "Elija su idioma preferido.", parental: "Control parental", internet: "Ajustes de Internet", device: "Ajustes del dispositivo", language: "Idioma", changeList: "Cambiar lista" },
-  home: { camerasLive: "Cámaras en vivo", favoriteChannels: "Canales favoritos", radioStations: "Emisoras de radio", assignNumber: "Asignar número de canal", assignNumberHint: "Introduce un número con el mando · OK para confirmar · Atrás para salir", liveLabel: "EN VIVO" },
+  home: { camerasLive: "Cámaras en vivo", favoriteChannels: "Canales favoritos", radioStations: "Emisoras de radio", assignNumber: "Asignar número de canal", assignNumberHint: "Introduce un número con el mando · OK para confirmar · Atrás para salir", numberTaken: "Número ya usado por {{channel}}. Elimínalo o cámbialo primero.", liveLabel: "EN VIVO" },
   tvCategories: { documentary: "Documental", kids: "Infantil", film: "Películas", sports: "Deportes", entertainment: "Entretenimiento", "4k": "4K/UHD", local: "Canales locales", international: "FTA Internacionales", adult: "Adultos", youtube: "YouTube" },
   tvFilters: { live: "En vivo", schedule: "Programación" },
   videoteka: { home: "Inicio", shows: "Series", movies: "Películas", myList: "Mi lista", search: "Buscar..." },
@@ -131,7 +131,7 @@ const es: Bundle = {
 const it: Bundle = {
   sidebar: { home: "Home", tv: "Canali TV", radio: "Radio", favorites: "Preferiti", videoteka: "Videoteca", cameras: "Telecamere live", settings: "Impostazioni", profile: "Profilo" },
   settings: { title: "Impostazioni", subtitle: "Premi un'opzione per gestire le impostazioni del dispositivo.", languageTitle: "Lingua", languageSubtitle: "Scegli la tua lingua preferita.", parental: "Controllo genitori", internet: "Impostazioni Internet", device: "Impostazioni dispositivo", language: "Lingua", changeList: "Cambia lista" },
-  home: { camerasLive: "Telecamere live", favoriteChannels: "Canali preferiti", radioStations: "Stazioni radio", assignNumber: "Assegna numero canale", assignNumberHint: "Inserisci un numero col telecomando · OK per confermare · Indietro per uscire", liveLabel: "LIVE" },
+  home: { camerasLive: "Telecamere live", favoriteChannels: "Canali preferiti", radioStations: "Stazioni radio", assignNumber: "Assegna numero canale", assignNumberHint: "Inserisci un numero col telecomando · OK per confermare · Indietro per uscire", numberTaken: "Numero già usato da {{channel}}. Rimuovilo o modificalo.", liveLabel: "LIVE" },
   tvCategories: { documentary: "Documentari", kids: "Bambini", film: "Film", sports: "Sport", entertainment: "Intrattenimento", "4k": "4K/UHD", local: "Canali locali", international: "FTA Internazionali", adult: "Adulti", youtube: "YouTube" },
   tvFilters: { live: "Live", schedule: "Palinsesto" },
   videoteka: { home: "Home", shows: "Serie", movies: "Film", myList: "La mia lista", search: "Cerca..." },
