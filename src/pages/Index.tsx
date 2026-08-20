@@ -448,21 +448,32 @@ const Index = () => {
   /** Dugi pritisak OK/Enter na omiljenom kanalu otvara uređivanje broja; kratki pokreće program. */
   const enterHoldTimerRef = useRef<number | null>(null);
   const enterHoldConsumedRef = useRef(false);
+  const enterShortPressRef = useRef<(() => void) | null>(null);
   const clearEnterHold = useCallback(() => {
     if (enterHoldTimerRef.current !== null) {
       window.clearTimeout(enterHoldTimerRef.current);
       enterHoldTimerRef.current = null;
+      return true;
     }
+    return false;
   }, []);
   useEffect(() => {
     const onUp = (e: KeyboardEvent) => {
       if (e.key !== "Enter") return;
-      clearEnterHold();
+      const wasPending = clearEnterHold();
+      if (wasPending && !enterHoldConsumedRef.current) {
+        enterShortPressRef.current?.();
+      }
+      enterShortPressRef.current = null;
       enterHoldConsumedRef.current = false;
     };
     window.addEventListener("keyup", onUp);
-    return () => window.removeEventListener("keyup", onUp);
+    return () => {
+      window.removeEventListener("keyup", onUp);
+      clearEnterHold();
+    };
   }, [clearEnterHold]);
+
 
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
