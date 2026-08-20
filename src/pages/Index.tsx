@@ -442,7 +442,9 @@ const CATEGORY_TO_DB_MAP: Record<string, string[]> = {
 const Index = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { favorites, toggleFavorite, isFavorite, favoriteNumber } = useFavorites();
+  const { favorites, toggleFavorite, isFavorite, favoriteNumber, setFavoriteNumber } = useFavorites();
+  // Dodjela vlastitog broja omiljenom kanalu (unos brojevima daljinskog)
+  const [numberEditor, setNumberEditor] = useState<{ name: string; value: string } | null>(null);
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [focusZone, setFocusZone] = useState<FocusZone>("cards");
@@ -603,7 +605,7 @@ const Index = () => {
         const [startTime = "00:00", endTime = "00:00"] = card.timeSlot.split(" - ").map((s) => s.trim());
         return {
           id: `favorite-${card.channelName}-${idx}`,
-          number: idx + 1,
+          number: favoriteNumber(card.channelName) || idx + 1,
           name: card.channelName,
           abbreviation: card.channelName.slice(0, 3).toUpperCase(),
           logoUrl: card.logoUrl ?? epgChannel?.logoUrl ?? null,
@@ -612,8 +614,9 @@ const Index = () => {
           programs: [{ title: card.title, startTime, endTime, date: "", isLive: true }],
         };
       })
-      .filter((channel): channel is EPGChannel => Boolean(channel));
-  }, [favorites, liveEpgChannels, liveChannelCards]);
+      .filter((channel): channel is EPGChannel => Boolean(channel))
+      .sort((a, b) => a.number - b.number);
+  }, [favorites, liveEpgChannels, liveChannelCards, favoriteNumber]);
 
   const playerFavoriteChannels: FavoriteChannel[] = useMemo(() => {
     return favoriteEpgChannels.map((ch) => {
@@ -789,6 +792,43 @@ const Index = () => {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (playerVisible) return;
+
+      // Editor za dodjelu broja omiljenom kanalu ima prioritet
+      if (numberEditor) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (/^\d$/.test(e.key)) {
+          setNumberEditor((prev) =>
+            prev ? { ...prev, value: (prev.value + e.key).replace(/^0+/, "").slice(0, 3) } : prev,
+          );
+          return;
+        }
+        if (e.key === "Enter") {
+          const num = parseInt(numberEditor.value, 10);
+          if (!isNaN(num) && num > 0) setFavoriteNumber(numberEditor.name, num);
+          setNumberEditor(null);
+          return;
+        }
+        if (e.key === "Backspace") {
+          setNumberEditor((prev) => (prev && prev.value ? { ...prev, value: prev.value.slice(0, -1) } : null));
+          return;
+        }
+        if (e.key === "Escape" || e.key === "XF86Back") {
+          setNumberEditor(null);
+          return;
+        }
+        return;
+      }
+
+      // U listi omiljenih: pritisak na cifru otvara dodjelu broja fokusiranom kanalu
+      if (focusZone === "epg" && showFavorites && /^\d$/.test(e.key)) {
+        const ch = activeEpgChannels[epgIndex];
+        if (ch) {
+          e.preventDefault();
+          setNumberEditor({ name: ch.name, value: e.key === "0" ? "" : e.key });
+          return;
+        }
+      }
 
       switch (e.key) {
         case "ArrowRight":
@@ -1043,6 +1083,8 @@ const Index = () => {
       openPlayerFromEPG,
       moveCardIndexLive,
       liveChannelCards,
+      numberEditor,
+      setFavoriteNumber,
     ],
   );
 
@@ -1340,6 +1382,7 @@ const Index = () => {
                     isProgramFocused={focusZone === "epgPrograms"}
                     hideSchedule={showRadio}
                     isRadio={showRadio}
+                    showNumbers={showFavorites}
                     onChannelClick={(i) => {
                       setFocusZone("epg");
                       setEpgIndex(i);
