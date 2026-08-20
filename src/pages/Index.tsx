@@ -1048,11 +1048,37 @@ const Index = () => {
 
         case "Enter":
           e.preventDefault();
+          if (focusZone === "epg" && showFavorites) {
+            const favCh = activeEpgChannels[epgIndex];
+            if (favCh) {
+              if (e.repeat) {
+                if (!enterHoldConsumedRef.current && enterHoldTimerRef.current !== null) {
+                  clearEnterHold();
+                  enterHoldConsumedRef.current = true;
+                  enterShortPressRef.current = null;
+                  setNumberEditor({ name: favCh.name, value: "" });
+                }
+                break;
+              }
+              if (enterHoldTimerRef.current !== null || enterHoldConsumedRef.current) break;
+              enterShortPressRef.current = () => openPlayerFromEPG(epgIndex);
+              enterHoldConsumedRef.current = false;
+              enterHoldTimerRef.current = window.setTimeout(() => {
+                enterHoldTimerRef.current = null;
+                enterHoldConsumedRef.current = true;
+                enterShortPressRef.current = null;
+                setNumberEditor({ name: favCh.name, value: "" });
+              }, 650);
+              break;
+            }
+          }
           if (focusZone === "sidebar") {
             handleSidebarAction(sidebarIndex);
           } else if (focusZone === "categories") {
             console.log("Selected category:", tvCategories[categoryIndex]?.label);
           } else if (focusZone === "epg") {
+            openPlayerFromEPG(epgIndex);
+          } else if (focusZone === "epgPrograms") {
             openPlayerFromEPG(epgIndex);
           } else if (focusZone === "epgPrograms") {
             openPlayerFromEPG(epgIndex);
