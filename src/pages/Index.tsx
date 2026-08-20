@@ -444,7 +444,7 @@ const Index = () => {
   const { t } = useTranslation();
   const { favorites, toggleFavorite, isFavorite, favoriteNumber, setFavoriteNumber } = useFavorites();
   // Dodjela vlastitog broja omiljenom kanalu (unos brojevima daljinskog)
-  const [numberEditor, setNumberEditor] = useState<{ name: string; value: string } | null>(null);
+  const [numberEditor, setNumberEditor] = useState<{ name: string; value: string; error?: string } | null>(null);
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [focusZone, setFocusZone] = useState<FocusZone>("cards");
@@ -799,13 +799,26 @@ const Index = () => {
         e.stopPropagation();
         if (/^\d$/.test(e.key)) {
           setNumberEditor((prev) =>
-            prev ? { ...prev, value: (prev.value + e.key).replace(/^0+/, "").slice(0, 3) } : prev,
+            prev
+              ? { ...prev, error: "", value: (prev.value + e.key).replace(/^0+/, "").slice(0, 3) }
+              : prev,
           );
           return;
         }
         if (e.key === "Enter") {
           const num = parseInt(numberEditor.value, 10);
-          if (!isNaN(num) && num > 0) setFavoriteNumber(numberEditor.name, num);
+          if (isNaN(num) || num <= 0) {
+            setNumberEditor(null);
+            return;
+          }
+          const taken = favorites.find((n) => n !== numberEditor.name && favoriteNumber(n) === num);
+          if (taken) {
+            setNumberEditor((prev) =>
+              prev ? { ...prev, value: "", error: t("home.numberTaken", { channel: taken }) } : prev,
+            );
+            return;
+          }
+          setFavoriteNumber(numberEditor.name, num);
           setNumberEditor(null);
           return;
         }
@@ -819,6 +832,7 @@ const Index = () => {
         }
         return;
       }
+
 
       // U listi omiljenih: pritisak na cifru otvara dodjelu broja fokusiranom kanalu
       if (focusZone === "epg" && showFavorites && /^\d$/.test(e.key)) {
@@ -1085,6 +1099,9 @@ const Index = () => {
       liveChannelCards,
       numberEditor,
       setFavoriteNumber,
+      favorites,
+      favoriteNumber,
+      t,
     ],
   );
 
@@ -1446,7 +1463,11 @@ const Index = () => {
             <div className="text-4xl font-bold tabular-nums text-accent tracking-widest mb-4">
               {numberEditor.value || "—"}
             </div>
-            <p className="text-xs text-muted-foreground">{t("home.assignNumberHint")}</p>
+            {numberEditor.error ? (
+              <p className="text-xs text-destructive">{numberEditor.error}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t("home.assignNumberHint")}</p>
+            )}
           </div>
         </div>
       )}

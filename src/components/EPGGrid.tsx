@@ -95,6 +95,16 @@ const ChannelItem = memo(({
           : "bg-transparent hover:bg-muted/20",
       )}
     >
+      {showNumber && (
+        <span
+          className={cn(
+            "flex-shrink-0 min-w-[28px] text-center text-sm font-bold tabular-nums px-1.5 py-0.5 rounded-md border transition-colors",
+            isFocused ? "text-accent border-accent/60 bg-accent/10" : "text-foreground/50 border-border/40",
+          )}
+        >
+          {channel.number}
+        </span>
+      )}
       <div
         className={cn(
           "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
@@ -128,16 +138,7 @@ const ChannelItem = memo(({
       >
         {channel.name}
       </span>
-      {showNumber && (
-        <span
-          className={cn(
-            "ml-auto flex-shrink-0 min-w-[28px] text-center text-sm font-bold tabular-nums px-1.5 py-0.5 rounded-md border transition-colors",
-            isFocused ? "text-accent border-accent/60 bg-accent/10" : "text-foreground/50 border-border/40",
-          )}
-        >
-          {channel.number}
-        </span>
-      )}
+
     </motion.button>
   );
 });
