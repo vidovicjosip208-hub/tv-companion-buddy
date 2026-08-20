@@ -1126,6 +1126,7 @@ const Index = () => {
       }
     },
     [
+      clearEnterHold,
       focusZone,
       sidebarIndex,
       epgIndex,
