@@ -496,11 +496,6 @@ const CATEGORY_TO_DB_MAP: Record<string, string[]> = {
   youtube: [],
 };
 
-// Postavi na true privremeno ako trebaš vidjeti koje evente stvarno šalje daljinski
-// (otvori DevTools/log konzolu na uređaju): ispisat će e.key / e.code / e.keyCode / e.repeat
-// za svaki keydown i keyup dok je numberEditor logika aktivna.
-const DEBUG_REMOTE_KEYS = true;
-
 const Index = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -508,20 +503,10 @@ const Index = () => {
   // Dodjela vlastitog broja omiljenom kanalu (unos brojevima daljinskog)
   const [numberEditor, setNumberEditor] = useState<{ name: string; value: string; error?: string } | null>(null);
 
-  // On-screen debug log — vidljiv direktno na TV ekranu, bez potrebe za dev konzolom
-  // (bitno jer objavljena/published verzija na Lovable-u nema jednostavan pristup konzoli na TV-u).
-  const [debugLog, setDebugLog] = useState<string[]>([]);
-  const pushDebugLog = useCallback((line: string) => {
-    if (!DEBUG_REMOTE_KEYS) return;
-    setDebugLog((prev) => [line, ...prev].slice(0, 12));
-  }, []);
-
   /**
    * Prepoznaje OK/Enter tipku bez obzira na to šalje li je fizička tipkovnica
    * (e.key === "Enter") ili daljinski upravljač, koji često koristi drugačiji
    * identifikator (npr. "OK", "Select", "Accept", ili samo keyCode 13 bez e.key).
-   * Ovo je ključna popravka: prije se svugdje provjeravalo isključivo `e.key === "Enter"`,
-   * pa OK tipka daljinskog jednostavno nikad nije "pogađala" te provjere.
    */
   const isOkKey = useCallback(
     (e: KeyboardEvent) =>
@@ -538,18 +523,11 @@ const Index = () => {
   /**
    * Dugi pritisak OK/Enter na omiljenom kanalu otvara uređivanje broja; kratki pokreće program.
    *
-   * NAPOMENA O DALJINSKOM UPRAVLJAČU (VAŽNO — popravljeno):
-   * Log s ovog TV-a je pokazao da SVAKI keydown stiže s `repeat=false`, čak i kad je
-   * tipka fizički držana — dakle platforma/driver ovog daljinskog uopće ne emitira
-   * "auto-repeat" evente kako ih zna emitirati tipkovnica. Prethodna implementacija je
-   * odluku "je li ovo dugi pritisak" pokušavala donijeti PRIJE keyup-a, oslanjajući se
-   * kombinirano na `setTimeout` i na `e.repeat` granu — što je stvaralo utrku (race)
-   * između timera i eventualnog keyup-a te je na ovom uređaju gotovo uvijek gubilo timer.
-   *
-   * Popravka: umjesto da nagađamo tijekom držanja, odluku donosimo TEK na keyup-u,
-   * mjerenjem stvarno proteklog vremena (Date.now() na keydown, pa razlika na keyup).
-   * Ovo potpuno zaobilazi i `e.repeat` (koji ovaj uređaj ionako ne šalje) i timer race,
-   * i radi identično bez obzira šalje li platforma repeat evente ili ne.
+   * NAPOMENA O DALJINSKOM UPRAVLJAČU:
+   * Ovaj daljinski ne emitira "auto-repeat" evente (svaki keydown stiže s repeat=false čak
+   * i kad je tipka fizički držana), pa se dugi/kratki pritisak odlučuje na keyup-u, mjerenjem
+   * stvarno proteklog vremena (Date.now() na keydown, razlika na keyup) — umjesto oslanjanja
+   * na e.repeat ili na setTimeout koji bi se utrkivao s keyup-om.
    */
   const ENTER_HOLD_MS = 650;
   const enterPressActiveRef = useRef(false);
@@ -558,10 +536,7 @@ const Index = () => {
   const enterLongPressActionRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    const fmt = (type: string, e: KeyboardEvent) =>
-      `${type} | key="${e.key}" code="${e.code}" keyCode=${e.keyCode} repeat=${e.repeat}`;
     const onUp = (e: KeyboardEvent) => {
-      pushDebugLog(fmt("UP", e));
       if (!isOkKey(e)) return;
       if (!enterPressActiveRef.current) return;
       const start = enterPressStartRef.current;
@@ -576,20 +551,14 @@ const Index = () => {
       enterShortPressActionRef.current = null;
       enterLongPressActionRef.current = null;
     };
-    const onDownDebug = (e: KeyboardEvent) => {
-      pushDebugLog(fmt("DOWN", e));
-    };
     // capture: true — ovaj listener mora primiti keyup PRIJE nego što ga eventualno
     // "pojede" stopPropagation() u focus-zone routing sloju (useZoneKeys), koji inače
     // može spriječiti da globalni bubble-fazni listener uopće dobije event.
     window.addEventListener("keyup", onUp, { capture: true });
-    if (DEBUG_REMOTE_KEYS) window.addEventListener("keydown", onDownDebug, { capture: true });
     return () => {
       window.removeEventListener("keyup", onUp, { capture: true } as EventListenerOptions);
-      if (DEBUG_REMOTE_KEYS)
-        window.removeEventListener("keydown", onDownDebug, { capture: true } as EventListenerOptions);
     };
-  }, [isOkKey, pushDebugLog]);
+  }, [isOkKey]);
 
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -939,8 +908,6 @@ const Index = () => {
     (e: KeyboardEvent) => {
       if (playerVisible) return;
 
-      pushDebugLog(`ZONE | key="${e.key}" code="${e.code}" keyCode=${e.keyCode} repeat=${e.repeat}`);
-
       // Editor za dodjelu broja omiljenom kanalu ima prioritet
       if (numberEditor) {
         e.preventDefault();
@@ -1175,11 +1142,10 @@ const Index = () => {
           if (focusZone === "epg" && showFavorites) {
             const favCh = activeEpgChannels[epgIndex];
             if (favCh) {
-              // Popravka: odluku kratak/dug pritisak sada donosimo na keyup-u (vidi
-              // useEffect gore), mjereći stvarno proteklo vrijeme. Ovdje samo, na prvi
-              // keydown ovog pritiska, zabilježimo trenutak početka i pripremimo obje
-              // moguće akcije; ignoriramo eventualne dodatne keydown evente dok se
-              // tipka ne otpusti (enterPressActiveRef sprječava ponovni start).
+              // Odluku kratak/dug pritisak donosimo na keyup-u (vidi useEffect gore).
+              // Ovdje, na prvi keydown ovog pritiska, zabilježimo trenutak početka i
+              // pripremimo obje moguće akcije; enterPressActiveRef sprječava ponovni
+              // start dok se tipka ne otpusti.
               if (!enterPressActiveRef.current) {
                 enterPressActiveRef.current = true;
                 enterPressStartRef.current = Date.now();
@@ -1241,7 +1207,6 @@ const Index = () => {
     },
     [
       isOkKey,
-      pushDebugLog,
       focusZone,
       sidebarIndex,
       epgIndex,
@@ -1641,18 +1606,6 @@ const Index = () => {
               <p className="text-xs text-muted-foreground">{t("home.assignNumberHint")}</p>
             )}
           </div>
-        </div>
-      )}
-
-      {/* DEBUG: prikaz zadnjih tipki s daljinskog direktno na ekranu — makni kad završiš testiranje */}
-      {DEBUG_REMOTE_KEYS && (
-        <div className="fixed bottom-2 left-2 right-2 z-[100] max-h-[40vh] overflow-y-auto rounded-lg bg-black/85 p-3 font-mono text-[11px] leading-tight text-lime-300 pointer-events-none">
-          <div className="mb-1 text-yellow-300">REMOTE DEBUG — pritisni OK i drži, pa gledaj ispod:</div>
-          {debugLog.length === 0 ? (
-            <div className="text-muted-foreground">(još nema eventova — pritisni bilo koju tipku)</div>
-          ) : (
-            debugLog.map((line, i) => <div key={i}>{line}</div>)
-          )}
         </div>
       )}
     </motion.div>
