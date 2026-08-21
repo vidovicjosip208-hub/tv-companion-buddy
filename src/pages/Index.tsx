@@ -14,6 +14,7 @@ import ProfileSelection from "@/components/ProfileSelection";
 import VideoPlayer, { PlayerData, FavoriteChannel } from "@/components/VideoPlayer";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useChannels, useEPGData } from "@/hooks/useChannels";
+import liveCamsLogo from "@/assets/livecams-logo.png.asset.json";
 
 interface ChannelCard {
   title: string;
