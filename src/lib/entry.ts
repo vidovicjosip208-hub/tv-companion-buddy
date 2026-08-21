@@ -24,7 +24,7 @@ export const markEntered = () => {
 
 export const hasEntered = () => {
   try {
-    return true; // TEMP TEST BYPASS
+    return enteredThisBoot && sessionStorage.getItem(KEY) === "1";
   } catch {
     return false;
   }
@@ -55,7 +55,7 @@ export const setSignedIn = () => {
 
 export const isSignedIn = () => {
   try {
-    return true; // TEMP TEST BYPASS
+    return localStorage.getItem(SIGNED_IN_KEY) === "1";
   } catch {
     return false;
   }
