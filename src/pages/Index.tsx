@@ -508,6 +508,14 @@ const Index = () => {
   // Dodjela vlastitog broja omiljenom kanalu (unos brojevima daljinskog)
   const [numberEditor, setNumberEditor] = useState<{ name: string; value: string; error?: string } | null>(null);
 
+  // On-screen debug log — vidljiv direktno na TV ekranu, bez potrebe za dev konzolom
+  // (bitno jer objavljena/published verzija na Lovable-u nema jednostavan pristup konzoli na TV-u).
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+  const pushDebugLog = useCallback((line: string) => {
+    if (!DEBUG_REMOTE_KEYS) return;
+    setDebugLog((prev) => [line, ...prev].slice(0, 12));
+  }, []);
+
   /**
    * Prepoznaje OK/Enter tipku bez obzira na to šalje li je fizička tipkovnica
    * (e.key === "Enter") ili daljinski upravljač, koji često koristi drugačiji
@@ -553,11 +561,10 @@ const Index = () => {
     return false;
   }, []);
   useEffect(() => {
+    const fmt = (type: string, e: KeyboardEvent) =>
+      `${type} | key="${e.key}" code="${e.code}" keyCode=${e.keyCode} repeat=${e.repeat}`;
     const onUp = (e: KeyboardEvent) => {
-      if (DEBUG_REMOTE_KEYS) {
-        // eslint-disable-next-line no-console
-        console.log("[remote-debug] keyup", { key: e.key, code: e.code, keyCode: e.keyCode, repeat: e.repeat });
-      }
+      pushDebugLog(fmt("UP", e));
       if (!isOkKey(e)) return;
       const wasPending = clearEnterHold();
       if (wasPending && !enterHoldConsumedRef.current) {
@@ -567,9 +574,7 @@ const Index = () => {
       enterHoldConsumedRef.current = false;
     };
     const onDownDebug = (e: KeyboardEvent) => {
-      if (!DEBUG_REMOTE_KEYS) return;
-      // eslint-disable-next-line no-console
-      console.log("[remote-debug] keydown", { key: e.key, code: e.code, keyCode: e.keyCode, repeat: e.repeat });
+      pushDebugLog(fmt("DOWN", e));
     };
     // capture: true — ovaj listener mora primiti keyup PRIJE nego što ga eventualno
     // "pojede" stopPropagation() u focus-zone routing sloju (useZoneKeys), koji inače
@@ -582,7 +587,7 @@ const Index = () => {
         window.removeEventListener("keydown", onDownDebug, { capture: true } as EventListenerOptions);
       clearEnterHold();
     };
-  }, [clearEnterHold, isOkKey]);
+  }, [clearEnterHold, isOkKey, pushDebugLog]);
 
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -932,15 +937,7 @@ const Index = () => {
     (e: KeyboardEvent) => {
       if (playerVisible) return;
 
-      if (DEBUG_REMOTE_KEYS) {
-        // eslint-disable-next-line no-console
-        console.log("[remote-debug] handleKeyDown", {
-          key: e.key,
-          code: e.code,
-          keyCode: e.keyCode,
-          repeat: e.repeat,
-        });
-      }
+      pushDebugLog(`ZONE | key="${e.key}" code="${e.code}" keyCode=${e.keyCode} repeat=${e.repeat}`);
 
       // Editor za dodjelu broja omiljenom kanalu ima prioritet
       if (numberEditor) {
@@ -1250,6 +1247,7 @@ const Index = () => {
     [
       clearEnterHold,
       isOkKey,
+      pushDebugLog,
       focusZone,
       sidebarIndex,
       epgIndex,
@@ -1649,6 +1647,18 @@ const Index = () => {
               <p className="text-xs text-muted-foreground">{t("home.assignNumberHint")}</p>
             )}
           </div>
+        </div>
+      )}
+
+      {/* DEBUG: prikaz zadnjih tipki s daljinskog direktno na ekranu — makni kad završiš testiranje */}
+      {DEBUG_REMOTE_KEYS && (
+        <div className="fixed bottom-2 left-2 right-2 z-[100] max-h-[40vh] overflow-y-auto rounded-lg bg-black/85 p-3 font-mono text-[11px] leading-tight text-lime-300 pointer-events-none">
+          <div className="mb-1 text-yellow-300">REMOTE DEBUG — pritisni OK i drži, pa gledaj ispod:</div>
+          {debugLog.length === 0 ? (
+            <div className="text-muted-foreground">(još nema eventova — pritisni bilo koju tipku)</div>
+          ) : (
+            debugLog.map((line, i) => <div key={i}>{line}</div>)
+          )}
         </div>
       )}
     </motion.div>
