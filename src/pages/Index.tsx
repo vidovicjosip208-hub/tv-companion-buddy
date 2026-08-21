@@ -308,7 +308,16 @@ const PROFILE_INDEX = 7;
 
 const CARDS_ROWS = 2;
 
-type FocusZone = "sidebar" | "categories" | "filters" | "epg" | "epgPrograms" | "cards" | "cameras" | "cameraHeaders" | "radio";
+type FocusZone =
+  | "sidebar"
+  | "categories"
+  | "filters"
+  | "epg"
+  | "epgPrograms"
+  | "cards"
+  | "cameras"
+  | "cameraHeaders"
+  | "radio";
 
 interface CameraItem {
   id: string;
@@ -320,14 +329,62 @@ interface CameraItem {
 }
 
 const liveCameras: CameraItem[] = [
-  { id: "cam1", name: "Zagreb - Trg", location: "Zagreb", country: "HR", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
-  { id: "cam2", name: "Split - Riva", location: "Split", country: "HR", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
-  { id: "cam3", name: "Dubrovnik - Stradun", location: "Dubrovnik", country: "HR", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
-  { id: "cam4", name: "Beograd - Kalemegdan", location: "Beograd", country: "RS", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
-  { id: "cam5", name: "Sarajevo - Baščaršija", location: "Sarajevo", country: "BA", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
-  { id: "cam6", name: "Ljubljana - Prešernov trg", location: "Ljubljana", country: "SI", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
-  { id: "cam7", name: "Podgorica - Centar", location: "Podgorica", country: "ME", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
-  { id: "cam8", name: "Skopje - Ploštad", location: "Skopje", country: "MK", thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80" },
+  {
+    id: "cam1",
+    name: "Zagreb - Trg",
+    location: "Zagreb",
+    country: "HR",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
+  {
+    id: "cam2",
+    name: "Split - Riva",
+    location: "Split",
+    country: "HR",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
+  {
+    id: "cam3",
+    name: "Dubrovnik - Stradun",
+    location: "Dubrovnik",
+    country: "HR",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
+  {
+    id: "cam4",
+    name: "Beograd - Kalemegdan",
+    location: "Beograd",
+    country: "RS",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
+  {
+    id: "cam5",
+    name: "Sarajevo - Baščaršija",
+    location: "Sarajevo",
+    country: "BA",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
+  {
+    id: "cam6",
+    name: "Ljubljana - Prešernov trg",
+    location: "Ljubljana",
+    country: "SI",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
+  {
+    id: "cam7",
+    name: "Podgorica - Centar",
+    location: "Podgorica",
+    country: "ME",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
+  {
+    id: "cam8",
+    name: "Skopje - Ploštad",
+    location: "Skopje",
+    country: "MK",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
 ];
 
 const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
@@ -340,7 +397,6 @@ const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
 };
 
 const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
-
 
 const radioStations: EPGChannel[] = [
   {
@@ -474,7 +530,6 @@ const Index = () => {
       clearEnterHold();
     };
   }, [clearEnterHold]);
-
 
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -830,9 +885,7 @@ const Index = () => {
         e.stopPropagation();
         if (/^\d$/.test(e.key)) {
           setNumberEditor((prev) =>
-            prev
-              ? { ...prev, error: "", value: (prev.value + e.key).replace(/^0+/, "").slice(0, 3) }
-              : prev,
+            prev ? { ...prev, error: "", value: (prev.value + e.key).replace(/^0+/, "").slice(0, 3) } : prev,
           );
           return;
         }
@@ -864,7 +917,6 @@ const Index = () => {
         }
         return;
       }
-
 
       // U listi omiljenih: pritisak na cifru otvara dodjelu broja fokusiranom kanalu
       if (focusZone === "epg" && showFavorites && /^\d$/.test(e.key)) {
@@ -1245,271 +1297,270 @@ const Index = () => {
       <TVHeader />
 
       <div className="flex-1 flex overflow-hidden relative min-h-0">
-      <TVSidebar
-        focusedIndex={focusZone === "sidebar" ? sidebarIndex : -1}
-        isExpanded={sidebarExpanded}
-        isMini={isSidebarMini}
-        onItemClick={(i) => {
-          setSidebarIndex(i);
-          setFocusZone("sidebar");
-          setSidebarExpanded(true);
-          if (i === FILMOVI_INDEX) {
-            navigate("/videoteka");
-          } else if (i === SETTINGS_INDEX) {
-            navigate("/settings");
-          } else if (i === PROFILE_INDEX) {
-            setShowProfile(true);
-          } else if (i === TV_KANALI_INDEX) {
-            setShowCategories(true);
-            setShowFavorites(false);
-            setShowCameras(false);
-            setShowRadio(false);
+        <TVSidebar
+          focusedIndex={focusZone === "sidebar" ? sidebarIndex : -1}
+          isExpanded={sidebarExpanded}
+          isMini={isSidebarMini}
+          onItemClick={(i) => {
+            setSidebarIndex(i);
+            setFocusZone("sidebar");
+            setSidebarExpanded(true);
+            if (i === FILMOVI_INDEX) {
+              navigate("/videoteka");
+            } else if (i === SETTINGS_INDEX) {
+              navigate("/settings");
+            } else if (i === PROFILE_INDEX) {
+              setShowProfile(true);
+            } else if (i === TV_KANALI_INDEX) {
+              setShowCategories(true);
+              setShowFavorites(false);
+              setShowCameras(false);
+              setShowRadio(false);
+              setFocusZone("categories");
+              setSidebarExpanded(false);
+            } else if (i === RADIO_INDEX) {
+              setShowRadio(true);
+              setShowCategories(false);
+              setShowFavorites(false);
+              setShowCameras(false);
+              setEpgIndex(0);
+              setProgramIndex(0);
+              setFocusZone("epg");
+              setSidebarExpanded(false);
+            } else if (i === FAVORITES_INDEX) {
+              setShowFavorites(true);
+              setShowCategories(false);
+              setShowCameras(false);
+              setShowRadio(false);
+              setEpgIndex(0);
+              setProgramIndex(0);
+              setFocusZone("epg");
+              setSidebarExpanded(false);
+            } else if (i === CAMERAS_INDEX) {
+              setShowCameras(true);
+              setShowCategories(false);
+              setShowFavorites(false);
+              setShowRadio(false);
+              setCameraIndex(0);
+              setFocusZone("cameras");
+              setSidebarExpanded(false);
+            }
+          }}
+          onItemHover={(i) => {
+            setSidebarIndex(i);
+            setFocusZone("sidebar");
+            setSidebarExpanded(true);
+            if (i === TV_KANALI_INDEX) {
+              setShowCategories(true);
+              setShowFavorites(false);
+              setShowCameras(false);
+              setShowRadio(false);
+            } else if (i === RADIO_INDEX) {
+              setShowRadio(true);
+              setShowCategories(false);
+              setShowFavorites(false);
+              setShowCameras(false);
+              setEpgIndex(0);
+              setProgramIndex(0);
+            } else if (i === FAVORITES_INDEX) {
+              setShowFavorites(true);
+              setShowCategories(false);
+              setShowCameras(false);
+              setShowRadio(false);
+              setEpgIndex(0);
+              setProgramIndex(0);
+            } else if (i === CAMERAS_INDEX) {
+              setShowCameras(true);
+              setShowCategories(false);
+              setShowFavorites(false);
+              setShowRadio(false);
+              setCameraIndex(0);
+            } else {
+              setShowCategories(false);
+              setShowFavorites(false);
+              setShowCameras(false);
+              setShowRadio(false);
+            }
+          }}
+        />
+
+        <TVCategoryMenu
+          isVisible={showCategories}
+          focusedIndex={focusZone === "categories" ? categoryIndex : -1}
+          onItemClick={(i) => {
+            setCategoryIndex(i);
             setFocusZone("categories");
-            setSidebarExpanded(false);
-          } else if (i === RADIO_INDEX) {
-            setShowRadio(true);
-            setShowCategories(false);
-            setShowFavorites(false);
-            setShowCameras(false);
-            setEpgIndex(0);
-            setProgramIndex(0);
-            setFocusZone("epg");
-            setSidebarExpanded(false);
-          } else if (i === FAVORITES_INDEX) {
-            setShowFavorites(true);
-            setShowCategories(false);
-            setShowCameras(false);
-            setShowRadio(false);
-            setEpgIndex(0);
-            setProgramIndex(0);
-            setFocusZone("epg");
-            setSidebarExpanded(false);
-          } else if (i === CAMERAS_INDEX) {
-            setShowCameras(true);
-            setShowCategories(false);
-            setShowFavorites(false);
-            setShowRadio(false);
-            setCameraIndex(0);
-            setFocusZone("cameras");
-            setSidebarExpanded(false);
-          }
-        }}
-        onItemHover={(i) => {
-          setSidebarIndex(i);
-          setFocusZone("sidebar");
-          setSidebarExpanded(true);
-          if (i === TV_KANALI_INDEX) {
-            setShowCategories(true);
-            setShowFavorites(false);
-            setShowCameras(false);
-            setShowRadio(false);
-          } else if (i === RADIO_INDEX) {
-            setShowRadio(true);
-            setShowCategories(false);
-            setShowFavorites(false);
-            setShowCameras(false);
-            setEpgIndex(0);
-            setProgramIndex(0);
-          } else if (i === FAVORITES_INDEX) {
-            setShowFavorites(true);
-            setShowCategories(false);
-            setShowCameras(false);
-            setShowRadio(false);
-            setEpgIndex(0);
-            setProgramIndex(0);
-          } else if (i === CAMERAS_INDEX) {
-            setShowCameras(true);
-            setShowCategories(false);
-            setShowFavorites(false);
-            setShowRadio(false);
-            setCameraIndex(0);
-          } else {
-            setShowCategories(false);
-            setShowFavorites(false);
-            setShowCameras(false);
-            setShowRadio(false);
-          }
-        }}
-      />
+          }}
+        />
 
-      <TVCategoryMenu
-        isVisible={showCategories}
-        focusedIndex={focusZone === "categories" ? categoryIndex : -1}
-        onItemClick={(i) => {
-          setCategoryIndex(i);
-          setFocusZone("categories");
-        }}
-      />
-
-      <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
-
-
-        <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden relative min-w-0">
-          <AnimatePresence mode="wait">
-            {showCameras ? (
-              <motion.div
-                key="cameras"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="flex-1 flex flex-col overflow-hidden"
-              >
-                <div className="relative flex items-center mb-4 px-1 h-12">
-                  <h2 className="text-lg font-semibold text-foreground">{t("home.camerasLive")}</h2>
-                  <img src={liveCamsLogo.url} alt="LiveCams" className="absolute left-1/2 -translate-x-1/2 h-12 w-auto" />
-                </div>
-                <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
-                  {camerasByCountry.map(({ country, items }, groupIdx) => {
-                    const info = COUNTRY_INFO[country] ?? { flag: "🏳️", name: country };
-                    const collapsed = collapsedCountries.has(country);
-                    const isHeaderFocused = focusZone === "cameraHeaders" && cameraHeaderIndex === groupIdx;
-                    return (
-                      <div key={country} className="flex flex-col gap-2">
-                        <button
-                          onClick={() => {
-                            setFocusZone("cameraHeaders");
-                            setCameraHeaderIndex(groupIdx);
-                            setCollapsedCountries((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(country)) next.delete(country);
-                              else next.add(country);
-                              return next;
-                            });
-                          }}
-                          className={`flex items-center gap-2 self-start px-3 py-1.5 rounded-md transition-all ${
-                            isHeaderFocused
-                              ? "bg-accent/20 ring-2 ring-accent"
-                              : "bg-muted/20 ring-1 ring-border/30 hover:bg-muted/30"
-                          }`}
-                        >
-                          <span className="text-xl leading-none">{info.flag}</span>
-                          <span className="text-sm font-semibold text-foreground">{info.name}</span>
-                          <span className="text-xs text-muted-foreground">({items.length})</span>
-                          <span className="text-xs text-muted-foreground ml-1">{collapsed ? "▸" : "▾"}</span>
-                        </button>
-                        {!collapsed && (
-                          <div className="grid grid-cols-4 gap-3 px-1">
-                            {items.map((cam) => {
-                              const i = liveCameras.indexOf(cam);
-                              const isFocused = focusZone === "cameras" && cameraIndex === i;
-                              return (
-                                <motion.div
-                                  key={cam.id}
-                                  whileHover={{ scale: 1.03 }}
-                                  className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
-                                    isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
-                                  }`}
-                                  onClick={() => {
-                                    setFocusZone("cameras");
-                                    setCameraIndex(i);
-                                  }}
-                                >
-                                  <div className="aspect-video relative">
-                                    <img src={cam.thumbnail} alt={cam.name} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                                    <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                      <span className="text-xs font-medium text-foreground">
-                                        {t("home.liveLabel")}
-                                      </span>
-                                    </div>
-                                    <div className="absolute bottom-2 left-2 right-2">
-                                      <p className="text-sm font-semibold text-foreground truncate">{cam.name}</p>
-                                      <p className="text-xs text-muted-foreground">{cam.location}</p>
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            ) : showEPG ? (
-              <motion.div
-                key={showFavorites ? "fav-epg" : showRadio ? "radio-epg" : "epg"}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="flex-1 flex flex-col overflow-hidden"
-              >
-                {showFavorites && (
-                  <h2 className="text-lg font-semibold text-foreground mb-2 px-1">
-                    {t("home.favoriteChannels")}
-                  </h2>
-                )}
-                {showRadio && (
-                  <h2 className="text-lg font-semibold text-foreground mb-2 px-1">
-                    {t("home.radioStations")}
-                  </h2>
-                )}
-                {activeEpgChannels.length > 0 ? (
-                  <EPGGrid
-                    channels={activeEpgChannels}
-                    focusedIndex={epgIndex}
-                    isFocusActive={focusZone === "epg"}
-                    focusedProgramIndex={programIndex}
-                    isProgramFocused={focusZone === "epgPrograms"}
-                    hideSchedule={showRadio}
-                    isRadio={showRadio}
-                    showNumbers={showFavorites}
-                    onChannelClick={(i) => {
-                      setFocusZone("epg");
-                      setEpgIndex(i);
-                      setProgramIndex(0);
-                    }}
-                  />
-                ) : (
-                  <div className="flex-1 flex items-center justify-center px-4 text-center">
-                    <p className="text-muted-foreground text-sm">
-                      Nemate omiljenih kanala. Dodajte kanale u omiljene putem Video playera.
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="cards"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-w-0 w-full px-2 py-2"
-              >
-                <TVContentRow
-                  title="Uživo"
-                  delay={0.1}
-                  navigationDisabled={focusZone !== "cards"}
-                  focusedIndex={focusZone === "cards" ? cardIndex : undefined}
+        <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
+          <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden relative min-w-0">
+            <AnimatePresence mode="wait">
+              {showCameras ? (
+                <motion.div
+                  key="cameras"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex-1 flex flex-col overflow-hidden"
                 >
-                  {liveChannelCards.map((card, i) => (
-                    <TVChannelCard
-                      key={i}
-                      title={card.title}
-                      thumbnail={card.thumbnail}
-                      channelName={card.channelName}
-                      timeSlot={card.timeSlot}
-                      logoUrl={card.logoUrl}
-                      index={i}
-                      isFocused={focusZone === "cards" && cardIndex === i}
-                      onClick={() => {
-                        setFocusZone("cards");
-                        setCardIndex(i);
-                        openPlayerFromCard(card);
+                  <div className="relative flex items-center mb-4 px-1 h-12">
+                    <h2 className="text-lg font-semibold text-foreground">{t("home.camerasLive")}</h2>
+                    {/* LiveCams logo — veličina duplo povećana: h-12 -> h-24 */}
+                    <img
+                      src={liveCamsLogo.url}
+                      alt="LiveCams"
+                      className="absolute left-1/2 -translate-x-1/2 h-24 w-auto"
+                    />
+                  </div>
+                  <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
+                    {camerasByCountry.map(({ country, items }, groupIdx) => {
+                      const info = COUNTRY_INFO[country] ?? { flag: "🏳️", name: country };
+                      const collapsed = collapsedCountries.has(country);
+                      const isHeaderFocused = focusZone === "cameraHeaders" && cameraHeaderIndex === groupIdx;
+                      return (
+                        <div key={country} className="flex flex-col gap-2">
+                          <button
+                            onClick={() => {
+                              setFocusZone("cameraHeaders");
+                              setCameraHeaderIndex(groupIdx);
+                              setCollapsedCountries((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(country)) next.delete(country);
+                                else next.add(country);
+                                return next;
+                              });
+                            }}
+                            className={`flex items-center gap-2 self-start px-3 py-1.5 rounded-md transition-all ${
+                              isHeaderFocused
+                                ? "bg-accent/20 ring-2 ring-accent"
+                                : "bg-muted/20 ring-1 ring-border/30 hover:bg-muted/30"
+                            }`}
+                          >
+                            <span className="text-xl leading-none">{info.flag}</span>
+                            <span className="text-sm font-semibold text-foreground">{info.name}</span>
+                            <span className="text-xs text-muted-foreground">({items.length})</span>
+                            <span className="text-xs text-muted-foreground ml-1">{collapsed ? "▸" : "▾"}</span>
+                          </button>
+                          {!collapsed && (
+                            <div className="grid grid-cols-4 gap-3 px-1">
+                              {items.map((cam) => {
+                                const i = liveCameras.indexOf(cam);
+                                const isFocused = focusZone === "cameras" && cameraIndex === i;
+                                return (
+                                  <motion.div
+                                    key={cam.id}
+                                    whileHover={{ scale: 1.03 }}
+                                    className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
+                                      isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
+                                    }`}
+                                    onClick={() => {
+                                      setFocusZone("cameras");
+                                      setCameraIndex(i);
+                                    }}
+                                  >
+                                    <div className="aspect-video relative">
+                                      <img src={cam.thumbnail} alt={cam.name} className="w-full h-full object-cover" />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                      <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                        <span className="text-xs font-medium text-foreground">
+                                          {t("home.liveLabel")}
+                                        </span>
+                                      </div>
+                                      <div className="absolute bottom-2 left-2 right-2">
+                                        <p className="text-sm font-semibold text-foreground truncate">{cam.name}</p>
+                                        <p className="text-xs text-muted-foreground">{cam.location}</p>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              ) : showEPG ? (
+                <motion.div
+                  key={showFavorites ? "fav-epg" : showRadio ? "radio-epg" : "epg"}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex-1 flex flex-col overflow-hidden"
+                >
+                  {showFavorites && (
+                    <h2 className="text-lg font-semibold text-foreground mb-2 px-1">{t("home.favoriteChannels")}</h2>
+                  )}
+                  {showRadio && (
+                    <h2 className="text-lg font-semibold text-foreground mb-2 px-1">{t("home.radioStations")}</h2>
+                  )}
+                  {activeEpgChannels.length > 0 ? (
+                    <EPGGrid
+                      channels={activeEpgChannels}
+                      focusedIndex={epgIndex}
+                      isFocusActive={focusZone === "epg"}
+                      focusedProgramIndex={programIndex}
+                      isProgramFocused={focusZone === "epgPrograms"}
+                      hideSchedule={showRadio}
+                      isRadio={showRadio}
+                      showNumbers={showFavorites}
+                      onChannelClick={(i) => {
+                        setFocusZone("epg");
+                        setEpgIndex(i);
+                        setProgramIndex(0);
                       }}
                     />
-                  ))}
-                </TVContentRow>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center px-4 text-center">
+                      <p className="text-muted-foreground text-sm">
+                        Nemate omiljenih kanala. Dodajte kanale u omiljene putem Video playera.
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="cards"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-w-0 w-full px-2 py-2"
+                >
+                  <TVContentRow
+                    title="Uživo"
+                    delay={0.1}
+                    navigationDisabled={focusZone !== "cards"}
+                    focusedIndex={focusZone === "cards" ? cardIndex : undefined}
+                  >
+                    {liveChannelCards.map((card, i) => (
+                      <TVChannelCard
+                        key={i}
+                        title={card.title}
+                        thumbnail={card.thumbnail}
+                        channelName={card.channelName}
+                        timeSlot={card.timeSlot}
+                        logoUrl={card.logoUrl}
+                        index={i}
+                        isFocused={focusZone === "cards" && cardIndex === i}
+                        onClick={() => {
+                          setFocusZone("cards");
+                          setCardIndex(i);
+                          openPlayerFromCard(card);
+                        }}
+                      />
+                    ))}
+                  </TVContentRow>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
       </div>
 
       {/* Popup za dodjelu broja omiljenom kanalu */}
@@ -1529,7 +1580,6 @@ const Index = () => {
           </div>
         </div>
       )}
-
     </motion.div>
   );
 };
