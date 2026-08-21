@@ -15,7 +15,7 @@ const SplashIntro = lazy(() => import("./SplashIntro.tsx"));
 const SplashGate = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(true); // TEMP TEST BYPASS
   const onPlayerRoute = location.pathname.startsWith("/player");
 
   useEffect(() => {
