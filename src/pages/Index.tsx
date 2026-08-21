@@ -1407,11 +1407,12 @@ const Index = () => {
                 >
                   <div className="relative flex items-center mb-4 px-1 h-12">
                     <h2 className="text-lg font-semibold text-foreground">{t("home.camerasLive")}</h2>
-                    {/* LiveCams logo — centriran, ne zavlači se ispod headera */}
+                    {/* LiveCams logo — h-192 zadržan; sidren na vrh retka (top-0)
+                        pa visi prema dolje i ne zavlači se ispod glavnog headera */}
                     <img
                       src={liveCamsLogo.url}
                       alt="LiveCams"
-                      className="absolute left-1/2 top-1/2 -translate-x-1/2 translate-y-1 h-24 w-auto"
+                      className="absolute left-1/2 top-0 -translate-x-1/2 h-192 w-auto pointer-events-none"
                     />
                   </div>
                   <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
