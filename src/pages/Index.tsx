@@ -1405,13 +1405,13 @@ const Index = () => {
                   transition={{ duration: 0.3 }}
                   className="flex-1 flex flex-col overflow-hidden"
                 >
-                  <div className="flex flex-col items-center mb-3">
+                  <div className="relative flex items-center mb-4 px-1 h-20 pt-6">
+                    <h2 className="text-lg font-semibold text-foreground">{t("home.camerasLive")}</h2>
                     <img
                       src={liveCamsLogo.url}
                       alt="LiveCams"
-                      className="h-24 w-auto scale-[3.6] pointer-events-none mb-2"
+                      className="absolute left-1/2 -translate-x-1/2 h-12 w-auto scale-[3.6] pointer-events-none"
                     />
-                    <h2 className="text-lg font-semibold text-foreground self-start px-1">{t("home.camerasLive")}</h2>
                   </div>
                   <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
                     {camerasByCountry.map(({ country, items }, groupIdx) => {
