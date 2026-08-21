@@ -1013,15 +1013,38 @@ interface SpeedTestViewProps {
 
 const SpeedGauge = ({ value, max, unit }: { value: number; max: number; unit: string }) => {
   const clamped = Math.min(Math.max(value, 0), max);
-  const arcDegrees = 270;
+  const cx = 160;
+  const cy = 160;
   const radius = 120;
+  // Arc starts at 135° (lower-left) and sweeps 270° clockwise.
+  const startAngle = 135;
+  const sweep = 270;
+
+  const angleFor = (v: number) => startAngle + (Math.min(Math.max(v, 0), max) / max) * sweep;
+  const polar = (angle: number, r: number) => {
+    const rad = (angle * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  };
+
   const fullCircumference = 2 * Math.PI * radius;
-  const arcLength = (arcDegrees / 360) * fullCircumference;
+  const arcLength = (sweep / 360) * fullCircumference;
   const progressLength = (clamped / max) * arcLength;
+
+  // Build tick marks: major every step with a label, minor in between.
+  const step = 50;
+  const majors: number[] = [];
+  for (let v = 0; v <= max; v += step) majors.push(v);
+  const minors: number[] = [];
+  for (let v = 0; v <= max; v += step / 5) {
+    if (v % step !== 0) minors.push(v);
+  }
+
+  const needleAngle = angleFor(clamped);
 
   return (
     <svg viewBox="0 0 320 320" className="w-[280px] h-[280px] md:w-[320px] md:h-[320px]">
-      <g transform="translate(160,160) rotate(135)">
+      {/* Track + progress arc */}
+      <g transform={`translate(${cx},${cy}) rotate(${startAngle})`}>
         <circle
           r={radius}
           fill="none"
@@ -1037,12 +1060,73 @@ const SpeedGauge = ({ value, max, unit }: { value: number; max: number; unit: st
           strokeLinecap="round"
           className="stroke-accent"
           strokeDasharray={`${progressLength} ${fullCircumference}`}
+          style={{ transition: "stroke-dasharray 0.2s linear" }}
         />
       </g>
-      <text x="160" y="152" textAnchor="middle" className="fill-foreground" style={{ fontSize: 54, fontWeight: 300 }}>
+
+      {/* Minor ticks */}
+      {minors.map((v, i) => {
+        const a = angleFor(v);
+        const p1 = polar(a, radius - 13);
+        const p2 = polar(a, radius - 22);
+        return (
+          <line
+            key={`mi-${i}`}
+            x1={p1.x}
+            y1={p1.y}
+            x2={p2.x}
+            y2={p2.y}
+            strokeWidth={1.5}
+            className="stroke-white/20"
+          />
+        );
+      })}
+      {/* Major ticks + labels */}
+      {majors.map((v) => {
+        const a = angleFor(v);
+        const p1 = polar(a, radius - 9);
+        const p2 = polar(a, radius - 26);
+        const lp = polar(a, radius - 44);
+        return (
+          <g key={`ma-${v}`}>
+            <line
+              x1={p1.x}
+              y1={p1.y}
+              x2={p2.x}
+              y2={p2.y}
+              strokeWidth={2.5}
+              className="stroke-white/70"
+            />
+            <text
+              x={lp.x}
+              y={lp.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-muted-foreground"
+              style={{ fontSize: 13, fontWeight: 500 }}
+            >
+              {v}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Needle */}
+      <g transform={`rotate(${needleAngle} ${cx} ${cy})`} style={{ transition: "transform 0.2s linear" }}>
+        <polygon
+          points={`${cx},${cy - radius + 18} ${cx - 5},${cy} ${cx + 5},${cy}`}
+          className="fill-accent"
+        />
+      </g>
+      {/* Center hub */}
+      <circle cx={cx} cy={cy} r={11} className="fill-accent" />
+      <circle cx={cx} cy={cy} r={5} className="fill-background" />
+
+      {/* Digital readout */}
+      <text x={cx} y={cy + 52} textAnchor="middle" className="fill-foreground" style={{ fontSize: 44, fontWeight: 300 }}>
         {clamped < 10 ? clamped.toFixed(1) : Math.round(clamped)}
       </text>
-      <text x="160" y="182" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 16 }}>
+      <text x={cx} y={cy + 78} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 15 }}>
         {unit}
       </text>
     </svg>
