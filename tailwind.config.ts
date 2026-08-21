@@ -24,6 +24,12 @@ export default {
       },
     },
     extend: {
+      // h-192 is used for the LiveCams logo on the fixed reference canvas.
+      // Defined explicitly (112px) so the logo renders at a consistent size on
+      // every screen instead of falling back to the source image's natural size.
+      spacing: {
+        "192": "112px",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
