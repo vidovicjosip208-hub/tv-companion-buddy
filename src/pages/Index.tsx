@@ -496,13 +496,51 @@ const CATEGORY_TO_DB_MAP: Record<string, string[]> = {
   youtube: [],
 };
 
+// Postavi na true privremeno ako trebaš vidjeti koje evente stvarno šalje daljinski
+// (otvori DevTools/log konzolu na uređaju): ispisat će e.key / e.code / e.keyCode / e.repeat
+// za svaki keydown i keyup dok je numberEditor logika aktivna.
+const DEBUG_REMOTE_KEYS = false;
+
 const Index = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { favorites, toggleFavorite, isFavorite, favoriteNumber, setFavoriteNumber } = useFavorites();
   // Dodjela vlastitog broja omiljenom kanalu (unos brojevima daljinskog)
   const [numberEditor, setNumberEditor] = useState<{ name: string; value: string; error?: string } | null>(null);
-  /** Dugi pritisak OK/Enter na omiljenom kanalu otvara uređivanje broja; kratki pokreće program. */
+
+  /**
+   * Prepoznaje OK/Enter tipku bez obzira na to šalje li je fizička tipkovnica
+   * (e.key === "Enter") ili daljinski upravljač, koji često koristi drugačiji
+   * identifikator (npr. "OK", "Select", "Accept", ili samo keyCode 13 bez e.key).
+   * Ovo je ključna popravka: prije se svugdje provjeravalo isključivo `e.key === "Enter"`,
+   * pa OK tipka daljinskog jednostavno nikad nije "pogađala" te provjere.
+   */
+  const isOkKey = useCallback(
+    (e: KeyboardEvent) =>
+      e.key === "Enter" ||
+      e.key === "OK" ||
+      e.key === "Accept" ||
+      e.key === "Select" ||
+      e.code === "Enter" ||
+      e.code === "NumpadEnter" ||
+      e.keyCode === 13,
+    [],
+  );
+
+  /**
+   * Dugi pritisak OK/Enter na omiljenom kanalu otvara uređivanje broja; kratki pokreće program.
+   *
+   * NAPOMENA O DALJINSKOM UPRAVLJAČU:
+   * Za razliku od tipkovnice, dio daljinskih upravljača/STB driver-a ne prijavljuje
+   * pregledniku "koliko dugo je tipka stvarno držana" — keydown i keyup mogu stići
+   * gotovo istovremeno bez obzira na to koliko je korisnik fizički držao tipku.
+   * Ako je to slučaj i s ovim uređajem, JS na ovoj razini fizički ne može pouzdano
+   * razlikovati dugi od kratkog pritiska (nedostaje mu informacija koju platforma
+   * ne šalje) — zato ostaje i alternativni, hold-neovisan način: pritisak BROJČANE
+   * tipke dok je fokus na omiljenom kanalu odmah otvara uređivanje broja (vidi
+   * granu "digit" niže u handleKeyDown), i taj put radi bez obzira na trajanje pritiska.
+   */
+  const ENTER_HOLD_MS = 650;
   const enterHoldTimerRef = useRef<number | null>(null);
   const enterHoldConsumedRef = useRef(false);
   const enterShortPressRef = useRef<(() => void) | null>(null);
@@ -516,7 +554,11 @@ const Index = () => {
   }, []);
   useEffect(() => {
     const onUp = (e: KeyboardEvent) => {
-      if (e.key !== "Enter") return;
+      if (DEBUG_REMOTE_KEYS) {
+        // eslint-disable-next-line no-console
+        console.log("[remote-debug] keyup", { key: e.key, code: e.code, keyCode: e.keyCode, repeat: e.repeat });
+      }
+      if (!isOkKey(e)) return;
       const wasPending = clearEnterHold();
       if (wasPending && !enterHoldConsumedRef.current) {
         enterShortPressRef.current?.();
@@ -524,12 +566,23 @@ const Index = () => {
       enterShortPressRef.current = null;
       enterHoldConsumedRef.current = false;
     };
-    window.addEventListener("keyup", onUp);
+    const onDownDebug = (e: KeyboardEvent) => {
+      if (!DEBUG_REMOTE_KEYS) return;
+      // eslint-disable-next-line no-console
+      console.log("[remote-debug] keydown", { key: e.key, code: e.code, keyCode: e.keyCode, repeat: e.repeat });
+    };
+    // capture: true — ovaj listener mora primiti keyup PRIJE nego što ga eventualno
+    // "pojede" stopPropagation() u focus-zone routing sloju (useZoneKeys), koji inače
+    // može spriječiti da globalni bubble-fazni listener uopće dobije event.
+    window.addEventListener("keyup", onUp, { capture: true });
+    if (DEBUG_REMOTE_KEYS) window.addEventListener("keydown", onDownDebug, { capture: true });
     return () => {
-      window.removeEventListener("keyup", onUp);
+      window.removeEventListener("keyup", onUp, { capture: true } as EventListenerOptions);
+      if (DEBUG_REMOTE_KEYS)
+        window.removeEventListener("keydown", onDownDebug, { capture: true } as EventListenerOptions);
       clearEnterHold();
     };
-  }, [clearEnterHold]);
+  }, [clearEnterHold, isOkKey]);
 
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -879,6 +932,16 @@ const Index = () => {
     (e: KeyboardEvent) => {
       if (playerVisible) return;
 
+      if (DEBUG_REMOTE_KEYS) {
+        // eslint-disable-next-line no-console
+        console.log("[remote-debug] handleKeyDown", {
+          key: e.key,
+          code: e.code,
+          keyCode: e.keyCode,
+          repeat: e.repeat,
+        });
+      }
+
       // Editor za dodjelu broja omiljenom kanalu ima prioritet
       if (numberEditor) {
         e.preventDefault();
@@ -889,7 +952,9 @@ const Index = () => {
           );
           return;
         }
-        if (e.key === "Enter") {
+        // Popravka: "OK potvrda" iz popupa je prije provjeravala isključivo e.key === "Enter",
+        // pa je OK tipka daljinskog (koja često šalje drugačiji key) tu propuštala potvrdu.
+        if (isOkKey(e)) {
           if (e.repeat) return;
           const num = parseInt(numberEditor.value, 10);
           if (isNaN(num) || num <= 0) {
@@ -918,7 +983,9 @@ const Index = () => {
         return;
       }
 
-      // U listi omiljenih: pritisak na cifru otvara dodjelu broja fokusiranom kanalu
+      // U listi omiljenih: pritisak na cifru otvara dodjelu broja fokusiranom kanalu.
+      // Ovo je pouzdan način koji NE ovisi o detekciji dugog pritiska, pa radi identično
+      // na tipkovnici i na daljinskom (dokle god daljinski ima brojčane tipke).
       if (focusZone === "epg" && showFavorites && /^\d$/.test(e.key)) {
         const ch = activeEpgChannels[epgIndex];
         if (ch) {
@@ -928,7 +995,11 @@ const Index = () => {
         }
       }
 
-      switch (e.key) {
+      // Popravka: normaliziramo OK tipku daljinskog na "Enter" prije switcha, jer je
+      // switch prije radio isključivo na doslovnom e.key === "Enter".
+      const normalizedKey = isOkKey(e) ? "Enter" : e.key;
+
+      switch (normalizedKey) {
         case "ArrowRight":
           e.preventDefault();
           if (focusZone === "sidebar") {
@@ -1122,7 +1193,7 @@ const Index = () => {
                 enterHoldConsumedRef.current = true;
                 enterShortPressRef.current = null;
                 setNumberEditor({ name: favCh.name, value: "" });
-              }, 650);
+              }, ENTER_HOLD_MS);
               break;
             }
           }
@@ -1178,6 +1249,7 @@ const Index = () => {
     },
     [
       clearEnterHold,
+      isOkKey,
       focusZone,
       sidebarIndex,
       epgIndex,
