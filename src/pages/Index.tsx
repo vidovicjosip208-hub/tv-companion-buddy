@@ -1406,14 +1406,8 @@ const Index = () => {
                   className="flex-1 flex flex-col overflow-hidden"
                 >
                   <div className="flex flex-col items-center mb-3">
-                    <img
-                      src={liveCamsLogo.url}
-                      alt="LiveCams"
-                      className="h-24 w-auto pointer-events-none mb-2"
-                    />
-                    <h2 className="text-lg font-semibold text-foreground self-start px-1">
-                      {t("home.camerasLive")}
-                    </h2>
+                    <img src={liveCamsLogo.url} alt="LiveCams" className="h-192 w-auto pointer-events-none mb-2" />
+                    <h2 className="text-lg font-semibold text-foreground self-start px-1">{t("home.camerasLive")}</h2>
                   </div>
                   <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
                     {camerasByCountry.map(({ country, items }, groupIdx) => {
