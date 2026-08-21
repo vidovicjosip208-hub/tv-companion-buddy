@@ -1014,11 +1014,11 @@ interface SpeedTestViewProps {
 const SpeedGauge = ({ value, max, unit }: { value: number; max: number; unit: string }) => {
   const clamped = Math.min(Math.max(value, 0), max);
   const cx = 160;
-  const cy = 160;
-  const radius = 120;
-  // Arc starts at 135° (lower-left) and sweeps 270° clockwise.
-  const startAngle = 135;
-  const sweep = 270;
+  const cy = 165;
+  const radius = 118;
+  // Kao na referenci: luk počinje dolje-lijevo i završava dolje-desno (praznina na dnu).
+  const startAngle = 145;
+  const sweep = 250;
 
   const angleFor = (v: number) => startAngle + (Math.min(Math.max(v, 0), max) / max) * sweep;
   const polar = (angle: number, r: number) => {
@@ -1030,33 +1030,34 @@ const SpeedGauge = ({ value, max, unit }: { value: number; max: number; unit: st
   const arcLength = (sweep / 360) * fullCircumference;
   const progressLength = (clamped / max) * arcLength;
 
-  // Build tick marks: major every step with a label, minor in between.
-  const step = 50;
-  const majors: number[] = [];
-  for (let v = 0; v <= max; v += step) majors.push(v);
-  const minors: number[] = [];
-  for (let v = 0; v <= max; v += step / 5) {
-    if (v % step !== 0) minors.push(v);
-  }
+  // 8 podjela s brojevima, isti raspored kao na referentnom brzinomjeru.
+  const divisions = 8;
+  const step = max / divisions;
+  const labels: number[] = [];
+  for (let i = 0; i <= divisions; i++) labels.push(Math.round(i * step));
 
   const needleAngle = angleFor(clamped);
+  const tip = polar(needleAngle, radius - 34);
+  const baseL = polar(needleAngle + 90, 9);
+  const baseR = polar(needleAngle - 90, 9);
 
   return (
     <svg viewBox="0 0 320 320" className="w-[280px] h-[280px] md:w-[320px] md:h-[320px]">
-      {/* Track + progress arc */}
+      {/* Neaktivni dio ljestvice */}
       <g transform={`translate(${cx},${cy}) rotate(${startAngle})`}>
         <circle
           r={radius}
           fill="none"
-          strokeWidth={18}
+          strokeWidth={22}
           strokeLinecap="round"
           className="stroke-white/10"
           strokeDasharray={`${arcLength} ${fullCircumference}`}
         />
+        {/* Aktivni (obojeni) dio ljestvice */}
         <circle
           r={radius}
           fill="none"
-          strokeWidth={18}
+          strokeWidth={22}
           strokeLinecap="round"
           className="stroke-accent"
           strokeDasharray={`${progressLength} ${fullCircumference}`}
@@ -1064,69 +1065,47 @@ const SpeedGauge = ({ value, max, unit }: { value: number; max: number; unit: st
         />
       </g>
 
-      {/* Minor ticks */}
-      {minors.map((v, i) => {
-        const a = angleFor(v);
-        const p1 = polar(a, radius - 13);
-        const p2 = polar(a, radius - 22);
+      {/* Brojevi unutar luka */}
+      {labels.map((v) => {
+        const lp = polar(angleFor(v), radius - 38);
+        const passed = clamped >= v;
         return (
-          <line
-            key={`mi-${i}`}
-            x1={p1.x}
-            y1={p1.y}
-            x2={p2.x}
-            y2={p2.y}
-            strokeWidth={1.5}
-            className="stroke-white/20"
-          />
-        );
-      })}
-      {/* Major ticks + labels */}
-      {majors.map((v) => {
-        const a = angleFor(v);
-        const p1 = polar(a, radius - 9);
-        const p2 = polar(a, radius - 26);
-        const lp = polar(a, radius - 44);
-        return (
-          <g key={`ma-${v}`}>
-            <line
-              x1={p1.x}
-              y1={p1.y}
-              x2={p2.x}
-              y2={p2.y}
-              strokeWidth={2.5}
-              className="stroke-white/70"
-            />
-            <text
-              x={lp.x}
-              y={lp.y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="fill-muted-foreground"
-              style={{ fontSize: 13, fontWeight: 500 }}
-            >
-              {v}
-            </text>
-          </g>
+          <text
+            key={`lb-${v}`}
+            x={lp.x}
+            y={lp.y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className={passed ? "fill-foreground" : "fill-muted-foreground"}
+            style={{ fontSize: 15, fontWeight: 700 }}
+          >
+            {v}
+          </text>
         );
       })}
 
-      {/* Needle */}
-      <g transform={`rotate(${needleAngle} ${cx} ${cy})`} style={{ transition: "transform 0.2s linear" }}>
+      {/* Kazaljka */}
+      <g style={{ transition: "all 0.2s linear" }}>
         <polygon
-          points={`${cx},${cy - radius + 18} ${cx - 5},${cy} ${cx + 5},${cy}`}
-          className="fill-accent"
+          points={`${tip.x},${tip.y} ${baseL.x},${baseL.y} ${baseR.x},${baseR.y}`}
+          className="fill-foreground"
         />
       </g>
-      {/* Center hub */}
-      <circle cx={cx} cy={cy} r={11} className="fill-accent" />
-      <circle cx={cx} cy={cy} r={5} className="fill-background" />
+      {/* Središnji nosač */}
+      <circle cx={cx} cy={cy} r={16} className="fill-muted" />
+      <circle cx={cx} cy={cy} r={11} className="fill-foreground" />
 
-      {/* Digital readout */}
-      <text x={cx} y={cy + 52} textAnchor="middle" className="fill-foreground" style={{ fontSize: 44, fontWeight: 300 }}>
+      {/* Digitalni ispis */}
+      <text
+        x={cx}
+        y={cy + 62}
+        textAnchor="middle"
+        className="fill-accent"
+        style={{ fontSize: 34, fontWeight: 700 }}
+      >
         {clamped < 10 ? clamped.toFixed(1) : Math.round(clamped)}
       </text>
-      <text x={cx} y={cy + 78} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 15 }}>
+      <text x={cx} y={cy + 86} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14 }}>
         {unit}
       </text>
     </svg>
