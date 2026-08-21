@@ -538,40 +538,43 @@ const Index = () => {
   /**
    * Dugi pritisak OK/Enter na omiljenom kanalu otvara uređivanje broja; kratki pokreće program.
    *
-   * NAPOMENA O DALJINSKOM UPRAVLJAČU:
-   * Za razliku od tipkovnice, dio daljinskih upravljača/STB driver-a ne prijavljuje
-   * pregledniku "koliko dugo je tipka stvarno držana" — keydown i keyup mogu stići
-   * gotovo istovremeno bez obzira na to koliko je korisnik fizički držao tipku.
-   * Ako je to slučaj i s ovim uređajem, JS na ovoj razini fizički ne može pouzdano
-   * razlikovati dugi od kratkog pritiska (nedostaje mu informacija koju platforma
-   * ne šalje) — zato ostaje i alternativni, hold-neovisan način: pritisak BROJČANE
-   * tipke dok je fokus na omiljenom kanalu odmah otvara uređivanje broja (vidi
-   * granu "digit" niže u handleKeyDown), i taj put radi bez obzira na trajanje pritiska.
+   * NAPOMENA O DALJINSKOM UPRAVLJAČU (VAŽNO — popravljeno):
+   * Log s ovog TV-a je pokazao da SVAKI keydown stiže s `repeat=false`, čak i kad je
+   * tipka fizički držana — dakle platforma/driver ovog daljinskog uopće ne emitira
+   * "auto-repeat" evente kako ih zna emitirati tipkovnica. Prethodna implementacija je
+   * odluku "je li ovo dugi pritisak" pokušavala donijeti PRIJE keyup-a, oslanjajući se
+   * kombinirano na `setTimeout` i na `e.repeat` granu — što je stvaralo utrku (race)
+   * između timera i eventualnog keyup-a te je na ovom uređaju gotovo uvijek gubilo timer.
+   *
+   * Popravka: umjesto da nagađamo tijekom držanja, odluku donosimo TEK na keyup-u,
+   * mjerenjem stvarno proteklog vremena (Date.now() na keydown, pa razlika na keyup).
+   * Ovo potpuno zaobilazi i `e.repeat` (koji ovaj uređaj ionako ne šalje) i timer race,
+   * i radi identično bez obzira šalje li platforma repeat evente ili ne.
    */
   const ENTER_HOLD_MS = 650;
-  const enterHoldTimerRef = useRef<number | null>(null);
-  const enterHoldConsumedRef = useRef(false);
-  const enterShortPressRef = useRef<(() => void) | null>(null);
-  const clearEnterHold = useCallback(() => {
-    if (enterHoldTimerRef.current !== null) {
-      window.clearTimeout(enterHoldTimerRef.current);
-      enterHoldTimerRef.current = null;
-      return true;
-    }
-    return false;
-  }, []);
+  const enterPressActiveRef = useRef(false);
+  const enterPressStartRef = useRef<number | null>(null);
+  const enterShortPressActionRef = useRef<(() => void) | null>(null);
+  const enterLongPressActionRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     const fmt = (type: string, e: KeyboardEvent) =>
       `${type} | key="${e.key}" code="${e.code}" keyCode=${e.keyCode} repeat=${e.repeat}`;
     const onUp = (e: KeyboardEvent) => {
       pushDebugLog(fmt("UP", e));
       if (!isOkKey(e)) return;
-      const wasPending = clearEnterHold();
-      if (wasPending && !enterHoldConsumedRef.current) {
-        enterShortPressRef.current?.();
+      if (!enterPressActiveRef.current) return;
+      const start = enterPressStartRef.current;
+      enterPressActiveRef.current = false;
+      enterPressStartRef.current = null;
+      const elapsed = start !== null ? Date.now() - start : 0;
+      if (elapsed >= ENTER_HOLD_MS) {
+        enterLongPressActionRef.current?.();
+      } else {
+        enterShortPressActionRef.current?.();
       }
-      enterShortPressRef.current = null;
-      enterHoldConsumedRef.current = false;
+      enterShortPressActionRef.current = null;
+      enterLongPressActionRef.current = null;
     };
     const onDownDebug = (e: KeyboardEvent) => {
       pushDebugLog(fmt("DOWN", e));
@@ -585,9 +588,8 @@ const Index = () => {
       window.removeEventListener("keyup", onUp, { capture: true } as EventListenerOptions);
       if (DEBUG_REMOTE_KEYS)
         window.removeEventListener("keydown", onDownDebug, { capture: true } as EventListenerOptions);
-      clearEnterHold();
     };
-  }, [clearEnterHold, isOkKey, pushDebugLog]);
+  }, [isOkKey, pushDebugLog]);
 
   const [sidebarIndex, setSidebarIndex] = useState(0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -1173,24 +1175,17 @@ const Index = () => {
           if (focusZone === "epg" && showFavorites) {
             const favCh = activeEpgChannels[epgIndex];
             if (favCh) {
-              if (e.repeat) {
-                if (!enterHoldConsumedRef.current && enterHoldTimerRef.current !== null) {
-                  clearEnterHold();
-                  enterHoldConsumedRef.current = true;
-                  enterShortPressRef.current = null;
-                  setNumberEditor({ name: favCh.name, value: "" });
-                }
-                break;
+              // Popravka: odluku kratak/dug pritisak sada donosimo na keyup-u (vidi
+              // useEffect gore), mjereći stvarno proteklo vrijeme. Ovdje samo, na prvi
+              // keydown ovog pritiska, zabilježimo trenutak početka i pripremimo obje
+              // moguće akcije; ignoriramo eventualne dodatne keydown evente dok se
+              // tipka ne otpusti (enterPressActiveRef sprječava ponovni start).
+              if (!enterPressActiveRef.current) {
+                enterPressActiveRef.current = true;
+                enterPressStartRef.current = Date.now();
+                enterShortPressActionRef.current = () => openPlayerFromEPG(epgIndex);
+                enterLongPressActionRef.current = () => setNumberEditor({ name: favCh.name, value: "" });
               }
-              if (enterHoldTimerRef.current !== null || enterHoldConsumedRef.current) break;
-              enterShortPressRef.current = () => openPlayerFromEPG(epgIndex);
-              enterHoldConsumedRef.current = false;
-              enterHoldTimerRef.current = window.setTimeout(() => {
-                enterHoldTimerRef.current = null;
-                enterHoldConsumedRef.current = true;
-                enterShortPressRef.current = null;
-                setNumberEditor({ name: favCh.name, value: "" });
-              }, ENTER_HOLD_MS);
               break;
             }
           }
@@ -1245,7 +1240,6 @@ const Index = () => {
       }
     },
     [
-      clearEnterHold,
       isOkKey,
       pushDebugLog,
       focusZone,
