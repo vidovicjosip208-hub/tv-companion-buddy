@@ -499,7 +499,7 @@ const CATEGORY_TO_DB_MAP: Record<string, string[]> = {
 // Postavi na true privremeno ako trebaš vidjeti koje evente stvarno šalje daljinski
 // (otvori DevTools/log konzolu na uređaju): ispisat će e.key / e.code / e.keyCode / e.repeat
 // za svaki keydown i keyup dok je numberEditor logika aktivna.
-const DEBUG_REMOTE_KEYS = false;
+const DEBUG_REMOTE_KEYS = true;
 
 const Index = () => {
   const navigate = useNavigate();
