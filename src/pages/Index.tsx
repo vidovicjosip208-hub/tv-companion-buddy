@@ -1406,7 +1406,11 @@ const Index = () => {
                   className="flex-1 flex flex-col overflow-hidden"
                 >
                   <div className="flex flex-col items-center mb-3">
-                    <img src={liveCamsLogo.url} alt="LiveCams" className="h-12 w-auto scale-[1.8] pointer-events-none mb-2" />
+                    <img
+                      src={liveCamsLogo.url}
+                      alt="LiveCams"
+                      className="h-12 w-auto scale-[3.6] pointer-events-none mb-2"
+                    />
                     <h2 className="text-lg font-semibold text-foreground self-start px-1">{t("home.camerasLive")}</h2>
                   </div>
                   <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
