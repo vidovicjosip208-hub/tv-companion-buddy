@@ -1411,7 +1411,7 @@ const Index = () => {
                     <img
                       src={liveCamsLogo.url}
                       alt="LiveCams"
-                      className="absolute left-1/2 -translate-x-1/2 h-96 w-auto"
+                      className="absolute left-1/2 -translate-x-1/2 h-192 w-auto"
                     />
                   </div>
                   <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
