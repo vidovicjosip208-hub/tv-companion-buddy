@@ -1409,7 +1409,7 @@ const Index = () => {
                     <img
                       src={liveCamsLogo.url}
                       alt="LiveCams"
-                      className="h-24 w-auto scale-[7.2] pointer-events-none mb-2"
+                      className="h-24 w-auto scale-[5.2] pointer-events-none mb-2"
                     />
                     <h2 className="text-lg font-semibold text-foreground self-start px-1">{t("home.camerasLive")}</h2>
                   </div>
