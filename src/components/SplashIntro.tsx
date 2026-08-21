@@ -9,20 +9,20 @@ interface SplashTileData {
   poster_url: string | null;
 }
 
-const TILE_SIZE = { w: 11, h: 11 };
+const TILE_SIZE = { w: 14, h: 14 };
 const TILES = [
-  { left: 44.5, top: 4.5, ...TILE_SIZE },    // 12 o'clock
-  { left: 57.75, top: 9.86, ...TILE_SIZE }, // 1
-  { left: 67.45, top: 24.5, ...TILE_SIZE }, // 2
-  { left: 71, top: 44.5, ...TILE_SIZE },     // 3
-  { left: 67.45, top: 64.5, ...TILE_SIZE },  // 4
-  { left: 57.75, top: 79.14, ...TILE_SIZE }, // 5
-  { left: 44.5, top: 84.5, ...TILE_SIZE },   // 6
-  { left: 31.25, top: 79.14, ...TILE_SIZE }, // 7
-  { left: 21.55, top: 64.5, ...TILE_SIZE },  // 8
-  { left: 18, top: 44.5, ...TILE_SIZE },     // 9
-  { left: 21.55, top: 24.5, ...TILE_SIZE },  // 10
-  { left: 31.25, top: 9.86, ...TILE_SIZE },  // 11
+  { left: 43, top: 3, ...TILE_SIZE }, // 12 o'clock
+  { left: 56.25, top: 8.36, ...TILE_SIZE }, // 1
+  { left: 65.95, top: 23, ...TILE_SIZE }, // 2
+  { left: 69.5, top: 43, ...TILE_SIZE }, // 3
+  { left: 65.95, top: 63, ...TILE_SIZE }, // 4
+  { left: 56.25, top: 77.64, ...TILE_SIZE }, // 5
+  { left: 43, top: 83, ...TILE_SIZE }, // 6
+  { left: 29.75, top: 77.64, ...TILE_SIZE }, // 7
+  { left: 20.05, top: 63, ...TILE_SIZE }, // 8
+  { left: 16.5, top: 43, ...TILE_SIZE }, // 9
+  { left: 20.05, top: 23, ...TILE_SIZE }, // 10
+  { left: 29.75, top: 8.36, ...TILE_SIZE }, // 11
 ];
 
 const useSplashContent = () =>
@@ -164,7 +164,6 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
       if (drew) setFramesReady(true);
     };
 
-
     players.forEach((player) => {
       player.currentTime = 0;
     });
@@ -178,7 +177,11 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
     return () => {
       if (animationFrame.current !== null) window.clearInterval(animationFrame.current);
       animationFrame.current = null;
-      players.forEach((player) => { player.pause(); player.src = ""; player.load(); });
+      players.forEach((player) => {
+        player.pause();
+        player.src = "";
+        player.load();
+      });
     };
   }, [loadedSourceCount, uniqueVideos]);
 
@@ -295,7 +298,6 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
                   </div>
                 );
               })}
-
             </div>
 
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
