@@ -14,6 +14,7 @@ import ProfileSelection from "@/components/ProfileSelection";
 import VideoPlayer, { PlayerData, FavoriteChannel } from "@/components/VideoPlayer";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useChannels, useEPGData } from "@/hooks/useChannels";
+import liveCamsLogo from "@/assets/livecams-logo.png.asset.json";
 
 interface ChannelCard {
   title: string;
@@ -1354,9 +1355,10 @@ const Index = () => {
                 transition={{ duration: 0.3 }}
                 className="flex-1 flex flex-col overflow-hidden"
               >
-                <h2 className="text-lg font-semibold text-foreground mb-4 px-1">
-                  {t("home.camerasLive")}
-                </h2>
+                <div className="flex items-center gap-3 mb-4 px-1">
+                  <h2 className="text-lg font-semibold text-foreground">{t("home.camerasLive")}</h2>
+                  <img src={liveCamsLogo.url} alt="LiveCams" className="h-7 w-auto" />
+                </div>
                 <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
                   {camerasByCountry.map(({ country, items }, groupIdx) => {
                     const info = COUNTRY_INFO[country] ?? { flag: "🏳️", name: country };
