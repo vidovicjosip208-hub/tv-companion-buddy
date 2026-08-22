@@ -387,14 +387,16 @@ const liveCameras: CameraItem[] = [
   },
 ];
 
-const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
-  HR: { flag: "🇭🇷", name: "Hrvatska" },
-  RS: { flag: "🇷🇸", name: "Srbija" },
-  BA: { flag: "🇧🇦", name: "Bosna i Hercegovina" },
-  SI: { flag: "🇸🇮", name: "Slovenija" },
-  ME: { flag: "🇲🇪", name: "Crna Gora" },
-  MK: { flag: "🇲🇰", name: "Sjeverna Makedonija" },
+const COUNTRY_INFO: Record<string, { name: string }> = {
+  HR: { name: "Hrvatska" },
+  RS: { name: "Srbija" },
+  BA: { name: "Bosna i Hercegovina" },
+  SI: { name: "Slovenija" },
+  ME: { name: "Crna Gora" },
+  MK: { name: "Sjeverna Makedonija" },
 };
+
+const flagUrl = (code: string) => `https://flagcdn.com/w80/${code.toLowerCase()}.png`;
 
 const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
 
@@ -1444,11 +1446,11 @@ const Index = () => {
                   </div>
                   <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
                     {camerasByCountry.map(({ country, items }, groupIdx) => {
-                      const info = COUNTRY_INFO[country] ?? { flag: "🏳️", name: country };
+                      const info = COUNTRY_INFO[country] ?? { name: country };
                       const collapsed = collapsedCountries.has(country);
                       const isHeaderFocused = focusZone === "cameraHeaders" && cameraHeaderIndex === groupIdx;
                       return (
-                        <div key={country} className="flex flex-col gap-2">
+                        <div key={country} className="flex flex-col gap-2 items-center">
                           <button
                             onClick={() => {
                               setFocusZone("cameraHeaders");
@@ -1460,19 +1462,24 @@ const Index = () => {
                                 return next;
                               });
                             }}
-                            className={`flex items-center gap-2 self-start px-3 py-1.5 rounded-md transition-all ${
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${
                               isHeaderFocused
                                 ? "bg-accent/20 ring-2 ring-accent"
                                 : "bg-muted/20 ring-1 ring-border/30 hover:bg-muted/30"
                             }`}
                           >
-                            <span className="text-xl leading-none">{info.flag}</span>
+                            <img
+                              src={flagUrl(country)}
+                              alt={info.name}
+                              className="w-6 h-4 object-cover rounded-[2px] shadow-sm"
+                              loading="lazy"
+                            />
                             <span className="text-sm font-semibold text-foreground">{info.name}</span>
                             <span className="text-xs text-muted-foreground">({items.length})</span>
                             <span className="text-xs text-muted-foreground ml-1">{collapsed ? "▸" : "▾"}</span>
                           </button>
                           {!collapsed && (
-                            <div className="grid grid-cols-4 gap-3 px-1">
+                            <div className="grid grid-cols-4 gap-3 px-1 w-full">
                               {items.map((cam) => {
                                 const i = liveCameras.indexOf(cam);
                                 const isFocused = focusZone === "cameras" && cameraIndex === i;
