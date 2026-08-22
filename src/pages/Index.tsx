@@ -1471,12 +1471,11 @@ const Index = () => {
                             <img
                               src={flagUrl(country)}
                               alt={info.name}
-                              className="w-6 h-4 object-cover rounded-[2px] shadow-sm"
+                              className="w-12 h-8 object-cover rounded-[3px] shadow-sm"
                               loading="lazy"
                             />
-                            <span className="text-sm font-semibold text-foreground">{info.name}</span>
-                            <span className="text-xs text-muted-foreground">({items.length})</span>
-                            <span className="text-xs text-muted-foreground ml-1">{collapsed ? "▸" : "▾"}</span>
+                            <span className="text-base font-bold text-foreground">{info.name}</span>
+                            <span className="text-sm text-muted-foreground">({items.length})</span>
                           </button>
                           {!collapsed && (
                             <div className="grid grid-cols-4 gap-3 px-1 w-full">
