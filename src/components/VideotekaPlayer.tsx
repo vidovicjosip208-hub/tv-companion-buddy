@@ -203,9 +203,32 @@ function useSeekPreview(seekPreviewUrl: string | null) {
     document.body.appendChild(canvas);
     canvasRef.current = canvas;
 
+    // ── Eager prewarm: čim su metapodaci (trajanje) poznati — dakle u istom
+    // trenutku kad se i glavni video učitava — u pozadini se generiraju SVE
+    // sličice fiksne vremenske mreže za cijeli film/epizodu. Korisnički
+    // zahtjevi (aktivno listanje) uvijek imaju prioritet ispred prewarma.
+    const onLoadedMetadata = () => {
+      const duration = video.duration;
+      if (!Number.isFinite(duration) || duration <= 0) return;
+      const cache = getCache();
+      const times: number[] = [];
+      for (let t = 0; t < duration; t += SEEK_THUMB_STEP) {
+        const time = Math.round(t);
+        if (cache.has(time) || pendingRef.current.has(time)) continue;
+        pendingRef.current.add(time);
+        times.push(time);
+      }
+      if (times.length === 0) return;
+      queueRef.current.push(...times);
+      processQueueRef.current?.();
+    };
+    video.addEventListener("loadedmetadata", onLoadedMetadata);
+    if (video.readyState >= 1) onLoadedMetadata();
+
     return () => {
       // Zaustavi i ukloni video/canvas ali NE briši cache
       video.removeEventListener("error", onMediaError);
+      video.removeEventListener("loadedmetadata", onLoadedMetadata);
       previewHls?.destroy();
       video.pause();
       video.removeAttribute("src");
@@ -219,7 +242,8 @@ function useSeekPreview(seekPreviewUrl: string | null) {
       queueRef.current = [];
       seekingRef.current = false;
     };
-  }, [seekPreviewUrl]);
+  }, [seekPreviewUrl, getCache]);
+
 
 
   const processQueue = useCallback(() => {
