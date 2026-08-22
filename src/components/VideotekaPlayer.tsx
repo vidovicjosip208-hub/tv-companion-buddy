@@ -329,6 +329,7 @@ function useSeekPreview(seekPreviewUrl: string | null) {
     video.addEventListener("seeked", onSeeked);
   }, [getCache, bumpVersion]);
 
+  processQueueRef.current = processQueue;
 
   const requestFrame = useCallback(
     (time: number) => {
@@ -336,15 +337,24 @@ function useSeekPreview(seekPreviewUrl: string | null) {
       const cache = getCache();
       // Već u cacheu — vrati odmah bez seekanja
       if (cache.has(t)) return cache.get(t)!;
-      if (!pendingRef.current.has(t)) {
+      if (pendingRef.current.has(t)) {
+        // Već u redu (npr. iz prewarma) — pomakni na početak reda jer ga
+        // korisnik trenutno gleda.
+        const idx = queueRef.current.indexOf(t);
+        if (idx > 0) {
+          queueRef.current.splice(idx, 1);
+          queueRef.current.unshift(t);
+        }
+      } else {
         pendingRef.current.add(t);
-        queueRef.current.push(t);
-        processQueue();
+        queueRef.current.unshift(t);
       }
+      processQueue();
       return null;
     },
     [getCache, processQueue],
   );
+
 
   // Živi preview: pomiče skriveni preview video na traženo vrijeme i vraća
   // sam element kako bi ga UI mogao prikazati kao središnju sličicu.
