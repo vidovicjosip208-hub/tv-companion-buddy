@@ -396,7 +396,8 @@ const COUNTRY_INFO: Record<string, { name: string }> = {
   MK: { name: "Sjeverna Makedonija" },
 };
 
-const flagUrl = (code: string) => `https://flagcdn.com/w80/${code.toLowerCase()}.png`;
+// Glossy 3D waving flag (matches the Apple-style waving flag look).
+const flagUrl = (code: string) => `https://flagsapi.com/${code.toUpperCase()}/shiny/64.png`;
 
 const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
 
