@@ -118,6 +118,7 @@ function useSeekPreview(seekPreviewUrl: string | null) {
   const pendingRef = useRef<Set<number>>(new Set());
   const seekingRef = useRef(false);
   const queueRef = useRef<number[]>([]);
+  const processQueueRef = useRef<(() => void) | null>(null);
   // Kada canvas capture nije moguć (CORS taint / TV dekoder), preview se
   // prikazuje kao živi frame iz istog videa koji ide u playeru.
   const [captureBlocked, setCaptureBlocked] = useState(false);
@@ -203,9 +204,32 @@ function useSeekPreview(seekPreviewUrl: string | null) {
     document.body.appendChild(canvas);
     canvasRef.current = canvas;
 
+    // ── Eager prewarm: čim su metapodaci (trajanje) poznati — dakle u istom
+    // trenutku kad se i glavni video učitava — u pozadini se generiraju SVE
+    // sličice fiksne vremenske mreže za cijeli film/epizodu. Korisnički
+    // zahtjevi (aktivno listanje) uvijek imaju prioritet ispred prewarma.
+    const onLoadedMetadata = () => {
+      const duration = video.duration;
+      if (!Number.isFinite(duration) || duration <= 0) return;
+      const cache = getCache();
+      const times: number[] = [];
+      for (let t = 0; t < duration; t += SEEK_THUMB_STEP) {
+        const time = Math.round(t);
+        if (cache.has(time) || pendingRef.current.has(time)) continue;
+        pendingRef.current.add(time);
+        times.push(time);
+      }
+      if (times.length === 0) return;
+      queueRef.current.push(...times);
+      processQueueRef.current?.();
+    };
+    video.addEventListener("loadedmetadata", onLoadedMetadata);
+    if (video.readyState >= 1) onLoadedMetadata();
+
     return () => {
       // Zaustavi i ukloni video/canvas ali NE briši cache
       video.removeEventListener("error", onMediaError);
+      video.removeEventListener("loadedmetadata", onLoadedMetadata);
       previewHls?.destroy();
       video.pause();
       video.removeAttribute("src");
@@ -219,7 +243,8 @@ function useSeekPreview(seekPreviewUrl: string | null) {
       queueRef.current = [];
       seekingRef.current = false;
     };
-  }, [seekPreviewUrl]);
+  }, [seekPreviewUrl, getCache]);
+
 
 
   const processQueue = useCallback(() => {
@@ -304,6 +329,7 @@ function useSeekPreview(seekPreviewUrl: string | null) {
     video.addEventListener("seeked", onSeeked);
   }, [getCache, bumpVersion]);
 
+  processQueueRef.current = processQueue;
 
   const requestFrame = useCallback(
     (time: number) => {
@@ -311,15 +337,24 @@ function useSeekPreview(seekPreviewUrl: string | null) {
       const cache = getCache();
       // Već u cacheu — vrati odmah bez seekanja
       if (cache.has(t)) return cache.get(t)!;
-      if (!pendingRef.current.has(t)) {
+      if (pendingRef.current.has(t)) {
+        // Već u redu (npr. iz prewarma) — pomakni na početak reda jer ga
+        // korisnik trenutno gleda.
+        const idx = queueRef.current.indexOf(t);
+        if (idx > 0) {
+          queueRef.current.splice(idx, 1);
+          queueRef.current.unshift(t);
+        }
+      } else {
         pendingRef.current.add(t);
-        queueRef.current.push(t);
-        processQueue();
+        queueRef.current.unshift(t);
       }
+      processQueue();
       return null;
     },
     [getCache, processQueue],
   );
+
 
   // Živi preview: pomiče skriveni preview video na traženo vrijeme i vraća
   // sam element kako bi ga UI mogao prikazati kao središnju sličicu.
