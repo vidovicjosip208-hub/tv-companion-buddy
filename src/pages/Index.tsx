@@ -396,7 +396,8 @@ const COUNTRY_INFO: Record<string, { name: string }> = {
   MK: { name: "Sjeverna Makedonija" },
 };
 
-const flagUrl = (code: string) => `https://flagcdn.com/w80/${code.toLowerCase()}.png`;
+// Glossy 3D waving flag (matches the Apple-style waving flag look).
+const flagUrl = (code: string) => `https://flagsapi.com/${code.toUpperCase()}/shiny/64.png`;
 
 const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
 
@@ -1462,7 +1463,9 @@ const Index = () => {
                                 return next;
                               });
                             }}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${
+                            // Fixed width + left-aligned content keeps every flag's
+                            // left edge flush with Hrvatska's, regardless of name length.
+                            className={`flex items-center gap-3 px-4 py-2 w-[440px] justify-start rounded-md transition-all ${
                               isHeaderFocused
                                 ? "bg-accent/20 ring-2 ring-accent"
                                 : "bg-muted/20 ring-1 ring-border/30 hover:bg-muted/30"
@@ -1471,11 +1474,11 @@ const Index = () => {
                             <img
                               src={flagUrl(country)}
                               alt={info.name}
-                              className="w-12 h-8 object-cover rounded-[3px] shadow-sm"
+                              className="w-14 h-14 object-contain drop-shadow-md shrink-0"
                               loading="lazy"
                             />
-                            <span className="text-base font-bold text-foreground">{info.name}</span>
-                            <span className="text-sm text-muted-foreground">({items.length})</span>
+                            <span className="text-2xl font-bold text-foreground whitespace-nowrap">{info.name}</span>
+                            <span className="text-xl text-muted-foreground ml-auto">({items.length})</span>
                           </button>
                           {!collapsed && (
                             <div className="grid grid-cols-4 gap-3 px-1 w-full">
