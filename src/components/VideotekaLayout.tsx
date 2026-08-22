@@ -30,7 +30,7 @@ const VideotekaLayout = ({ initialTab = "Home" }: VideotekaLayoutProps) => {
   const [rowTransitioning, setRowTransitioning] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => headerRef.current?.focus(1), 100);
+    setTimeout(() => headerRef.current?.focus(0), 100);
   }, []);
 
   const [detailViewOpen, setDetailViewOpen] = useState(false);
