@@ -387,14 +387,16 @@ const liveCameras: CameraItem[] = [
   },
 ];
 
-const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
-  HR: { flag: "🇭🇷", name: "Hrvatska" },
-  RS: { flag: "🇷🇸", name: "Srbija" },
-  BA: { flag: "🇧🇦", name: "Bosna i Hercegovina" },
-  SI: { flag: "🇸🇮", name: "Slovenija" },
-  ME: { flag: "🇲🇪", name: "Crna Gora" },
-  MK: { flag: "🇲🇰", name: "Sjeverna Makedonija" },
+const COUNTRY_INFO: Record<string, { name: string }> = {
+  HR: { name: "Hrvatska" },
+  RS: { name: "Srbija" },
+  BA: { name: "Bosna i Hercegovina" },
+  SI: { name: "Slovenija" },
+  ME: { name: "Crna Gora" },
+  MK: { name: "Sjeverna Makedonija" },
 };
+
+const flagUrl = (code: string) => `https://flagcdn.com/w80/${code.toLowerCase()}.png`;
 
 const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
 
