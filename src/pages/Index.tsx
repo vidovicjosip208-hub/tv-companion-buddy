@@ -930,20 +930,39 @@ const Index = () => {
     [cameraRows],
   );
 
-  // Ref na svaki "blok" države (header + red kamera) unutar scrollable containera,
-  // koristi se za automatsko skrolanje kad se fokus pomiče strelicama — jer overflow-y-auto
-  // sam po sebi ne prati fokus, treba eksplicitni scrollIntoView.
+  // Ref na svaki "blok" države (header + red kamera) i na SAM scrollable kontejner.
+  // Koristi se za automatsko skrolanje kad se fokus pomiče strelicama — jer overflow-y-auto
+  // sam po sebi ne prati fokus, treba eksplicitno postaviti scrollTop.
   const cameraGroupRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const cameraScrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Kad ideš dolje: blok nove fokusirane države poravna se na DNO vidljivog područja
   // (prethodna država ostaje vidljiva iznad, dokle god ima mjesta).
   // Kad ideš gore: blok se poravna na VRH (obrnuti princip).
+  //
+  // NAPOMENA: namjerno NE koristimo el.scrollIntoView() — taj poziv po defaultu skrola
+  // SVE scrollable pretke potrebne da element bude vidljiv, pa je u praksi skrolao
+  // cijelu stranicu (nestajao je "Kamere uživo" header i vrh sidebara). Umjesto toga
+  // ručno računamo poziciju elementa RELATIVNO na sam scrollable kontejner i mijenjamo
+  // isključivo njegov scrollTop — ništa izvan njega se ne pomiče.
   const scrollCameraGroupIntoView = useCallback((camIdx: number, direction: "up" | "down") => {
     const cam = liveCameras[camIdx];
     if (!cam) return;
     const el = cameraGroupRefs.current[cam.country];
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: direction === "down" ? "end" : "start" });
+    const container = cameraScrollContainerRef.current;
+    if (!el || !container) return;
+
+    const elRect = el.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const relativeTop = elRect.top - containerRect.top + container.scrollTop;
+    const relativeBottom = relativeTop + el.offsetHeight;
+
+    const targetScrollTop = direction === "down" ? relativeBottom - container.clientHeight : relativeTop;
+
+    container.scrollTo({
+      top: Math.max(0, targetScrollTop),
+      behavior: "smooth",
+    });
   }, []);
 
   const handleKeyDown = useCallback(
@@ -1443,7 +1462,10 @@ const Index = () => {
                       className="absolute left-1/2 -translate-x-1/2 h-12 w-auto scale-[4.5] pointer-events-none"
                     />
                   </div>
-                  <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
+                  <div
+                    ref={cameraScrollContainerRef}
+                    className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4"
+                  >
                     {camerasByCountry.map(({ country, items }) => {
                       const info = COUNTRY_INFO[country] ?? { name: country };
                       return (
