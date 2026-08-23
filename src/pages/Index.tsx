@@ -911,14 +911,31 @@ const Index = () => {
     }));
   }, []);
 
-  const visibleCameraIndices = useMemo(() => {
-    const indices: number[] = [];
-    camerasByCountry.forEach(({ country, items }) => {
-      if (collapsedCountries.has(country)) return;
-      items.forEach((cam) => indices.push(liveCameras.indexOf(cam)));
-    });
-    return indices;
-  }, [camerasByCountry, collapsedCountries]);
+  /** Pozicija fokusirane kamere: indeks države (retka) i pozicija unutar retka. */
+  const cameraLocation = useCallback(
+    (globalIdx: number) => {
+      const cam = liveCameras[globalIdx];
+      if (!cam) return { groupIdx: 0, pos: 0 };
+      const groupIdx = Math.max(
+        0,
+        camerasByCountry.findIndex((g) => g.country === cam.country),
+      );
+      const pos = Math.max(0, camerasByCountry[groupIdx]?.items.indexOf(cam) ?? 0);
+      return { groupIdx, pos };
+    },
+    [camerasByCountry],
+  );
+
+  const cameraAt = useCallback(
+    (groupIdx: number, pos: number) => {
+      const grp = camerasByCountry[groupIdx];
+      if (!grp) return 0;
+      const item = grp.items[Math.min(pos, grp.items.length - 1)];
+      return liveCameras.indexOf(item);
+    },
+    [camerasByCountry],
+  );
+
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
