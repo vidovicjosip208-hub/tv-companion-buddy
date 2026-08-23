@@ -1424,29 +1424,11 @@ const Index = () => {
                     />
                   </div>
                   <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
-                    {camerasByCountry.map(({ country, items }, groupIdx) => {
+                    {camerasByCountry.map(({ country, items }) => {
                       const info = COUNTRY_INFO[country] ?? { name: country };
-                      const collapsed = collapsedCountries.has(country);
-                      const isHeaderFocused = focusZone === "cameraHeaders" && cameraHeaderIndex === groupIdx;
                       return (
                         <div key={country} className="flex flex-col gap-2 items-center">
-                          <button
-                            onClick={() => {
-                              setFocusZone("cameraHeaders");
-                              setCameraHeaderIndex(groupIdx);
-                              setCollapsedCountries((prev) => {
-                                const next = new Set(prev);
-                                if (next.has(country)) next.delete(country);
-                                else next.add(country);
-                                return next;
-                              });
-                            }}
-                            className={`flex items-center gap-2 rounded-md transition-all ${
-                              isHeaderFocused
-                                ? "bg-accent/20 ring-2 ring-accent"
-                                : "bg-muted/20 ring-1 ring-border/30 hover:bg-muted/30"
-                            }`}
-                          >
+                          <div className="flex items-center gap-2 rounded-md pointer-events-none select-none">
                             <img
                               src={flagImageUrl(country)}
                               alt={info.name}
@@ -1454,44 +1436,44 @@ const Index = () => {
                               loading="lazy"
                             />
                             <span className="text-2xl font-bold text-foreground">{info.name}</span>
-                            <span className="text-lg text-muted-foreground">({items.length})</span>
-                          </button>
-                          {!collapsed && (
-                            <div className="grid grid-cols-4 gap-3 px-1 w-full">
-                              {items.map((cam) => {
-                                const i = liveCameras.indexOf(cam);
-                                const isFocused = focusZone === "cameras" && cameraIndex === i;
-                                return (
-                                  <motion.div
-                                    key={cam.id}
-                                    whileHover={{ scale: 1.03 }}
-                                    className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
-                                      isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
-                                    }`}
-                                    onClick={() => {
-                                      setFocusZone("cameras");
-                                      setCameraIndex(i);
-                                    }}
-                                  >
-                                    <div className="aspect-video relative">
-                                      <img src={cam.thumbnail} alt={cam.name} className="w-full h-full object-cover" />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                                      <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                        <span className="text-xs font-medium text-foreground">
-                                          {t("home.liveLabel")}
-                                        </span>
-                                      </div>
-                                      <div className="absolute bottom-2 left-2 right-2">
-                                        <p className="text-sm font-semibold text-foreground truncate">{cam.name}</p>
-                                        <p className="text-xs text-muted-foreground">{cam.location}</p>
-                                      </div>
+                          </div>
+                          <div className="flex gap-3 px-1 w-full overflow-x-auto scrollbar-hide">
+                            {items.map((cam) => {
+                              const i = liveCameras.indexOf(cam);
+                              const isFocused = focusZone === "cameras" && cameraIndex === i;
+                              return (
+                                <motion.div
+                                  key={cam.id}
+                                  ref={(el: HTMLDivElement | null) => {
+                                    if (el && isFocused) {
+                                      el.scrollIntoView({ block: "nearest", inline: "center" });
+                                    }
+                                  }}
+                                  whileHover={{ scale: 1.03 }}
+                                  className={`relative shrink-0 w-[300px] rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
+                                    isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
+                                  }`}
+                                  onClick={() => {
+                                    setFocusZone("cameras");
+                                    setCameraIndex(i);
+                                  }}
+                                >
+                                  <div className="aspect-video relative">
+                                    <img src={cam.thumbnail} alt={cam.name} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                    <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                      <span className="text-xs font-medium text-foreground">{t("home.liveLabel")}</span>
                                     </div>
-                                  </motion.div>
-                                );
-                              })}
-                            </div>
-                          )}
+                                    <div className="absolute bottom-2 left-2 right-2">
+                                      <p className="text-sm font-semibold text-foreground truncate">{cam.name}</p>
+                                      <p className="text-xs text-muted-foreground">{cam.location}</p>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}
