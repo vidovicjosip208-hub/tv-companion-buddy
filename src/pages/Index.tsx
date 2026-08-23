@@ -396,10 +396,24 @@ const COUNTRY_INFO: Record<string, { name: string }> = {
   MK: { name: "Sjeverna Makedonija" },
 };
 
-// Native flag emoji (waving stil) umjesto pravokutnih flagcdn slika.
-// Regional indicator simboli: 'A'..'Z' -> U+1F1E6..U+1F1FF (offset 127397).
+// Regionalni indikator kodovi ('A'..'Z' -> U+1F1E6..U+1F1FF), koriste se samo
+// da bismo dobili standardni Unicode codepoint niz za pojedinu zastavicu.
 const countryFlagEmoji = (code: string) =>
   code.toUpperCase().replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+
+// Pretvara emoji string u niz Unicode codepointova (hex, malim slovima, spojeno s "-"),
+// format koji emoji CDN-ovi koriste za nazive datoteka slika.
+const toCodePoints = (str: string) =>
+  Array.from(str)
+    .map((c) => c.codePointAt(0)!.toString(16))
+    .join("-");
+
+// EmojiOne CDN — klasični "lepršavi" glossy stil zastavica s naborom i sjenom,
+// isti izgled na svim uređajima (laptop, TV, mobitel) jer se ne oslanja na
+// sistemski emoji font (Windows Segoe UI Emoji namjerno ne prikazuje flag emoji).
+// Licenca: EmojiOne 2.2.7, CC BY 4.0 — potrebna atribucija negdje u aplikaciji.
+const flagImageUrl = (code: string) =>
+  `https://cdnjs.cloudflare.com/ajax/libs/emojione/2.2.7/assets/svg/${toCodePoints(countryFlagEmoji(code))}.svg`;
 
 const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
 
@@ -1471,9 +1485,12 @@ const Index = () => {
                                 : "bg-muted/20 ring-1 ring-border/30 hover:bg-muted/30"
                             }`}
                           >
-                            <span className="text-4xl leading-none" aria-label={info.name}>
-                              {countryFlagEmoji(country)}
-                            </span>
+                            <img
+                              src={flagImageUrl(country)}
+                              alt={info.name}
+                              className="w-10 h-10 object-contain"
+                              loading="lazy"
+                            />
                             <span className="text-2xl font-bold text-foreground">{info.name}</span>
                             <span className="text-lg text-muted-foreground">({items.length})</span>
                           </button>
