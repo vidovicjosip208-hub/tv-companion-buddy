@@ -1026,10 +1026,10 @@ const Index = () => {
           } else if (focusZone === "cards") {
             setCardIndex((p) => moveCardIndexLive(p, "right"));
           } else if (focusZone === "cameras") {
-            const pos = visibleCameraIndices.indexOf(cameraIndex);
-            const col = pos % CAMERAS_COLS;
-            if (col < CAMERAS_COLS - 1 && pos + 1 < visibleCameraIndices.length) {
-              setCameraIndex(visibleCameraIndices[pos + 1]);
+            const { groupIdx, pos } = cameraLocation(cameraIndex);
+            const grp = camerasByCountry[groupIdx];
+            if (grp && pos + 1 < grp.items.length) {
+              setCameraIndex(cameraAt(groupIdx, pos + 1));
             }
           }
           break;
