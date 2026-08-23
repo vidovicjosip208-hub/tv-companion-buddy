@@ -316,7 +316,6 @@ type FocusZone =
   | "epgPrograms"
   | "cards"
   | "cameras"
-  | "cameraHeaders"
   | "radio";
 
 interface CameraItem {
@@ -500,7 +499,6 @@ const radioStations: EPGChannel[] = [
   },
 ];
 
-const CAMERAS_COLS = 4;
 
 const CATEGORY_TO_DB_MAP: Record<string, string[]> = {
   documentary: ["Documentary"],
@@ -1012,7 +1010,7 @@ const Index = () => {
             } else if (isRadioActive && showRadio) {
               setFocusZone("epg");
             } else if (isCamerasActive && showCameras) {
-              setFocusZone("cameraHeaders");
+              setFocusZone("cameras");
             } else {
               setFocusZone("cards");
             }
@@ -1176,7 +1174,7 @@ const Index = () => {
             setShowCategories(false);
             setSidebarExpanded(true);
             setFocusZone("sidebar");
-          } else if (focusZone === "cameras" || focusZone === "cameraHeaders") {
+          } else if (focusZone === "cameras") {
             setShowCameras(false);
             setSidebarExpanded(true);
             setFocusZone("sidebar");
@@ -1195,10 +1193,9 @@ const Index = () => {
       categoryIndex,
       cardIndex,
       cameraIndex,
-      cameraHeaderIndex,
       camerasByCountry,
-      visibleCameraIndices,
-      collapsedCountries,
+      cameraLocation,
+      cameraAt,
       programIndex,
       selectedChannelPrograms,
       handleSidebarAction,
