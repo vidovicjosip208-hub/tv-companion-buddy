@@ -930,6 +930,22 @@ const Index = () => {
     [cameraRows],
   );
 
+  // Ref na svaki "blok" države (header + red kamera) unutar scrollable containera,
+  // koristi se za automatsko skrolanje kad se fokus pomiče strelicama — jer overflow-y-auto
+  // sam po sebi ne prati fokus, treba eksplicitni scrollIntoView.
+  const cameraGroupRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Kad ideš dolje: blok nove fokusirane države poravna se na DNO vidljivog područja
+  // (prethodna država ostaje vidljiva iznad, dokle god ima mjesta).
+  // Kad ideš gore: blok se poravna na VRH (obrnuti princip).
+  const scrollCameraGroupIntoView = useCallback((camIdx: number, direction: "up" | "down") => {
+    const cam = liveCameras[camIdx];
+    if (!cam) return;
+    const el = cameraGroupRefs.current[cam.country];
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: direction === "down" ? "end" : "start" });
+  }, []);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (playerVisible) return;
@@ -1091,7 +1107,9 @@ const Index = () => {
             const nextRow = cameraRows[row + 1];
             if (nextRow) {
               const targetCol = Math.min(col, nextRow.length - 1);
-              setCameraIndex(nextRow[targetCol]);
+              const nextIdx = nextRow[targetCol];
+              setCameraIndex(nextIdx);
+              scrollCameraGroupIntoView(nextIdx, "down");
             }
           }
           break;
@@ -1124,7 +1142,9 @@ const Index = () => {
             } else {
               const prevRow = cameraRows[row - 1];
               const targetCol = Math.min(col, prevRow.length - 1);
-              setCameraIndex(prevRow[targetCol]);
+              const prevIdx = prevRow[targetCol];
+              setCameraIndex(prevIdx);
+              scrollCameraGroupIntoView(prevIdx, "up");
             }
           }
           break;
@@ -1198,6 +1218,7 @@ const Index = () => {
       cameraIndex,
       cameraRows,
       findCameraPosition,
+      scrollCameraGroupIntoView,
       programIndex,
       selectedChannelPrograms,
       handleSidebarAction,
@@ -1426,7 +1447,13 @@ const Index = () => {
                     {camerasByCountry.map(({ country, items }) => {
                       const info = COUNTRY_INFO[country] ?? { name: country };
                       return (
-                        <div key={country} className="flex flex-col gap-2 items-center">
+                        <div
+                          key={country}
+                          ref={(el) => {
+                            cameraGroupRefs.current[country] = el;
+                          }}
+                          className="flex flex-col gap-2 items-center"
+                        >
                           {/* Statični header — nije klikabilan, kamere ispod su uvijek vidljive */}
                           <div className="flex items-center gap-2 rounded-md bg-muted/20 ring-1 ring-border/30">
                             <img
