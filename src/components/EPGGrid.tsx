@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useEffect, useState } from "react";
+import { memo, useMemo, useRef, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -38,6 +38,32 @@ interface EPGGridProps {
   showNumbers?: boolean;
 }
 
+// Ovo je TV aplikacija — scroll mišem/kotačićem ne treba postojati nigdje, samo
+// navigacija strelicama. React od v17 dodaje wheel/touch listenere kao PASSIVE po
+// defaultu, pa preventDefault() unutar običnog onWheel propa NEMA efekta (browser ga
+// ignorira). Ovaj hook ručno veže native "wheel" listener s { passive: false } preko
+// ref callbacka — zakači se točno kad React montira DOM element, neovisno o
+// Framer Motion/AnimatePresence tajmingu. Vraća ref koji se stavlja na scrollable div;
+// postojeći scrollIntoView() pozivi (za praćenje fokusa strelicama) ostaju netaknuti,
+// jer to je programski scroll, ne scroll mišem.
+function useNoWheelRef<T extends HTMLElement>() {
+  const nodeRef = useRef<T | null>(null);
+  const blockWheel = useCallback((e: WheelEvent) => e.preventDefault(), []);
+
+  return useCallback(
+    (el: T | null) => {
+      if (nodeRef.current) {
+        nodeRef.current.removeEventListener("wheel", blockWheel);
+      }
+      nodeRef.current = el;
+      if (el) {
+        el.addEventListener("wheel", blockWheel, { passive: false });
+      }
+    },
+    [blockWheel],
+  );
+}
+
 function calculateProgress(startTime: string, endTime: string): number {
   const parseTime = (t: string) => {
     const [h, m] = t.split(":").map(Number);
@@ -53,95 +79,94 @@ function calculateProgress(startTime: string, endTime: string): number {
   return Math.max(0, Math.min(100, ((current - start) / total) * 100));
 }
 
-const ChannelItem = memo(({
-  channel,
-  isFocused,
-  onClick,
-  index,
-  showNumber = false,
-}: {
-  channel: EPGChannel;
-  isFocused: boolean;
-  onClick?: () => void;
-  index: number;
-  showNumber?: boolean;
-}) => {
-  const ref = useRef<HTMLButtonElement>(null);
-  const [logoError, setLogoError] = useState(false);
+const ChannelItem = memo(
+  ({
+    channel,
+    isFocused,
+    onClick,
+    index,
+    showNumber = false,
+  }: {
+    channel: EPGChannel;
+    isFocused: boolean;
+    onClick?: () => void;
+    index: number;
+    showNumber?: boolean;
+  }) => {
+    const ref = useRef<HTMLButtonElement>(null);
+    const [logoError, setLogoError] = useState(false);
 
-  useEffect(() => {
-    if (isFocused && ref.current) {
-      ref.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-  }, [isFocused]);
+    useEffect(() => {
+      if (isFocused && ref.current) {
+        ref.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    }, [isFocused]);
 
-  useEffect(() => {
-    setLogoError(false);
-  }, [channel.logoUrl]);
+    useEffect(() => {
+      setLogoError(false);
+    }, [channel.logoUrl]);
 
-  return (
-    <motion.button
-      ref={ref}
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.03 }}
-      onClick={onClick}
-      onMouseEnter={onClick}
-      className={cn(
-        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-left",
-        "border border-transparent",
-        isFocused
-          ? "bg-accent/15 border-accent/40"
-          : "bg-transparent hover:bg-muted/20",
-      )}
-    >
-      {showNumber && (
-        <span
-          className={cn(
-            "flex-shrink-0 min-w-[28px] text-center text-sm font-bold tabular-nums px-1.5 py-0.5 rounded-md border transition-colors",
-            isFocused ? "text-accent border-accent/60 bg-accent/10" : "text-foreground/50 border-border/40",
-          )}
-        >
-          {channel.number}
-        </span>
-      )}
-      <div
+    return (
+      <motion.button
+        ref={ref}
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.03 }}
+        onClick={onClick}
+        onMouseEnter={onClick}
         className={cn(
-          "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
-          "bg-transparent",
+          "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-left",
+          "border border-transparent",
+          isFocused ? "bg-accent/15 border-accent/40" : "bg-transparent hover:bg-muted/20",
         )}
       >
-        {channel.logoUrl && !logoError ? (
-          <img
-            src={channel.logoUrl}
-            alt={channel.name}
-            className="w-full h-full object-contain scale-125"
-            loading="eager"
-            onError={() => setLogoError(true)}
-          />
-        ) : (
+        {showNumber && (
           <span
             className={cn(
-              "text-sm font-bold tracking-wide transition-colors",
-              isFocused ? "text-accent" : "text-foreground/60",
+              "flex-shrink-0 min-w-[28px] text-center text-sm font-bold tabular-nums px-1.5 py-0.5 rounded-md border transition-colors",
+              isFocused ? "text-accent border-accent/60 bg-accent/10" : "text-foreground/50 border-border/40",
             )}
           >
-            {channel.abbreviation}
+            {channel.number}
           </span>
         )}
-      </div>
-      <span
-        className={cn(
-          "text-sm font-medium truncate transition-colors",
-          isFocused ? "text-foreground" : "text-foreground/50",
-        )}
-      >
-        {channel.name}
-      </span>
-
-    </motion.button>
-  );
-});
+        <div
+          className={cn(
+            "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
+            "bg-transparent",
+          )}
+        >
+          {channel.logoUrl && !logoError ? (
+            <img
+              src={channel.logoUrl}
+              alt={channel.name}
+              className="w-full h-full object-contain scale-125"
+              loading="eager"
+              onError={() => setLogoError(true)}
+            />
+          ) : (
+            <span
+              className={cn(
+                "text-sm font-bold tracking-wide transition-colors",
+                isFocused ? "text-accent" : "text-foreground/60",
+              )}
+            >
+              {channel.abbreviation}
+            </span>
+          )}
+        </div>
+        <span
+          className={cn(
+            "text-sm font-medium truncate transition-colors",
+            isFocused ? "text-foreground" : "text-foreground/50",
+          )}
+        >
+          {channel.name}
+        </span>
+      </motion.button>
+    );
+  },
+);
 ChannelItem.displayName = "ChannelItem";
 
 const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; index: number; isFocused: boolean }) => {
@@ -165,11 +190,7 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
       transition={{ duration: 0.25, delay: index * 0.04 }}
       className={cn(
         "flex items-center gap-4 px-5 py-3 rounded-lg transition-all duration-200",
-        isFocused
-          ? "bg-accent/15"
-          : program.isLive
-            ? "bg-accent/8"
-            : "bg-transparent hover:bg-muted/10",
+        isFocused ? "bg-accent/15" : program.isLive ? "bg-accent/8" : "bg-transparent hover:bg-muted/10",
       )}
     >
       <span
@@ -218,9 +239,7 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
 
       <span className="text-xs text-muted-foreground flex-shrink-0">{program.endTime}</span>
 
-      <span className="hidden text-xs text-muted-foreground/60 flex-shrink-0 w-14 text-right">
-        {program.date}
-      </span>
+      <span className="hidden text-xs text-muted-foreground/60 flex-shrink-0 w-14 text-right">{program.date}</span>
     </motion.div>
   );
 });
@@ -239,6 +258,13 @@ const EPGGrid = ({
 }: EPGGridProps) => {
   const { t } = useTranslation();
   const selectedChannel = isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
+
+  // Refovi koji blokiraju scroll mišem na sva tri scrollable stupca (lista kanala,
+  // raspored programa, panel s detaljima) — postojeći scrollIntoView() u ChannelItem/
+  // ProgramRow (za praćenje fokusa strelicama) ostaje netaknut jer je to programski scroll.
+  const noWheelChannelListRef = useNoWheelRef<HTMLDivElement>();
+  const noWheelProgramListRef = useNoWheelRef<HTMLDivElement>();
+  const noWheelDetailPanelRef = useNoWheelRef<HTMLDivElement>();
 
   const selectedProgram = useMemo(() => {
     if (!selectedChannel) return undefined;
@@ -261,7 +287,13 @@ const EPGGrid = ({
       className="flex flex-row flex-1 overflow-hidden rounded-xl gap-2"
     >
       {/* Left Column — Channel List */}
-      <div className={cn("flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2 flex-shrink-0", hideSchedule ? "w-[35%]" : "w-[21%]") }>
+      <div
+        ref={noWheelChannelListRef}
+        className={cn(
+          "flex flex-col overflow-y-auto scrollbar-hide pr-0 py-2 flex-shrink-0",
+          hideSchedule ? "w-[35%]" : "w-[21%]",
+        )}
+      >
         <h2 className="text-muted-foreground font-medium text-sm px-4 pb-2">{t("epg.live")}</h2>
         {channels.map((channel, index) => (
           <ChannelItem
@@ -278,12 +310,13 @@ const EPGGrid = ({
       {/* Gold Divider */}
       <div className="w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
 
-
       {/* Middle Column — Program Guide */}
       {!hideSchedule && (
         <>
-          <div className="w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2 flex-shrink-0">
-
+          <div
+            ref={noWheelProgramListRef}
+            className="w-[44%] flex flex-col overflow-y-auto scrollbar-hide py-2 flex-shrink-0"
+          >
             <h2 className="text-muted-foreground font-medium text-sm px-5 pb-2">{t("epg.schedule")}</h2>
             <AnimatePresence mode="wait">
               <motion.div
@@ -309,7 +342,9 @@ const EPGGrid = ({
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-foreground">{selectedChannel?.name}</h3>
-                    <span className="text-xs text-muted-foreground">{t("epg.channel")} {selectedChannel?.number}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {t("epg.channel")} {selectedChannel?.number}
+                    </span>
                   </div>
                 </div>
 
@@ -332,11 +367,16 @@ const EPGGrid = ({
         </>
       )}
       {/* Right Column — Program Details */}
-      <div className={cn("flex flex-col justify-center py-2 px-3 overflow-hidden h-full", hideSchedule ? "flex-1" : "flex-1") }>
-
+      <div
+        className={cn(
+          "flex flex-col justify-center py-2 px-3 overflow-hidden h-full",
+          hideSchedule ? "flex-1" : "flex-1",
+        )}
+      >
         <AnimatePresence mode="wait">
           {selectedProgram && (isProgramFocused || hideSchedule) && (
             <motion.div
+              ref={noWheelDetailPanelRef}
               key={`${selectedChannel?.id}-${selectedProgram.title}-${selectedProgram.startTime}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
