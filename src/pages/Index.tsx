@@ -592,8 +592,6 @@ const Index = () => {
   const [showCameras, setShowCameras] = useState(false);
   const [showRadio, setShowRadio] = useState(false);
   const [cameraIndex, setCameraIndex] = useState(0);
-  const [collapsedCountries, setCollapsedCountries] = useState<Set<string>>(new Set());
-  const [cameraHeaderIndex, setCameraHeaderIndex] = useState(0);
   const [showProfile, setShowProfile] = useState(false);
 
   const [playerVisible, setPlayerVisible] = useState(false);
