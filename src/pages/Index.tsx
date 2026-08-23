@@ -1097,27 +1097,9 @@ const Index = () => {
           } else if (focusZone === "cards") {
             setCardIndex((p) => moveCardIndexLive(p, "down"));
           } else if (focusZone === "cameras") {
-            const pos = visibleCameraIndices.indexOf(cameraIndex);
-            const nextPos = pos + CAMERAS_COLS;
-            if (nextPos < visibleCameraIndices.length) {
-              setCameraIndex(visibleCameraIndices[nextPos]);
-            } else {
-              // Move to next country header
-              const cam = liveCameras[cameraIndex];
-              const grpIdx = camerasByCountry.findIndex((g) => g.country === cam.country);
-              if (grpIdx >= 0 && grpIdx + 1 < camerasByCountry.length) {
-                setCameraHeaderIndex(grpIdx + 1);
-                setFocusZone("cameraHeaders");
-              }
-            }
-          } else if (focusZone === "cameraHeaders") {
-            const grp = camerasByCountry[cameraHeaderIndex];
-            if (grp && !collapsedCountries.has(grp.country)) {
-              const firstIdx = liveCameras.indexOf(grp.items[0]);
-              setCameraIndex(firstIdx);
-              setFocusZone("cameras");
-            } else if (cameraHeaderIndex + 1 < camerasByCountry.length) {
-              setCameraHeaderIndex((p) => p + 1);
+            const { groupIdx, pos } = cameraLocation(cameraIndex);
+            if (groupIdx + 1 < camerasByCountry.length) {
+              setCameraIndex(cameraAt(groupIdx + 1, pos));
             }
           }
           break;
