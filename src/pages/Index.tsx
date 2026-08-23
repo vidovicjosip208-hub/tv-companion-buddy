@@ -941,20 +941,44 @@ const Index = () => {
   // Ovo je TV aplikacija — scroll mišem/kotačićem ne treba postojati, samo navigacija
   // strelicama. React od v17 dodaje wheel/touch listenere kao PASSIVE po defaultu, pa
   // preventDefault() unutar običnog onWheel propa NEMA efekta (browser ga ignorira).
-  // Zato ovdje ručno vežemo native "wheel" listener s { passive: false } na oba
-  // scrollable kontejnera — to je jedini pouzdan način da se stvarno blokira scroll
-  // kotačićem, dok programski scroll (container.scrollTo() iz navigacije strelicama)
-  // ostaje potpuno neovisan i dalje radi normalno.
-  useEffect(() => {
-    const blockWheel = (e: WheelEvent) => e.preventDefault();
-    const targets = [cameraScrollContainerRef.current, cardsScrollContainerRef.current].filter(
-      (el): el is HTMLDivElement => el !== null,
-    );
-    targets.forEach((el) => el.addEventListener("wheel", blockWheel, { passive: false }));
-    return () => {
-      targets.forEach((el) => el.removeEventListener("wheel", blockWheel));
-    };
-  }, [showCameras, showCategories, showFavorites, showRadio]);
+  // Zato ručno vežemo native "wheel" listener s { passive: false }.
+  //
+  // NAPOMENA: ovo NIJE u useEffect-u vezanom za show* state — AnimatePresence koristi
+  // mode="wait", pa čeka da se PRETHODNI prikaz animira van (exit, ~0.3s) prije nego
+  // što uopće montira novi motion.div. Kad bi se listener vezao u useEffect-u koji
+  // reagira na promjenu show* state-a, taj efekt bi pucao ODMAH (prije nego DOM čvor
+  // uopće postoji), pa cameraScrollContainerRef.current / cardsScrollContainerRef.current
+  // budu null u tom trenutku i listener se nikad ne zakači — to je razlog zašto je scroll
+  // mišem i dalje radio na "TV Kanali" / "Kamere uživo" nakon prebacivanja prikaza.
+  // Umjesto toga koristimo REF CALLBACK koji se poziva TOČNO kad React montira/unmounta
+  // sam DOM element — garantirano ispravan tajming bez obzira na animacije.
+  const blockWheel = useCallback((e: WheelEvent) => e.preventDefault(), []);
+
+  const setCameraScrollRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (cameraScrollContainerRef.current) {
+        cameraScrollContainerRef.current.removeEventListener("wheel", blockWheel);
+      }
+      cameraScrollContainerRef.current = el;
+      if (el) {
+        el.addEventListener("wheel", blockWheel, { passive: false });
+      }
+    },
+    [blockWheel],
+  );
+
+  const setCardsScrollRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (cardsScrollContainerRef.current) {
+        cardsScrollContainerRef.current.removeEventListener("wheel", blockWheel);
+      }
+      cardsScrollContainerRef.current = el;
+      if (el) {
+        el.addEventListener("wheel", blockWheel, { passive: false });
+      }
+    },
+    [blockWheel],
+  );
 
   // Kad ideš dolje: blok nove fokusirane države poravna se na DNO vidljivog područja
   // (prethodna država ostaje vidljiva iznad, dokle god ima mjesta).
@@ -1491,7 +1515,7 @@ const Index = () => {
                     />
                   </div>
                   <div
-                    ref={cameraScrollContainerRef}
+                    ref={setCameraScrollRef}
                     className="relative z-10 flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4"
                   >
                     {camerasByCountry.map(({ country, items }) => {
@@ -1599,7 +1623,7 @@ const Index = () => {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                   className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-w-0 w-full px-2 py-2"
-                  ref={cardsScrollContainerRef}
+                  ref={setCardsScrollRef}
                 >
                   <TVContentRow
                     title="Uživo"
