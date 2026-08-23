@@ -1143,29 +1143,9 @@ const Index = () => {
           } else if (focusZone === "cards") {
             setCardIndex((p) => moveCardIndexLive(p, "up"));
           } else if (focusZone === "cameras") {
-            const pos = visibleCameraIndices.indexOf(cameraIndex);
-            const prevPos = pos - CAMERAS_COLS;
-            if (prevPos >= 0) {
-              setCameraIndex(visibleCameraIndices[prevPos]);
-            } else {
-              // Move up to current group's header
-              const cam = liveCameras[cameraIndex];
-              const grpIdx = camerasByCountry.findIndex((g) => g.country === cam.country);
-              if (grpIdx >= 0) {
-                setCameraHeaderIndex(grpIdx);
-                setFocusZone("cameraHeaders");
-              }
-            }
-          } else if (focusZone === "cameraHeaders") {
-            if (cameraHeaderIndex > 0) {
-              setCameraHeaderIndex((p) => p - 1);
-              const prevGrp = camerasByCountry[cameraHeaderIndex - 1];
-              if (prevGrp && !collapsedCountries.has(prevGrp.country)) {
-                // jump into last row of previous group
-                const lastIdx = liveCameras.indexOf(prevGrp.items[prevGrp.items.length - 1]);
-                setCameraIndex(lastIdx);
-                setFocusZone("cameras");
-              }
+            const { groupIdx, pos } = cameraLocation(cameraIndex);
+            if (groupIdx > 0) {
+              setCameraIndex(cameraAt(groupIdx - 1, pos));
             }
           }
           break;
