@@ -935,6 +935,26 @@ const Index = () => {
   // sam po sebi ne prati fokus, treba eksplicitno postaviti scrollTop.
   const cameraGroupRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const cameraScrollContainerRef = useRef<HTMLDivElement | null>(null);
+  // Scrollable kontejner za "Uživo" kartice.
+  const cardsScrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Ovo je TV aplikacija — scroll mišem/kotačićem ne treba postojati, samo navigacija
+  // strelicama. React od v17 dodaje wheel/touch listenere kao PASSIVE po defaultu, pa
+  // preventDefault() unutar običnog onWheel propa NEMA efekta (browser ga ignorira).
+  // Zato ovdje ručno vežemo native "wheel" listener s { passive: false } na oba
+  // scrollable kontejnera — to je jedini pouzdan način da se stvarno blokira scroll
+  // kotačićem, dok programski scroll (container.scrollTo() iz navigacije strelicama)
+  // ostaje potpuno neovisan i dalje radi normalno.
+  useEffect(() => {
+    const blockWheel = (e: WheelEvent) => e.preventDefault();
+    const targets = [cameraScrollContainerRef.current, cardsScrollContainerRef.current].filter(
+      (el): el is HTMLDivElement => el !== null,
+    );
+    targets.forEach((el) => el.addEventListener("wheel", blockWheel, { passive: false }));
+    return () => {
+      targets.forEach((el) => el.removeEventListener("wheel", blockWheel));
+    };
+  }, [showCameras, showCategories, showFavorites, showRadio]);
 
   // Kad ideš dolje: blok nove fokusirane države poravna se na DNO vidljivog područja
   // (prethodna država ostaje vidljiva iznad, dokle god ima mjesta).
@@ -1473,7 +1493,6 @@ const Index = () => {
                   <div
                     ref={cameraScrollContainerRef}
                     className="relative z-10 flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4"
-                    onWheel={(e) => e.preventDefault()}
                   >
                     {camerasByCountry.map(({ country, items }) => {
                       const info = COUNTRY_INFO[country] ?? { name: country };
@@ -1580,7 +1599,7 @@ const Index = () => {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                   className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-w-0 w-full px-2 py-2"
-                  onWheel={(e) => e.preventDefault()}
+                  ref={cardsScrollContainerRef}
                 >
                   <TVContentRow
                     title="Uživo"
