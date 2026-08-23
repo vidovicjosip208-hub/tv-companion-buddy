@@ -1462,7 +1462,7 @@ const Index = () => {
                   transition={{ duration: 0.3 }}
                   className="flex-1 flex flex-col overflow-hidden"
                 >
-                  <div className="relative flex items-center mb-4 px-1 h-20 pt-8">
+                  <div className="relative z-0 flex items-center mb-4 px-1 h-20 pt-8">
                     <h2 className="text-lg font-semibold text-foreground">{t("home.camerasLive")}</h2>
                     <img
                       src={liveCamsLogo.url}
@@ -1472,7 +1472,8 @@ const Index = () => {
                   </div>
                   <div
                     ref={cameraScrollContainerRef}
-                    className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4"
+                    className="relative z-10 flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4"
+                    onWheel={(e) => e.preventDefault()}
                   >
                     {camerasByCountry.map(({ country, items }) => {
                       const info = COUNTRY_INFO[country] ?? { name: country };
@@ -1579,6 +1580,7 @@ const Index = () => {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                   className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-w-0 w-full px-2 py-2"
+                  onWheel={(e) => e.preventDefault()}
                 >
                   <TVContentRow
                     title="Uživo"
