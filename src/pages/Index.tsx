@@ -1068,17 +1068,13 @@ const Index = () => {
               setCardIndex((p) => moveCardIndexLive(p, "left"));
             }
           } else if (focusZone === "cameras") {
-            const pos = visibleCameraIndices.indexOf(cameraIndex);
-            const col = pos % CAMERAS_COLS;
-            if (col === 0) {
+            const { groupIdx, pos } = cameraLocation(cameraIndex);
+            if (pos === 0) {
               setSidebarExpanded(true);
               setFocusZone("sidebar");
             } else {
-              setCameraIndex(visibleCameraIndices[pos - 1]);
+              setCameraIndex(cameraAt(groupIdx, pos - 1));
             }
-          } else if (focusZone === "cameraHeaders") {
-            setSidebarExpanded(true);
-            setFocusZone("sidebar");
           }
           break;
 
