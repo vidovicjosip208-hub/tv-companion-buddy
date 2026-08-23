@@ -316,6 +316,7 @@ type FocusZone =
   | "epgPrograms"
   | "cards"
   | "cameras"
+  | "cameraHeaders"
   | "radio";
 
 interface CameraItem {
@@ -499,6 +500,7 @@ const radioStations: EPGChannel[] = [
   },
 ];
 
+const CAMERAS_COLS = 4;
 
 const CATEGORY_TO_DB_MAP: Record<string, string[]> = {
   documentary: ["Documentary"],
@@ -590,6 +592,8 @@ const Index = () => {
   const [showCameras, setShowCameras] = useState(false);
   const [showRadio, setShowRadio] = useState(false);
   const [cameraIndex, setCameraIndex] = useState(0);
+  const [collapsedCountries, setCollapsedCountries] = useState<Set<string>>(new Set());
+  const [cameraHeaderIndex, setCameraHeaderIndex] = useState(0);
   const [showProfile, setShowProfile] = useState(false);
 
   const [playerVisible, setPlayerVisible] = useState(false);
@@ -888,7 +892,8 @@ const Index = () => {
         setShowFavorites(false);
         setShowRadio(false);
         setCameraIndex(0);
-        setFocusZone("cameras");
+        setCameraHeaderIndex(0);
+        setFocusZone("cameraHeaders");
         setSidebarExpanded(false);
       }
     },
@@ -909,31 +914,14 @@ const Index = () => {
     }));
   }, []);
 
-  /** Pozicija fokusirane kamere: indeks države (retka) i pozicija unutar retka. */
-  const cameraLocation = useCallback(
-    (globalIdx: number) => {
-      const cam = liveCameras[globalIdx];
-      if (!cam) return { groupIdx: 0, pos: 0 };
-      const groupIdx = Math.max(
-        0,
-        camerasByCountry.findIndex((g) => g.country === cam.country),
-      );
-      const pos = Math.max(0, camerasByCountry[groupIdx]?.items.indexOf(cam) ?? 0);
-      return { groupIdx, pos };
-    },
-    [camerasByCountry],
-  );
-
-  const cameraAt = useCallback(
-    (groupIdx: number, pos: number) => {
-      const grp = camerasByCountry[groupIdx];
-      if (!grp) return 0;
-      const item = grp.items[Math.min(pos, grp.items.length - 1)];
-      return liveCameras.indexOf(item);
-    },
-    [camerasByCountry],
-  );
-
+  const visibleCameraIndices = useMemo(() => {
+    const indices: number[] = [];
+    camerasByCountry.forEach(({ country, items }) => {
+      if (collapsedCountries.has(country)) return;
+      items.forEach((cam) => indices.push(liveCameras.indexOf(cam)));
+    });
+    return indices;
+  }, [camerasByCountry, collapsedCountries]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -1010,7 +998,7 @@ const Index = () => {
             } else if (isRadioActive && showRadio) {
               setFocusZone("epg");
             } else if (isCamerasActive && showCameras) {
-              setFocusZone("cameras");
+              setFocusZone("cameraHeaders");
             } else {
               setFocusZone("cards");
             }
@@ -1024,10 +1012,10 @@ const Index = () => {
           } else if (focusZone === "cards") {
             setCardIndex((p) => moveCardIndexLive(p, "right"));
           } else if (focusZone === "cameras") {
-            const { groupIdx, pos } = cameraLocation(cameraIndex);
-            const grp = camerasByCountry[groupIdx];
-            if (grp && pos + 1 < grp.items.length) {
-              setCameraIndex(cameraAt(groupIdx, pos + 1));
+            const pos = visibleCameraIndices.indexOf(cameraIndex);
+            const col = pos % CAMERAS_COLS;
+            if (col < CAMERAS_COLS - 1 && pos + 1 < visibleCameraIndices.length) {
+              setCameraIndex(visibleCameraIndices[pos + 1]);
             }
           }
           break;
@@ -1066,13 +1054,17 @@ const Index = () => {
               setCardIndex((p) => moveCardIndexLive(p, "left"));
             }
           } else if (focusZone === "cameras") {
-            const { groupIdx, pos } = cameraLocation(cameraIndex);
-            if (pos === 0) {
+            const pos = visibleCameraIndices.indexOf(cameraIndex);
+            const col = pos % CAMERAS_COLS;
+            if (col === 0) {
               setSidebarExpanded(true);
               setFocusZone("sidebar");
             } else {
-              setCameraIndex(cameraAt(groupIdx, pos - 1));
+              setCameraIndex(visibleCameraIndices[pos - 1]);
             }
+          } else if (focusZone === "cameraHeaders") {
+            setSidebarExpanded(true);
+            setFocusZone("sidebar");
           }
           break;
 
@@ -1091,9 +1083,27 @@ const Index = () => {
           } else if (focusZone === "cards") {
             setCardIndex((p) => moveCardIndexLive(p, "down"));
           } else if (focusZone === "cameras") {
-            const { groupIdx, pos } = cameraLocation(cameraIndex);
-            if (groupIdx + 1 < camerasByCountry.length) {
-              setCameraIndex(cameraAt(groupIdx + 1, pos));
+            const pos = visibleCameraIndices.indexOf(cameraIndex);
+            const nextPos = pos + CAMERAS_COLS;
+            if (nextPos < visibleCameraIndices.length) {
+              setCameraIndex(visibleCameraIndices[nextPos]);
+            } else {
+              // Move to next country header
+              const cam = liveCameras[cameraIndex];
+              const grpIdx = camerasByCountry.findIndex((g) => g.country === cam.country);
+              if (grpIdx >= 0 && grpIdx + 1 < camerasByCountry.length) {
+                setCameraHeaderIndex(grpIdx + 1);
+                setFocusZone("cameraHeaders");
+              }
+            }
+          } else if (focusZone === "cameraHeaders") {
+            const grp = camerasByCountry[cameraHeaderIndex];
+            if (grp && !collapsedCountries.has(grp.country)) {
+              const firstIdx = liveCameras.indexOf(grp.items[0]);
+              setCameraIndex(firstIdx);
+              setFocusZone("cameras");
+            } else if (cameraHeaderIndex + 1 < camerasByCountry.length) {
+              setCameraHeaderIndex((p) => p + 1);
             }
           }
           break;
@@ -1119,9 +1129,29 @@ const Index = () => {
           } else if (focusZone === "cards") {
             setCardIndex((p) => moveCardIndexLive(p, "up"));
           } else if (focusZone === "cameras") {
-            const { groupIdx, pos } = cameraLocation(cameraIndex);
-            if (groupIdx > 0) {
-              setCameraIndex(cameraAt(groupIdx - 1, pos));
+            const pos = visibleCameraIndices.indexOf(cameraIndex);
+            const prevPos = pos - CAMERAS_COLS;
+            if (prevPos >= 0) {
+              setCameraIndex(visibleCameraIndices[prevPos]);
+            } else {
+              // Move up to current group's header
+              const cam = liveCameras[cameraIndex];
+              const grpIdx = camerasByCountry.findIndex((g) => g.country === cam.country);
+              if (grpIdx >= 0) {
+                setCameraHeaderIndex(grpIdx);
+                setFocusZone("cameraHeaders");
+              }
+            }
+          } else if (focusZone === "cameraHeaders") {
+            if (cameraHeaderIndex > 0) {
+              setCameraHeaderIndex((p) => p - 1);
+              const prevGrp = camerasByCountry[cameraHeaderIndex - 1];
+              if (prevGrp && !collapsedCountries.has(prevGrp.country)) {
+                // jump into last row of previous group
+                const lastIdx = liveCameras.indexOf(prevGrp.items[prevGrp.items.length - 1]);
+                setCameraIndex(lastIdx);
+                setFocusZone("cameras");
+              }
             }
           }
           break;
@@ -1154,6 +1184,16 @@ const Index = () => {
             openPlayerFromEPG(epgIndex);
           } else if (focusZone === "cards") {
             openPlayerFromCard(liveChannelCards[cardIndex]);
+          } else if (focusZone === "cameraHeaders") {
+            const grp = camerasByCountry[cameraHeaderIndex];
+            if (grp) {
+              setCollapsedCountries((prev) => {
+                const next = new Set(prev);
+                if (next.has(grp.country)) next.delete(grp.country);
+                else next.add(grp.country);
+                return next;
+              });
+            }
           }
           break;
 
@@ -1174,7 +1214,7 @@ const Index = () => {
             setShowCategories(false);
             setSidebarExpanded(true);
             setFocusZone("sidebar");
-          } else if (focusZone === "cameras") {
+          } else if (focusZone === "cameras" || focusZone === "cameraHeaders") {
             setShowCameras(false);
             setSidebarExpanded(true);
             setFocusZone("sidebar");
@@ -1193,9 +1233,10 @@ const Index = () => {
       categoryIndex,
       cardIndex,
       cameraIndex,
+      cameraHeaderIndex,
       camerasByCountry,
-      cameraLocation,
-      cameraAt,
+      visibleCameraIndices,
+      collapsedCountries,
       programIndex,
       selectedChannelPrograms,
       handleSidebarAction,
@@ -1421,11 +1462,29 @@ const Index = () => {
                     />
                   </div>
                   <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4">
-                    {camerasByCountry.map(({ country, items }) => {
+                    {camerasByCountry.map(({ country, items }, groupIdx) => {
                       const info = COUNTRY_INFO[country] ?? { name: country };
+                      const collapsed = collapsedCountries.has(country);
+                      const isHeaderFocused = focusZone === "cameraHeaders" && cameraHeaderIndex === groupIdx;
                       return (
                         <div key={country} className="flex flex-col gap-2 items-center">
-                          <div className="flex items-center gap-2 rounded-md pointer-events-none select-none">
+                          <button
+                            onClick={() => {
+                              setFocusZone("cameraHeaders");
+                              setCameraHeaderIndex(groupIdx);
+                              setCollapsedCountries((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(country)) next.delete(country);
+                                else next.add(country);
+                                return next;
+                              });
+                            }}
+                            className={`flex items-center gap-2 rounded-md transition-all ${
+                              isHeaderFocused
+                                ? "bg-accent/20 ring-2 ring-accent"
+                                : "bg-muted/20 ring-1 ring-border/30 hover:bg-muted/30"
+                            }`}
+                          >
                             <img
                               src={flagImageUrl(country)}
                               alt={info.name}
@@ -1433,44 +1492,44 @@ const Index = () => {
                               loading="lazy"
                             />
                             <span className="text-2xl font-bold text-foreground">{info.name}</span>
-                          </div>
-                          <div className="flex gap-3 px-1 w-full overflow-x-auto scrollbar-hide">
-                            {items.map((cam) => {
-                              const i = liveCameras.indexOf(cam);
-                              const isFocused = focusZone === "cameras" && cameraIndex === i;
-                              return (
-                                <motion.div
-                                  key={cam.id}
-                                  ref={(el: HTMLDivElement | null) => {
-                                    if (el && isFocused) {
-                                      el.scrollIntoView({ block: "nearest", inline: "center" });
-                                    }
-                                  }}
-                                  whileHover={{ scale: 1.03 }}
-                                  className={`relative shrink-0 w-[300px] rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
-                                    isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
-                                  }`}
-                                  onClick={() => {
-                                    setFocusZone("cameras");
-                                    setCameraIndex(i);
-                                  }}
-                                >
-                                  <div className="aspect-video relative">
-                                    <img src={cam.thumbnail} alt={cam.name} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                                    <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                      <span className="text-xs font-medium text-foreground">{t("home.liveLabel")}</span>
+                            <span className="text-lg text-muted-foreground">({items.length})</span>
+                          </button>
+                          {!collapsed && (
+                            <div className="grid grid-cols-4 gap-3 px-1 w-full">
+                              {items.map((cam) => {
+                                const i = liveCameras.indexOf(cam);
+                                const isFocused = focusZone === "cameras" && cameraIndex === i;
+                                return (
+                                  <motion.div
+                                    key={cam.id}
+                                    whileHover={{ scale: 1.03 }}
+                                    className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
+                                      isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
+                                    }`}
+                                    onClick={() => {
+                                      setFocusZone("cameras");
+                                      setCameraIndex(i);
+                                    }}
+                                  >
+                                    <div className="aspect-video relative">
+                                      <img src={cam.thumbnail} alt={cam.name} className="w-full h-full object-cover" />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                      <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                        <span className="text-xs font-medium text-foreground">
+                                          {t("home.liveLabel")}
+                                        </span>
+                                      </div>
+                                      <div className="absolute bottom-2 left-2 right-2">
+                                        <p className="text-sm font-semibold text-foreground truncate">{cam.name}</p>
+                                        <p className="text-xs text-muted-foreground">{cam.location}</p>
+                                      </div>
                                     </div>
-                                    <div className="absolute bottom-2 left-2 right-2">
-                                      <p className="text-sm font-semibold text-foreground truncate">{cam.name}</p>
-                                      <p className="text-xs text-muted-foreground">{cam.location}</p>
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              );
-                            })}
-                          </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
