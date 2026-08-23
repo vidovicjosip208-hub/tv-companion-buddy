@@ -907,16 +907,19 @@ const Index = () => {
   // Redovi kamera za navigaciju strelicama: svaka država počinje NOVI red (čak i ako
   // prethodni red nije pun), jer se vizualno tako i prikazuje (zaseban grid po državi).
   // Ovo sprječava da ArrowDown/ArrowUp "preskoči" u pogrešnu državu kad grupe imaju
-  // različit broj kamera po redu.
-  const cameraRows = useMemo(() => {
+  // različit broj kamera po redu. Paralelno pamtimo kojoj GRUPI (indeks države) svaki
+  // red pripada — treba nam da znamo koju grupu prikazati kao "trenutnu".
+  const { cameraRows, rowGroupIndex } = useMemo(() => {
     const rows: number[][] = [];
-    camerasByCountry.forEach(({ items }) => {
+    const rowGroup: number[] = [];
+    camerasByCountry.forEach(({ items }, groupIdx) => {
       for (let i = 0; i < items.length; i += CAMERAS_COLS) {
         const rowIndices = items.slice(i, i + CAMERAS_COLS).map((cam) => liveCameras.indexOf(cam));
         rows.push(rowIndices);
+        rowGroup.push(groupIdx);
       }
     });
-    return rows;
+    return { cameraRows: rows, rowGroupIndex: rowGroup };
   }, [camerasByCountry]);
 
   const findCameraPosition = useCallback(
@@ -930,42 +933,17 @@ const Index = () => {
     [cameraRows],
   );
 
-  // Ref na svaki "blok" države (header + red kamera) i na SAM scrollable kontejner.
-  // Koristi se za automatsko skrolanje kad se fokus pomiče strelicama — jer overflow-y-auto
-  // sam po sebi ne prati fokus, treba eksplicitno postaviti scrollTop.
-  const cameraGroupRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const cameraScrollContainerRef = useRef<HTMLDivElement | null>(null);
   // Scrollable kontejner za "Uživo" kartice.
   const cardsScrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Ovo je TV aplikacija — scroll mišem/kotačićem ne treba postojati, samo navigacija
   // strelicama. React od v17 dodaje wheel/touch listenere kao PASSIVE po defaultu, pa
   // preventDefault() unutar običnog onWheel propa NEMA efekta (browser ga ignorira).
-  // Zato ručno vežemo native "wheel" listener s { passive: false }.
-  //
-  // NAPOMENA: ovo NIJE u useEffect-u vezanom za show* state — AnimatePresence koristi
-  // mode="wait", pa čeka da se PRETHODNI prikaz animira van (exit, ~0.3s) prije nego
-  // što uopće montira novi motion.div. Kad bi se listener vezao u useEffect-u koji
-  // reagira na promjenu show* state-a, taj efekt bi pucao ODMAH (prije nego DOM čvor
-  // uopće postoji), pa cameraScrollContainerRef.current / cardsScrollContainerRef.current
-  // budu null u tom trenutku i listener se nikad ne zakači — to je razlog zašto je scroll
-  // mišem i dalje radio na "TV Kanali" / "Kamere uživo" nakon prebacivanja prikaza.
-  // Umjesto toga koristimo REF CALLBACK koji se poziva TOČNO kad React montira/unmounta
-  // sam DOM element — garantirano ispravan tajming bez obzira na animacije.
+  // Zato ručno vežemo native "wheel" listener s { passive: false } preko ref callbacka
+  // koji se poziva TOČNO kad React montira/unmounta sam DOM element — garantirano
+  // ispravan tajming bez obzira na animacije (AnimatePresence mode="wait" kasni s
+  // montiranjem, pa bi useEffect vezan za show* state pucao prerano).
   const blockWheel = useCallback((e: WheelEvent) => e.preventDefault(), []);
-
-  const setCameraScrollRef = useCallback(
-    (el: HTMLDivElement | null) => {
-      if (cameraScrollContainerRef.current) {
-        cameraScrollContainerRef.current.removeEventListener("wheel", blockWheel);
-      }
-      cameraScrollContainerRef.current = el;
-      if (el) {
-        el.addEventListener("wheel", blockWheel, { passive: false });
-      }
-    },
-    [blockWheel],
-  );
 
   const setCardsScrollRef = useCallback(
     (el: HTMLDivElement | null) => {
@@ -980,42 +958,13 @@ const Index = () => {
     [blockWheel],
   );
 
-  // Kad ideš dolje: blok nove fokusirane države poravna se na DNO vidljivog područja
-  // (prethodna država ostaje vidljiva iznad, dokle god ima mjesta).
-  // Kad ideš gore: blok se poravna na VRH (obrnuti princip).
-  //
-  // NAPOMENA: namjerno NE koristimo el.scrollIntoView() — taj poziv po defaultu skrola
-  // SVE scrollable pretke potrebne da element bude vidljiv, pa je u praksi skrolao
-  // cijelu stranicu (nestajao je "Kamere uživo" header i vrh sidebara). Umjesto toga
-  // ručno računamo poziciju elementa RELATIVNO na sam scrollable kontejner i mijenjamo
-  // isključivo njegov scrollTop — ništa izvan njega se ne pomiče.
-  const scrollCameraGroupIntoView = useCallback((camIdx: number, direction: "up" | "down") => {
-    const cam = liveCameras[camIdx];
-    if (!cam) return;
-    const el = cameraGroupRefs.current[cam.country];
-    const container = cameraScrollContainerRef.current;
-    if (!el || !container) return;
-
-    const elRect = el.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const relativeTop = elRect.top - containerRect.top + container.scrollTop;
-    const relativeBottom = relativeTop + el.offsetHeight;
-
-    // Ne skrolaj ako je blok već u potpunosti vidljiv unutar containera — inače i
-    // najmanji nepotreban pomak (npr. par piksela na prvi pritisak strelice) gura
-    // sadržaj gore-dolje bez razloga i uzrokuje da se npr. zastavica/naslov iznad
-    // (koji vizualno "curi" izvan svoje kutije zbog uvećanog loga) preklopi s tekstom.
-    const isFullyVisible =
-      relativeTop >= container.scrollTop && relativeBottom <= container.scrollTop + container.clientHeight;
-    if (isFullyVisible) return;
-
-    const targetScrollTop = direction === "down" ? relativeBottom - container.clientHeight : relativeTop;
-
-    container.scrollTo({
-      top: Math.max(0, targetScrollTop),
-      behavior: "smooth",
-    });
-  }, []);
+  // Smjer zadnje navigacije kroz kamere — određuje koja SUSJEDNA grupa (država) se
+  // prikazuje uz trenutnu. Isti princip kao VideotekaLayout: nema scrollable containera
+  // ni ručnog scrollTop računanja — samo se prikaže trenutni "red" (ovdje: grupa države)
+  // plus jedan susjedni, a prijelaz je obična promjena state-a / re-render umjesto
+  // fizičkog skrolanja. Header ostaje zalijepljen izravno iznad svog reda kamera jer je
+  // dio istog wrappera po grupi (nepromijenjeno iz prijašnje verzije).
+  const [cameraDirection, setCameraDirection] = useState<"up" | "down">("down");
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -1179,8 +1128,8 @@ const Index = () => {
             if (nextRow) {
               const targetCol = Math.min(col, nextRow.length - 1);
               const nextIdx = nextRow[targetCol];
+              setCameraDirection("down");
               setCameraIndex(nextIdx);
-              scrollCameraGroupIntoView(nextIdx, "down");
             }
           }
           break;
@@ -1214,8 +1163,8 @@ const Index = () => {
               const prevRow = cameraRows[row - 1];
               const targetCol = Math.min(col, prevRow.length - 1);
               const prevIdx = prevRow[targetCol];
+              setCameraDirection("up");
               setCameraIndex(prevIdx);
-              scrollCameraGroupIntoView(prevIdx, "up");
             }
           }
           break;
@@ -1289,7 +1238,6 @@ const Index = () => {
       cameraIndex,
       cameraRows,
       findCameraPosition,
-      scrollCameraGroupIntoView,
       programIndex,
       selectedChannelPrograms,
       handleSidebarAction,
@@ -1514,67 +1462,101 @@ const Index = () => {
                       className="absolute left-1/2 -translate-x-1/2 h-12 w-auto scale-[4.5] pointer-events-none"
                     />
                   </div>
-                  <div
-                    ref={setCameraScrollRef}
-                    className="relative z-10 flex-1 overflow-y-auto scrollbar-hide pr-1 flex flex-col gap-4"
-                  >
-                    {camerasByCountry.map(({ country, items }) => {
-                      const info = COUNTRY_INFO[country] ?? { name: country };
-                      return (
-                        <div
-                          key={country}
-                          ref={(el) => {
-                            cameraGroupRefs.current[country] = el;
-                          }}
-                          className="flex flex-col gap-2 items-center"
-                        >
-                          {/* Statični header — nije klikabilan, kamere ispod su uvijek vidljive */}
-                          <div className="flex items-center gap-2 rounded-md bg-muted/20 ring-1 ring-border/30">
-                            <img
-                              src={flagImageUrl(country)}
-                              alt={info.name}
-                              className="w-10 h-10 object-contain"
-                              loading="lazy"
-                            />
-                            <span className="text-2xl font-bold text-foreground">{info.name}</span>
-                            <span className="text-lg text-muted-foreground">({items.length})</span>
-                          </div>
-                          <div className="grid grid-cols-4 gap-3 px-1 w-full">
-                            {items.map((cam) => {
-                              const i = liveCameras.indexOf(cam);
-                              const isFocused = focusZone === "cameras" && cameraIndex === i;
-                              return (
-                                <motion.div
-                                  key={cam.id}
-                                  whileHover={{ scale: 1.03 }}
-                                  className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
-                                    isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
-                                  }`}
-                                  onClick={() => {
-                                    setFocusZone("cameras");
-                                    setCameraIndex(i);
-                                  }}
-                                >
-                                  <div className="aspect-video relative">
-                                    <img src={cam.thumbnail} alt={cam.name} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                                    <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                      <span className="text-xs font-medium text-foreground">{t("home.liveLabel")}</span>
-                                    </div>
-                                    <div className="absolute bottom-2 left-2 right-2">
-                                      <p className="text-sm font-semibold text-foreground truncate">{cam.name}</p>
-                                      <p className="text-xs text-muted-foreground">{cam.location}</p>
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {/*
+                    Isti princip kao VideotekaLayout: nema scrollable containera ni ručnog
+                    scrollTop računanja. Prikazuje se samo TRENUTNA grupa (država) fokusirane
+                    kamere + JEDNA susjedna, a prijelaz je obična promjena state-a / re-render.
+                    Header ostaje zalijepljen izravno iznad svog reda kamera jer je dio istog
+                    wrappera po grupi.
+
+                    Smjer određuje koja susjedna grupa se prikazuje: idući DOLJE, prethodna
+                    grupa ostaje vidljiva IZNAD trenutne (fokusirane); idući GORE (obrnuti
+                    princip), trenutna grupa je na vrhu, a sljedeća je "peek" ispod.
+                  */}
+                  {(() => {
+                    const { row: currentRow } = findCameraPosition(cameraIndex);
+                    const currentGroupIdx = rowGroupIndex[currentRow] ?? 0;
+                    const adjacentGroupIdx = cameraDirection === "down" ? currentGroupIdx - 1 : currentGroupIdx + 1;
+                    const hasAdjacent = adjacentGroupIdx >= 0 && adjacentGroupIdx < camerasByCountry.length;
+                    const groupIndicesToRender = !hasAdjacent
+                      ? [currentGroupIdx]
+                      : cameraDirection === "down"
+                        ? [adjacentGroupIdx, currentGroupIdx]
+                        : [currentGroupIdx, adjacentGroupIdx];
+
+                    return (
+                      <div className="relative z-10 flex-1 flex flex-col gap-4 overflow-hidden">
+                        <AnimatePresence mode="popLayout" initial={false}>
+                          {groupIndicesToRender.map((groupIdx) => {
+                            const group = camerasByCountry[groupIdx];
+                            if (!group) return null;
+                            const { country, items } = group;
+                            const info = COUNTRY_INFO[country] ?? { name: country };
+                            return (
+                              <motion.div
+                                key={country}
+                                initial={{ opacity: 0, y: cameraDirection === "down" ? 24 : -24 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: cameraDirection === "down" ? -24 : 24 }}
+                                transition={{ duration: 0.25 }}
+                                className="flex flex-col gap-2 items-center"
+                              >
+                                {/* Statični header — nije klikabilan, kamere ispod su uvijek vidljive */}
+                                <div className="flex items-center gap-2 rounded-md bg-muted/20 ring-1 ring-border/30">
+                                  <img
+                                    src={flagImageUrl(country)}
+                                    alt={info.name}
+                                    className="w-10 h-10 object-contain"
+                                    loading="lazy"
+                                  />
+                                  <span className="text-2xl font-bold text-foreground">{info.name}</span>
+                                  <span className="text-lg text-muted-foreground">({items.length})</span>
+                                </div>
+                                <div className="grid grid-cols-4 gap-3 px-1 w-full">
+                                  {items.map((cam) => {
+                                    const i = liveCameras.indexOf(cam);
+                                    const isFocused = focusZone === "cameras" && cameraIndex === i;
+                                    return (
+                                      <motion.div
+                                        key={cam.id}
+                                        whileHover={{ scale: 1.03 }}
+                                        className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
+                                          isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
+                                        }`}
+                                        onClick={() => {
+                                          setFocusZone("cameras");
+                                          setCameraIndex(i);
+                                        }}
+                                      >
+                                        <div className="aspect-video relative">
+                                          <img
+                                            src={cam.thumbnail}
+                                            alt={cam.name}
+                                            className="w-full h-full object-cover"
+                                          />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                          <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                            <span className="text-xs font-medium text-foreground">
+                                              {t("home.liveLabel")}
+                                            </span>
+                                          </div>
+                                          <div className="absolute bottom-2 left-2 right-2">
+                                            <p className="text-sm font-semibold text-foreground truncate">{cam.name}</p>
+                                            <p className="text-xs text-muted-foreground">{cam.location}</p>
+                                          </div>
+                                        </div>
+                                      </motion.div>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })()}
                 </motion.div>
               ) : showEPG ? (
                 <motion.div
