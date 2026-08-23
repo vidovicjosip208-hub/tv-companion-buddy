@@ -957,6 +957,14 @@ const Index = () => {
     const relativeTop = elRect.top - containerRect.top + container.scrollTop;
     const relativeBottom = relativeTop + el.offsetHeight;
 
+    // Ne skrolaj ako je blok već u potpunosti vidljiv unutar containera — inače i
+    // najmanji nepotreban pomak (npr. par piksela na prvi pritisak strelice) gura
+    // sadržaj gore-dolje bez razloga i uzrokuje da se npr. zastavica/naslov iznad
+    // (koji vizualno "curi" izvan svoje kutije zbog uvećanog loga) preklopi s tekstom.
+    const isFullyVisible =
+      relativeTop >= container.scrollTop && relativeBottom <= container.scrollTop + container.clientHeight;
+    if (isFullyVisible) return;
+
     const targetScrollTop = direction === "down" ? relativeBottom - container.clientHeight : relativeTop;
 
     container.scrollTo({
@@ -1443,7 +1451,7 @@ const Index = () => {
         />
 
         <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
-          <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden relative min-w-0">
+          <div className={`flex-1 flex flex-col px-4 overflow-hidden relative min-w-0 ${showCameras ? "" : "pb-4"}`}>
             <AnimatePresence mode="wait">
               {showCameras ? (
                 <motion.div
