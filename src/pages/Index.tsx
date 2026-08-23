@@ -396,7 +396,10 @@ const COUNTRY_INFO: Record<string, { name: string }> = {
   MK: { name: "Sjeverna Makedonija" },
 };
 
-const flagUrl = (code: string) => `https://flagcdn.com/w80/${code.toLowerCase()}.png`;
+// Native flag emoji (waving stil) umjesto pravokutnih flagcdn slika.
+// Regional indicator simboli: 'A'..'Z' -> U+1F1E6..U+1F1FF (offset 127397).
+const countryFlagEmoji = (code: string) =>
+  code.toUpperCase().replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 
 const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
 
@@ -1462,20 +1465,17 @@ const Index = () => {
                                 return next;
                               });
                             }}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${
+                            className={`flex items-center gap-2 rounded-md transition-all ${
                               isHeaderFocused
                                 ? "bg-accent/20 ring-2 ring-accent"
                                 : "bg-muted/20 ring-1 ring-border/30 hover:bg-muted/30"
                             }`}
                           >
-                            <img
-                              src={flagUrl(country)}
-                              alt={info.name}
-                              className="w-12 h-8 object-cover rounded-[3px] shadow-sm"
-                              loading="lazy"
-                            />
-                            <span className="text-base font-bold text-foreground">{info.name}</span>
-                            <span className="text-sm text-muted-foreground">({items.length})</span>
+                            <span className="text-4xl leading-none" aria-label={info.name}>
+                              {countryFlagEmoji(country)}
+                            </span>
+                            <span className="text-2xl font-bold text-foreground">{info.name}</span>
+                            <span className="text-lg text-muted-foreground">({items.length})</span>
                           </button>
                           {!collapsed && (
                             <div className="grid grid-cols-4 gap-3 px-1 w-full">
