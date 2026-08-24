@@ -61,15 +61,42 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
 
   useEffect(() => {
     if (focusedArea !== "episodes" || !episodeListRef.current) return;
+    const scroller = episodeListRef.current.querySelector<HTMLElement>("[data-episode-scroller]");
     const items = episodeListRef.current.querySelectorAll("[data-episode]");
-    (items[focusedEpisodeIndex] as HTMLElement | undefined)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    const el = items[focusedEpisodeIndex] as HTMLElement | undefined;
+    if (!scroller || !el) return;
+    const top = el.offsetTop;
+    const bottom = top + el.offsetHeight;
+    const viewTop = scroller.scrollTop;
+    const viewBottom = viewTop + scroller.clientHeight;
+    let target = viewTop;
+    if (top < viewTop - 1) target = top;
+    else if (bottom > viewBottom + 1) target = bottom - scroller.clientHeight;
+    else return;
+    target = Math.max(0, Math.min(target, scroller.scrollHeight - scroller.clientHeight));
+    if (Math.abs(target - viewTop) < 2) return;
+    scroller.scrollTo({ top: target, behavior: "smooth" });
   }, [focusedEpisodeIndex, focusedArea]);
 
   useEffect(() => {
     if (focusedArea !== "seasons" || !seasonListRef.current) return;
-    const items = seasonListRef.current.querySelectorAll("[data-season]");
-    (items[focusedSeasonIndex] as HTMLElement | undefined)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    const scroller = seasonListRef.current;
+    const items = scroller.querySelectorAll("[data-season]");
+    const el = items[focusedSeasonIndex] as HTMLElement | undefined;
+    if (!el) return;
+    const top = el.offsetTop;
+    const bottom = top + el.offsetHeight;
+    const viewTop = scroller.scrollTop;
+    const viewBottom = viewTop + scroller.clientHeight;
+    let target = viewTop;
+    if (top < viewTop - 1) target = top;
+    else if (bottom > viewBottom + 1) target = bottom - scroller.clientHeight;
+    else return;
+    target = Math.max(0, Math.min(target, scroller.scrollHeight - scroller.clientHeight));
+    if (Math.abs(target - viewTop) < 2) return;
+    scroller.scrollTo({ top: target, behavior: "smooth" });
   }, [focusedSeasonIndex, focusedArea]);
+
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -175,7 +202,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
           initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex flex-col gap-1 flex-1 overflow-y-auto scrollbar-hide"
+          className="relative flex flex-col gap-1 flex-1 overflow-y-auto scrollbar-hide"
         >
           {seasons.map((season, index) => {
             const isSelected = selectedSeason === index;
@@ -266,7 +293,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
         </motion.div>
 
         <div ref={episodeListRef} className="flex-1 overflow-hidden">
-          <div className="flex flex-col gap-3 h-full overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+          <div data-episode-scroller="" className="relative flex flex-col gap-3 h-full overflow-y-auto" style={{ scrollbarWidth: "none" }}>
             {isTrailersSelected ? (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
