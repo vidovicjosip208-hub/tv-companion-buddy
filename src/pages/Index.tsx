@@ -905,20 +905,18 @@ const Index = () => {
     }));
   }, []);
 
-  // Redovi kamera za navigaciju strelicama: svaka država počinje NOVI red (čak i ako
-  // prethodni red nije pun), jer se vizualno tako i prikazuje (zaseban grid po državi).
-  // Ovo sprječava da ArrowDown/ArrowUp "preskoči" u pogrešnu državu kad grupe imaju
-  // različit broj kamera po redu. Paralelno pamtimo kojoj GRUPI (indeks države) svaki
-  // red pripada — treba nam da znamo koju grupu prikazati kao "trenutnu".
+  // Redovi kamera za navigaciju strelicama: svaka država je UVIJEK jedan red, bez obzira
+  // koliko kamera ima — ako ih ima više od 4 (CAMERAS_COLS), ne lomi se u novi red nego se
+  // omogućava horizontalno skrolanje (ArrowRight pomiče vidljivi prozor od 4 udesno).
+  // Paralelno pamtimo kojoj GRUPI (indeks države) svaki red pripada — treba nam da znamo
+  // koju grupu prikazati kao "trenutnu".
   const { cameraRows, rowGroupIndex } = useMemo(() => {
     const rows: number[][] = [];
     const rowGroup: number[] = [];
     camerasByCountry.forEach(({ items }, groupIdx) => {
-      for (let i = 0; i < items.length; i += CAMERAS_COLS) {
-        const rowIndices = items.slice(i, i + CAMERAS_COLS).map((cam) => liveCameras.indexOf(cam));
-        rows.push(rowIndices);
-        rowGroup.push(groupIdx);
-      }
+      const rowIndices = items.map((cam) => liveCameras.indexOf(cam));
+      rows.push(rowIndices);
+      rowGroup.push(groupIdx);
     });
     return { cameraRows: rows, rowGroupIndex: rowGroup };
   }, [camerasByCountry]);
@@ -1477,7 +1475,7 @@ const Index = () => {
                     princip), trenutna grupa je na vrhu, a sljedeća je "peek" ispod.
                   */}
                   {(() => {
-                    const { row: currentRow } = findCameraPosition(cameraIndex);
+                    const { row: currentRow, col: currentCol } = findCameraPosition(cameraIndex);
                     const currentGroupIdx = rowGroupIndex[currentRow] ?? 0;
                     const adjacentGroupIdx = cameraDirection === "down" ? currentGroupIdx - 1 : currentGroupIdx + 1;
                     const hasAdjacent = adjacentGroupIdx >= 0 && adjacentGroupIdx < camerasByCountry.length;
@@ -1495,6 +1493,19 @@ const Index = () => {
                             if (!group) return null;
                             const { country, items } = group;
                             const info = COUNTRY_INFO[country] ?? { name: country };
+
+                            // Klizni prozor od CAMERAS_COLS (4) vidljivih kamera. Za grupu koja
+                            // je trenutno fokusirana, prozor prati fokusiranu kameru — čim
+                            // ArrowRight prijeđe zadnju vidljivu poziciju, prozor se pomakne
+                            // udesno za jedno mjesto (umjesto da se kamere lome u novi red).
+                            // Za susjednu ("peek") grupu uvijek se prikazuju prve 4.
+                            const isCurrentGroup = groupIdx === currentGroupIdx;
+                            const maxWindowStart = Math.max(0, items.length - CAMERAS_COLS);
+                            const windowStart = isCurrentGroup
+                              ? Math.min(Math.max(0, currentCol - (CAMERAS_COLS - 1)), maxWindowStart)
+                              : 0;
+                            const visibleItems = items.slice(windowStart, windowStart + CAMERAS_COLS);
+
                             return (
                               <motion.div
                                 key={country}
@@ -1516,12 +1527,13 @@ const Index = () => {
                                   <span className="text-lg text-muted-foreground">({items.length})</span>
                                 </div>
                                 <div className="grid grid-cols-4 gap-3 px-1 w-full">
-                                  {items.map((cam) => {
+                                  {visibleItems.map((cam) => {
                                     const i = liveCameras.indexOf(cam);
                                     const isFocused = focusZone === "cameras" && cameraIndex === i;
                                     return (
                                       <motion.div
                                         key={cam.id}
+                                        layout
                                         whileHover={{ scale: 1.03 }}
                                         className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
                                           isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
