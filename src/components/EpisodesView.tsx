@@ -308,7 +308,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                   >
                     <div
                       className={`
-                        relative w-[280px] shrink-0 aspect-video rounded-lg overflow-hidden bg-white/5
+                        relative w-[320px] shrink-0 aspect-video rounded-lg overflow-hidden bg-white/5
                         ${isFocused ? "ring-2 ring-white/70" : ""}
                       
                       `}
