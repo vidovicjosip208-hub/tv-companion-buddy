@@ -301,7 +301,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                       if (onPlayEpisode) onPlayEpisode(ep.id);
                     }}
                     className={`
-                      flex gap-5 rounded-xl px-4 py-4 cursor-pointer transition-colors flex-shrink-0
+                      flex gap-5 rounded-xl px-4 py-6 cursor-pointer transition-colors flex-shrink-0
                       ${isFocused ? "bg-white/12" : ""}
                     
                     `}
