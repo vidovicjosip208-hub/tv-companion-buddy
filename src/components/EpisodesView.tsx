@@ -266,7 +266,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
         </motion.div>
 
         <div ref={episodeListRef} className="flex-1 overflow-hidden">
-          <div className="flex flex-col gap-3 h-full overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+          <div className="flex flex-col gap-2 h-full overflow-y-auto" style={{ scrollbarWidth: "none" }}>
             {isTrailersSelected ? (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -301,14 +301,14 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                       if (onPlayEpisode) onPlayEpisode(ep.id);
                     }}
                     className={`
-                      flex gap-5 rounded-xl px-4 py-6 cursor-pointer transition-colors flex-shrink-0
+                      flex gap-5 rounded-xl px-4 py-4 cursor-pointer transition-colors flex-shrink-0
                       ${isFocused ? "bg-white/12" : ""}
                     
                     `}
                   >
                     <div
                       className={`
-                        relative w-[320px] shrink-0 aspect-video rounded-lg overflow-hidden bg-white/5
+                        relative w-[280px] shrink-0 aspect-video rounded-lg overflow-hidden bg-white/5
                         ${isFocused ? "ring-2 ring-white/70" : ""}
                       
                       `}
