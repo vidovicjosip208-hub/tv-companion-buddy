@@ -342,6 +342,27 @@ const liveCameras: CameraItem[] = [
     thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
   },
   {
+    id: "cam9",
+    name: "Rijeka - Korzo",
+    location: "Rijeka",
+    country: "HR",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
+  {
+    id: "cam10",
+    name: "Osijek - Trg Ante Starčevića",
+    location: "Osijek",
+    country: "HR",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
+  {
+    id: "cam11",
+    name: "Zadar - Morske orgulje",
+    location: "Zadar",
+    country: "HR",
+    thumbnail: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80",
+  },
+  {
     id: "cam4",
     name: "Beograd - Kalemegdan",
     location: "Beograd",
