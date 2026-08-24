@@ -14,6 +14,7 @@ interface EpisodesViewProps {
 }
 
 const FALLBACK_EP_THUMB = "https://images.unsplash.com/photo-1504593811423-6dd665756598?w=400&q=80";
+const EPISODE_SCROLL_EDGE_TOLERANCE = 12;
 
 const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewProps) => {
   const { t } = useTranslation();
@@ -70,11 +71,11 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
     const viewTop = scroller.scrollTop;
     const viewBottom = viewTop + scroller.clientHeight;
     let target = viewTop;
-    if (top < viewTop - 1) target = top;
-    else if (bottom > viewBottom + 1) target = bottom - scroller.clientHeight;
+    if (top < viewTop - EPISODE_SCROLL_EDGE_TOLERANCE) target = top;
+    else if (bottom > viewBottom + EPISODE_SCROLL_EDGE_TOLERANCE) target = bottom - scroller.clientHeight;
     else return;
     target = Math.max(0, Math.min(target, scroller.scrollHeight - scroller.clientHeight));
-    if (Math.abs(target - viewTop) < 2) return;
+    if (Math.abs(target - viewTop) <= EPISODE_SCROLL_EDGE_TOLERANCE) return;
     scroller.scrollTo({ top: target, behavior: "smooth" });
   }, [focusedEpisodeIndex, focusedArea]);
 
