@@ -1499,7 +1499,7 @@ const Index = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: cameraDirection === "down" ? -24 : 24 }}
                                 transition={{ duration: 0.25 }}
-                                className="flex flex-col gap-2 items-center"
+                                className="flex flex-col gap-2 items-start"
                               >
                                 {/* Statični header — nije klikabilan, kamere ispod su uvijek vidljive */}
                                 <div className="flex items-center gap-2 rounded-md bg-muted/20 ring-1 ring-border/30">
