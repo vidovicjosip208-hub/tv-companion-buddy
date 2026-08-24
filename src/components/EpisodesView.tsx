@@ -266,7 +266,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
         </motion.div>
 
         <div ref={episodeListRef} className="flex-1 overflow-hidden">
-          <div className="flex flex-col gap-2 h-full overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+          <div className="flex flex-col gap-3 h-full overflow-y-auto" style={{ scrollbarWidth: "none" }}>
             {isTrailersSelected ? (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
