@@ -881,6 +881,7 @@ const Index = () => {
         setShowFavorites(false);
         setShowRadio(false);
         setCameraIndex(0);
+        setCameraDirection("up");
         setFocusZone("cameras");
         setSidebarExpanded(false);
       }
@@ -964,7 +965,7 @@ const Index = () => {
   // plus jedan susjedni, a prijelaz je obična promjena state-a / re-render umjesto
   // fizičkog skrolanja. Header ostaje zalijepljen izravno iznad svog reda kamera jer je
   // dio istog wrappera po grupi (nepromijenjeno iz prijašnje verzije).
-  const [cameraDirection, setCameraDirection] = useState<"up" | "down">("down");
+  const [cameraDirection, setCameraDirection] = useState<"up" | "down">("up");
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -1391,6 +1392,7 @@ const Index = () => {
               setShowFavorites(false);
               setShowRadio(false);
               setCameraIndex(0);
+              setCameraDirection("up");
               setFocusZone("cameras");
               setSidebarExpanded(false);
             }
@@ -1424,6 +1426,7 @@ const Index = () => {
               setShowFavorites(false);
               setShowRadio(false);
               setCameraIndex(0);
+              setCameraDirection("up");
             } else {
               setShowCategories(false);
               setShowFavorites(false);
