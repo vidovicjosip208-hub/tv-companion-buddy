@@ -202,7 +202,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
           initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex flex-col gap-1 flex-1 overflow-y-auto scrollbar-hide"
+          className="relative flex flex-col gap-1 flex-1 overflow-y-auto scrollbar-hide"
         >
           {seasons.map((season, index) => {
             const isSelected = selectedSeason === index;
