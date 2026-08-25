@@ -17,14 +17,15 @@ const Profiles = () => {
     navigate("/", { replace: true });
   }, [navigate]);
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(() => {
+    // Očisti lokalnu sesiju i preusmjeri odmah — TV uređaji ne smiju čekati
+    // na mrežni poziv supabase.auth.signOut() koji može visjeti.
     signOut();
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // ignore — lokalni signOut je već očistio sve zastavice i tokene
-    }
     navigate("/auth", { replace: true });
+    // Supabase odjava u pozadini (best-effort).
+    void supabase.auth.signOut().catch(() => {
+      // ignore — lokalni signOut je već očistio sve zastavice i tokene
+    });
   }, [navigate]);
 
   if (!isSignedIn()) return <Navigate to="/auth" replace />;
