@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { signOut as appSignOut } from "@/lib/entry";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import TVSidebar from "@/components/TVSidebar";
@@ -1332,7 +1334,18 @@ const Index = () => {
     return (
       <div className="h-screen w-screen relative overflow-hidden">
         <StarryBackground />
-        <ProfileSelection onBack={() => setShowProfile(false)} />
+        <ProfileSelection
+          onBack={() => setShowProfile(false)}
+          onSelect={() => setShowProfile(false)}
+          onLogout={() => {
+            // Lokalna odjava odmah (bez čekanja na mrežu), pa navigacija na login.
+            appSignOut();
+            navigate("/auth", { replace: true });
+            void supabase.auth.signOut().catch(() => {
+              // ignore
+            });
+          }}
+        />
       </div>
     );
   }
