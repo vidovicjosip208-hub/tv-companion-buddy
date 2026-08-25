@@ -1332,7 +1332,18 @@ const Index = () => {
     return (
       <div className="h-screen w-screen relative overflow-hidden">
         <StarryBackground />
-        <ProfileSelection onBack={() => setShowProfile(false)} />
+        <ProfileSelection
+          onBack={() => setShowProfile(false)}
+          onSelect={() => setShowProfile(false)}
+          onLogout={() => {
+            // Lokalna odjava odmah (bez čekanja na mrežu), pa navigacija na login.
+            appSignOut();
+            navigate("/auth", { replace: true });
+            void supabase.auth.signOut().catch(() => {
+              // ignore
+            });
+          }}
+        />
       </div>
     );
   }
