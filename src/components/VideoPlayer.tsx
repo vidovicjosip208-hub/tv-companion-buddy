@@ -1793,18 +1793,14 @@ const VideoPlayer = ({
                         flexShrink: 0,
                         transition: "all 0.2s",
                         width: "fit-content",
-                        opacity: isFavoriteProp || focusedControl === 5 ? 1 : 0.55,
-                        outline:
-                          focusedControl === 5 && !epgMode && !isProgressFocused
-                            ? `2px solid rgba(245,197,24,0.5)`
-                            : "2px solid transparent",
-                        outlineOffset: "4px",
+                        opacity: isFavoriteProp || (focusedControl === 5 && !epgMode && !isProgressFocused) ? 1 : 0.55,
+                        outline: "none",
                         borderRadius: "6px",
                         background: "none",
                         border: "none",
                         cursor: "pointer",
                         padding: "4px 8px",
-                        transform: focusedControl === 5 && !epgMode && !isProgressFocused ? "scale(1.06)" : "scale(1)",
+                        transform: focusedControl === 5 && !epgMode && !isProgressFocused ? "scale(1.08)" : "scale(1)",
                       }}
                       onMouseDown={(e) => {
                         e.preventDefault();
