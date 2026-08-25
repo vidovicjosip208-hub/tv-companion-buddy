@@ -1607,7 +1607,9 @@ const VideoPlayer = ({
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 8, flexShrink: 0 }}>
-                    {/* Zaključaj program — obris uvijek zlatan, rupica (ključanica) prozirna dok nije zaključano, puna zlatna kad jeste */}
+                    {/* Zaključaj program — obris uvijek zlatan, rupica (ključanica) prozirna dok nije zaključano, puna zlatna kad jeste.
+                        IZMJENA: fokus se sad prikazuje samo promjenom opacity/scale ikone, bez kockastog
+                        containera sa žutim borderom i pozadinom. */}
                     <button
                       onMouseDown={(e) => {
                         e.preventDefault();
@@ -1623,9 +1625,8 @@ const VideoPlayer = ({
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        background:
-                          focusedControl === 3 && !epgMode && !isProgressFocused ? "rgba(245,197,24,0.15)" : "none",
-                        border: `1.5px solid ${focusedControl === 3 && !epgMode && !isProgressFocused ? GOLD : "transparent"}`,
+                        background: "none",
+                        border: "none",
                         borderRadius: 6,
                         cursor: "pointer",
                         transition: "all 0.2s",
@@ -1667,7 +1668,9 @@ const VideoPlayer = ({
                       </svg>
                     </button>
 
-                    {/* Aspect Ratio gumb */}
+                    {/* Aspect Ratio gumb.
+                        IZMJENA: fokus se sad prikazuje samo promjenom opacity/scale ikone, bez kockastog
+                        containera sa žutim borderom i pozadinom. */}
                     <button
                       onMouseDown={(e) => {
                         e.preventDefault();
@@ -1682,9 +1685,8 @@ const VideoPlayer = ({
                         justifyContent: "center",
                         gap: 2,
                         padding: "4px 10px",
-                        background:
-                          focusedControl === 4 && !epgMode && !isProgressFocused ? "rgba(245,197,24,0.15)" : "none",
-                        border: `1.5px solid ${focusedControl === 4 && !epgMode && !isProgressFocused ? GOLD : "transparent"}`,
+                        background: "none",
+                        border: "none",
                         borderRadius: 6,
                         cursor: "pointer",
                         transition: "all 0.2s",
