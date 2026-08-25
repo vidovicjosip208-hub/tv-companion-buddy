@@ -470,7 +470,7 @@ const ProfileSelection = ({
       </div>
 
       {/* Title */}
-      <h1 className="text-2xl font-light text-muted-foreground">{t("profile.choose")}</h1>
+      <h1 className="text-3xl font-bold text-muted-foreground">{t("profile.choose")}</h1>
 
       {/* Profile cards */}
       <div className="flex flex-wrap justify-center gap-6">
