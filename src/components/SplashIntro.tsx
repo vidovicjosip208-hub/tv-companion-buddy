@@ -54,12 +54,31 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
   const [revealed, setRevealed] = useState(true);
   const [framesReady, setFramesReady] = useState(false);
   const [loadedSourceCount, setLoadedSourceCount] = useState(0);
+  const [scale, setScale] = useState({ x: 1, y: 1 });
   const loadedSources = useRef(new Set<string>());
   const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const canvasRefs = useRef<Array<HTMLCanvasElement | null>>([]);
   const animationFrame = useRef<number | null>(null);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
+
+  // Isti fiksni canvas (1624x768) kao i ostatak aplikacije — splash se
+  // rasteže na fizički ekran istom metodom kao ScaleToFit, pa je prikaz
+  // identičan na TV-u i laptopu i nijedna pločica nije odsječena.
+  useEffect(() => {
+    const measure = () => {
+      setScale({ x: window.innerWidth / CANVAS_WIDTH, y: window.innerHeight / CANVAS_HEIGHT });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
+  }, []);
 
   const MAX_SOURCES = 2;
   const uniqueVideos = useMemo(
