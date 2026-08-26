@@ -352,7 +352,8 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 };
 
