@@ -267,7 +267,10 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
     setLoadedSourceCount(loadedSources.current.size);
   };
 
-  return (
+  // Portal u document.body: splash mora pobjeći iz ScaleToFit kontejnera
+  // (njegov transform bi inače skalirao i ovaj fixed overlay dvaput, pa bi
+  // se rubne pločice sjekle i prikaz bi se razlikovao na TV-u i laptopu).
+  return createPortal(
     <AnimatePresence onExitComplete={() => onFinished?.()}>
       {visible && (
         <motion.div
