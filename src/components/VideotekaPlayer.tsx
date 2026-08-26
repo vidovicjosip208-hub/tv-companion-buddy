@@ -1776,13 +1776,11 @@ const VideotekaPlayer = ({
                         alt="Logo"
                         className="w-auto pointer-events-none transition-opacity duration-300"
                         style={{
-                          height: "280px",
+                          height: "120px",
                           position: "absolute",
-                          /* FIX: clamp(min,pref,max) mora imati min < max. Prije je bilo
-                             clamp(-40px, -6vw, -90px) što je nevažeći poredak (-40 > -90)
-                             pa je vrijednost uvijek "zapinjala" na -40px (logo previsoko).
-                             Sada je ispravno poredano; malo podignuto u odnosu na prijašnju verziju. */
-                          bottom: "-219px",
+                          /* Smanjen logo (280px -> 120px); bottom podešen da gornji rub
+                             logotipa ostane otprilike na istoj poziciji iznad naslova. */
+                          bottom: "-59px",
                           opacity: isSeeking ? 0 : 1,
                         }}
                       />

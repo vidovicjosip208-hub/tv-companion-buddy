@@ -132,7 +132,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
         <div className="flex items-center">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Max Ovizija" className="h-[221px] w-auto" />
+            <img src={logo} alt="Max Ovizija" className="h-[120px] w-auto" />
           </div>
 
           {/* Navigation */}
