@@ -273,6 +273,7 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
           key="splash"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.6 } }}
+          ref={hostRef}
           className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
           <div
@@ -280,7 +281,7 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
             style={{
               width: `${CANVAS_WIDTH}px`,
               height: `${CANVAS_HEIGHT}px`,
-              transform: `scale(${scale.x}, ${scale.y})`,
+              transform: `translate(${scale.left}px, ${scale.top}px) scale(${scale.x}, ${scale.y})`,
               transformOrigin: "top left",
             }}
           >
