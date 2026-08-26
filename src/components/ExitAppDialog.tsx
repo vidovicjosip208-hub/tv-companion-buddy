@@ -121,18 +121,22 @@ const ExitAppDialog = () => {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
       {/*
-        Baza (fontSize) je 1.25vw — to je točno isti omjer kao originalni title font-size
-        (24px na referentnoj širini ekrana od 1920px = Tailwind text-2xl). Sve ostalo je
-        izraženo u "em" relativno na tu bazu, preračunato iz originalnih Tailwind vrijednosti
-        (max-w-md, p-8, gap-4, px-6 py-3, min-w-[130px], text-sm...), tako da na 1920px
-        širokom ekranu ispadne piksel-identično originalnom dizajnu, a na bilo kojoj drugoj
-        širini ekrana (TV, tablet...) sve skalira proporcionalno umjesto da ostane fiksno
-        u pikselima.
+        Sve dimenzije su vezane uz "vw" (širinu viewporta), ne uz fiksne px/rem. To znači
+        da dialog uvijek zauzima ISTI POSTOTAK širine ekrana na kojem se prikazuje — automatski
+        se smanjuje na užim ekranima i povećava na širima, bez ikakvih hardkodiranih pragova
+        za pojedine rezolucije (mobitel, laptop, TV, 4K...). clamp() donja/gornja granica
+        samo sprječava da tekst postane nečitljivo malen na jako uskim ekranima ili
+        nerazumno ogroman na jako širokima (npr. 8K TV).
+
+        Baza (fontSize) = 1.25vw, a sve ostalo je izraženo u "em" relativno na tu bazu,
+        preračunato iz omjera originalnog dizajna (max-w-md, p-8, text-2xl, gap-4,
+        min-w-[130px], px-6 py-3, text-sm...), tako da omjeri veličina unutar dialoga
+        ostanu isti kao u originalu, samo cijela cjelina skalira s ekranom.
       */}
       <div
         className="mx-4 w-full rounded-[0.6667em] border border-white/15 bg-black p-[1.3333em] shadow-2xl"
         style={{
-          fontSize: "clamp(12px, 1.25vw, 30px)",
+          fontSize: "clamp(14px, 1.25vw, 26px)",
           maxWidth: "18.667em",
         }}
       >
