@@ -120,34 +120,15 @@ const ExitAppDialog = () => {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-      {/*
-        Sve dimenzije su vezane uz "vw" (širinu viewporta), ne uz fiksne px/rem. To znači
-        da dialog uvijek zauzima ISTI POSTOTAK širine ekrana na kojem se prikazuje — automatski
-        se smanjuje na užim ekranima i povećava na širima, bez ikakvih hardkodiranih pragova
-        za pojedine rezolucije (mobitel, laptop, TV, 4K...). clamp() donja/gornja granica
-        samo sprječava da tekst postane nečitljivo malen na jako uskim ekranima ili
-        nerazumno ogroman na jako širokima (npr. 8K TV).
-
-        Baza (fontSize) = 1.25vw, a sve ostalo je izraženo u "em" relativno na tu bazu,
-        preračunato iz omjera originalnog dizajna (max-w-md, p-8, text-2xl, gap-4,
-        min-w-[130px], px-6 py-3, text-sm...), tako da omjeri veličina unutar dialoga
-        ostanu isti kao u originalu, samo cijela cjelina skalira s ekranom.
-      */}
-      <div
-        className="mx-4 w-full rounded-[0.6667em] border border-white/15 bg-black p-[1.3333em] shadow-2xl"
-        style={{
-          fontSize: "clamp(14px, 1.25vw, 26px)",
-          maxWidth: "18.667em",
-        }}
-      >
-        <h2 className="text-[1em] font-bold text-white text-center">{title}</h2>
-        <p className="mt-[0.5em] text-center text-[0.6667em] text-white/70">{message}</p>
-        <div className="mt-[1.3333em] flex items-center justify-center gap-[0.6667em]">
+      <div className="mx-4 w-full max-w-md rounded-2xl border border-white/15 bg-black p-8 shadow-2xl">
+        <h2 className="text-2xl font-bold text-white text-center">{title}</h2>
+        <p className="mt-3 text-center text-white/70">{message}</p>
+        <div className="mt-8 flex items-center justify-center gap-4">
           <button
             onClick={exitApp}
             onMouseEnter={() => setSelected(0)}
             className={cn(
-              "min-w-[5.4167em] rounded-[0.5em] border px-[1em] py-[0.5em] text-[0.5833em] font-bold uppercase tracking-wide outline-none transition-all",
+              "min-w-[130px] rounded-xl border px-6 py-3 text-sm font-bold uppercase tracking-wide outline-none transition-all",
               selected === 0
                 ? "border-[#F5C518] bg-[#F5C518] text-black scale-105"
                 : "border-white/20 bg-white/5 text-white/70 hover:text-white",
@@ -159,7 +140,7 @@ const ExitAppDialog = () => {
             onClick={close}
             onMouseEnter={() => setSelected(1)}
             className={cn(
-              "min-w-[5.4167em] rounded-[0.5em] border px-[1em] py-[0.5em] text-[0.5833em] font-bold uppercase tracking-wide outline-none transition-all",
+              "min-w-[130px] rounded-xl border px-6 py-3 text-sm font-bold uppercase tracking-wide outline-none transition-all",
               selected === 1
                 ? "border-[#F5C518] bg-[#F5C518] text-black scale-105"
                 : "border-white/20 bg-white/5 text-white/70 hover:text-white",
