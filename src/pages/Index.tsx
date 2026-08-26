@@ -1528,16 +1528,16 @@ const Index = () => {
                             const { country, items } = group;
                             const info = COUNTRY_INFO[country] ?? { name: country };
 
-                            // Klizni prozor od CAMERAS_COLS (4) vidljivih kamera. Za grupu koja
-                            // je trenutno fokusirana, prozor prati fokusiranu kameru — čim
-                            // ArrowRight prijeđe zadnju vidljivu poziciju, prozor se pomakne
-                            // udesno za jedno mjesto (umjesto da se kamere lome u novi red).
-                            // Za susjednu ("peek") grupu uvijek se prikazuju prve 4.
+                            // Klizni prozor od CAMERAS_COLS (4) vidljivih kamera, s "pinned focus"
+                            // ponašanjem: dok ima još kamera koje nisu bile prikazane (col <=
+                            // maxWindowStart), fokus OSTAJE na prvoj (lijevoj) kartici, a prozor
+                            // se pomiče ispod njega otkrivajući nove kamere udesno. Tek kad prozor
+                            // stigne do kraja (nema više novih kamera za otkriti), fokus počinje
+                            // stvarno putovati kroz preostale vidljive kartice, sve do zadnje
+                            // (krajnje desne). Za susjednu ("peek") grupu uvijek se prikazuju prve 4.
                             const isCurrentGroup = groupIdx === currentGroupIdx;
                             const maxWindowStart = Math.max(0, items.length - CAMERAS_COLS);
-                            const windowStart = isCurrentGroup
-                              ? Math.min(Math.max(0, currentCol - (CAMERAS_COLS - 1)), maxWindowStart)
-                              : 0;
+                            const windowStart = isCurrentGroup ? Math.min(currentCol, maxWindowStart) : 0;
                             const visibleItems = items.slice(windowStart, windowStart + CAMERAS_COLS);
 
                             return (
