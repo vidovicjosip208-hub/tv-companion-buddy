@@ -54,7 +54,8 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
   const [revealed, setRevealed] = useState(true);
   const [framesReady, setFramesReady] = useState(false);
   const [loadedSourceCount, setLoadedSourceCount] = useState(0);
-  const [scale, setScale] = useState({ x: 1, y: 1 });
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState({ x: 1, y: 1, left: 0, top: 0 });
   const loadedSources = useRef(new Set<string>());
   const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const canvasRefs = useRef<Array<HTMLCanvasElement | null>>([]);
