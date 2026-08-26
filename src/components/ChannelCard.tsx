@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Play } from "lucide-react";
 import type { EPGChannel } from "./EPGGrid";
@@ -18,8 +19,11 @@ const gradients = [
 ];
 
 const ChannelCard = ({ channel, isFocused, onClick }: Props) => {
-  const live = channel.programs.find((p) => p.isLive) ?? channel.programs[0];
-  const grad = gradients[channel.number % gradients.length];
+  // Memoizirano po channel.programs/channel.number — bez ovoga se "live" program i
+  // gradient boja iznova računaju pri SVAKOM renderu ove kartice (a ovakvih kartica
+  // ima puno istovremeno na ekranu), iako se mijenjaju samo kad se sam kanal promijeni.
+  const live = useMemo(() => channel.programs.find((p) => p.isLive) ?? channel.programs[0], [channel.programs]);
+  const grad = useMemo(() => gradients[channel.number % gradients.length], [channel.number]);
 
   return (
     <button
@@ -52,4 +56,9 @@ const ChannelCard = ({ channel, isFocused, onClick }: Props) => {
   );
 };
 
-export default ChannelCard;
+// React.memo — sprječava re-render pojedine kartice kad se roditelj (EPG grid/red
+// kanala) re-renderira zbog promjene fokusa na NEKOJ DRUGOJ kartici, a ovoj konkretnoj
+// se ni channel, ni isFocused, ni onClick nisu promijenili. Na slabijem uređaju gdje
+// se ovakve kartice renderiraju u velikom broju istovremeno, ovo znatno smanjuje broj
+// nepotrebnih re-renderiranja pri navigaciji strelicama.
+export default memo(ChannelCard);
