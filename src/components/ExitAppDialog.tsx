@@ -121,25 +121,29 @@ const ExitAppDialog = () => {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
       {/*
-        Sizing je namjerno vezan uz vw (a ne rem/px) i sve je izraženo u "em" relativno na
-        taj vw font-size. Ostatak app-a (sidebar, kartice...) skalira se s viewportom, ali
-        su Tailwind rem-klase (max-w-md, p-8, text-2xl...) ovisile o root font-sizeu, koji se
-        na TV pregledniku ponaša drugačije nego na laptopu — pa je isti "broj" ispadao
-        vizualno veći na TV-u. Vezanjem uz vw dialog dobiva identičan omjer prema ekranu na
-        svakom uređaju, neovisno o razlikama u root font-sizeu/DPI-u.
+        Baza (fontSize) je 1.25vw — to je točno isti omjer kao originalni title font-size
+        (24px na referentnoj širini ekrana od 1920px = Tailwind text-2xl). Sve ostalo je
+        izraženo u "em" relativno na tu bazu, preračunato iz originalnih Tailwind vrijednosti
+        (max-w-md, p-8, gap-4, px-6 py-3, min-w-[130px], text-sm...), tako da na 1920px
+        širokom ekranu ispadne piksel-identično originalnom dizajnu, a na bilo kojoj drugoj
+        širini ekrana (TV, tablet...) sve skalira proporcionalno umjesto da ostane fiksno
+        u pikselima.
       */}
       <div
-        className="mx-4 w-full rounded-[0.6em] border border-white/15 bg-black p-[1.6em] shadow-2xl"
-        style={{ fontSize: "clamp(12px, 1.15vw, 20px)", maxWidth: "26em" }}
+        className="mx-4 w-full rounded-[0.6667em] border border-white/15 bg-black p-[1.3333em] shadow-2xl"
+        style={{
+          fontSize: "clamp(12px, 1.25vw, 30px)",
+          maxWidth: "18.667em",
+        }}
       >
-        <h2 className="text-[1.35em] font-bold text-white text-center">{title}</h2>
-        <p className="mt-[0.6em] text-center text-[0.85em] text-white/70">{message}</p>
-        <div className="mt-[1.6em] flex items-center justify-center gap-[0.8em]">
+        <h2 className="text-[1em] font-bold text-white text-center">{title}</h2>
+        <p className="mt-[0.5em] text-center text-[0.6667em] text-white/70">{message}</p>
+        <div className="mt-[1.3333em] flex items-center justify-center gap-[0.6667em]">
           <button
             onClick={exitApp}
             onMouseEnter={() => setSelected(0)}
             className={cn(
-              "min-w-[6.5em] rounded-[0.5em] border px-[1.2em] py-[0.6em] text-[0.85em] font-bold uppercase tracking-wide outline-none transition-all",
+              "min-w-[5.4167em] rounded-[0.5em] border px-[1em] py-[0.5em] text-[0.5833em] font-bold uppercase tracking-wide outline-none transition-all",
               selected === 0
                 ? "border-[#F5C518] bg-[#F5C518] text-black scale-105"
                 : "border-white/20 bg-white/5 text-white/70 hover:text-white",
@@ -151,7 +155,7 @@ const ExitAppDialog = () => {
             onClick={close}
             onMouseEnter={() => setSelected(1)}
             className={cn(
-              "min-w-[6.5em] rounded-[0.5em] border px-[1.2em] py-[0.6em] text-[0.85em] font-bold uppercase tracking-wide outline-none transition-all",
+              "min-w-[5.4167em] rounded-[0.5em] border px-[1em] py-[0.5em] text-[0.5833em] font-bold uppercase tracking-wide outline-none transition-all",
               selected === 1
                 ? "border-[#F5C518] bg-[#F5C518] text-black scale-105"
                 : "border-white/20 bg-white/5 text-white/70 hover:text-white",
