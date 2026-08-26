@@ -130,8 +130,10 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
     return (
       <header className="relative z-10 px-12 -mt-[65px] pb-0">
         <div className="flex items-center">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
+          {/* Logo — slot zadržava izvornu visinu (221px) da layout headera,
+              navigacije i sadržaja ispod ostanu nepromijenjeni; slika je manja
+              i vertikalno centrirana u istom centru kao prije. */}
+          <div className="flex items-center gap-3 h-[221px]">
             <img src={logo} alt="Max Ovizija" className="h-[120px] w-auto" />
           </div>
 
