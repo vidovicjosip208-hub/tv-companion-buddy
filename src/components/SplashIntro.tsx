@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/max-ovizija-logo.png";
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "@/lib/canvas";
 
 interface SplashTileData {
   video_url: string;
