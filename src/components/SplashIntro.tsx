@@ -253,12 +253,12 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
           className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
           <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            className="absolute left-0 top-0"
             style={{
-              width: "100vw",
-              height: "56.25vw",
-              minWidth: "177.78vh",
-              minHeight: "100vh",
+              width: `${CANVAS_WIDTH}px`,
+              height: `${CANVAS_HEIGHT}px`,
+              transform: `scale(${scale.x}, ${scale.y})`,
+              transformOrigin: "top left",
             }}
           >
             <div className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0" aria-hidden="true">
