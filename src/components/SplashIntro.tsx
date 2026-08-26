@@ -66,15 +66,37 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
   // Isti fiksni canvas (1624x768) kao i ostatak aplikacije — splash se
   // rasteže na fizički ekran istom metodom kao ScaleToFit, pa je prikaz
   // identičan na TV-u i laptopu i nijedna pločica nije odsječena.
+  // Mjeri se stvarni host element (ne window.innerWidth/Height, koje TV
+  // browseri često krivo prijave) i canvas se centrira na ekranu.
   useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
     const measure = () => {
-      setScale({ x: window.innerWidth / CANVAS_WIDTH, y: window.innerHeight / CANVAS_HEIGHT });
+      const rect = host.getBoundingClientRect();
+      const w = rect.width || host.clientWidth || window.innerWidth;
+      const h = rect.height || host.clientHeight || window.innerHeight;
+      if (w < 1 || h < 1) return;
+      const x = w / CANVAS_WIDTH;
+      const y = h / CANVAS_HEIGHT;
+      setScale({
+        x,
+        y,
+        left: (w - CANVAS_WIDTH * x) / 2,
+        top: (h - CANVAS_HEIGHT * y) / 2,
+      });
     };
+
     measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(host);
+    const timers = [50, 250, 800, 2000].map((ms) => window.setTimeout(measure, ms));
     window.addEventListener("resize", measure);
     window.addEventListener("orientationchange", measure);
     window.visualViewport?.addEventListener("resize", measure);
     return () => {
+      ro.disconnect();
+      timers.forEach(window.clearTimeout);
       window.removeEventListener("resize", measure);
       window.removeEventListener("orientationchange", measure);
       window.visualViewport?.removeEventListener("resize", measure);
