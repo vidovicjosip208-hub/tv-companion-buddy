@@ -431,6 +431,21 @@ const flagImageUrl = (code: string) =>
 
 const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
 
+// Pretkompajlirano indeksiranje kamera po id-u — liveCameras je statičan niz,
+// pa se ovime izbjegava O(n) liveCameras.indexOf(cam) pri SVAKOM renderu za
+// svaku pojedinu kameru u mreži.
+const cameraIndexById: Record<string, number> = liveCameras.reduce<Record<string, number>>((acc, cam, idx) => {
+  acc[cam.id] = idx;
+  return acc;
+}, {});
+
+// URL-ovi zastavica se računaju samo jednom (string/codepoint manipulacija),
+// umjesto ponovno pri svakom renderu za svaku grupu kamera po državi.
+const countryFlagUrls: Record<string, string> = CAMERA_COUNTRY_ORDER.reduce<Record<string, string>>((acc, code) => {
+  acc[code] = flagImageUrl(code);
+  return acc;
+}, {});
+
 const radioStations: EPGChannel[] = [
   {
     id: "r1",
@@ -742,12 +757,26 @@ const Index = () => {
     setPlayerVisible(true);
   }, []);
 
+  // Mape za O(1) pretragu kanala po imenu — zamjena za ponovljene .find() prolaze
+  // kroz nizove pri svakom renderu (favoriti, promjena kanala u playeru).
+  const liveChannelCardByName = useMemo(() => {
+    const map = new Map<string, (typeof liveChannelCards)[number]>();
+    for (const card of liveChannelCards) map.set(card.channelName, card);
+    return map;
+  }, [liveChannelCards]);
+
+  const liveEpgChannelByName = useMemo(() => {
+    const map = new Map<string, EPGChannel>();
+    for (const ch of liveEpgChannels) map.set(ch.name, ch);
+    return map;
+  }, [liveEpgChannels]);
+
   const favoriteEpgChannels = useMemo(() => {
     return favorites
       .map((name, idx): EPGChannel | null => {
-        const card = liveChannelCards.find((c) => c.channelName === name);
+        const card = liveChannelCardByName.get(name);
         if (!card) return null;
-        const epgChannel = liveEpgChannels.find((ch) => ch.name === card.channelName);
+        const epgChannel = liveEpgChannelByName.get(card.channelName);
         const [startTime = "00:00", endTime = "00:00"] = card.timeSlot.split(" - ").map((s) => s.trim());
         return {
           id: `favorite-${card.channelName}-${idx}`,
@@ -762,11 +791,11 @@ const Index = () => {
       })
       .filter((channel): channel is EPGChannel => Boolean(channel))
       .sort((a, b) => a.number - b.number);
-  }, [favorites, liveEpgChannels, liveChannelCards, favoriteNumber]);
+  }, [favorites, liveChannelCardByName, liveEpgChannelByName, favoriteNumber]);
 
   const playerFavoriteChannels: FavoriteChannel[] = useMemo(() => {
     return favoriteEpgChannels.map((ch) => {
-      const card = liveChannelCards.find((c) => c.channelName === ch.name);
+      const card = liveChannelCardByName.get(ch.name);
       const liveProgram = ch.programs.find((p) => p.isLive) ?? ch.programs[0];
       return {
         number: ch.number,
@@ -781,7 +810,7 @@ const Index = () => {
         logoUrl: card?.logoUrl ?? ch.logoUrl ?? null,
       };
     });
-  }, [favoriteEpgChannels, liveChannelCards]);
+  }, [favoriteEpgChannels, liveChannelCardByName]);
 
   const allPlayerChannels: FavoriteChannel[] = useMemo(() => {
     return liveChannelCards.map((card) => ({
@@ -795,11 +824,16 @@ const Index = () => {
     }));
   }, [liveChannelCards]);
 
+  const allPlayerChannelsByName = useMemo(() => {
+    const map = new Map<string, FavoriteChannel>();
+    for (const c of allPlayerChannels) map.set(c.channelName, c);
+    return map;
+  }, [allPlayerChannels]);
+
   const handleSwitchChannel = useCallback(
     (next: PlayerData) => {
-      const matchedCard = liveChannelCards.find((c) => c.channelName === next.channelName);
-      const resolvedStreamUrl =
-        next.streamUrl ?? allPlayerChannels.find((c) => c.channelName === next.channelName)?.streamUrl;
+      const matchedCard = liveChannelCardByName.get(next.channelName);
+      const resolvedStreamUrl = next.streamUrl ?? allPlayerChannelsByName.get(next.channelName)?.streamUrl;
 
       if (!resolvedStreamUrl) {
         console.warn("[Index] handleSwitchChannel: stream_url nije pronađen za", next.channelName);
@@ -812,7 +846,7 @@ const Index = () => {
         streamUrl: resolvedStreamUrl,
       });
     },
-    [allPlayerChannels, liveChannelCards],
+    [allPlayerChannelsByName, liveChannelCardByName],
   );
 
   const selectedCategoryId = showCategories ? tvCategories[categoryIndex]?.id : null;
@@ -937,7 +971,7 @@ const Index = () => {
     const rows: number[][] = [];
     const rowGroup: number[] = [];
     camerasByCountry.forEach(({ items }, groupIdx) => {
-      const rowIndices = items.map((cam) => liveCameras.indexOf(cam));
+      const rowIndices = items.map((cam) => cameraIndexById[cam.id]);
       rows.push(rowIndices);
       rowGroup.push(groupIdx);
     });
@@ -988,8 +1022,166 @@ const Index = () => {
   // dio istog wrappera po grupi (nepromijenjeno iz prijašnje verzije).
   const [cameraDirection, setCameraDirection] = useState<"up" | "down">("up");
 
+  // Memoizirano grupiranje kamera za prikaz (trenutna + susjedna grupa) — prije se ovaj
+  // izračun (pozicija fokusa, filter, slice) radio iznova unutar JSX-a pri SVAKOM renderu,
+  // neovisno o tome je li se ijedna od potrebnih vrijednosti uopće promijenila.
+  const cameraGroupsToRender = useMemo(() => {
+    const { row: currentRow, col: currentCol } = findCameraPosition(cameraIndex);
+    const currentGroupIdx = rowGroupIndex[currentRow] ?? 0;
+    const adjacentGroupIdx = cameraDirection === "down" ? currentGroupIdx - 1 : currentGroupIdx + 1;
+    const hasAdjacent = adjacentGroupIdx >= 0 && adjacentGroupIdx < camerasByCountry.length;
+    const groupIndicesToRender = !hasAdjacent
+      ? [currentGroupIdx]
+      : cameraDirection === "down"
+        ? [adjacentGroupIdx, currentGroupIdx]
+        : [currentGroupIdx, adjacentGroupIdx];
+    return { currentGroupIdx, currentCol, groupIndicesToRender };
+  }, [cameraIndex, cameraDirection, rowGroupIndex, camerasByCountry, findCameraPosition]);
+
+  // Stabilni handleri za TVSidebar (klik/hover) — bez ovoga bi se pri SVAKOM renderu
+  // Index-a kreirale dvije nove, glomazne inline funkcije koje TVSidebar prima kao
+  // propove s novom referencom (nepotreban re-render/re-attach event handlera u djetetu).
+  const handleSidebarSelect = useCallback(
+    (i: number) => {
+      setSidebarIndex(i);
+      setFocusZone("sidebar");
+      setSidebarExpanded(true);
+      handleSidebarAction(i);
+    },
+    [handleSidebarAction],
+  );
+
+  const handleSidebarHover = useCallback((i: number) => {
+    setSidebarIndex(i);
+    setFocusZone("sidebar");
+    setSidebarExpanded(true);
+    if (i === TV_KANALI_INDEX) {
+      setShowCategories(true);
+      setShowFavorites(false);
+      setShowCameras(false);
+      setShowRadio(false);
+    } else if (i === RADIO_INDEX) {
+      setShowRadio(true);
+      setShowCategories(false);
+      setShowFavorites(false);
+      setShowCameras(false);
+      setEpgIndex(0);
+      setProgramIndex(0);
+    } else if (i === FAVORITES_INDEX) {
+      setShowFavorites(true);
+      setShowCategories(false);
+      setShowCameras(false);
+      setShowRadio(false);
+      setEpgIndex(0);
+      setProgramIndex(0);
+    } else if (i === CAMERAS_INDEX) {
+      setShowCameras(true);
+      setShowCategories(false);
+      setShowFavorites(false);
+      setShowRadio(false);
+      setCameraIndex(0);
+      setCameraDirection("up");
+    } else {
+      setShowCategories(false);
+      setShowFavorites(false);
+      setShowCameras(false);
+      setShowRadio(false);
+    }
+  }, []);
+
+  // "Latest values" ref — handleKeyDown čita svježe podatke odavde umjesto da ih drži
+  // kao closure/dependency. Bez ovoga bi se handleKeyDown (i time efekt u useZoneKeys
+  // koji ga registrira/deregistrira) re-kreirao pri SVAKOJ promjeni bilo koje od ovih
+  // vrijednosti — a to je doslovno svaki pritisak strelice na daljinskom, što je najveći
+  // pojedinačni uzrok "laga" na ovako slabom uređaju.
+  const kbStateRef = useRef({
+    focusZone,
+    sidebarIndex,
+    epgIndex,
+    programIndex,
+    cardIndex,
+    cameraIndex,
+    filterIndex,
+    categoryIndex,
+    showCategories,
+    showFavorites,
+    showRadio,
+    showCameras,
+    activeEpgChannels,
+    selectedChannelPrograms,
+    numberEditor,
+    playerVisible,
+    isTvKanaliActive,
+    isRadioActive,
+    isFavoritesActive,
+    isCamerasActive,
+    favorites,
+    favoriteNumber,
+    liveChannelCards,
+    t,
+  });
+
+  useEffect(() => {
+    kbStateRef.current = {
+      focusZone,
+      sidebarIndex,
+      epgIndex,
+      programIndex,
+      cardIndex,
+      cameraIndex,
+      filterIndex,
+      categoryIndex,
+      showCategories,
+      showFavorites,
+      showRadio,
+      showCameras,
+      activeEpgChannels,
+      selectedChannelPrograms,
+      numberEditor,
+      playerVisible,
+      isTvKanaliActive,
+      isRadioActive,
+      isFavoritesActive,
+      isCamerasActive,
+      favorites,
+      favoriteNumber,
+      liveChannelCards,
+      t,
+    };
+  });
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      // Sve što se čita ispod dolazi iz reference (uvijek svježe), a ne iz closure-a —
+      // zato ova funkcija ostaje stabilna (ista referenca) bez obzira što se ove
+      // vrijednosti mijenjaju gotovo pri svakom pritisku tipke.
+      const {
+        focusZone,
+        sidebarIndex,
+        epgIndex,
+        programIndex,
+        cardIndex,
+        cameraIndex,
+        filterIndex,
+        categoryIndex,
+        showCategories,
+        showFavorites,
+        showRadio,
+        showCameras,
+        activeEpgChannels,
+        selectedChannelPrograms,
+        numberEditor,
+        playerVisible,
+        isTvKanaliActive,
+        isRadioActive,
+        isFavoritesActive,
+        isCamerasActive,
+        favorites,
+        favoriteNumber,
+        liveChannelCards,
+        t,
+      } = kbStateRef.current;
+
       if (playerVisible) return;
 
       // Editor za dodjelu broja omiljenom kanalu ima prioritet
@@ -1251,37 +1443,13 @@ const Index = () => {
     },
     [
       isOkKey,
-      focusZone,
-      sidebarIndex,
-      epgIndex,
-      filterIndex,
-      categoryIndex,
-      cardIndex,
-      cameraIndex,
       cameraRows,
       findCameraPosition,
-      programIndex,
-      selectedChannelPrograms,
       handleSidebarAction,
-      isTvKanaliActive,
-      isRadioActive,
-      isFavoritesActive,
-      isCamerasActive,
-      showCategories,
-      showFavorites,
-      showRadio,
-      showCameras,
-      activeEpgChannels,
-      playerVisible,
-      openPlayerFromCard,
       openPlayerFromEPG,
+      openPlayerFromCard,
       moveCardIndexLive,
-      liveChannelCards,
-      numberEditor,
       setFavoriteNumber,
-      favorites,
-      favoriteNumber,
-      t,
     ],
   );
 
@@ -1383,89 +1551,8 @@ const Index = () => {
           focusedIndex={focusZone === "sidebar" ? sidebarIndex : -1}
           isExpanded={sidebarExpanded}
           isMini={isSidebarMini}
-          onItemClick={(i) => {
-            setSidebarIndex(i);
-            setFocusZone("sidebar");
-            setSidebarExpanded(true);
-            if (i === FILMOVI_INDEX) {
-              navigate("/videoteka");
-            } else if (i === SETTINGS_INDEX) {
-              navigate("/settings");
-            } else if (i === PROFILE_INDEX) {
-              setShowProfile(true);
-            } else if (i === TV_KANALI_INDEX) {
-              setShowCategories(true);
-              setShowFavorites(false);
-              setShowCameras(false);
-              setShowRadio(false);
-              setFocusZone("categories");
-              setSidebarExpanded(false);
-            } else if (i === RADIO_INDEX) {
-              setShowRadio(true);
-              setShowCategories(false);
-              setShowFavorites(false);
-              setShowCameras(false);
-              setEpgIndex(0);
-              setProgramIndex(0);
-              setFocusZone("epg");
-              setSidebarExpanded(false);
-            } else if (i === FAVORITES_INDEX) {
-              setShowFavorites(true);
-              setShowCategories(false);
-              setShowCameras(false);
-              setShowRadio(false);
-              setEpgIndex(0);
-              setProgramIndex(0);
-              setFocusZone("epg");
-              setSidebarExpanded(false);
-            } else if (i === CAMERAS_INDEX) {
-              setShowCameras(true);
-              setShowCategories(false);
-              setShowFavorites(false);
-              setShowRadio(false);
-              setCameraIndex(0);
-              setCameraDirection("up");
-              setFocusZone("cameras");
-              setSidebarExpanded(false);
-            }
-          }}
-          onItemHover={(i) => {
-            setSidebarIndex(i);
-            setFocusZone("sidebar");
-            setSidebarExpanded(true);
-            if (i === TV_KANALI_INDEX) {
-              setShowCategories(true);
-              setShowFavorites(false);
-              setShowCameras(false);
-              setShowRadio(false);
-            } else if (i === RADIO_INDEX) {
-              setShowRadio(true);
-              setShowCategories(false);
-              setShowFavorites(false);
-              setShowCameras(false);
-              setEpgIndex(0);
-              setProgramIndex(0);
-            } else if (i === FAVORITES_INDEX) {
-              setShowFavorites(true);
-              setShowCategories(false);
-              setShowCameras(false);
-              setShowRadio(false);
-              setEpgIndex(0);
-              setProgramIndex(0);
-            } else if (i === CAMERAS_INDEX) {
-              setShowCameras(true);
-              setShowCategories(false);
-              setShowFavorites(false);
-              setShowRadio(false);
-              setCameraIndex(0);
-              setCameraDirection("up");
-            } else {
-              setShowCategories(false);
-              setShowFavorites(false);
-              setShowCameras(false);
-              setShowRadio(false);
-            }
-          }}
+          onItemClick={handleSidebarSelect}
+          onItemHover={handleSidebarHover}
         />
 
         <TVCategoryMenu
@@ -1509,15 +1596,7 @@ const Index = () => {
                     princip), trenutna grupa je na vrhu, a sljedeća je "peek" ispod.
                   */}
                   {(() => {
-                    const { row: currentRow, col: currentCol } = findCameraPosition(cameraIndex);
-                    const currentGroupIdx = rowGroupIndex[currentRow] ?? 0;
-                    const adjacentGroupIdx = cameraDirection === "down" ? currentGroupIdx - 1 : currentGroupIdx + 1;
-                    const hasAdjacent = adjacentGroupIdx >= 0 && adjacentGroupIdx < camerasByCountry.length;
-                    const groupIndicesToRender = !hasAdjacent
-                      ? [currentGroupIdx]
-                      : cameraDirection === "down"
-                        ? [adjacentGroupIdx, currentGroupIdx]
-                        : [currentGroupIdx, adjacentGroupIdx];
+                    const { currentGroupIdx, currentCol, groupIndicesToRender } = cameraGroupsToRender;
 
                     return (
                       <div className="relative z-10 flex-1 flex flex-col gap-4 overflow-hidden">
@@ -1552,7 +1631,7 @@ const Index = () => {
                                 {/* Statični header — nije klikabilan, kamere ispod su uvijek vidljive */}
                                 <div className="flex items-center gap-2 rounded-md bg-muted/20 ring-1 ring-border/30">
                                   <img
-                                    src={flagImageUrl(country)}
+                                    src={countryFlagUrls[country]}
                                     alt={info.name}
                                     className="w-10 h-10 object-contain"
                                     loading="lazy"
@@ -1562,7 +1641,7 @@ const Index = () => {
                                 </div>
                                 <div className="grid grid-cols-4 gap-3 px-1 w-full">
                                   {visibleItems.map((cam) => {
-                                    const i = liveCameras.indexOf(cam);
+                                    const i = cameraIndexById[cam.id];
                                     const isFocused = focusZone === "cameras" && cameraIndex === i;
                                     return (
                                       <motion.div
