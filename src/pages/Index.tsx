@@ -661,6 +661,101 @@ const Index = () => {
     [navigate],
   );
 
+  // NAPOMENA (performanse): ova dva handlera su izdvojena u useCallback (prije su bila
+  // inline arrow funkcije direktno u JSX-u kod <TVSidebar onItemClick={...} onItemHover={...}>).
+  // Logika je 1:1 identična. Razlog izdvajanja: TVSidebar je sad memoiziran (React.memo), a
+  // memo štiti od nepotrebnog re-rendera SAMO ako su mu propsi referentno stabilni. Inline
+  // funkcije bi se stvarale iznova na svaki render Index-a (npr. svaki pritisak strelice dok
+  // gledaš kartice), što bi poništilo korist memo-a na TVSidebar-u. Sad su reference stabilne
+  // (useCallback), pa TVSidebar stvarno preskače re-render kad njegovi propsi ne trebaju.
+  const handleSidebarItemClick = useCallback(
+    (i: number) => {
+      setSidebarIndex(i);
+      setFocusZone("sidebar");
+      setSidebarExpanded(true);
+      if (i === FILMOVI_INDEX) {
+        navigate("/videoteka");
+      } else if (i === SETTINGS_INDEX) {
+        navigate("/settings");
+      } else if (i === PROFILE_INDEX) {
+        setShowProfile(true);
+      } else if (i === TV_KANALI_INDEX) {
+        setShowCategories(true);
+        setShowFavorites(false);
+        setShowCameras(false);
+        setShowRadio(false);
+        setFocusZone("categories");
+        setSidebarExpanded(false);
+      } else if (i === RADIO_INDEX) {
+        setShowRadio(true);
+        setShowCategories(false);
+        setShowFavorites(false);
+        setShowCameras(false);
+        setEpgIndex(0);
+        setProgramIndex(0);
+        setFocusZone("epg");
+        setSidebarExpanded(false);
+      } else if (i === FAVORITES_INDEX) {
+        setShowFavorites(true);
+        setShowCategories(false);
+        setShowCameras(false);
+        setShowRadio(false);
+        setEpgIndex(0);
+        setProgramIndex(0);
+        setFocusZone("epg");
+        setSidebarExpanded(false);
+      } else if (i === CAMERAS_INDEX) {
+        setShowCameras(true);
+        setShowCategories(false);
+        setShowFavorites(false);
+        setShowRadio(false);
+        setCameraIndex(0);
+        setCameraDirection("up");
+        setFocusZone("cameras");
+        setSidebarExpanded(false);
+      }
+    },
+    [navigate],
+  );
+
+  const handleSidebarItemHover = useCallback((i: number) => {
+    setSidebarIndex(i);
+    setFocusZone("sidebar");
+    setSidebarExpanded(true);
+    if (i === TV_KANALI_INDEX) {
+      setShowCategories(true);
+      setShowFavorites(false);
+      setShowCameras(false);
+      setShowRadio(false);
+    } else if (i === RADIO_INDEX) {
+      setShowRadio(true);
+      setShowCategories(false);
+      setShowFavorites(false);
+      setShowCameras(false);
+      setEpgIndex(0);
+      setProgramIndex(0);
+    } else if (i === FAVORITES_INDEX) {
+      setShowFavorites(true);
+      setShowCategories(false);
+      setShowCameras(false);
+      setShowRadio(false);
+      setEpgIndex(0);
+      setProgramIndex(0);
+    } else if (i === CAMERAS_INDEX) {
+      setShowCameras(true);
+      setShowCategories(false);
+      setShowFavorites(false);
+      setShowRadio(false);
+      setCameraIndex(0);
+      setCameraDirection("up");
+    } else {
+      setShowCategories(false);
+      setShowFavorites(false);
+      setShowCameras(false);
+      setShowRadio(false);
+    }
+  }, []);
+
   const selectedChannelPrograms = activeEpgChannels[epgIndex]?.programs ?? [];
 
   // Kamere grupirane po državi — headeri su statični (nisu klikabilni, ne sklapaju se),
@@ -1132,89 +1227,8 @@ const Index = () => {
           focusedIndex={focusZone === "sidebar" ? sidebarIndex : -1}
           isExpanded={sidebarExpanded}
           isMini={isSidebarMini}
-          onItemClick={(i) => {
-            setSidebarIndex(i);
-            setFocusZone("sidebar");
-            setSidebarExpanded(true);
-            if (i === FILMOVI_INDEX) {
-              navigate("/videoteka");
-            } else if (i === SETTINGS_INDEX) {
-              navigate("/settings");
-            } else if (i === PROFILE_INDEX) {
-              setShowProfile(true);
-            } else if (i === TV_KANALI_INDEX) {
-              setShowCategories(true);
-              setShowFavorites(false);
-              setShowCameras(false);
-              setShowRadio(false);
-              setFocusZone("categories");
-              setSidebarExpanded(false);
-            } else if (i === RADIO_INDEX) {
-              setShowRadio(true);
-              setShowCategories(false);
-              setShowFavorites(false);
-              setShowCameras(false);
-              setEpgIndex(0);
-              setProgramIndex(0);
-              setFocusZone("epg");
-              setSidebarExpanded(false);
-            } else if (i === FAVORITES_INDEX) {
-              setShowFavorites(true);
-              setShowCategories(false);
-              setShowCameras(false);
-              setShowRadio(false);
-              setEpgIndex(0);
-              setProgramIndex(0);
-              setFocusZone("epg");
-              setSidebarExpanded(false);
-            } else if (i === CAMERAS_INDEX) {
-              setShowCameras(true);
-              setShowCategories(false);
-              setShowFavorites(false);
-              setShowRadio(false);
-              setCameraIndex(0);
-              setCameraDirection("up");
-              setFocusZone("cameras");
-              setSidebarExpanded(false);
-            }
-          }}
-          onItemHover={(i) => {
-            setSidebarIndex(i);
-            setFocusZone("sidebar");
-            setSidebarExpanded(true);
-            if (i === TV_KANALI_INDEX) {
-              setShowCategories(true);
-              setShowFavorites(false);
-              setShowCameras(false);
-              setShowRadio(false);
-            } else if (i === RADIO_INDEX) {
-              setShowRadio(true);
-              setShowCategories(false);
-              setShowFavorites(false);
-              setShowCameras(false);
-              setEpgIndex(0);
-              setProgramIndex(0);
-            } else if (i === FAVORITES_INDEX) {
-              setShowFavorites(true);
-              setShowCategories(false);
-              setShowCameras(false);
-              setShowRadio(false);
-              setEpgIndex(0);
-              setProgramIndex(0);
-            } else if (i === CAMERAS_INDEX) {
-              setShowCameras(true);
-              setShowCategories(false);
-              setShowFavorites(false);
-              setShowRadio(false);
-              setCameraIndex(0);
-              setCameraDirection("up");
-            } else {
-              setShowCategories(false);
-              setShowFavorites(false);
-              setShowCameras(false);
-              setShowRadio(false);
-            }
-          }}
+          onItemClick={handleSidebarItemClick}
+          onItemHover={handleSidebarItemHover}
         />
 
         <TVCategoryMenu
