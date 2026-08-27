@@ -144,6 +144,7 @@ const ContentRow = ({
                   src={item.thumbnail}
                   alt={item.title}
                   loading="eager"
+                  decoding="async"
                   className={cn(
                     "absolute inset-0 w-full h-full object-cover object-center",
                     isExpanded && item.backdrop && "opacity-0",
@@ -155,7 +156,8 @@ const ContentRow = ({
                     src={item.backdrop}
                     alt=""
                     aria-hidden="true"
-                    loading="eager"
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = "none";
                     }}
@@ -172,7 +174,7 @@ const ContentRow = ({
                 {!peek && (item.progress !== undefined || (isFocused && showIndicator)) && (
                   <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-muted/50">
                     <div
-                      className="h-full bg-accent rounded-r-sm transition-all duration-300"
+                      className="h-full bg-accent rounded-r-sm"
                       style={{ width: `${item.progress ?? 35}%` }}
                     />
                   </div>

@@ -140,6 +140,7 @@ const ChannelItem = memo(
             <img
               src={channel.logoUrl}
               alt={channel.name}
+              decoding="async"
               className="w-full h-full object-contain scale-125"
               loading="eager"
               onError={() => setLogoError(true)}
