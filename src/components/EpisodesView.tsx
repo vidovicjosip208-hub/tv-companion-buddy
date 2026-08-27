@@ -175,6 +175,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
           <img
             src={backdropImage}
             alt=""
+            decoding="async"
             className="w-full h-full object-cover"
             style={{ transform: "translate3d(0,0,0) scale(1.04)" }}
           />
@@ -341,7 +342,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                       
                       `}
                     >
-                      <img src={ep.thumbnail} alt={ep.title} className="w-full h-full object-cover" />
+                      <img src={ep.thumbnail} alt={ep.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       <span className="absolute bottom-2 left-2 bg-black/65 px-2 py-0.5 rounded text-xs text-white font-medium">
                         S{currentSeason.season}: E{ep.number}
                       </span>

@@ -93,7 +93,7 @@ const TVChannelCard = ({
       )}
     >
       <div className="relative aspect-[16/9] overflow-hidden">
-        <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
+        <img src={thumbnail} alt={title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         <div className="absolute bottom-0 left-0 w-full">
           <div className="w-full bg-muted/70" style={{ height: "3px" }} />
           <div
@@ -112,6 +112,7 @@ const TVChannelCard = ({
               alt={channelName}
               className="w-full h-full object-contain p-1"
               loading="lazy"
+              decoding="async"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).style.display = "none";
               }}
