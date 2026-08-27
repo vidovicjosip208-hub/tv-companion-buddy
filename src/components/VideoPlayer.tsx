@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from "react";
 import { useZoneKeys } from "@/lib/focusZone";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, RotateCw, Heart, Tv } from "lucide-react";
@@ -283,111 +283,120 @@ interface ChannelCardProps {
   overrideNum?: number | string;
 }
 
-const ChannelCard = ({
-  ch,
-  isActive = false,
-  isFocused = false,
-  width = "100%",
-  onClick,
-  showArrows = false,
-  logoUrl = null,
-  overrideNum,
-}: ChannelCardProps) => {
-  const [logoError, setLogoError] = useState(false);
+// React.memo — ove kartice se renderiraju u više primjeraka istovremeno (slot iznad HUD-a
+// + HUD kartica) pri svakom renderu VideoPlayera (npr. svaki "tick" progress bara), iako se
+// sam sadržaj kartice često uopće ne mijenja.
+const ChannelCard = memo(
+  ({
+    ch,
+    isActive = false,
+    isFocused = false,
+    width = "100%",
+    onClick,
+    showArrows = false,
+    logoUrl = null,
+    overrideNum,
+  }: ChannelCardProps) => {
+    const [logoError, setLogoError] = useState(false);
 
-  // Reset error kada se logoUrl promijeni
-  useEffect(() => {
-    setLogoError(false);
-  }, [logoUrl]);
+    // Reset error kada se logoUrl promijeni
+    useEffect(() => {
+      setLogoError(false);
+    }, [logoUrl]);
 
-  return (
-    <div
-      onClick={onClick}
-      className="flex flex-col items-center cursor-pointer flex-shrink-0 select-none"
-      style={{ width }}
-    >
-      {showArrows ? (
-        <div style={{ height: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 6 }}>
-          {isFocused && (
-            <div
-              style={{
-                width: 0,
-                height: 0,
-                borderLeft: "22px solid transparent",
-                borderRight: "22px solid transparent",
-                borderBottom: `16px solid ${GOLD}`,
-              }}
-            />
-          )}
-        </div>
-      ) : (
-        <div style={{ height: 8 }} />
-      )}
-
+    return (
       <div
-        className="w-full relative flex flex-col items-center"
-        style={{
-          backgroundColor: "rgba(22,22,30,1)",
-          border: isFocused
-            ? `1.5px solid ${GOLD}`
-            : isActive
-              ? `1px solid rgba(245,197,24,0.45)`
-              : "1px solid rgba(255,255,255,0.1)",
-          borderRadius: "6px",
-          padding: "6px 8px 9px 8px",
-          minHeight: "96px",
-        }}
+        onClick={onClick}
+        className="flex flex-col items-center cursor-pointer flex-shrink-0 select-none"
+        style={{ width }}
       >
-        <span
-          className="absolute top-1.5 left-2 font-bold tabular-nums leading-none"
-          style={{ fontSize: "13px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
+        {showArrows ? (
+          <div
+            style={{ height: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 6 }}
+          >
+            {isFocused && (
+              <div
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: "22px solid transparent",
+                  borderRight: "22px solid transparent",
+                  borderBottom: `16px solid ${GOLD}`,
+                }}
+              />
+            )}
+          </div>
+        ) : (
+          <div style={{ height: 8 }} />
+        )}
+
+        <div
+          className="w-full relative flex flex-col items-center"
+          style={{
+            backgroundColor: "rgba(22,22,30,1)",
+            border: isFocused
+              ? `1.5px solid ${GOLD}`
+              : isActive
+                ? `1px solid rgba(245,197,24,0.45)`
+                : "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "6px",
+            padding: "6px 8px 9px 8px",
+            minHeight: "96px",
+          }}
         >
-          {overrideNum ?? ch.num}
-        </span>
+          <span
+            className="absolute top-1.5 left-2 font-bold tabular-nums leading-none"
+            style={{ fontSize: "13px", color: isFocused ? GOLD : "rgba(255,255,255,0.5)" }}
+          >
+            {overrideNum ?? ch.num}
+          </span>
 
-        <div className="mt-3 mb-1 flex items-center justify-center" style={{ height: 62 }}>
-          {logoUrl && !logoError ? (
-            <img
-              key={logoUrl}
-              src={logoUrl}
-              alt={ch.label}
-              className="max-h-[62px] max-w-full object-contain"
-              style={{}}
-              onError={() => setLogoError(true)}
-            />
-          ) : (
-            <Tv
-              style={{
-                width: 40,
-                height: 40,
-                color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
-                transition: "color 0.18s",
-              }}
-            />
-          )}
+          <div className="mt-3 mb-1 flex items-center justify-center" style={{ height: 62 }}>
+            {logoUrl && !logoError ? (
+              <img
+                key={logoUrl}
+                src={logoUrl}
+                alt={ch.label}
+                className="max-h-[62px] max-w-full object-contain"
+                style={{}}
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <Tv
+                style={{
+                  width: 40,
+                  height: 40,
+                  color: isFocused ? GOLD : isActive ? "#e8c94a" : "rgba(255,255,255,0.8)",
+                  transition: "color 0.18s",
+                }}
+              />
+            )}
+          </div>
         </div>
+
+        {showArrows ? (
+          <div
+            style={{ height: 22, display: "flex", alignItems: "flex-start", justifyContent: "center", marginTop: 6 }}
+          >
+            {isFocused && (
+              <div
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: "22px solid transparent",
+                  borderRight: "22px solid transparent",
+                  borderTop: `16px solid ${GOLD}`,
+                }}
+              />
+            )}
+          </div>
+        ) : (
+          <div style={{ height: 8 }} />
+        )}
       </div>
-
-      {showArrows ? (
-        <div style={{ height: 22, display: "flex", alignItems: "flex-start", justifyContent: "center", marginTop: 6 }}>
-          {isFocused && (
-            <div
-              style={{
-                width: 0,
-                height: 0,
-                borderLeft: "22px solid transparent",
-                borderRight: "22px solid transparent",
-                borderTop: `16px solid ${GOLD}`,
-              }}
-            />
-          )}
-        </div>
-      ) : (
-        <div style={{ height: 8 }} />
-      )}
-    </div>
-  );
-};
+    );
+  },
+);
 
 interface EPGCardProps {
   channel: MiniChannel;
@@ -396,7 +405,10 @@ interface EPGCardProps {
   onSelect: () => void;
 }
 
-const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
+// React.memo — u EPG traci je istovremeno prikazano više ovakvih kartica; bez memo-a se
+// SVAKA od njih re-renderira (uključujući IIFE izračun postotka napretka programa) čim se
+// bilo koja od njih pomakne, umjesto samo one čiji su se propovi stvarno promijenili.
+const EPGCard = memo(({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
   <div
     className={cn(
       "relative flex flex-col rounded-lg overflow-visible transition-all duration-300 ease-in-out cursor-pointer",
@@ -489,7 +501,7 @@ const EPGCard = ({ channel, isFocused, isFuture, onSelect }: EPGCardProps) => (
       </p>
     </div>
   </div>
-);
+));
 
 interface ChannelNumberOverlayProps {
   input: string;
@@ -608,13 +620,67 @@ const VideoPlayer = ({
     [miniChannels, onSwitchChannel, data?.channelName, data?.logoUrl],
   );
 
-  // favAsSidebarChannels — favoriteChannels konvertirani u SidebarChannel format
-  const favAsSidebarChannels: SidebarChannel[] = favoriteChannels.map((fc) => ({
-    id: `fav-${fc.number}`,
-    num: fc.number,
-    label: fc.channelName,
-    sub: "ODIVIZIJA",
-  }));
+  // favAsSidebarChannels — favoriteChannels konvertirani u SidebarChannel format.
+  // useMemo umjesto plain .map() — bez ovoga se čitav niz (i svi objekti u njemu)
+  // iznova kreirao pri SVAKOM renderu VideoPlayera (npr. svaki "tick" progress bara),
+  // što je karticama ispod davalo nove reference propova i prisiljavalo ih na
+  // re-render bez ikakve stvarne promjene sadržaja.
+  const favAsSidebarChannels: SidebarChannel[] = useMemo(
+    () =>
+      favoriteChannels.map((fc) => ({
+        id: `fav-${fc.number}`,
+        num: fc.number,
+        label: fc.channelName,
+        sub: "ODIVIZIJA",
+      })),
+    [favoriteChannels],
+  );
+
+  // Mape za O(1) pretragu kanala — zamjena za ponovljene .find()/.findIndex() prolaze
+  // kroz nizove kanala koji su se prije radili iznova pri svakom renderu i pri svakoj
+  // promjeni kanala/tipke na daljinskom.
+  const channelLookupByName = useMemo(() => {
+    const map = new Map<string, FavoriteChannel>();
+    for (const c of channelLookup) map.set(c.channelName, c);
+    return map;
+  }, [channelLookup]);
+
+  const allChannelsByName = useMemo(() => {
+    const map = new Map<string, FavoriteChannel>();
+    for (const c of allChannels ?? []) map.set(c.channelName, c);
+    return map;
+  }, [allChannels]);
+
+  const favoriteByNumber = useMemo(() => {
+    const map = new Map<number, FavoriteChannel>();
+    for (const c of favoriteChannels) map.set(c.number, c);
+    return map;
+  }, [favoriteChannels]);
+
+  // Pozicija trenutnog kanala u listi omiljenih — prije se identičan izračun
+  // (Math.max(0, favoriteChannels.findIndex(...))) ponavljao na 3 mjesta u komponenti
+  // pri svakom renderu; sada se računa jednom i dijeli.
+  const currentFavIndex = useMemo(
+    () =>
+      Math.max(
+        0,
+        favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
+      ),
+    [favoriteChannels, data?.channelName],
+  );
+
+  // Jedini pouzdani izvor za logo je allChannels — direktno iz baze s channel_logos
+  // merge-om. Sve kartice u lancu (slot + HUD) koriste ovu istu funkciju. Prebačeno u
+  // useCallback + Map lookup (umjesto .find() i console.log pri svakom pozivu, za
+  // svaku karticu, pri svakom renderu — console I/O na slabom uređaju zna biti
+  // iznenađujuće skupo).
+  const getLogoUrl = useCallback(
+    (channelName: string | undefined): string | null => {
+      if (!channelName) return null;
+      return allChannelsByName.get(channelName)?.logoUrl ?? null;
+    },
+    [allChannelsByName],
+  );
 
   const [progress, setProgress] = useState(42);
   const [aspectRatioMode, setAspectRatioMode] = useState<"original" | "fill" | "4:3" | "16:9">("fill");
@@ -638,14 +704,14 @@ const VideoPlayer = ({
     video.addEventListener("loadedmetadata", onMeta);
     return () => video.removeEventListener("loadedmetadata", onMeta);
   }, [streamUrl]);
-  const cycleAspectRatio = () => {
+  const cycleAspectRatio = useCallback(() => {
     setAspectRatioMode((p) => {
       if (p === "original") return "fill";
       if (p === "fill") return "4:3";
       if (p === "4:3") return "16:9";
       return "original";
     });
-  };
+  }, []);
   const [isProgressFocused, setIsProgressFocused] = useState(false);
   const [focusedControl, setFocusedControl] = useState<number>(1);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -893,15 +959,11 @@ const VideoPlayer = ({
   const openSidebar = useCallback(() => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
     setShowHud(true);
-    const currentIdx = Math.max(
-      0,
-      favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
-    );
-    setVerticalIndex(currentIdx);
+    setVerticalIndex(currentFavIndex);
     // -1 = HUD kartica je fokusirana (trokutići); 4 kartice iznad su preview bez fokusa.
     setSidebarFocus(-1);
     setFocusedControl(-1);
-  }, [favoriteChannels, data?.channelName]);
+  }, [currentFavIndex]);
 
   const closeSidebar = useCallback(() => {
     setSidebarFocus(-1);
@@ -909,8 +971,65 @@ const VideoPlayer = ({
     resetHideTimer();
   }, [resetHideTimer]);
 
+  // "Latest values" ref — handleKeyDown čita svježe podatke odavde umjesto da ih drži kao
+  // closure/dependency. Bez ovoga bi se handleKeyDown (i time useZoneKeys efekt koji ga
+  // registrira/deregistrira) re-kreirao pri SVAKOJ promjeni fokusa/unosa na daljinskom —
+  // što je bio glavni uzrok "laga" pri navigaciji unutar playera na slabijem uređaju.
+  const kbStateRef = useRef({
+    isVisible,
+    focusedControl,
+    epgMode,
+    sidebarFocus,
+    isProgressFocused,
+    channelInput,
+    showHud,
+    pinOpen,
+    pinValue,
+    epgFocusIndex,
+    miniChannels,
+    data,
+    currentFavIndex,
+    favoriteChannels,
+  });
+
+  useEffect(() => {
+    kbStateRef.current = {
+      isVisible,
+      focusedControl,
+      epgMode,
+      sidebarFocus,
+      isProgressFocused,
+      channelInput,
+      showHud,
+      pinOpen,
+      pinValue,
+      epgFocusIndex,
+      miniChannels,
+      data,
+      currentFavIndex,
+      favoriteChannels,
+    };
+  });
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      const {
+        isVisible,
+        focusedControl,
+        epgMode,
+        sidebarFocus,
+        isProgressFocused,
+        channelInput,
+        showHud,
+        pinOpen,
+        pinValue,
+        epgFocusIndex,
+        miniChannels,
+        data,
+        currentFavIndex,
+        favoriteChannels,
+      } = kbStateRef.current;
+
       if (!isVisible) return;
 
       // PIN popup ima prioritet nad ostalom navigacijom playera
@@ -964,11 +1083,10 @@ const VideoPlayer = ({
           const num = parseInt(newInput, 10);
           // Numerički unos traži po poziciji u listi omiljenih (1-based),
           // jer korisnik tipka "3" misleći na 3. omiljeni kanal — ne na channel_number iz baze.
-          const favCh = favoriteChannels.find((c) => c.number === num);
+          const favCh = favoriteByNumber.get(num);
           if (favCh && onSwitchChannel) {
             // Fallback: ako favCh.streamUrl nije dostupan, traži u allChannels po imenu
-            const resolvedStreamUrl =
-              favCh.streamUrl ?? (allChannels ?? []).find((c) => c.channelName === favCh.channelName)?.streamUrl;
+            const resolvedStreamUrl = favCh.streamUrl ?? allChannelsByName.get(favCh.channelName)?.streamUrl;
             onSwitchChannel({
               channelNumber: String(favCh.number),
               showTitle: favCh.showTitle,
@@ -1042,18 +1160,14 @@ const VideoPlayer = ({
         return;
       }
 
-      if (sidebarOpen) {
+      if (focusedControl === -1) {
         const favTotal = Math.max(favoriteChannels.length, 1);
-        const currentIdx = Math.max(
-          0,
-          favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
-        );
         switch (e.key) {
           case "ArrowUp":
             e.preventDefault();
             // HUD kartica je uvijek fokus. Skrol gore = HUD prikazuje sljedeći kanal u nizu.
             setSidebarFocus((p) => {
-              const cur = p === -1 ? currentIdx : p;
+              const cur = p === -1 ? currentFavIndex : p;
               return (cur + 1) % favTotal;
             });
             resetHideTimer();
@@ -1062,7 +1176,7 @@ const VideoPlayer = ({
             e.preventDefault();
             // Skrol dolje = HUD prikazuje prethodni kanal u nizu.
             setSidebarFocus((p) => {
-              const cur = p === -1 ? currentIdx : p;
+              const cur = p === -1 ? currentFavIndex : p;
               return (((cur - 1) % favTotal) + favTotal) % favTotal;
             });
             resetHideTimer();
@@ -1075,12 +1189,11 @@ const VideoPlayer = ({
           case " ": {
             e.preventDefault();
             // Enter učitava stream kanala koji je trenutno u HUD-u.
-            const hudIdxLocal = sidebarFocus === -1 ? currentIdx : sidebarFocus;
+            const hudIdxLocal = sidebarFocus === -1 ? currentFavIndex : sidebarFocus;
             const favCh = favoriteChannels[hudIdxLocal];
             if (favCh && onSwitchChannel && favCh.channelName !== data?.channelName) {
               // Fallback: ako favCh.streamUrl nije dostupan, traži u channelLookup
-              const resolvedStreamUrl =
-                favCh.streamUrl ?? channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
+              const resolvedStreamUrl = favCh.streamUrl ?? channelLookupByName.get(favCh.channelName)?.streamUrl;
               onSwitchChannel({
                 channelNumber: String(favCh.number),
                 showTitle: favCh.showTitle,
@@ -1153,30 +1266,20 @@ const VideoPlayer = ({
       }
     },
     [
-      isVisible,
       onClose,
-      focusedControl,
-      epgMode,
-      sidebarOpen,
-      sidebarFocus,
-      verticalIndex,
       openEpgMode,
       closeEpgMode,
       openSidebar,
       closeSidebar,
       resetHideTimer,
-      isProgressFocused,
-      getSeekStep,
-      startSeeking,
       goLive,
       onToggleFavorite,
-      channelInput,
-      favoriteChannels,
-      channelLookup,
       onSwitchChannel,
-      showHud,
-      pinOpen,
-      pinValue,
+      cycleAspectRatio,
+      playScheduleItem,
+      favoriteByNumber,
+      allChannelsByName,
+      channelLookupByName,
     ],
   );
 
@@ -1201,10 +1304,7 @@ const VideoPlayer = ({
   // HUD kartica je UVIJEK fokus zona. Skrolanjem se mijenja koji se kanal prikazuje
   // u HUD-u (preview), a 4 kartice iznad progress bara su sljedeći kandidati u nizu.
   // Enter učitava stream kanala koji je trenutno u HUD-u.
-  const currentIdx = Math.max(
-    0,
-    favoriteChannels.findIndex((fc) => fc.channelName === data?.channelName),
-  );
+  const currentIdx = currentFavIndex;
   const total = Math.max(favoriteChannels.length, 1);
 
   // hudIdx — koji se kanal prikazuje u HUD kartici. Default = trenutno reproducirani.
@@ -1218,17 +1318,6 @@ const VideoPlayer = ({
     num: hudFav?.number ?? 0,
     label: hudFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
-  };
-  // Jedini pouzdani izvor za logo je allChannels — direktno iz baze s channel_logos merge-om.
-  // Sve kartice u lancu (slot + HUD) koriste ovu istu funkciju.
-  const getLogoUrl = (channelName: string | undefined): string | null => {
-    if (!channelName) return null;
-    const found = (allChannels ?? []).find((c) => c.channelName === channelName);
-    const logo = found?.logoUrl ?? null;
-    console.log(
-      `[getLogoUrl] "${channelName}" → found=${!!found} logoUrl=${logo} allChannels.length=${(allChannels ?? []).length}`,
-    );
-    return logo;
   };
 
   // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
@@ -1251,7 +1340,7 @@ const VideoPlayer = ({
 
   const syncTransition = { type: "spring", stiffness: 300, damping: 30, mass: 0.8 } as const;
   const inputNum = parseInt(channelInput, 10);
-  const foundFavChannel = isNaN(inputNum) ? undefined : favoriteChannels.find((c) => c.number === inputNum);
+  const foundFavChannel = isNaN(inputNum) ? undefined : favoriteByNumber.get(inputNum);
 
   return (
     <motion.div
@@ -1464,8 +1553,7 @@ const VideoPlayer = ({
                       onClick={() => {
                         if (favCh && onSwitchChannel) {
                           const resolvedStreamUrl =
-                            favCh.streamUrl ??
-                            channelLookup.find((c) => c.channelName === favCh.channelName)?.streamUrl;
+                            favCh.streamUrl ?? channelLookupByName.get(favCh.channelName)?.streamUrl;
                           onSwitchChannel({
                             channelNumber: String(favCh.number),
                             showTitle: favCh.showTitle,
