@@ -321,7 +321,7 @@ const EpisodesView = ({ itemId, details, onClose, onPlayEpisode }: EpisodesViewP
                     data-episode=""
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.08 + index * 0.04 }}
+                    transition={{ delay: 0.08 + Math.min(index, 6) * 0.04 }}
                     onMouseEnter={() => {
                       setFocusedArea("episodes");
                       setFocusedEpisodeIndex(index);
