@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { Home, Tv, Radio, Heart, Film, Cctv, User, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -30,7 +31,75 @@ interface TVSidebarProps {
   onItemHover?: (index: number) => void;
 }
 
-const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onItemHover }: TVSidebarProps) => {
+// NAPOMENA (performanse): izdvojeno u vlastitu memo komponentu tako da promjena fokusa
+// (focusedIndex) re-renderira SAMO onaj gumb čiji se fokus stvarno promijenio (stari i
+// novi fokusirani), a ne svih 7 gumba u nizu. Handleri su useCallback da se ne stvaraju
+// iznova pri svakom renderu (14+ novih closure-a po renderu prije ove izmjene).
+interface SidebarNavItemProps {
+  item: SidebarItem;
+  index: number;
+  isFocused: boolean;
+  isMini: boolean;
+  showLabels: boolean;
+  label: string;
+  onItemClick: (index: number) => void;
+  onItemHover?: (index: number) => void;
+}
+
+const SidebarNavItem = memo(function SidebarNavItem({
+  item,
+  index,
+  isFocused,
+  isMini,
+  showLabels,
+  label,
+  onItemClick,
+  onItemHover,
+}: SidebarNavItemProps) {
+  const handleClick = useCallback(() => {
+    onItemClick(index);
+  }, [onItemClick, index]);
+
+  const handleMouseEnter = useCallback(() => {
+    if (item.id !== "movies") {
+      onItemHover ? onItemHover(index) : onItemClick(index);
+    }
+  }, [item.id, onItemHover, onItemClick, index]);
+
+  return (
+    <motion.button
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      whileHover={{ scale: 1.02 }}
+      className={cn(
+        "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 w-full",
+        isMini && "justify-center px-2",
+        isFocused ? "text-white bg-muted" : "text-sidebar-foreground hover:bg-muted hover:text-white",
+      )}
+    >
+      <span className="flex-shrink-0">{item.icon}</span>
+      {showLabels && (
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="font-medium text-base whitespace-nowrap"
+        >
+          {label}
+        </motion.span>
+      )}
+    </motion.button>
+  );
+});
+SidebarNavItem.displayName = "SidebarNavItem";
+
+const TVSidebar = memo(function TVSidebar({
+  focusedIndex,
+  isExpanded,
+  isMini = false,
+  onItemClick,
+  onItemHover,
+}: TVSidebarProps) {
   const { t } = useTranslation();
   const showLabels = isExpanded && !isMini;
 
@@ -41,6 +110,10 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
       ? Math.min(240, CANVAS_WIDTH * 0.4)
       : Math.min(80, CANVAS_WIDTH * 0.14);
 
+  const handleProfileClick = useCallback(() => {
+    onItemClick(PROFILE_INDEX);
+  }, [onItemClick]);
+
   return (
     <motion.aside
       initial={{ width: 80 }}
@@ -50,48 +123,28 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
     >
       {/* Logo moved to header */}
 
-
       {/* Nav Items */}
       <nav className="flex-1 flex flex-col gap-1 px-2">
-        {sidebarItems.map((item, index) => {
-          const isFocused = focusedIndex === index;
-          return (
-            <motion.button
-              key={item.id}
-              onClick={() => onItemClick(index)}
-              onMouseEnter={() => {
-                if (item.id !== "movies") {
-                  onItemHover ? onItemHover(index) : onItemClick(index);
-                }
-              }}
-              whileHover={{ scale: 1.02 }}
-              className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 w-full",
-                isMini && "justify-center px-2",
-                isFocused ? "text-white bg-muted" : "text-sidebar-foreground hover:bg-muted hover:text-white",
-              )}
-            >
-              <span className="flex-shrink-0">{item.icon}</span>
-              {showLabels && (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="font-medium text-base whitespace-nowrap"
-                >
-                  {t(item.labelKey)}
-                </motion.span>
-              )}
-            </motion.button>
-          );
-        })}
+        {sidebarItems.map((item, index) => (
+          <SidebarNavItem
+            key={item.id}
+            item={item}
+            index={index}
+            isFocused={focusedIndex === index}
+            isMini={isMini}
+            showLabels={showLabels}
+            label={t(item.labelKey)}
+            onItemClick={onItemClick}
+            onItemHover={onItemHover}
+          />
+        ))}
       </nav>
 
       {/* Profile Button */}
       <div className="px-2 mt-auto pt-4 mx-2">
         <motion.button
-          onClick={() => onItemClick(PROFILE_INDEX)}
-          onMouseEnter={() => onItemClick(PROFILE_INDEX)}
+          onClick={handleProfileClick}
+          onMouseEnter={handleProfileClick}
           whileHover={{ scale: 1.02 }}
           className={cn(
             "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200",
@@ -118,6 +171,7 @@ const TVSidebar = ({ focusedIndex, isExpanded, isMini = false, onItemClick, onIt
       </div>
     </motion.aside>
   );
-};
+});
+TVSidebar.displayName = "TVSidebar";
 
 export default TVSidebar;
