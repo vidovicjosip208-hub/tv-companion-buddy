@@ -359,6 +359,7 @@ const ChannelCard = memo(
                 alt={ch.label}
                 className="max-h-[62px] max-w-full object-contain"
                 style={{}}
+                decoding="async"
                 onError={() => setLogoError(true)}
               />
             ) : (
@@ -451,6 +452,7 @@ const EPGCard = memo(({ channel, isFocused, isFuture, onSelect }: EPGCardProps) 
         alt={channel.title}
         className="w-full h-full object-cover"
         style={{ filter: isFuture && !isFocused ? "grayscale(100%)" : "none", transition: "filter 0.3s" }}
+        decoding="async"
       />
 
       {!isFuture &&
@@ -971,6 +973,45 @@ const VideoPlayer = ({
     resetHideTimer();
   }, [resetHideTimer]);
 
+  // total/hudIdx/aboveWindow pomaknuti ovdje (prije early returna) i memoizirani kako bi
+  // ChannelCard komponente u slotu mogle stvarno iskoristiti React.memo — bez ovoga su se
+  // ovaj niz i onClick handleri ispod iznova računali pri SVAKOM renderu, pa je memo na
+  // ChannelCard-u bio bezvrijedan i svaka kartica se ponovno crtala baš dok se HUD traka
+  // otvara (otud sitni trzaji na slabijem GPU-u).
+  const total = Math.max(favoriteChannels.length, 1);
+  const hudIdx = useMemo(
+    () => (sidebarOpen && sidebarFocus !== -1 ? sidebarFocus : currentFavIndex),
+    [sidebarOpen, sidebarFocus, currentFavIndex],
+  );
+  const aboveWindow = useMemo(
+    () => Array.from({ length: 4 }, (_, i) => (((hudIdx + (4 - i)) % total) + total) % total),
+    [hudIdx, total],
+  );
+
+  // Stabilni onClick handleri za slot kartice — jedan po vidljivom kanalu, memoizirani
+  // zajedno s aboveWindow. Bez ovoga bi svaka ChannelCard u slotu dobivala NOVU onClick
+  // referencu pri svakom renderu (čak i nakon što je sam ChannelCard omotan u memo), što
+  // u potpunosti poništava korist od memo-a.
+  const slotClickHandlers = useMemo(
+    () =>
+      aboveWindow.map((chIdx) => () => {
+        const favCh = favoriteChannels[chIdx];
+        if (favCh && onSwitchChannel) {
+          const resolvedStreamUrl = favCh.streamUrl ?? channelLookupByName.get(favCh.channelName)?.streamUrl;
+          onSwitchChannel({
+            channelNumber: String(favCh.number),
+            showTitle: favCh.showTitle,
+            timeRange: favCh.timeRange,
+            thumbnail: favCh.thumbnail,
+            channelName: favCh.channelName,
+            streamUrl: resolvedStreamUrl,
+            logoUrl: favCh.logoUrl,
+          });
+        }
+      }),
+    [aboveWindow, favoriteChannels, onSwitchChannel, channelLookupByName],
+  );
+
   // "Latest values" ref — handleKeyDown čita svježe podatke odavde umjesto da ih drži kao
   // closure/dependency. Bez ovoga bi se handleKeyDown (i time useZoneKeys efekt koji ga
   // registrira/deregistrira) re-kreirao pri SVAKOJ promjeni fokusa/unosa na daljinskom —
@@ -1305,11 +1346,9 @@ const VideoPlayer = ({
   // u HUD-u (preview), a 4 kartice iznad progress bara su sljedeći kandidati u nizu.
   // Enter učitava stream kanala koji je trenutno u HUD-u.
   const currentIdx = currentFavIndex;
-  const total = Math.max(favoriteChannels.length, 1);
 
-  // hudIdx — koji se kanal prikazuje u HUD kartici. Default = trenutno reproducirani.
-  // Kad korisnik skrola, hudIdx se mijenja iako stream ostaje isti dok ne pritisne Enter.
-  const hudIdx = sidebarOpen && sidebarFocus !== -1 ? sidebarFocus : currentIdx;
+  // hudIdx / total / aboveWindow / slotClickHandlers su već izračunati gore (prije early
+  // returna) kao memoizirane vrijednosti — ovdje se samo izvode preostale, jeftine vrijednosti.
   const hudFav = favoriteChannels[hudIdx];
   const hudIsCurrent = hudIdx === currentIdx;
 
@@ -1319,10 +1358,6 @@ const VideoPlayer = ({
     label: hudFav?.channelName ?? data?.channelName ?? "",
     sub: "ODIVIZIJA",
   };
-
-  // Slot prozor: 4 kartice iznad HUD-a. Uvijek pokazuju sljedeća 4 kanala nakon hudIdx.
-  // Renderiramo odozgo prema dolje: [hud+4, hud+3, hud+2, hud+1].
-  const aboveWindow: number[] = Array.from({ length: 4 }, (_, i) => (((hudIdx + (4 - i)) % total) + total) % total);
 
   const CARD_W = 170;
   // SIDEBAR_BOTTOM = visina HUD-a. Sidebar raste prema gore od ove točke.
@@ -1530,12 +1565,16 @@ const VideoPlayer = ({
                 display: "flex",
                 flexDirection: "column",
                 gap: 10,
+                // willChange + contain: priprema GPU sloj unaprijed i izolira layout/style
+                // izračun ove trake od ostatka stranice — pozadinska optimizacija, ne mijenja
+                // izgled ni ponašanje.
+                willChange: "opacity",
+                contain: "layout style",
               }}
             >
-              {aboveWindow.map((chIdx) => {
+              {aboveWindow.map((chIdx, i) => {
                 const ch = favAsSidebarChannels[chIdx];
                 if (!ch) return null;
-                const favCh = favoriteChannels[chIdx];
                 return (
                   <motion.div
                     key={`slot-${chIdx}`}
@@ -1549,22 +1588,8 @@ const VideoPlayer = ({
                       isFocused={false}
                       width="100%"
                       showArrows={false}
-                      logoUrl={getLogoUrl(favCh?.channelName)}
-                      onClick={() => {
-                        if (favCh && onSwitchChannel) {
-                          const resolvedStreamUrl =
-                            favCh.streamUrl ?? channelLookupByName.get(favCh.channelName)?.streamUrl;
-                          onSwitchChannel({
-                            channelNumber: String(favCh.number),
-                            showTitle: favCh.showTitle,
-                            timeRange: favCh.timeRange,
-                            thumbnail: favCh.thumbnail,
-                            channelName: favCh.channelName,
-                            streamUrl: resolvedStreamUrl,
-                            logoUrl: favCh.logoUrl,
-                          });
-                        }
-                      }}
+                      logoUrl={getLogoUrl(favoriteChannels[chIdx]?.channelName)}
+                      onClick={slotClickHandlers[i]}
                     />
                   </motion.div>
                 );
@@ -1583,7 +1608,13 @@ const VideoPlayer = ({
               exit={{ opacity: 0, y: 50 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="absolute inset-x-0 bottom-0 flex flex-col gap-0 pointer-events-none"
-              style={{ zIndex: 40 }}
+              style={{
+                zIndex: 40,
+                // willChange + contain: isto obrazloženje kao kod slot trake iznad — priprema
+                // GPU sloj i izolira layout ove trake, bez utjecaja na izgled.
+                willChange: "transform, opacity",
+                contain: "layout style",
+              }}
             >
               <div className="relative overflow-visible pointer-events-auto flex flex-col">
                 {/* Progress bar */}
@@ -1623,7 +1654,12 @@ const VideoPlayer = ({
                         >
                           <div className="p-1 bg-white/20 rounded-lg border border-white/40 shadow-2xl">
                             <div className="w-56 aspect-video rounded overflow-hidden relative bg-black">
-                              <img src={thumbnail} alt="preview" className="w-full h-full object-cover" />
+                              <img
+                                src={thumbnail}
+                                alt="preview"
+                                className="w-full h-full object-cover"
+                                decoding="async"
+                              />
                               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded text-[14px] font-bold text-white tabular-nums border border-white/10">
                                 {calculateTimeFromProgress(progress, timeRange)}
                               </div>
@@ -1962,6 +1998,7 @@ const VideoPlayer = ({
                             className="w-full h-full object-cover"
                             alt={ch.title}
                             style={{ filter: isFutureShow(ch.timeRange, ch.day) ? "grayscale(100%)" : "none" }}
+                            decoding="async"
                           />
                         </div>
                       ))}
