@@ -18,263 +18,12 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useChannels, useEPGData } from "@/hooks/useChannels";
 import liveCamsLogo from "@/assets/livecams-logo.png.asset.json";
 
-interface ChannelCard {
-  title: string;
-  thumbnail: string;
-  channelName: string;
-  timeSlot: string;
-  channelNumber: string;
-  streamUrl?: string;
-  logoUrl?: string | null;
-}
-
-const defaultChannelCards: ChannelCard[] = [
-  {
-    title: "Vesti B92",
-    thumbnail: "https://images.unsplash.com/photo-1504711434969-e33886168d6c?w=400&q=80",
-    channelName: "B92",
-    timeSlot: "16:00 - 16:30",
-    channelNumber: "6",
-  },
-  {
-    title: "Selo gori, a baba se češlja",
-    thumbnail: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&q=80",
-    channelName: "PTC1",
-    timeSlot: "16:02 - 17:00",
-    channelNumber: "15",
-  },
-  {
-    title: "Elita Uživo",
-    thumbnail: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80",
-    channelName: "Pink",
-    timeSlot: "15:35 - 17:45",
-    channelNumber: "208",
-  },
-];
-
-const epgChannels: EPGChannel[] = [
-  {
-    id: "c1",
-    number: 4,
-    name: "Adria Info",
-    abbreviation: "AI",
-    programs: [
-      { title: "Nikola Rokvić — Live Session", startTime: "16:25", endTime: "16:29", date: "18.03.", isLive: true },
-      { title: "Vijesti iz regije", startTime: "16:30", endTime: "17:00", date: "18.03." },
-      { title: "Balkan Express", startTime: "17:00", endTime: "17:45", date: "18.03." },
-      { title: "Kulturni magazin", startTime: "17:45", endTime: "18:30", date: "18.03." },
-    ],
-  },
-  {
-    id: "c2",
-    number: 5,
-    name: "EX-YU Rock",
-    abbreviation: "EX",
-    programs: [
-      { title: "Idoli — Maljčiki", startTime: "16:25", endTime: "16:28", date: "18.03.", isLive: true },
-      { title: "Bijelo Dugme — Koncert", startTime: "16:28", endTime: "17:15", date: "18.03." },
-      { title: "Rock Hronika", startTime: "17:15", endTime: "18:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c3",
-    number: 6,
-    name: "B92",
-    abbreviation: "B92",
-    programs: [
-      { title: "Vesti B92", startTime: "16:00", endTime: "16:30", date: "18.03.", isLive: true },
-      { title: "Sportski pregled", startTime: "16:30", endTime: "17:00", date: "18.03." },
-      { title: "Utisak nedelje", startTime: "17:00", endTime: "18:00", date: "18.03." },
-      { title: "Film — Akcija", startTime: "18:00", endTime: "20:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c4",
-    number: 15,
-    name: "PTC1",
-    abbreviation: "PTC1",
-    programs: [
-      { title: "Selo gori, a baba se češlja", startTime: "16:02", endTime: "17:00", date: "18.03.", isLive: true },
-      { title: "Dnevnik", startTime: "17:00", endTime: "17:30", date: "18.03." },
-      { title: "Kulturni dnevnik", startTime: "17:30", endTime: "18:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c5",
-    number: 45,
-    name: "Adria Hits",
-    abbreviation: "AH",
-    programs: [
-      { title: "Željko Samardžić — Koncert", startTime: "16:24", endTime: "16:28", date: "18.03.", isLive: true },
-      { title: "Top Lista Hitova", startTime: "16:28", endTime: "17:00", date: "18.03." },
-      { title: "Acoustic Sessions", startTime: "17:00", endTime: "18:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c6",
-    number: 91,
-    name: "HRT",
-    abbreviation: "HRT",
-    programs: [
-      { title: "Praktična žena", startTime: "16:01", endTime: "17:02", date: "18.03.", isLive: true },
-      { title: "Dnevnik HRT", startTime: "17:02", endTime: "17:30", date: "18.03." },
-      { title: "Documentarni film", startTime: "17:30", endTime: "18:30", date: "18.03." },
-    ],
-  },
-  {
-    id: "c7",
-    number: 208,
-    name: "Pink",
-    abbreviation: "Pink",
-    programs: [
-      { title: "Elita Uživo", startTime: "15:35", endTime: "17:45", date: "18.03.", isLive: true },
-      { title: "Nacionalni dnevnik", startTime: "17:45", endTime: "18:15", date: "18.03." },
-      { title: "Zvezde Granda", startTime: "18:15", endTime: "20:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c8",
-    number: 706,
-    name: "PTC2",
-    abbreviation: "PTC2",
-    programs: [
-      { title: "Porodični kuvar", startTime: "15:55", endTime: "16:29", date: "18.03.", isLive: true },
-      { title: "Bela lađa", startTime: "16:29", endTime: "17:15", date: "18.03." },
-      { title: "Trezor", startTime: "17:15", endTime: "18:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c9",
-    number: 15,
-    name: "NOVA S",
-    abbreviation: "NOVA",
-    programs: [
-      { title: "Priče iz lobija", startTime: "16:40", endTime: "17:30", date: "18.03.", isLive: true },
-      { title: "Pregled dana", startTime: "17:30", endTime: "18:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c10",
-    number: 208,
-    name: "TLC",
-    abbreviation: "TLC",
-    programs: [
-      { title: "Tigovv Balkan", startTime: "15:38", endTime: "16:30", date: "18.03.", isLive: true },
-      { title: "Say Yes to the Dress", startTime: "16:30", endTime: "17:15", date: "18.03." },
-      { title: "90 Day Fiancé", startTime: "17:15", endTime: "18:30", date: "18.03." },
-    ],
-  },
-  {
-    id: "c11",
-    number: 12,
-    name: "Nova TV",
-    abbreviation: "NTV",
-    programs: [
-      { title: "Dobro jutro, Hrvatska", startTime: "06:30", endTime: "09:00", date: "18.03.", isLive: true },
-      { title: "Vijesti", startTime: "12:00", endTime: "12:30", date: "18.03." },
-    ],
-  },
-  {
-    id: "c12",
-    number: 14,
-    name: "RTL",
-    abbreviation: "RTL",
-    programs: [
-      { title: "Vijesti RTL danas", startTime: "13:00", endTime: "13:30", date: "18.03.", isLive: true },
-      { title: "Exkluziv", startTime: "17:30", endTime: "18:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c13",
-    number: 22,
-    name: "N1",
-    abbreviation: "N1",
-    programs: [
-      { title: "N1 Studio uživo", startTime: "11:00", endTime: "13:00", date: "18.03.", isLive: true },
-      { title: "Pressing", startTime: "20:00", endTime: "21:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c14",
-    number: 30,
-    name: "Sport Klub",
-    abbreviation: "SK",
-    programs: [
-      { title: "Liga prvaka uživo", startTime: "20:45", endTime: "23:00", date: "18.03.", isLive: true },
-      { title: "Sportski pregled", startTime: "23:00", endTime: "23:30", date: "18.03." },
-    ],
-  },
-  {
-    id: "c15",
-    number: 50,
-    name: "HBO",
-    abbreviation: "HBO",
-    programs: [
-      { title: "HBO originalna serija", startTime: "21:00", endTime: "22:00", date: "18.03.", isLive: true },
-      { title: "Film večeri", startTime: "22:00", endTime: "00:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c16",
-    number: 55,
-    name: "National Geo",
-    abbreviation: "NGO",
-    programs: [
-      { title: "Divlja priroda", startTime: "17:00", endTime: "18:00", date: "18.03.", isLive: true },
-      { title: "Cosmos", startTime: "18:00", endTime: "19:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c17",
-    number: 56,
-    name: "Discovery",
-    abbreviation: "DIS",
-    programs: [
-      { title: "Kako to rade?", startTime: "14:30", endTime: "15:30", date: "18.03.", isLive: true },
-      { title: "Mitbusters", startTime: "15:30", endTime: "16:30", date: "18.03." },
-    ],
-  },
-  {
-    id: "c18",
-    number: 60,
-    name: "Cartoon Net",
-    abbreviation: "CN",
-    programs: [
-      { title: "Animirani maraton", startTime: "09:00", endTime: "12:00", date: "18.03.", isLive: true },
-      { title: "Teen Titans", startTime: "12:00", endTime: "13:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c19",
-    number: 35,
-    name: "Eurosport",
-    abbreviation: "EUR",
-    programs: [
-      { title: "Formula 1 trka", startTime: "14:00", endTime: "17:00", date: "18.03.", isLive: true },
-      { title: "Tenis highlights", startTime: "17:00", endTime: "18:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c20",
-    number: 70,
-    name: "FTV",
-    abbreviation: "FTV",
-    programs: [
-      { title: "FTV dnevnik", startTime: "19:30", endTime: "20:00", date: "18.03.", isLive: true },
-      { title: "Dokumentarni film", startTime: "20:00", endTime: "21:00", date: "18.03." },
-    ],
-  },
-  {
-    id: "c21",
-    number: 72,
-    name: "Hayat TV",
-    abbreviation: "HAY",
-    programs: [
-      { title: "Hayat music show", startTime: "20:00", endTime: "22:00", date: "18.03.", isLive: true },
-      { title: "Vijesti Hayat", startTime: "19:00", endTime: "19:30", date: "18.03." },
-    ],
-  },
-];
+// NAPOMENA (performanse): stari hardkodirani mock nizovi "defaultChannelCards" i
+// "epgChannels" (ChannelCard interface uključen) su ovdje uklonjeni jer se nigdje u
+// komponenti nisu koristili — zamijenjeni su podacima iz baze (liveChannelCards /
+// liveEpgChannels). Nisu utjecali na izgled (nikad nisu bili renderirani), ali su se
+// svejedno parsirali i alocirali u memoriji pri svakom pokretanju aplikacije, što je
+// nepotreban trošak na uređajima sa malo RAM-a (npr. TV box s 2GB RAM-a).
 
 const channelThumbnails: Record<string, string> = {
   "Adria Info": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80",
@@ -430,21 +179,6 @@ const flagImageUrl = (code: string) =>
   `https://cdnjs.cloudflare.com/ajax/libs/emojione/2.2.7/assets/svg/${toCodePoints(countryFlagEmoji(code))}.svg`;
 
 const CAMERA_COUNTRY_ORDER = ["HR", "RS", "BA", "SI", "ME", "MK"];
-
-// Pretkompajlirano indeksiranje kamera po id-u — liveCameras je statičan niz,
-// pa se ovime izbjegava O(n) liveCameras.indexOf(cam) pri SVAKOM renderu za
-// svaku pojedinu kameru u mreži.
-const cameraIndexById: Record<string, number> = liveCameras.reduce<Record<string, number>>((acc, cam, idx) => {
-  acc[cam.id] = idx;
-  return acc;
-}, {});
-
-// URL-ovi zastavica se računaju samo jednom (string/codepoint manipulacija),
-// umjesto ponovno pri svakom renderu za svaku grupu kamera po državi.
-const countryFlagUrls: Record<string, string> = CAMERA_COUNTRY_ORDER.reduce<Record<string, string>>((acc, code) => {
-  acc[code] = flagImageUrl(code);
-  return acc;
-}, {});
 
 const radioStations: EPGChannel[] = [
   {
@@ -757,26 +491,12 @@ const Index = () => {
     setPlayerVisible(true);
   }, []);
 
-  // Mape za O(1) pretragu kanala po imenu — zamjena za ponovljene .find() prolaze
-  // kroz nizove pri svakom renderu (favoriti, promjena kanala u playeru).
-  const liveChannelCardByName = useMemo(() => {
-    const map = new Map<string, (typeof liveChannelCards)[number]>();
-    for (const card of liveChannelCards) map.set(card.channelName, card);
-    return map;
-  }, [liveChannelCards]);
-
-  const liveEpgChannelByName = useMemo(() => {
-    const map = new Map<string, EPGChannel>();
-    for (const ch of liveEpgChannels) map.set(ch.name, ch);
-    return map;
-  }, [liveEpgChannels]);
-
   const favoriteEpgChannels = useMemo(() => {
     return favorites
       .map((name, idx): EPGChannel | null => {
-        const card = liveChannelCardByName.get(name);
+        const card = liveChannelCards.find((c) => c.channelName === name);
         if (!card) return null;
-        const epgChannel = liveEpgChannelByName.get(card.channelName);
+        const epgChannel = liveEpgChannels.find((ch) => ch.name === card.channelName);
         const [startTime = "00:00", endTime = "00:00"] = card.timeSlot.split(" - ").map((s) => s.trim());
         return {
           id: `favorite-${card.channelName}-${idx}`,
@@ -791,11 +511,11 @@ const Index = () => {
       })
       .filter((channel): channel is EPGChannel => Boolean(channel))
       .sort((a, b) => a.number - b.number);
-  }, [favorites, liveChannelCardByName, liveEpgChannelByName, favoriteNumber]);
+  }, [favorites, liveEpgChannels, liveChannelCards, favoriteNumber]);
 
   const playerFavoriteChannels: FavoriteChannel[] = useMemo(() => {
     return favoriteEpgChannels.map((ch) => {
-      const card = liveChannelCardByName.get(ch.name);
+      const card = liveChannelCards.find((c) => c.channelName === ch.name);
       const liveProgram = ch.programs.find((p) => p.isLive) ?? ch.programs[0];
       return {
         number: ch.number,
@@ -810,7 +530,7 @@ const Index = () => {
         logoUrl: card?.logoUrl ?? ch.logoUrl ?? null,
       };
     });
-  }, [favoriteEpgChannels, liveChannelCardByName]);
+  }, [favoriteEpgChannels, liveChannelCards]);
 
   const allPlayerChannels: FavoriteChannel[] = useMemo(() => {
     return liveChannelCards.map((card) => ({
@@ -824,16 +544,11 @@ const Index = () => {
     }));
   }, [liveChannelCards]);
 
-  const allPlayerChannelsByName = useMemo(() => {
-    const map = new Map<string, FavoriteChannel>();
-    for (const c of allPlayerChannels) map.set(c.channelName, c);
-    return map;
-  }, [allPlayerChannels]);
-
   const handleSwitchChannel = useCallback(
     (next: PlayerData) => {
-      const matchedCard = liveChannelCardByName.get(next.channelName);
-      const resolvedStreamUrl = next.streamUrl ?? allPlayerChannelsByName.get(next.channelName)?.streamUrl;
+      const matchedCard = liveChannelCards.find((c) => c.channelName === next.channelName);
+      const resolvedStreamUrl =
+        next.streamUrl ?? allPlayerChannels.find((c) => c.channelName === next.channelName)?.streamUrl;
 
       if (!resolvedStreamUrl) {
         console.warn("[Index] handleSwitchChannel: stream_url nije pronađen za", next.channelName);
@@ -846,7 +561,7 @@ const Index = () => {
         streamUrl: resolvedStreamUrl,
       });
     },
-    [allPlayerChannelsByName, liveChannelCardByName],
+    [allPlayerChannels, liveChannelCards],
   );
 
   const selectedCategoryId = showCategories ? tvCategories[categoryIndex]?.id : null;
@@ -971,7 +686,7 @@ const Index = () => {
     const rows: number[][] = [];
     const rowGroup: number[] = [];
     camerasByCountry.forEach(({ items }, groupIdx) => {
-      const rowIndices = items.map((cam) => cameraIndexById[cam.id]);
+      const rowIndices = items.map((cam) => liveCameras.indexOf(cam));
       rows.push(rowIndices);
       rowGroup.push(groupIdx);
     });
@@ -1022,166 +737,8 @@ const Index = () => {
   // dio istog wrappera po grupi (nepromijenjeno iz prijašnje verzije).
   const [cameraDirection, setCameraDirection] = useState<"up" | "down">("up");
 
-  // Memoizirano grupiranje kamera za prikaz (trenutna + susjedna grupa) — prije se ovaj
-  // izračun (pozicija fokusa, filter, slice) radio iznova unutar JSX-a pri SVAKOM renderu,
-  // neovisno o tome je li se ijedna od potrebnih vrijednosti uopće promijenila.
-  const cameraGroupsToRender = useMemo(() => {
-    const { row: currentRow, col: currentCol } = findCameraPosition(cameraIndex);
-    const currentGroupIdx = rowGroupIndex[currentRow] ?? 0;
-    const adjacentGroupIdx = cameraDirection === "down" ? currentGroupIdx - 1 : currentGroupIdx + 1;
-    const hasAdjacent = adjacentGroupIdx >= 0 && adjacentGroupIdx < camerasByCountry.length;
-    const groupIndicesToRender = !hasAdjacent
-      ? [currentGroupIdx]
-      : cameraDirection === "down"
-        ? [adjacentGroupIdx, currentGroupIdx]
-        : [currentGroupIdx, adjacentGroupIdx];
-    return { currentGroupIdx, currentCol, groupIndicesToRender };
-  }, [cameraIndex, cameraDirection, rowGroupIndex, camerasByCountry, findCameraPosition]);
-
-  // Stabilni handleri za TVSidebar (klik/hover) — bez ovoga bi se pri SVAKOM renderu
-  // Index-a kreirale dvije nove, glomazne inline funkcije koje TVSidebar prima kao
-  // propove s novom referencom (nepotreban re-render/re-attach event handlera u djetetu).
-  const handleSidebarSelect = useCallback(
-    (i: number) => {
-      setSidebarIndex(i);
-      setFocusZone("sidebar");
-      setSidebarExpanded(true);
-      handleSidebarAction(i);
-    },
-    [handleSidebarAction],
-  );
-
-  const handleSidebarHover = useCallback((i: number) => {
-    setSidebarIndex(i);
-    setFocusZone("sidebar");
-    setSidebarExpanded(true);
-    if (i === TV_KANALI_INDEX) {
-      setShowCategories(true);
-      setShowFavorites(false);
-      setShowCameras(false);
-      setShowRadio(false);
-    } else if (i === RADIO_INDEX) {
-      setShowRadio(true);
-      setShowCategories(false);
-      setShowFavorites(false);
-      setShowCameras(false);
-      setEpgIndex(0);
-      setProgramIndex(0);
-    } else if (i === FAVORITES_INDEX) {
-      setShowFavorites(true);
-      setShowCategories(false);
-      setShowCameras(false);
-      setShowRadio(false);
-      setEpgIndex(0);
-      setProgramIndex(0);
-    } else if (i === CAMERAS_INDEX) {
-      setShowCameras(true);
-      setShowCategories(false);
-      setShowFavorites(false);
-      setShowRadio(false);
-      setCameraIndex(0);
-      setCameraDirection("up");
-    } else {
-      setShowCategories(false);
-      setShowFavorites(false);
-      setShowCameras(false);
-      setShowRadio(false);
-    }
-  }, []);
-
-  // "Latest values" ref — handleKeyDown čita svježe podatke odavde umjesto da ih drži
-  // kao closure/dependency. Bez ovoga bi se handleKeyDown (i time efekt u useZoneKeys
-  // koji ga registrira/deregistrira) re-kreirao pri SVAKOJ promjeni bilo koje od ovih
-  // vrijednosti — a to je doslovno svaki pritisak strelice na daljinskom, što je najveći
-  // pojedinačni uzrok "laga" na ovako slabom uređaju.
-  const kbStateRef = useRef({
-    focusZone,
-    sidebarIndex,
-    epgIndex,
-    programIndex,
-    cardIndex,
-    cameraIndex,
-    filterIndex,
-    categoryIndex,
-    showCategories,
-    showFavorites,
-    showRadio,
-    showCameras,
-    activeEpgChannels,
-    selectedChannelPrograms,
-    numberEditor,
-    playerVisible,
-    isTvKanaliActive,
-    isRadioActive,
-    isFavoritesActive,
-    isCamerasActive,
-    favorites,
-    favoriteNumber,
-    liveChannelCards,
-    t,
-  });
-
-  useEffect(() => {
-    kbStateRef.current = {
-      focusZone,
-      sidebarIndex,
-      epgIndex,
-      programIndex,
-      cardIndex,
-      cameraIndex,
-      filterIndex,
-      categoryIndex,
-      showCategories,
-      showFavorites,
-      showRadio,
-      showCameras,
-      activeEpgChannels,
-      selectedChannelPrograms,
-      numberEditor,
-      playerVisible,
-      isTvKanaliActive,
-      isRadioActive,
-      isFavoritesActive,
-      isCamerasActive,
-      favorites,
-      favoriteNumber,
-      liveChannelCards,
-      t,
-    };
-  });
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      // Sve što se čita ispod dolazi iz reference (uvijek svježe), a ne iz closure-a —
-      // zato ova funkcija ostaje stabilna (ista referenca) bez obzira što se ove
-      // vrijednosti mijenjaju gotovo pri svakom pritisku tipke.
-      const {
-        focusZone,
-        sidebarIndex,
-        epgIndex,
-        programIndex,
-        cardIndex,
-        cameraIndex,
-        filterIndex,
-        categoryIndex,
-        showCategories,
-        showFavorites,
-        showRadio,
-        showCameras,
-        activeEpgChannels,
-        selectedChannelPrograms,
-        numberEditor,
-        playerVisible,
-        isTvKanaliActive,
-        isRadioActive,
-        isFavoritesActive,
-        isCamerasActive,
-        favorites,
-        favoriteNumber,
-        liveChannelCards,
-        t,
-      } = kbStateRef.current;
-
       if (playerVisible) return;
 
       // Editor za dodjelu broja omiljenom kanalu ima prioritet
@@ -1443,13 +1000,37 @@ const Index = () => {
     },
     [
       isOkKey,
+      focusZone,
+      sidebarIndex,
+      epgIndex,
+      filterIndex,
+      categoryIndex,
+      cardIndex,
+      cameraIndex,
       cameraRows,
       findCameraPosition,
+      programIndex,
+      selectedChannelPrograms,
       handleSidebarAction,
-      openPlayerFromEPG,
+      isTvKanaliActive,
+      isRadioActive,
+      isFavoritesActive,
+      isCamerasActive,
+      showCategories,
+      showFavorites,
+      showRadio,
+      showCameras,
+      activeEpgChannels,
+      playerVisible,
       openPlayerFromCard,
+      openPlayerFromEPG,
       moveCardIndexLive,
+      liveChannelCards,
+      numberEditor,
       setFavoriteNumber,
+      favorites,
+      favoriteNumber,
+      t,
     ],
   );
 
@@ -1551,8 +1132,89 @@ const Index = () => {
           focusedIndex={focusZone === "sidebar" ? sidebarIndex : -1}
           isExpanded={sidebarExpanded}
           isMini={isSidebarMini}
-          onItemClick={handleSidebarSelect}
-          onItemHover={handleSidebarHover}
+          onItemClick={(i) => {
+            setSidebarIndex(i);
+            setFocusZone("sidebar");
+            setSidebarExpanded(true);
+            if (i === FILMOVI_INDEX) {
+              navigate("/videoteka");
+            } else if (i === SETTINGS_INDEX) {
+              navigate("/settings");
+            } else if (i === PROFILE_INDEX) {
+              setShowProfile(true);
+            } else if (i === TV_KANALI_INDEX) {
+              setShowCategories(true);
+              setShowFavorites(false);
+              setShowCameras(false);
+              setShowRadio(false);
+              setFocusZone("categories");
+              setSidebarExpanded(false);
+            } else if (i === RADIO_INDEX) {
+              setShowRadio(true);
+              setShowCategories(false);
+              setShowFavorites(false);
+              setShowCameras(false);
+              setEpgIndex(0);
+              setProgramIndex(0);
+              setFocusZone("epg");
+              setSidebarExpanded(false);
+            } else if (i === FAVORITES_INDEX) {
+              setShowFavorites(true);
+              setShowCategories(false);
+              setShowCameras(false);
+              setShowRadio(false);
+              setEpgIndex(0);
+              setProgramIndex(0);
+              setFocusZone("epg");
+              setSidebarExpanded(false);
+            } else if (i === CAMERAS_INDEX) {
+              setShowCameras(true);
+              setShowCategories(false);
+              setShowFavorites(false);
+              setShowRadio(false);
+              setCameraIndex(0);
+              setCameraDirection("up");
+              setFocusZone("cameras");
+              setSidebarExpanded(false);
+            }
+          }}
+          onItemHover={(i) => {
+            setSidebarIndex(i);
+            setFocusZone("sidebar");
+            setSidebarExpanded(true);
+            if (i === TV_KANALI_INDEX) {
+              setShowCategories(true);
+              setShowFavorites(false);
+              setShowCameras(false);
+              setShowRadio(false);
+            } else if (i === RADIO_INDEX) {
+              setShowRadio(true);
+              setShowCategories(false);
+              setShowFavorites(false);
+              setShowCameras(false);
+              setEpgIndex(0);
+              setProgramIndex(0);
+            } else if (i === FAVORITES_INDEX) {
+              setShowFavorites(true);
+              setShowCategories(false);
+              setShowCameras(false);
+              setShowRadio(false);
+              setEpgIndex(0);
+              setProgramIndex(0);
+            } else if (i === CAMERAS_INDEX) {
+              setShowCameras(true);
+              setShowCategories(false);
+              setShowFavorites(false);
+              setShowRadio(false);
+              setCameraIndex(0);
+              setCameraDirection("up");
+            } else {
+              setShowCategories(false);
+              setShowFavorites(false);
+              setShowCameras(false);
+              setShowRadio(false);
+            }
+          }}
         />
 
         <TVCategoryMenu
@@ -1596,7 +1258,15 @@ const Index = () => {
                     princip), trenutna grupa je na vrhu, a sljedeća je "peek" ispod.
                   */}
                   {(() => {
-                    const { currentGroupIdx, currentCol, groupIndicesToRender } = cameraGroupsToRender;
+                    const { row: currentRow, col: currentCol } = findCameraPosition(cameraIndex);
+                    const currentGroupIdx = rowGroupIndex[currentRow] ?? 0;
+                    const adjacentGroupIdx = cameraDirection === "down" ? currentGroupIdx - 1 : currentGroupIdx + 1;
+                    const hasAdjacent = adjacentGroupIdx >= 0 && adjacentGroupIdx < camerasByCountry.length;
+                    const groupIndicesToRender = !hasAdjacent
+                      ? [currentGroupIdx]
+                      : cameraDirection === "down"
+                        ? [adjacentGroupIdx, currentGroupIdx]
+                        : [currentGroupIdx, adjacentGroupIdx];
 
                     return (
                       <div className="relative z-10 flex-1 flex flex-col gap-4 overflow-hidden">
@@ -1631,7 +1301,7 @@ const Index = () => {
                                 {/* Statični header — nije klikabilan, kamere ispod su uvijek vidljive */}
                                 <div className="flex items-center gap-2 rounded-md bg-muted/20 ring-1 ring-border/30">
                                   <img
-                                    src={countryFlagUrls[country]}
+                                    src={flagImageUrl(country)}
                                     alt={info.name}
                                     className="w-10 h-10 object-contain"
                                     loading="lazy"
@@ -1641,7 +1311,7 @@ const Index = () => {
                                 </div>
                                 <div className="grid grid-cols-4 gap-3 px-1 w-full">
                                   {visibleItems.map((cam) => {
-                                    const i = cameraIndexById[cam.id];
+                                    const i = liveCameras.indexOf(cam);
                                     const isFocused = focusZone === "cameras" && cameraIndex === i;
                                     return (
                                       <motion.div
@@ -1661,6 +1331,8 @@ const Index = () => {
                                             src={cam.thumbnail}
                                             alt={cam.name}
                                             className="w-full h-full object-cover"
+                                            loading="lazy"
+                                            decoding="async"
                                           />
                                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                                           <div className="absolute top-2 left-2 flex items-center gap-1.5">
