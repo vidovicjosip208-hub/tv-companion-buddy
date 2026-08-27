@@ -143,7 +143,6 @@ const ChannelItem = memo(
               decoding="async"
               className="w-full h-full object-contain scale-125"
               loading="eager"
-                        decoding="async"
               onError={() => setLogoError(true)}
             />
           ) : (
