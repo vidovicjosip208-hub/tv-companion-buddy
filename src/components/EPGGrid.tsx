@@ -143,6 +143,7 @@ const ChannelItem = memo(
               decoding="async"
               className="w-full h-full object-contain scale-125"
               loading="eager"
+                        decoding="async"
               onError={() => setLogoError(true)}
             />
           ) : (
@@ -229,9 +230,9 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
         {program.isLive && (
           <div className="mt-1.5 w-full max-w-[240px] h-[3px] rounded-full bg-muted/30 overflow-hidden">
             <motion.div
-              className="h-full rounded-full bg-accent"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
+              className="h-full w-full origin-left rounded-full bg-accent"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: progress / 100 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             />
           </div>
@@ -336,6 +337,7 @@ const EPGGrid = ({
                         alt={selectedChannel.name}
                         className="w-full h-full object-contain scale-125"
                         loading="eager"
+                        decoding="async"
                       />
                     ) : (
                       <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
@@ -393,6 +395,7 @@ const EPGGrid = ({
                       alt={selectedChannel.name}
                       className="w-full h-full object-contain scale-125"
                       loading="eager"
+                        decoding="async"
                     />
                   ) : (
                     <span className="text-sm font-bold text-accent tracking-wider">
