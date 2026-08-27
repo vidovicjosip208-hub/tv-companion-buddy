@@ -128,7 +128,7 @@ const ExitAppDialog = () => {
             onClick={exitApp}
             onMouseEnter={() => setSelected(0)}
             className={cn(
-              "min-w-[130px] rounded-xl border px-6 py-3 text-sm font-bold uppercase tracking-wide outline-none transition-all",
+              "min-w-[130px] rounded-xl border px-6 py-3 text-sm font-bold uppercase tracking-wide outline-none transition-[background-color,border-color,color,box-shadow,transform,opacity]",
               selected === 0
                 ? "border-[#F5C518] bg-[#F5C518] text-black scale-105"
                 : "border-white/20 bg-white/5 text-white/70 hover:text-white",
@@ -140,7 +140,7 @@ const ExitAppDialog = () => {
             onClick={close}
             onMouseEnter={() => setSelected(1)}
             className={cn(
-              "min-w-[130px] rounded-xl border px-6 py-3 text-sm font-bold uppercase tracking-wide outline-none transition-all",
+              "min-w-[130px] rounded-xl border px-6 py-3 text-sm font-bold uppercase tracking-wide outline-none transition-[background-color,border-color,color,box-shadow,transform,opacity]",
               selected === 1
                 ? "border-[#F5C518] bg-[#F5C518] text-black scale-105"
                 : "border-white/20 bg-white/5 text-white/70 hover:text-white",

@@ -115,7 +115,7 @@ const ChannelItem = memo(
         onClick={onClick}
         onMouseEnter={onClick}
         className={cn(
-          "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-left",
+          "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-300 text-left",
           "border border-transparent",
           isFocused ? "bg-accent/15 border-accent/40" : "bg-transparent hover:bg-muted/20",
         )}
@@ -132,7 +132,7 @@ const ChannelItem = memo(
         )}
         <div
           className={cn(
-            "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
+            "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-[background-color,border-color,color,box-shadow,transform,opacity] overflow-hidden",
             "bg-transparent",
           )}
         >
@@ -189,7 +189,7 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.04 }}
       className={cn(
-        "flex items-center gap-4 px-5 py-3 rounded-lg transition-all duration-200",
+        "flex items-center gap-4 px-5 py-3 rounded-lg transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
         isFocused ? "bg-accent/15" : program.isLive ? "bg-accent/8" : "bg-transparent hover:bg-muted/10",
       )}
     >

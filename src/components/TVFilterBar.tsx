@@ -15,7 +15,7 @@ const TVFilterBar = ({ focusedFilter }: TVFilterBarProps) => {
         <button
           key={filter}
           className={cn(
-            "px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 border",
+            "px-5 py-2 rounded-lg text-sm font-medium transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 border",
             focusedFilter === index
               ? "bg-accent text-accent-foreground border-accent tv-focus-glow"
               : "bg-card/40 text-muted-foreground border-border/50 hover:bg-card/60",
