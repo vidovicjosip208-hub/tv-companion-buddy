@@ -58,6 +58,15 @@ const ContentRow = ({
       ? `${leftPad}px`
       : `calc(${leftPad}px - ${focusedIndex} * ${defaultW + GAP}px)`;
 
+  // Windowing (TV box ima 2GB RAM-a): kartice izvan vidljivog okvira renderiramo kao
+  // prazne "spacer" kutije iste širine/visine — layout i pozicije ostaju identični,
+  // ali se posteri/backdropovi za njih ne dekodiraju niti drže u memoriji.
+  const WINDOW_BEFORE = 3;
+  const WINDOW_AFTER = 7;
+  const shouldWindow = !peek && items.length > 14;
+  const windowStart = shouldWindow ? Math.max(0, focusedIndex - WINDOW_BEFORE) : 0;
+  const windowEnd = shouldWindow ? Math.min(items.length - 1, focusedIndex + WINDOW_AFTER) : items.length - 1;
+
   return (
     <div className={cn("relative z-10 mb-2", peek && "opacity-60")}>
       <h2 className="text-accent font-bold text-xl mb-4 px-12">
@@ -68,8 +77,7 @@ const ContentRow = ({
       </h2>
       <div className={cn("overflow-hidden", peek && "max-h-[100px]")}>
         <div
-          className={cn("flex transition-all duration-300 ease-in-out", peek && "px-12")}
-
+          className={cn("flex duration-300 ease-in-out", !peek && "transition-transform", peek && "px-12")}
           style={
             peek
               ? {
@@ -78,7 +86,8 @@ const ContentRow = ({
                 }
               : {
                   gap: `${GAP}px`,
-                  transform: `translateX(${translateX})`,
+                  transform: `translate3d(${translateX}, 0, 0)`,
+                  willChange: "transform",
                 }
           }
         >
@@ -87,6 +96,22 @@ const ContentRow = ({
             const isHovered = hoveredIndex === index;
             const isExpanded = uniform ? false : isFocused || isHovered;
 
+            if (index < windowStart || index > windowEnd) {
+              return (
+                <div
+                  key={item.id}
+                  aria-hidden="true"
+                  className="relative rounded-lg overflow-hidden shrink-0 bg-muted"
+                  style={{
+                    width: defaultW,
+                    height: portrait ? undefined : cardH,
+                    aspectRatio: portrait ? "2/3" : undefined,
+                    flexGrow: 0,
+                  }}
+                />
+              );
+            }
+
             return (
               <button
                 key={item.id}
@@ -94,7 +119,7 @@ const ContentRow = ({
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={cn(
-                  "relative rounded-lg overflow-hidden shrink-0 transition-all duration-300 ease-in-out",
+                  "relative rounded-lg overflow-hidden shrink-0 transition-[width,height,opacity] duration-300 ease-in-out",
                   !peek && "cursor-pointer",
                   peek && "flex-1",
                 )}
@@ -119,6 +144,7 @@ const ContentRow = ({
                   src={item.thumbnail}
                   alt={item.title}
                   loading="eager"
+                  decoding="async"
                   className={cn(
                     "absolute inset-0 w-full h-full object-cover object-center",
                     isExpanded && item.backdrop && "opacity-0",
@@ -130,7 +156,8 @@ const ContentRow = ({
                     src={item.backdrop}
                     alt=""
                     aria-hidden="true"
-                    loading="eager"
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = "none";
                     }}
@@ -147,7 +174,7 @@ const ContentRow = ({
                 {!peek && (item.progress !== undefined || (isFocused && showIndicator)) && (
                   <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-muted/50">
                     <div
-                      className="h-full bg-accent rounded-r-sm transition-all duration-300"
+                      className="h-full bg-accent rounded-r-sm"
                       style={{ width: `${item.progress ?? 35}%` }}
                     />
                   </div>

@@ -72,7 +72,7 @@ const SidebarNavItem = memo(function SidebarNavItem({
       onMouseEnter={handleMouseEnter}
       whileHover={{ scale: 1.02 }}
       className={cn(
-        "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 w-full",
+        "flex items-center gap-3 px-3 py-3 rounded-xl transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 w-full",
         isMini && "justify-center px-2",
         isFocused ? "text-white bg-muted" : "text-sidebar-foreground hover:bg-muted hover:text-white",
       )}
@@ -147,7 +147,7 @@ const TVSidebar = memo(function TVSidebar({
           onMouseEnter={handleProfileClick}
           whileHover={{ scale: 1.02 }}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200",
+            "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
             isMini && "justify-center px-2",
             focusedIndex === PROFILE_INDEX
               ? "text-white bg-muted"

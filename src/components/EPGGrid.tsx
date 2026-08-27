@@ -111,11 +111,11 @@ const ChannelItem = memo(
         ref={ref}
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3, delay: index * 0.03 }}
+        transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.03 }}
         onClick={onClick}
         onMouseEnter={onClick}
         className={cn(
-          "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-left",
+          "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-300 text-left",
           "border border-transparent",
           isFocused ? "bg-accent/15 border-accent/40" : "bg-transparent hover:bg-muted/20",
         )}
@@ -132,7 +132,7 @@ const ChannelItem = memo(
         )}
         <div
           className={cn(
-            "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-all overflow-hidden",
+            "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-[background-color,border-color,color,box-shadow,transform,opacity] overflow-hidden",
             "bg-transparent",
           )}
         >
@@ -140,6 +140,7 @@ const ChannelItem = memo(
             <img
               src={channel.logoUrl}
               alt={channel.name}
+              decoding="async"
               className="w-full h-full object-contain scale-125"
               loading="eager"
               onError={() => setLogoError(true)}
@@ -187,9 +188,9 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
       ref={ref}
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: index * 0.04 }}
+      transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.04 }}
       className={cn(
-        "flex items-center gap-4 px-5 py-3 rounded-lg transition-all duration-200",
+        "flex items-center gap-4 px-5 py-3 rounded-lg transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
         isFocused ? "bg-accent/15" : program.isLive ? "bg-accent/8" : "bg-transparent hover:bg-muted/10",
       )}
     >
@@ -228,9 +229,9 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
         {program.isLive && (
           <div className="mt-1.5 w-full max-w-[240px] h-[3px] rounded-full bg-muted/30 overflow-hidden">
             <motion.div
-              className="h-full rounded-full bg-accent"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
+              className="h-full w-full origin-left rounded-full bg-accent"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: progress / 100 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             />
           </div>
@@ -335,6 +336,7 @@ const EPGGrid = ({
                         alt={selectedChannel.name}
                         className="w-full h-full object-contain scale-125"
                         loading="eager"
+                        decoding="async"
                       />
                     ) : (
                       <span className="text-xs font-bold text-accent">{selectedChannel?.abbreviation}</span>
@@ -392,6 +394,7 @@ const EPGGrid = ({
                       alt={selectedChannel.name}
                       className="w-full h-full object-contain scale-125"
                       loading="eager"
+                        decoding="async"
                     />
                   ) : (
                     <span className="text-sm font-bold text-accent tracking-wider">

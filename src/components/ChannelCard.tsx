@@ -29,7 +29,7 @@ const ChannelCard = ({ channel, isFocused, onClick }: Props) => {
     <button
       onClick={onClick}
       className={cn(
-        "group relative flex aspect-video w-56 shrink-0 flex-col justify-end overflow-hidden rounded-xl border border-white/5 bg-gradient-to-br p-3 text-left transition-all",
+        "group relative flex aspect-video w-56 shrink-0 flex-col justify-end overflow-hidden rounded-xl border border-white/5 bg-gradient-to-br p-3 text-left transition-[transform,border-color,box-shadow,opacity]",
         grad,
         isFocused
           ? "scale-105 ring-2 ring-amber-400 ring-offset-2 ring-offset-black"

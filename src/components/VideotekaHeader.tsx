@@ -150,7 +150,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
                   onFocus={() => handleButtonFocus(index)}
                   onBlur={handleButtonBlur}
                   className={cn(
-                    "px-[18px] py-[7px] rounded-xl text-[18px] font-bold transition-all outline-none border",
+                    "px-[18px] py-[7px] rounded-xl text-[18px] font-bold transition-[background-color,border-color,color,box-shadow,transform,opacity] outline-none border",
                     isFocused
                       ? "bg-white border-white/20 text-black scale-105"
                       : activeTab === tab.id
@@ -175,7 +175,7 @@ const VideotekaHeader = forwardRef<VideotekaHeaderHandle, VideotekaHeaderProps>(
               onFocus={() => handleButtonFocus(4)}
               onBlur={handleButtonBlur}
               className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center transition-all outline-none border",
+                "w-10 h-10 rounded-xl flex items-center justify-center transition-[background-color,border-color,color,box-shadow,transform,opacity] outline-none border",
                 focusedIndex === 4
                   ? "bg-white border-white/20 scale-105"
                   : "border-white/20 bg-muted/40 text-white/60 hover:text-white",

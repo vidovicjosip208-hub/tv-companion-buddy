@@ -41,6 +41,12 @@ const notify = () => {
   for (const l of listeners) l();
 };
 
+const ARROW_KEYS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+// Min. razmak između ponovljenih pritisaka strelice (auto-repeat na daljinskom).
+// Sprječava lavinu state update-a na slabijem TV boxu.
+const ARROW_REPEAT_MS = 90;
+let lastArrowAt = 0;
+
 const onWindowKeyDown = (e: KeyboardEvent) => {
   const zone = topZone();
   if (!zone) return;
@@ -51,8 +57,17 @@ const onWindowKeyDown = (e: KeyboardEvent) => {
       return;
     }
   }
+  if (ARROW_KEYS.has(e.key)) {
+    const now = performance.now();
+    if (now - lastArrowAt < ARROW_REPEAT_MS) {
+      e.preventDefault();
+      return;
+    }
+    lastArrowAt = now;
+  }
   zone.handlerRef.current(e);
 };
+
 
 
 const attach = () => {

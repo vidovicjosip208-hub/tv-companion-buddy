@@ -352,7 +352,7 @@ const ProfileSelection = ({
             whileHover={{ scale: 1.02 }}
             onClick={startEditingName}
             className={cn(
-              "flex flex-col items-start gap-1 px-6 py-4 rounded-xl border transition-all duration-200 text-left",
+              "flex flex-col items-start gap-1 px-6 py-4 rounded-xl border transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 text-left",
               isFocused("name")
                 ? "bg-muted border-accent ring-2 ring-accent/40"
                 : "bg-muted/30 border-border/40 hover:border-border",
@@ -379,7 +379,7 @@ const ProfileSelection = ({
             whileHover={{ scale: 1.02 }}
             onClick={() => editingProfileId && onChangeAvatar?.(editingProfileId)}
             className={cn(
-              "flex flex-col items-start gap-1 px-6 py-4 rounded-xl border transition-all duration-200 text-left",
+              "flex flex-col items-start gap-1 px-6 py-4 rounded-xl border transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 text-left",
               isFocused("avatar")
                 ? "bg-muted border-accent ring-2 ring-accent/40"
                 : "bg-muted/30 border-border/40 hover:border-border",
@@ -405,7 +405,7 @@ const ProfileSelection = ({
                 exitEditView();
               }}
               className={cn(
-                "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+                "flex items-center gap-3 px-8 py-3 rounded-full transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
                 isFocused("add")
                   ? "bg-muted border border-border ring-2 ring-accent/40"
                   : "bg-muted/40 border border-border/30 hover:bg-muted/60",
@@ -423,7 +423,7 @@ const ProfileSelection = ({
                   exitEditView();
                 }}
                 className={cn(
-                  "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+                  "flex items-center gap-3 px-8 py-3 rounded-full transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
                   isFocused("remove")
                     ? "bg-muted border border-border ring-2 ring-accent/40"
                     : "bg-muted/40 border border-border/30 hover:bg-muted/60",
@@ -440,7 +440,7 @@ const ProfileSelection = ({
                   exitEditView();
                 }}
                 className={cn(
-                  "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+                  "flex items-center gap-3 px-8 py-3 rounded-full transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
                   isFocused("save")
                     ? "bg-muted border border-border ring-2 ring-accent/40"
                     : "bg-muted/40 border border-border/30 hover:bg-muted/60",
@@ -486,7 +486,7 @@ const ProfileSelection = ({
                   onSelect?.();
                 }}
                 className={cn(
-                  "w-44 h-44 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
+                  "w-44 h-44 rounded-full flex items-center justify-center transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 border-2 overflow-hidden",
                   isFocused
                     ? "bg-accent border-accent ring-2 ring-accent/60 shadow-lg shadow-accent/30"
                     : "bg-muted/30 border-border/40 hover:border-border",
@@ -512,7 +512,7 @@ const ProfileSelection = ({
                 }}
                 aria-label={`Edit ${profile.name}`}
                 className={cn(
-                  "flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-200",
+                  "flex items-center justify-center w-8 h-8 rounded-full border transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
                   focusArea === "edit" && focusedIndex === index
                     ? "border-accent ring-2 ring-accent/60 bg-muted text-foreground"
                     : "border-border/40 bg-muted/30 text-muted-foreground hover:text-foreground hover:border-border",
@@ -538,7 +538,7 @@ const ProfileSelection = ({
                   openAddView();
                 }}
                 className={cn(
-                  "w-44 h-44 rounded-full flex items-center justify-center transition-all duration-200 border-2 overflow-hidden",
+                  "w-44 h-44 rounded-full flex items-center justify-center transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 border-2 overflow-hidden",
                   isFocused
                     ? "bg-muted border-border ring-2 ring-accent/40"
                     : "bg-muted/20 border-border/30 hover:border-border/60",
@@ -561,7 +561,7 @@ const ProfileSelection = ({
           whileHover={{ scale: 1.02 }}
           onClick={() => setFocusArea("manage")}
           className={cn(
-            "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+            "flex items-center gap-3 px-8 py-3 rounded-full transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
             focusArea === "manage"
               ? "bg-muted border border-border ring-2 ring-accent/40"
               : "bg-muted/40 border border-border/30 hover:bg-muted/60",
@@ -578,7 +578,7 @@ const ProfileSelection = ({
             onLogout?.();
           }}
           className={cn(
-            "flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-200",
+            "flex items-center gap-3 px-8 py-3 rounded-full transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
             focusArea === "logout"
               ? "bg-muted border border-border ring-2 ring-accent/40"
               : "bg-muted/40 border border-border/30 hover:bg-muted/60",

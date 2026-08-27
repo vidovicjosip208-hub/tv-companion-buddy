@@ -69,7 +69,7 @@ const TVCategoryMenu = ({ isVisible, focusedIndex, onItemClick }: TVCategoryMenu
                 onClick={() => onItemClick(index)}
                 whileHover={{ scale: 1.02 }}
                 className={cn(
-                  "flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 w-full text-left",
+                  "flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 w-full text-left",
                   isFocused ? "text-white bg-muted" : "text-sidebar-foreground hover:bg-muted hover:text-white",
                 )}
               >
