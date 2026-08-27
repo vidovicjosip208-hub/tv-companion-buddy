@@ -1330,9 +1330,8 @@ const Index = () => {
                                     return (
                                       <motion.div
                                         key={cam.id}
-                                        layout
                                         whileHover={{ scale: 1.03 }}
-                                        className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
+                                        className={`relative rounded-lg overflow-hidden cursor-pointer transition-[background-color,border-color,box-shadow,transform,opacity] duration-200 ${
                                           isFocused ? "ring-2 ring-accent scale-[1.01] z-10" : "ring-1 ring-border/30"
                                         }`}
                                         onClick={() => {

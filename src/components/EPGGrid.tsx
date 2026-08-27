@@ -111,7 +111,7 @@ const ChannelItem = memo(
         ref={ref}
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3, delay: index * 0.03 }}
+        transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.03 }}
         onClick={onClick}
         onMouseEnter={onClick}
         className={cn(
@@ -187,7 +187,7 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
       ref={ref}
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: index * 0.04 }}
+      transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.04 }}
       className={cn(
         "flex items-center gap-4 px-5 py-3 rounded-lg transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
         isFocused ? "bg-accent/15" : program.isLive ? "bg-accent/8" : "bg-transparent hover:bg-muted/10",
