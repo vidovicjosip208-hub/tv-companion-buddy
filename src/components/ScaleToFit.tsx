@@ -111,7 +111,7 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
       window.clearTimeout(maxWaitTimer);
       maxWaitTimer = 0;
       if (raf) return;
-      raf = window.requestAnimationFrame(apply);
+      raf = window.requestAnimationFrame(() => apply());
     };
 
     const handleFullscreenChange = () => {
