@@ -252,8 +252,7 @@ const StarryBackground = () => {
       // Own compositing layer + paint containment: overlays (exit popup, player
       // teardown) then composite on the GPU instead of forcing the whole
       // upscaled 4K layer — starfield included — to repaint.
-      style={{ transform: "translateZ(0)", contain: "strict" }}
-    >
+          transform: `translate(${scale.left}px, ${scale.top}px) scale(${scale.x}, ${scale.y})`,
       <div className="absolute inset-0 bg-background" />
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
     </div>

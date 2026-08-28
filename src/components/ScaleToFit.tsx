@@ -12,8 +12,8 @@ interface ScaleToFitProps {
  *
  * The available area is measured from the fixed wrapper instead of
  * window.innerWidth/innerHeight. The scale is established at mount and when the
- * app enters fullscreen, then remains locked so transient Android TV viewport
- * reports cannot resize the whole interface during normal use.
+ * app enters or leaves fullscreen, then remains locked so transient Android TV
+ * viewport reports cannot resize the whole interface during normal use.
  */
 const ScaleToFit = ({ children }: ScaleToFitProps) => {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -25,7 +25,6 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
     if (!host || !canvas) return;
 
     let raf = 0;
-
     const apply = () => {
       raf = 0;
       const rect = host.getBoundingClientRect();
@@ -46,21 +45,31 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
       raf = window.requestAnimationFrame(apply);
     };
 
-    const measureOnFullscreenEntry = () => {
-      const fullscreenDocument = document as Document & { webkitFullscreenElement?: Element | null };
-      if (fullscreenDocument.fullscreenElement || fullscreenDocument.webkitFullscreenElement) measure();
-    };
+    // Remeasure on ANY real fullscreen transition, not just entry. Leaving
+    // fullscreen (e.g. the TV remote's Back button dropping browser fullscreen
+    // right before the exit dialog opens) shrinks the host just as much as
+    // entering it grows it — skipping that case left the canvas locked to the
+    // old (fullscreen) size while the host had already shrunk, which is what
+    // caused the visible size jump / clipping around the exit popup.
+    const measureOnFullscreenChange = () => measure();
+
+    // FullscreenBootstrap already filters out noisy Android TV fullscreen
+    // exits and only fires this for a genuine, user-triggered fullscreen exit
+    // (e.g. Back button), so it's safe to remeasure on it directly.
+    const onFullscreenBack = () => measure();
 
     apply();
     window.addEventListener("orientationchange", measure);
-    document.addEventListener("fullscreenchange", measureOnFullscreenEntry);
-    document.addEventListener("webkitfullscreenchange", measureOnFullscreenEntry);
+    document.addEventListener("fullscreenchange", measureOnFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", measureOnFullscreenChange);
+    window.addEventListener("app:fullscreen-back", onFullscreenBack);
 
     return () => {
       if (raf) window.cancelAnimationFrame(raf);
       window.removeEventListener("orientationchange", measure);
-      document.removeEventListener("fullscreenchange", measureOnFullscreenEntry);
-      document.removeEventListener("webkitfullscreenchange", measureOnFullscreenEntry);
+      document.removeEventListener("fullscreenchange", measureOnFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", measureOnFullscreenChange);
+      window.removeEventListener("app:fullscreen-back", onFullscreenBack);
     };
   }, []);
 
