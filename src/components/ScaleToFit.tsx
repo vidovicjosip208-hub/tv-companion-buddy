@@ -10,11 +10,10 @@ interface ScaleToFitProps {
  * real available area so the composition is always edge to edge — identical on
  * a laptop, a phone or a TV.
  *
- * The available area is measured from the wrapper element itself (via
- * ResizeObserver) instead of window.innerWidth/innerHeight, because TV browsers
- * frequently report a wrong or stale window size (overscan, late viewport
- * resolution, visualViewport differences), which is exactly what makes the UI
- * appear zoomed in or shrunken there.
+ * The available area is measured from the fixed wrapper instead of
+ * window.innerWidth/innerHeight. The scale is established at mount and when the
+ * app enters fullscreen, then remains locked so transient Android TV viewport
+ * reports cannot resize the whole interface during normal use.
  */
 const ScaleToFit = ({ children }: ScaleToFitProps) => {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -47,16 +46,21 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
       raf = window.requestAnimationFrame(apply);
     };
 
+    const measureOnFullscreenEntry = () => {
+      const fullscreenDocument = document as Document & { webkitFullscreenElement?: Element | null };
+      if (fullscreenDocument.fullscreenElement || fullscreenDocument.webkitFullscreenElement) measure();
+    };
+
     apply();
     window.addEventListener("orientationchange", measure);
-    document.addEventListener("fullscreenchange", measure);
-    document.addEventListener("webkitfullscreenchange", measure);
+    document.addEventListener("fullscreenchange", measureOnFullscreenEntry);
+    document.addEventListener("webkitfullscreenchange", measureOnFullscreenEntry);
 
     return () => {
       if (raf) window.cancelAnimationFrame(raf);
       window.removeEventListener("orientationchange", measure);
-      document.removeEventListener("fullscreenchange", measure);
-      document.removeEventListener("webkitfullscreenchange", measure);
+      document.removeEventListener("fullscreenchange", measureOnFullscreenEntry);
+      document.removeEventListener("webkitfullscreenchange", measureOnFullscreenEntry);
     };
   }, []);
 
