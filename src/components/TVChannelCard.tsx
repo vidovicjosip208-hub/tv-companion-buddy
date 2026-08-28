@@ -84,6 +84,9 @@ const TVChannelCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.6) }}
       onClick={onClick}
+      // Paint containment keeps a focus change (border + progress bar) inside
+      // this card instead of invalidating the whole upscaled TV layer.
+      style={{ contain: "layout paint style" }}
       className={cn(
         "group relative rounded-2xl overflow-hidden transition-colors duration-200 ease-out",
         "focus:outline-none bg-card/60 w-full border-2",
@@ -92,6 +95,7 @@ const TVChannelCard = ({
           : "border-white/15",
       )}
     >
+
       <div className="relative aspect-[16/9] overflow-hidden">
         <img src={thumbnail} alt={title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         <div className="absolute bottom-0 left-0 w-full">
