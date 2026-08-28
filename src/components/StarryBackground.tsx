@@ -188,10 +188,41 @@ const StarryBackground = () => {
       const host = canvas.parentElement;
       const w = host?.clientWidth || CANVAS_WIDTH;
       const h = host?.clientHeight || CANVAS_HEIGHT;
-      canvas.width = Math.max(1, Math.round(w * RENDER_SCALE));
-      canvas.height = Math.max(1, Math.round(h * RENDER_SCALE));
+      const cw = Math.max(1, Math.round(w * RENDER_SCALE));
+      const ch = Math.max(1, Math.round(h * RENDER_SCALE));
+
+      // Re-rasterising the whole starfield is one of the most expensive things
+      // this app does on a weak TV SoC. The scene is deterministic per size, so
+      // it is cached at module scope: remounting a page (or a stray
+      // resize/fullscreenchange event that reports the same size) only blits
+      // the cached bitmap instead of drawing thousands of paths again.
+      if (canvas.width === cw && canvas.height === ch && sceneCache && sceneCache.w === cw && sceneCache.h === ch) {
+        ctx.clearRect(0, 0, cw, ch);
+        ctx.drawImage(sceneCache.canvas, 0, 0);
+        return;
+      }
+
+      canvas.width = cw;
+      canvas.height = ch;
+
+      if (sceneCache && sceneCache.w === cw && sceneCache.h === ch) {
+        ctx.drawImage(sceneCache.canvas, 0, 0);
+        return;
+      }
+
       buildScene();
       renderScene();
+
+      const snapshot = document.createElement("canvas");
+      snapshot.width = cw;
+      snapshot.height = ch;
+      snapshot.getContext("2d")?.drawImage(canvas, 0, 0);
+      sceneCache = { w: cw, h: ch, canvas: snapshot };
+
+      // The generated geometry is no longer needed once it is rasterised.
+      dustLayer = null;
+      brightStars = [];
+      wisps = [];
     };
     resize();
 
@@ -209,11 +240,19 @@ const StarryBackground = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
+    <div
+      className="fixed inset-0 -z-10 overflow-hidden pointer-events-none"
+      aria-hidden="true"
+      // Own compositing layer + paint containment: overlays (exit popup, player
+      // teardown) then composite on the GPU instead of forcing the whole
+      // upscaled 4K layer — starfield included — to repaint.
+      style={{ transform: "translateZ(0)", contain: "strict" }}
+    >
       <div className="absolute inset-0 bg-background" />
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
     </div>
   );
 };
+
 
 export default memo(StarryBackground);
