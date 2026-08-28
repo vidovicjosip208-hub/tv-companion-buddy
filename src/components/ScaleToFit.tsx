@@ -11,9 +11,10 @@ interface ScaleToFitProps {
  * a laptop, a phone or a TV.
  *
  * The available area is measured from the fixed wrapper instead of
- * window.innerWidth/innerHeight. The scale is established at mount and when the
- * app enters or leaves fullscreen, then remains locked so transient Android TV
- * viewport reports cannot resize the whole interface during normal use.
+ * window.innerWidth/innerHeight. A debounced ResizeObserver re-establishes the
+ * scale on real size changes (window resize, fullscreen enter/exit, orientation
+ * change) while the debounce filters out the transient viewport reports Android
+ * TV WebViews emit while compositing overlays or releasing a video surface.
  */
 const ScaleToFit = ({ children }: ScaleToFitProps) => {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -34,42 +35,31 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
       canvas.style.transform = `scale(${w / CANVAS_WIDTH}, ${h / CANVAS_HEIGHT})`;
     };
 
-    // Do not listen to resize, ResizeObserver or visualViewport here. Android TV
-    // WebViews emit transient viewport sizes while compositing overlays and while
-    // releasing a video surface. Those events used to rewrite the scale of the
-    // entire app, which looked like the home screen randomly changed dimensions.
-    // The physical TV orientation is stable; only a real orientation/fullscreen
-    // transition is allowed to establish a new scale.
     const measure = () => {
       if (raf) return;
       raf = window.requestAnimationFrame(apply);
     };
 
-    // Remeasure on ANY real fullscreen transition, not just entry. Leaving
-    // fullscreen (e.g. the TV remote's Back button dropping browser fullscreen
-    // right before the exit dialog opens) shrinks the host just as much as
-    // entering it grows it — skipping that case left the canvas locked to the
-    // old (fullscreen) size while the host had already shrunk, which is what
-    // caused the visible size jump / clipping around the exit popup.
-    const measureOnFullscreenChange = () => measure();
-
-    // FullscreenBootstrap already filters out noisy Android TV fullscreen
-    // exits and only fires this for a genuine, user-triggered fullscreen exit
-    // (e.g. Back button), so it's safe to remeasure on it directly.
-    const onFullscreenBack = () => measure();
+    // Debounced ResizeObserver: TV WebViews emit several transient viewport
+    // sizes in quick succession (compositing overlays, releasing a video
+    // surface). Waiting for a quiet period before applying filters those out,
+    // while still picking up real size changes on desktop and TV (window
+    // resize, fullscreen enter/exit, etc).
+    let resizeTimer: number | undefined;
+    const ro = new ResizeObserver(() => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(measure, 250);
+    });
+    ro.observe(host);
 
     apply();
     window.addEventListener("orientationchange", measure);
-    document.addEventListener("fullscreenchange", measureOnFullscreenChange);
-    document.addEventListener("webkitfullscreenchange", measureOnFullscreenChange);
-    window.addEventListener("app:fullscreen-back", onFullscreenBack);
 
     return () => {
       if (raf) window.cancelAnimationFrame(raf);
+      window.clearTimeout(resizeTimer);
+      ro.disconnect();
       window.removeEventListener("orientationchange", measure);
-      document.removeEventListener("fullscreenchange", measureOnFullscreenChange);
-      document.removeEventListener("webkitfullscreenchange", measureOnFullscreenChange);
-      window.removeEventListener("app:fullscreen-back", onFullscreenBack);
     };
   }, []);
 
