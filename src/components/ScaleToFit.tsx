@@ -62,11 +62,13 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
 
     return () => {
       ro.disconnect();
+      if (raf) window.cancelAnimationFrame(raf);
       timers.forEach(window.clearTimeout);
       window.removeEventListener("resize", measure);
       window.removeEventListener("orientationchange", measure);
       window.visualViewport?.removeEventListener("resize", measure);
     };
+
   }, []);
 
   return (
