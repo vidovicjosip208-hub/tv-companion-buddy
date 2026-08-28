@@ -51,11 +51,12 @@ const FullscreenBootstrap = () => {
     // the gesture listeners below take over.
     const autoTimers = [0, 100, 500, 1500].map((ms) => window.setTimeout(() => void requestFs(), ms));
 
-    window.addEventListener("keydown", onGesture);
-    window.addEventListener("pointerdown", onGesture);
-    window.addEventListener("pointermove", onGesture, { once: true });
-    window.addEventListener("focus", onGesture);
-    document.addEventListener("visibilitychange", onGesture);
+    // Only the first real interaction may complete startup fullscreen. Keeping
+    // these listeners active made an arbitrary later keypress (notably Back,
+    // which opens the exit dialog) re-enter fullscreen and change the TV
+    // viewport while the app was already running.
+    window.addEventListener("keydown", onGesture, { once: true });
+    window.addEventListener("pointerdown", onGesture, { once: true });
 
     const onFsChange = () => {
       if (isFullscreen()) {
@@ -75,9 +76,6 @@ const FullscreenBootstrap = () => {
       autoTimers.forEach(window.clearTimeout);
       window.removeEventListener("keydown", onGesture);
       window.removeEventListener("pointerdown", onGesture);
-      window.removeEventListener("pointermove", onGesture);
-      window.removeEventListener("focus", onGesture);
-      document.removeEventListener("visibilitychange", onGesture);
       document.removeEventListener("fullscreenchange", onFsChange);
       document.removeEventListener("webkitfullscreenchange", onFsChange);
     };

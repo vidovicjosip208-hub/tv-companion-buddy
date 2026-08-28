@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "@/lib/canvas";
 
 interface ScaleToFitProps {
@@ -10,75 +10,69 @@ interface ScaleToFitProps {
  * real available area so the composition is always edge to edge — identical on
  * a laptop, a phone or a TV.
  *
- * The available area is measured from the wrapper element itself (via
- * ResizeObserver) instead of window.innerWidth/innerHeight, because TV browsers
- * frequently report a wrong or stale window size (overscan, late viewport
- * resolution, visualViewport differences), which is exactly what makes the UI
- * appear zoomed in or shrunken there.
+ * The available area is measured from the fixed wrapper instead of
+ * window.innerWidth/innerHeight. The scale is established at mount and when the
+ * app enters fullscreen, then remains locked so transient Android TV viewport
+ * reports cannot resize the whole interface during normal use.
  */
 const ScaleToFit = ({ children }: ScaleToFitProps) => {
   const hostRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState({ x: 1, y: 1 });
+  const canvasRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const host = hostRef.current;
-    if (!host) return;
+    const canvas = canvasRef.current;
+    if (!host || !canvas) return;
 
     let raf = 0;
 
     const apply = () => {
       raf = 0;
       const rect = host.getBoundingClientRect();
-      const w = rect.width || host.clientWidth || window.innerWidth;
-      const h = rect.height || host.clientHeight || window.innerHeight;
+      const w = rect.width || host.clientWidth || document.documentElement.clientWidth;
+      const h = rect.height || host.clientHeight || document.documentElement.clientHeight;
       if (w < 1 || h < 1) return;
-      setScale((prev) => {
-        const next = { x: w / CANVAS_WIDTH, y: h / CANVAS_HEIGHT };
-        if (Math.abs(prev.x - next.x) < 0.0005 && Math.abs(prev.y - next.y) < 0.0005) return prev;
-        return next;
-      });
+      canvas.style.transform = `scale(${w / CANVAS_WIDTH}, ${h / CANVAS_HEIGHT})`;
     };
 
-    // TV browsers fire resize/fullscreenchange/visualViewport storms (several
-    // events per frame when entering or leaving a player). Coalescing them into
-    // one rAF keeps layout reads out of the middle of those bursts.
+    // Do not listen to resize, ResizeObserver or visualViewport here. Android TV
+    // WebViews emit transient viewport sizes while compositing overlays and while
+    // releasing a video surface. Those events used to rewrite the scale of the
+    // entire app, which looked like the home screen randomly changed dimensions.
+    // The physical TV orientation is stable; only a real orientation/fullscreen
+    // transition is allowed to establish a new scale.
     const measure = () => {
       if (raf) return;
       raf = window.requestAnimationFrame(apply);
     };
 
-    apply();
-
-    const ro = new ResizeObserver(measure);
-    ro.observe(host);
-
-
-    // TV browsers often settle on the final viewport a few frames late.
-    const timers = [50, 250, 800, 2000].map((ms) => window.setTimeout(measure, ms));
-
-    window.addEventListener("resize", measure);
-    window.addEventListener("orientationchange", measure);
-    window.visualViewport?.addEventListener("resize", measure);
-
-    return () => {
-      ro.disconnect();
-      if (raf) window.cancelAnimationFrame(raf);
-      timers.forEach(window.clearTimeout);
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("orientationchange", measure);
-      window.visualViewport?.removeEventListener("resize", measure);
+    const measureOnFullscreenEntry = () => {
+      const fullscreenDocument = document as Document & { webkitFullscreenElement?: Element | null };
+      if (fullscreenDocument.fullscreenElement || fullscreenDocument.webkitFullscreenElement) measure();
     };
 
+    apply();
+    window.addEventListener("orientationchange", measure);
+    document.addEventListener("fullscreenchange", measureOnFullscreenEntry);
+    document.addEventListener("webkitfullscreenchange", measureOnFullscreenEntry);
+
+    return () => {
+      if (raf) window.cancelAnimationFrame(raf);
+      window.removeEventListener("orientationchange", measure);
+      document.removeEventListener("fullscreenchange", measureOnFullscreenEntry);
+      document.removeEventListener("webkitfullscreenchange", measureOnFullscreenEntry);
+    };
   }, []);
 
   return (
     <div ref={hostRef} className="fixed inset-0 overflow-hidden bg-background">
       <div
+        ref={canvasRef}
         className="scale-to-fit-canvas"
         style={{
           width: `${CANVAS_WIDTH}px`,
           height: `${CANVAS_HEIGHT}px`,
-          transform: `scale(${scale.x}, ${scale.y})`,
+          transform: "scale(1, 1)",
           transformOrigin: "top left",
         }}
       >

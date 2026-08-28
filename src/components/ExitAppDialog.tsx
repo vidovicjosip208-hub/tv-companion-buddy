@@ -7,30 +7,6 @@ import { cn } from "@/lib/utils";
 
 const EXIT_ALLOWED_PATHS = ["/", "/auth"];
 
-type FSDoc = Document & {
-  webkitFullscreenElement?: Element | null;
-};
-type FSEl = HTMLElement & {
-  webkitRequestFullscreen?: () => Promise<void>;
-};
-
-const isFullscreen = () => {
-  const d = document as FSDoc;
-  return !!(d.fullscreenElement || d.webkitFullscreenElement);
-};
-
-const requestFs = () => {
-  if (isFullscreen()) return;
-  const el = document.documentElement as FSEl;
-  const req = el.requestFullscreen?.bind(el) ?? el.webkitRequestFullscreen?.bind(el);
-  if (!req) return;
-  try {
-    Promise.resolve(req()).catch(() => {});
-  } catch {
-    // ignore
-  }
-};
-
 export const requestAppExit = () => {
   window.dispatchEvent(new CustomEvent("app:request-exit"));
 };
@@ -59,8 +35,6 @@ const ExitAppDialog = () => {
 
   const close = useCallback(() => {
     setOpen(false);
-    // Restore fullscreen (button click is a valid user gesture)
-    requestFs();
   }, []);
 
   const exitApp = useCallback(() => {
