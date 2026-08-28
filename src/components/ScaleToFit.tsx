@@ -11,10 +11,11 @@ interface ScaleToFitProps {
  * a laptop, a phone or a TV.
  *
  * The available area is measured from the fixed wrapper instead of
- * window.innerWidth/innerHeight. A debounced ResizeObserver re-establishes the
- * scale on real size changes (window resize, fullscreen enter/exit, orientation
- * change) while the debounce filters out the transient viewport reports Android
- * TV WebViews emit while compositing overlays or releasing a video surface.
+ * window.innerWidth/innerHeight. A ResizeObserver re-establishes the scale on
+ * real size changes (window resize, fullscreen enter/exit, orientation change,
+ * player teardown). Applying is rAF-batched (not delayed by a timer) so the
+ * correction happens on the very next frame instead of visibly lagging behind
+ * the size change.
  */
 const ScaleToFit = ({ children }: ScaleToFitProps) => {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -26,12 +27,21 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
     if (!host || !canvas) return;
 
     let raf = 0;
+    let lastW = 0;
+    let lastH = 0;
+
     const apply = () => {
       raf = 0;
       const rect = host.getBoundingClientRect();
       const w = rect.width || host.clientWidth || document.documentElement.clientWidth;
       const h = rect.height || host.clientHeight || document.documentElement.clientHeight;
       if (w < 1 || h < 1) return;
+      // Skip no-op re-applies (sub-pixel noise from TV WebViews compositing
+      // overlays or tearing down the video surface) so we don't keep touching
+      // the transform when nothing actually changed.
+      if (Math.abs(w - lastW) < 0.5 && Math.abs(h - lastH) < 0.5) return;
+      lastW = w;
+      lastH = h;
       canvas.style.transform = `scale(${w / CANVAS_WIDTH}, ${h / CANVAS_HEIGHT})`;
     };
 
@@ -40,16 +50,7 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
       raf = window.requestAnimationFrame(apply);
     };
 
-    // Debounced ResizeObserver: TV WebViews emit several transient viewport
-    // sizes in quick succession (compositing overlays, releasing a video
-    // surface). Waiting for a quiet period before applying filters those out,
-    // while still picking up real size changes on desktop and TV (window
-    // resize, fullscreen enter/exit, etc).
-    let resizeTimer: number | undefined;
-    const ro = new ResizeObserver(() => {
-      window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(measure, 250);
-    });
+    const ro = new ResizeObserver(measure);
     ro.observe(host);
 
     apply();
@@ -57,7 +58,6 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
 
     return () => {
       if (raf) window.cancelAnimationFrame(raf);
-      window.clearTimeout(resizeTimer);
       ro.disconnect();
       window.removeEventListener("orientationchange", measure);
     };
