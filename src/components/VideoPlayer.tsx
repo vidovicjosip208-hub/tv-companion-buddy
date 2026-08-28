@@ -868,7 +868,18 @@ const VideoPlayer = ({
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
+      // Release the hardware decoder explicitly. Without this, Android TV
+      // WebView keeps decoding/holding buffers while React tears the tree down,
+      // which is exactly the freeze felt when leaving the player.
+      try {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      } catch {
+        // ignore
+      }
     };
+
   }, [streamUrl]);
 
   useEffect(() => {
