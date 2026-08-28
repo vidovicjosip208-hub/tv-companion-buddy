@@ -119,8 +119,15 @@ const ExitAppDialog = () => {
   const cancelLabel = t("exit.cancel", "Odustani");
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50"
+      // Promote the dim layer to its own GPU layer so showing/hiding it is a
+      // pure composite step — otherwise the translucent overlay forces a full
+      // repaint of the upscaled canvas beneath it on TV hardware.
+      style={{ transform: "translateZ(0)", willChange: "opacity", contain: "layout paint style" }}
+    >
       <div className="mx-4 w-full max-w-md rounded-2xl border border-white/15 bg-black p-8 shadow-2xl">
+
         <h2 className="text-2xl font-bold text-white text-center">{title}</h2>
         <p className="mt-3 text-center text-white/70">{message}</p>
         <div className="mt-8 flex items-center justify-center gap-4">

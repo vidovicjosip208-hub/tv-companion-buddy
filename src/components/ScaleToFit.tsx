@@ -24,7 +24,10 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
     const host = hostRef.current;
     if (!host) return;
 
-    const measure = () => {
+    let raf = 0;
+
+    const apply = () => {
+      raf = 0;
       const rect = host.getBoundingClientRect();
       const w = rect.width || host.clientWidth || window.innerWidth;
       const h = rect.height || host.clientHeight || window.innerHeight;
@@ -36,10 +39,19 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
       });
     };
 
-    measure();
+    // TV browsers fire resize/fullscreenchange/visualViewport storms (several
+    // events per frame when entering or leaving a player). Coalescing them into
+    // one rAF keeps layout reads out of the middle of those bursts.
+    const measure = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(apply);
+    };
+
+    apply();
 
     const ro = new ResizeObserver(measure);
     ro.observe(host);
+
 
     // TV browsers often settle on the final viewport a few frames late.
     const timers = [50, 250, 800, 2000].map((ms) => window.setTimeout(measure, ms));
@@ -50,11 +62,13 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
 
     return () => {
       ro.disconnect();
+      if (raf) window.cancelAnimationFrame(raf);
       timers.forEach(window.clearTimeout);
       window.removeEventListener("resize", measure);
       window.removeEventListener("orientationchange", measure);
       window.visualViewport?.removeEventListener("resize", measure);
     };
+
   }, []);
 
   return (

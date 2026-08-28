@@ -451,8 +451,13 @@ const EPGCard = memo(({ channel, isFocused, isFuture, onSelect }: EPGCardProps) 
         src={channel.thumbnail}
         alt={channel.title}
         className="w-full h-full object-cover"
-        style={{ filter: isFuture && !isFocused ? "grayscale(100%)" : "none", transition: "filter 0.3s" }}
+        // Animating `filter` re-rasterises the image every frame on Mali GPUs;
+        // the end states (grayscale / none) are unchanged, only the 0.3s tween
+        // between them is dropped.
+        style={{ filter: isFuture && !isFocused ? "grayscale(100%)" : "none" }}
         decoding="async"
+        loading="lazy"
+
       />
 
       {!isFuture &&
@@ -868,7 +873,18 @@ const VideoPlayer = ({
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
+      // Release the hardware decoder explicitly. Without this, Android TV
+      // WebView keeps decoding/holding buffers while React tears the tree down,
+      // which is exactly the freeze felt when leaving the player.
+      try {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      } catch {
+        // ignore
+      }
     };
+
   }, [streamUrl]);
 
   useEffect(() => {
