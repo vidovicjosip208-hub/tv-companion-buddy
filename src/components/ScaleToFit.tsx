@@ -10,8 +10,8 @@ const isFullscreen = () => {
   return Boolean(doc.fullscreenElement || doc.webkitFullscreenElement);
 };
 
-const FULLSCREEN_SETTLE_MS = 240;
-const FULLSCREEN_MAX_WAIT_MS = 1800;
+const FULLSCREEN_SETTLE_MS = 1500;
+const FULLSCREEN_MAX_WAIT_MS = 2500;
 
 interface ScaleToFitProps {
   children: ReactNode;
@@ -40,7 +40,6 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
     let settleTimer = 0;
     let maxWaitTimer = 0;
     let fullscreenLocked = false;
-    let fullscreenSettling = false;
 
     // TVs lie about the viewport in different ways: with overscan the window is
     // reported LARGER than what is actually painted on the panel (which cuts off
@@ -75,7 +74,6 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
       });
       if (lockFullscreen && isFullscreen()) {
         fullscreenLocked = true;
-        fullscreenSettling = false;
         window.clearTimeout(settleTimer);
         window.clearTimeout(maxWaitTimer);
       }
@@ -89,7 +87,6 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
 
     const scheduleFullscreenLock = () => {
       if (!isFullscreen() || fullscreenLocked) return;
-      fullscreenSettling = true;
       window.clearTimeout(settleTimer);
       settleTimer = window.setTimeout(lockFullscreenScale, FULLSCREEN_SETTLE_MS);
       if (!maxWaitTimer) {
@@ -110,7 +107,6 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
         scheduleFullscreenLock();
         return;
       }
-      fullscreenSettling = false;
       window.clearTimeout(settleTimer);
       window.clearTimeout(maxWaitTimer);
       maxWaitTimer = 0;
@@ -121,7 +117,6 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
     const handleFullscreenChange = () => {
       if (isFullscreen()) {
         fullscreenLocked = false;
-        fullscreenSettling = true;
         window.clearTimeout(maxWaitTimer);
         maxWaitTimer = 0;
         scheduleFullscreenLock();
@@ -129,7 +124,6 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
       }
 
       fullscreenLocked = false;
-      fullscreenSettling = false;
       measure();
     };
 
