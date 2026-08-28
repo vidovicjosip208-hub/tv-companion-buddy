@@ -10,27 +10,38 @@ interface ScaleToFitProps {
  * real available area so the composition is always edge to edge — identical on
  * a laptop, a phone or a TV.
  *
- * The scale is derived from document.documentElement.clientWidth/clientHeight
- * (not from a ResizeObserver on the host, and not from window.innerWidth/Height)
- * because clientWidth/clientHeight excludes the scrollbar and is not affected
- * by transient layout noise (e.g. a modal mounting/unmounting, a scrollbar
- * appearing/disappearing). The scale is established at mount and on orientation
- * change only, and remains locked otherwise so transient Android TV viewport
- * reports cannot resize the whole interface during normal use.
+ * The available area is measured from the fixed wrapper instead of
+ * window.innerWidth/innerHeight. A ResizeObserver re-establishes the scale on
+ * real size changes (window resize, fullscreen enter/exit, orientation change,
+ * player teardown). Applying is rAF-batched (not delayed by a timer) so the
+ * correction happens on the very next frame instead of visibly lagging behind
+ * the size change.
  */
 const ScaleToFit = ({ children }: ScaleToFitProps) => {
+  const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
+    const host = hostRef.current;
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!host || !canvas) return;
 
     let raf = 0;
+    let lastW = 0;
+    let lastH = 0;
+
     const apply = () => {
       raf = 0;
-      const w = document.documentElement.clientWidth;
-      const h = document.documentElement.clientHeight;
+      const rect = host.getBoundingClientRect();
+      const w = rect.width || host.clientWidth || document.documentElement.clientWidth;
+      const h = rect.height || host.clientHeight || document.documentElement.clientHeight;
       if (w < 1 || h < 1) return;
+      // Skip no-op re-applies (sub-pixel noise from TV WebViews compositing
+      // overlays or tearing down the video surface) so we don't keep touching
+      // the transform when nothing actually changed.
+      if (Math.abs(w - lastW) < 0.5 && Math.abs(h - lastH) < 0.5) return;
+      lastW = w;
+      lastH = h;
       canvas.style.transform = `scale(${w / CANVAS_WIDTH}, ${h / CANVAS_HEIGHT})`;
     };
 
@@ -39,17 +50,21 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
       raf = window.requestAnimationFrame(apply);
     };
 
+    const ro = new ResizeObserver(measure);
+    ro.observe(host);
+
     apply();
     window.addEventListener("orientationchange", measure);
 
     return () => {
       if (raf) window.cancelAnimationFrame(raf);
+      ro.disconnect();
       window.removeEventListener("orientationchange", measure);
     };
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-background">
+    <div ref={hostRef} className="fixed inset-0 overflow-hidden bg-background">
       <div
         ref={canvasRef}
         className="scale-to-fit-canvas"
