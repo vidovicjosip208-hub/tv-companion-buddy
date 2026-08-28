@@ -11,6 +11,12 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH } from "@/lib/canvas";
  */
 const RENDER_SCALE = 0.4;
 
+/**
+ * Rasterised starfield, cached across mounts/pages so navigating never pays the
+ * cost of regenerating dust, stars and wisps again.
+ */
+let sceneCache: { w: number; h: number; canvas: HTMLCanvasElement } | null = null;
+
 const StarryBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
