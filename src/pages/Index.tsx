@@ -17,6 +17,14 @@ import VideoPlayer, { PlayerData, FavoriteChannel } from "@/components/VideoPlay
 import { useFavorites } from "@/hooks/useFavorites";
 import { useChannels, useEPGData } from "@/hooks/useChannels";
 import liveCamsLogo from "@/assets/livecams-logo.png.asset.json";
+import BackgroundPlayer from "@/components/BackgroundPlayer";
+import {
+  consumeStartupAction,
+  getLastWatchedChannel,
+  setLastWatchedChannel,
+  type StartupActionSettings,
+} from "@/lib/startupAction";
+
 
 // NAPOMENA (performanse): stari hardkodirani mock nizovi "defaultChannelCards" i
 // "epgChannels" (ChannelCard interface uključen) su ovdje uklonjeni jer se nigdje u
