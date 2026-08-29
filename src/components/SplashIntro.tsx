@@ -150,7 +150,7 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
       // resolution bought nothing but more drawImage/scale cost per tick.
       const BUF_W = 96;
       const BUF_H = 54;
-      const buffers = new Map
+      const buffers = new Map<
         string,
         { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number }
       >();
