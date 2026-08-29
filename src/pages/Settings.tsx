@@ -44,6 +44,13 @@ import StarryBackground from "@/components/StarryBackground";
 import { cn } from "@/lib/utils";
 import settingsGearbox from "@/assets/settings-gearbox.png";
 import { LANGUAGE_OPTIONS } from "@/i18n";
+import {
+  DEFAULT_STARTUP_ACTION_SETTINGS,
+  loadStartupActionSettings,
+  saveStartupActionSettingsLocal,
+  type StartupActionSettings,
+} from "@/lib/startupAction";
+
 
 // Prilagođena ikona daljinskog upravljača (lucide nema ugrađenu "Remote" ikonu)
 const remoteIconNode: IconNode = [
