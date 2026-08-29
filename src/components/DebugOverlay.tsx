@@ -8,7 +8,12 @@ import { subscribeDebugLog } from "@/lib/debugOverlay";
 const DebugOverlay = () => {
   const [lines, setLines] = useState<string[]>([]);
 
-  useEffect(() => subscribeDebugLog(setLines), []);
+  useEffect(() => {
+    const unsubscribe = subscribeDebugLog(setLines);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   if (lines.length === 0) return null;
 
