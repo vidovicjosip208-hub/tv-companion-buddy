@@ -604,7 +604,9 @@ const Index = () => {
         return;
       }
 
+      setLastWatchedChannel(next.channelName);
       setPlayerData({
+
         ...next,
         channelId: next.channelId ?? matchedCard?.id,
         streamUrl: resolvedStreamUrl,
