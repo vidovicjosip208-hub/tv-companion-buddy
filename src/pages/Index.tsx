@@ -17,6 +17,14 @@ import VideoPlayer, { PlayerData, FavoriteChannel } from "@/components/VideoPlay
 import { useFavorites } from "@/hooks/useFavorites";
 import { useChannels, useEPGData } from "@/hooks/useChannels";
 import liveCamsLogo from "@/assets/livecams-logo.png.asset.json";
+import BackgroundPlayer from "@/components/BackgroundPlayer";
+import {
+  consumeStartupAction,
+  getLastWatchedChannel,
+  setLastWatchedChannel,
+  type StartupActionSettings,
+} from "@/lib/startupAction";
+
 
 // NAPOMENA (performanse): stari hardkodirani mock nizovi "defaultChannelCards" i
 // "epgChannels" (ChannelCard interface uključen) su ovdje uklonjeni jer se nigdje u
@@ -360,6 +368,17 @@ const Index = () => {
   const [playerVisible, setPlayerVisible] = useState(false);
   const [playerData, setPlayerData] = useState<PlayerData | undefined>();
 
+  // ── Startup Action ──────────────────────────────────────────
+  // Pri pokretanju aplikacije (samo jednom) otvara Omiljene, fokusira zadnje
+  // gledani kanal i pušta ga u pozadini ispod UI-a.
+  const startupRef = useRef<StartupActionSettings | null | undefined>(undefined);
+  if (startupRef.current === undefined) startupRef.current = consumeStartupAction();
+  const startup = startupRef.current;
+  const startupAppliedRef = useRef(false);
+  const [bgStreamUrl, setBgStreamUrl] = useState<string | undefined>();
+
+
+
   const { data: dbChannels } = useChannels();
   const channelIds = useMemo(() => dbChannels?.map((c) => c.id) ?? [], [dbChannels]);
   const { data: dbEpg } = useEPGData(channelIds.length > 0 ? channelIds : undefined);
@@ -478,6 +497,7 @@ const Index = () => {
   );
 
   const openPlayerFromCard = useCallback((card: (typeof liveChannelCards)[0]) => {
+    setLastWatchedChannel(card.channelName);
     setPlayerData({
       channelId: card.id,
       channelNumber: card.channelNumber,
@@ -490,6 +510,7 @@ const Index = () => {
     });
     setPlayerVisible(true);
   }, []);
+
 
   const favoriteEpgChannels = useMemo(() => {
     return favorites
@@ -532,6 +553,40 @@ const Index = () => {
     });
   }, [favoriteEpgChannels, liveChannelCards]);
 
+  // Startup Action: otvori Omiljene, fokusiraj zadnje gledani kanal (žuti fokus)
+  // i pusti ga u pozadini. Čeka da se lista omiljenih napuni iz baze.
+  useEffect(() => {
+    if (startupAppliedRef.current) return;
+    if (!startup || startup.screen !== "favorites") {
+      startupAppliedRef.current = true;
+      return;
+    }
+    if (favoriteEpgChannels.length === 0) return;
+    startupAppliedRef.current = true;
+
+    const last = getLastWatchedChannel();
+    const foundIdx = favoriteEpgChannels.findIndex((ch) => ch.name === last);
+    const idx = foundIdx >= 0 ? foundIdx : 0;
+
+    setSidebarIndex(FAVORITES_INDEX);
+    setShowFavorites(true);
+    setShowCategories(false);
+    setShowCameras(false);
+    setShowRadio(false);
+    setEpgIndex(idx);
+    setProgramIndex(0);
+    setFocusZone("epg");
+    setSidebarExpanded(false);
+    setBgStreamUrl(favoriteEpgChannels[idx]?.streamUrl);
+  }, [startup, favoriteEpgChannels]);
+
+  // Pozadinski kanal svira samo dok smo u prikazu Omiljenih (startup stanje).
+  useEffect(() => {
+    if (!showFavorites) setBgStreamUrl(undefined);
+  }, [showFavorites]);
+
+
+
   const allPlayerChannels: FavoriteChannel[] = useMemo(() => {
     return liveChannelCards.map((card) => ({
       number: parseInt(card.channelNumber, 10),
@@ -555,7 +610,9 @@ const Index = () => {
         return;
       }
 
+      setLastWatchedChannel(next.channelName);
       setPlayerData({
+
         ...next,
         channelId: next.channelId ?? matchedCard?.id,
         streamUrl: resolvedStreamUrl,
@@ -580,8 +637,10 @@ const Index = () => {
       const ch = activeEpgChannels[channelIdx];
       if (!ch) return;
       const liveProgram = ch.programs.find((p) => p.isLive) ?? ch.programs[0];
+      setLastWatchedChannel(ch.name);
       setPlayerData({
         channelId: ch.id,
+
         channelNumber: String(ch.number),
         showTitle: liveProgram?.title ?? ch.name,
         timeRange: liveProgram ? `${liveProgram.startTime} - ${liveProgram.endTime}` : "",
@@ -1219,6 +1278,10 @@ const Index = () => {
       className="h-screen flex flex-col overflow-hidden relative"
     >
       <StarryBackground />
+
+      {/* Startup Action — zadnje gledani kanal svira u pozadini ispod UI-a */}
+      {bgStreamUrl && <BackgroundPlayer streamUrl={bgStreamUrl} muted={startup?.backgroundAudio === "muted"} />}
+
 
       <TVHeader />
 
