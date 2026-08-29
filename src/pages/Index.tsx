@@ -368,6 +368,17 @@ const Index = () => {
   const [playerVisible, setPlayerVisible] = useState(false);
   const [playerData, setPlayerData] = useState<PlayerData | undefined>();
 
+  // ── Startup Action ──────────────────────────────────────────
+  // Pri pokretanju aplikacije (samo jednom) otvara Omiljene, fokusira zadnje
+  // gledani kanal i pušta ga u pozadini ispod UI-a.
+  const startupRef = useRef<StartupActionSettings | null | undefined>(undefined);
+  if (startupRef.current === undefined) startupRef.current = consumeStartupAction();
+  const startup = startupRef.current;
+  const startupAppliedRef = useRef(false);
+  const [bgStreamUrl, setBgStreamUrl] = useState<string | undefined>();
+
+
+
   const { data: dbChannels } = useChannels();
   const channelIds = useMemo(() => dbChannels?.map((c) => c.id) ?? [], [dbChannels]);
   const { data: dbEpg } = useEPGData(channelIds.length > 0 ? channelIds : undefined);
