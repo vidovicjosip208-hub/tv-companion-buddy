@@ -61,9 +61,6 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
   const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const canvasRefs = useRef<Array<HTMLCanvasElement | null>>([]);
   const animationFrame = useRef<number | null>(null);
-  // Holds the teardown function created inside the delayed setup below, so the
-  // effect's cleanup can call it even though setup itself runs asynchronously.
-  const cleanupRef = useRef<(() => void) | null>(null);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
 
@@ -137,127 +134,95 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
     const readyVideos = uniqueVideos.filter((video) => loadedSources.current.has(video.video_url));
     if (!readyVideos.length) return;
 
-    // Delay the heavy part (buffer/canvas setup + decode-driven redraw loop) by
-    // one tick past mount so it doesn't compete with the app's own initial
-    // render for CPU time right at startup — this is exactly the window where
-    // long main-thread tasks were observed on weak TV hardware.
-    const startDelay = window.setTimeout(() => {
-      const players = readyVideos
-        .map((video) => sourceVideoRefs.current[video.video_url])
-        .filter((player): player is HTMLVideoElement => player !== null);
+    const players = readyVideos
+      .map((video) => sourceVideoRefs.current[video.video_url])
+      .filter((player): player is HTMLVideoElement => player !== null);
 
-      // Reduced from 128x72 — tiles render small on screen, so the extra
-      // resolution bought nothing but more drawImage/scale cost per tick.
-      const BUF_W = 96;
-      const BUF_H = 54;
-      const buffers = new Map<
-        string,
-        { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number }
-      >();
-      readyVideos.forEach((video) => {
-        const c = document.createElement("canvas");
-        c.width = BUF_W;
-        c.height = BUF_H;
-        buffers.set(video.video_url, { canvas: c, ctx: c.getContext("2d", { alpha: false }), t: -1 });
-      });
+    const BUF_W = 128;
+    const BUF_H = 72;
+    const buffers = new Map<string, { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number }>();
+    readyVideos.forEach((video) => {
+      const c = document.createElement("canvas");
+      c.width = BUF_W;
+      c.height = BUF_H;
+      buffers.set(video.video_url, { canvas: c, ctx: c.getContext("2d", { alpha: false }), t: -1 });
+    });
 
-      const tileTargets: Array<{
-        buf: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number };
-        canvas: HTMLCanvasElement;
-        ctx: CanvasRenderingContext2D;
-        lastT: number;
-      }> = [];
+    const tileTargets: Array<{
+      buf: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null; t: number };
+      canvas: HTMLCanvasElement;
+      ctx: CanvasRenderingContext2D;
+      lastT: number;
+    }> = [];
 
-      const buildTargets = () => {
-        tileTargets.length = 0;
-        TILES.forEach((_, index) => {
-          const item = readyVideos[index % readyVideos.length];
-          const buf = item ? buffers.get(item.video_url) : undefined;
-          const canvas = canvasRefs.current[index];
-          if (!buf || !canvas) return;
-          if (canvas.width !== BUF_W || canvas.height !== BUF_H) {
-            canvas.width = BUF_W;
-            canvas.height = BUF_H;
-          }
-          const ctx = canvas.getContext("2d", {
-            alpha: false,
-            desynchronized: true,
-          }) as CanvasRenderingContext2D | null;
-          if (!ctx) return;
-          tileTargets.push({ buf, canvas, ctx, lastT: -1 });
-        });
-      };
-
-      // Which tile group gets repainted on the current tick — spreads the
-      // drawImage cost across ticks instead of repainting all 12 tiles at
-      // once, which is what produced single 100-180ms main-thread blocks.
-      let rotationIndex = 0;
-      const TILES_PER_TICK = 3;
-
-      const drawFrames = () => {
-        if (document.hidden) return;
-        buffers.forEach((buf, url) => {
-          const player = sourceVideoRefs.current[url];
-          if (!player || !buf.ctx || player.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
-          if (!player.videoWidth || !player.videoHeight) return;
-          if (player.currentTime === buf.t) return;
-          buf.t = player.currentTime;
-
-          const scale = Math.max(BUF_W / player.videoWidth, BUF_H / player.videoHeight);
-          const sw = BUF_W / scale;
-          const sh = BUF_H / scale;
-          buf.ctx.drawImage(
-            player,
-            (player.videoWidth - sw) / 2,
-            (player.videoHeight - sh) / 2,
-            sw,
-            sh,
-            0,
-            0,
-            BUF_W,
-            BUF_H,
-          );
-        });
-
-        if (!tileTargets.length) buildTargets();
-
-        let drew = false;
-        for (let i = 0; i < TILES_PER_TICK && tileTargets.length; i++) {
-          const target = tileTargets[rotationIndex % tileTargets.length];
-          rotationIndex++;
-          if (target.buf.t < 0 || target.buf.t === target.lastT) continue;
-          target.lastT = target.buf.t;
-          target.ctx.drawImage(target.buf.canvas, 0, 0);
-          drew = true;
+    const buildTargets = () => {
+      tileTargets.length = 0;
+      TILES.forEach((_, index) => {
+        const item = readyVideos[index % readyVideos.length];
+        const buf = item ? buffers.get(item.video_url) : undefined;
+        const canvas = canvasRefs.current[index];
+        if (!buf || !canvas) return;
+        if (canvas.width !== BUF_W || canvas.height !== BUF_H) {
+          canvas.width = BUF_W;
+          canvas.height = BUF_H;
         }
-        if (drew) setFramesReady(true);
-      };
-
-      players.forEach((player) => {
-        player.currentTime = 0;
+        const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true }) as CanvasRenderingContext2D | null;
+        if (!ctx) return;
+        tileTargets.push({ buf, canvas, ctx, lastT: -1 });
       });
-      drawFrames();
+    };
 
-      const FRAME_INTERVAL = 1000;
-      animationFrame.current = window.setInterval(drawFrames, FRAME_INTERVAL);
-      setRevealed(true);
-      void Promise.allSettled(players.map((player) => player.play()));
+    const drawFrames = () => {
+      if (document.hidden) return;
+      buffers.forEach((buf, url) => {
+        const player = sourceVideoRefs.current[url];
+        if (!player || !buf.ctx || player.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+        if (!player.videoWidth || !player.videoHeight) return;
+        if (player.currentTime === buf.t) return;
+        buf.t = player.currentTime;
 
-      cleanupRef.current = () => {
-        if (animationFrame.current !== null) window.clearInterval(animationFrame.current);
-        animationFrame.current = null;
-        players.forEach((player) => {
-          player.pause();
-          player.src = "";
-          player.load();
-        });
-      };
-    }, 150);
+        const scale = Math.max(BUF_W / player.videoWidth, BUF_H / player.videoHeight);
+        const sw = BUF_W / scale;
+        const sh = BUF_H / scale;
+        buf.ctx.drawImage(
+          player,
+          (player.videoWidth - sw) / 2,
+          (player.videoHeight - sh) / 2,
+          sw,
+          sh,
+          0,
+          0,
+          BUF_W,
+          BUF_H,
+        );
+      });
+
+      if (!tileTargets.length) buildTargets();
+      let drew = false;
+      for (const target of tileTargets) {
+        if (target.buf.t < 0 || target.buf.t === target.lastT) continue;
+        target.lastT = target.buf.t;
+        target.ctx.drawImage(target.buf.canvas, 0, 0);
+        drew = true;
+      }
+      if (drew) setFramesReady(true);
+    };
+
+
+    players.forEach((player) => {
+      player.currentTime = 0;
+    });
+    drawFrames();
+
+    const FRAME_INTERVAL = 1000;
+    animationFrame.current = window.setInterval(drawFrames, FRAME_INTERVAL);
+    setRevealed(true);
+    void Promise.allSettled(players.map((player) => player.play()));
 
     return () => {
-      window.clearTimeout(startDelay);
-      cleanupRef.current?.();
-      cleanupRef.current = null;
+      if (animationFrame.current !== null) window.clearInterval(animationFrame.current);
+      animationFrame.current = null;
+      players.forEach((player) => { player.pause(); player.src = ""; player.load(); });
     };
   }, [loadedSourceCount, uniqueVideos]);
 

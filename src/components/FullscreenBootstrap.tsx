@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { debugLog } from "@/lib/debugOverlay";
 
 type FSDoc = Document & {
   webkitFullscreenElement?: Element | null;
@@ -22,17 +23,24 @@ const requestFs = async () => {
   if (isFullscreen()) return;
   const el = document.documentElement as FSEl;
   const req = el.requestFullscreen?.bind(el) ?? el.webkitRequestFullscreen?.bind(el);
-  if (!req) return;
-  try {
-    await Promise.resolve(req());
-  } catch {
-    // ignore
+  if (!req) {
+    debugLog("[FullscreenBootstrap] requestFullscreen not available");
+    return;
   }
   try {
+    await Promise.resolve(req());
+    debugLog("[FullscreenBootstrap] requestFullscreen OK");
+  } catch (e) {
+    debugLog("[FullscreenBootstrap] requestFullscreen FAILED", String(e));
+  }
+
+  try {
     const nav = navigator as KeyboardLockNav;
+    debugLog("[FullscreenBootstrap] keyboard.lock available?", !!nav.keyboard?.lock);
     await nav.keyboard?.lock?.(["Escape"]);
-  } catch {
-    // ignore
+    debugLog("[FullscreenBootstrap] keyboard.lock OK");
+  } catch (e) {
+    debugLog("[FullscreenBootstrap] keyboard.lock FAILED", String(e));
   }
 };
 
@@ -48,6 +56,11 @@ const FullscreenBootstrap = () => {
     window.addEventListener("pointerdown", onGesture, { once: true });
 
     const onFsChange = () => {
+      debugLog("[FullscreenBootstrap] fsChange", {
+        isFullscreen: isFullscreen(),
+        wasFullscreen: wasFullscreenRef.current,
+      });
+
       if (isFullscreen()) {
         wasFullscreenRef.current = true;
       } else if (wasFullscreenRef.current) {
