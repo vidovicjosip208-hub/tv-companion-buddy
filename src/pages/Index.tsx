@@ -553,6 +553,34 @@ const Index = () => {
     });
   }, [favoriteEpgChannels, liveChannelCards]);
 
+  // Startup Action: otvori Omiljene, fokusiraj zadnje gledani kanal (žuti fokus)
+  // i pusti ga u pozadini. Čeka da se lista omiljenih napuni iz baze.
+  useEffect(() => {
+    if (startupAppliedRef.current) return;
+    if (!startup || startup.screen !== "favorites") {
+      startupAppliedRef.current = true;
+      return;
+    }
+    if (favoriteEpgChannels.length === 0) return;
+    startupAppliedRef.current = true;
+
+    const last = getLastWatchedChannel();
+    const foundIdx = favoriteEpgChannels.findIndex((ch) => ch.name === last);
+    const idx = foundIdx >= 0 ? foundIdx : 0;
+
+    setSidebarIndex(FAVORITES_INDEX);
+    setShowFavorites(true);
+    setShowCategories(false);
+    setShowCameras(false);
+    setShowRadio(false);
+    setEpgIndex(idx);
+    setProgramIndex(0);
+    setFocusZone("epg");
+    setSidebarExpanded(false);
+    setBgStreamUrl(favoriteEpgChannels[idx]?.streamUrl);
+  }, [startup, favoriteEpgChannels]);
+
+
   const allPlayerChannels: FavoriteChannel[] = useMemo(() => {
     return liveChannelCards.map((card) => ({
       number: parseInt(card.channelNumber, 10),
