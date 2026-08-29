@@ -1,24 +1,16 @@
 import { useEffect, useState } from "react";
 import { subscribeDebugLog } from "@/lib/debugOverlay";
 
+// On-screen debug log for devices without an accessible browser console
+// (real TVs). Deliberately rendered OUTSIDE ScaleToFit's scaled canvas, at
+// raw viewport size, so it stays readable/full-size no matter what the app
+// itself is doing.
 const DebugOverlay = () => {
   const [lines, setLines] = useState<string[]>([]);
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => subscribeDebugLog(setLines), []);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "0" && (e.ctrlKey || e.metaKey) && e.shiftKey) {
-        e.preventDefault();
-        setVisible((v) => !v);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  if (!visible) return null;
+  if (lines.length === 0) return null;
 
   return (
     <div
@@ -26,22 +18,22 @@ const DebugOverlay = () => {
         position: "fixed",
         top: 0,
         right: 0,
-        width: 480,
-        maxHeight: "60vh",
+        width: "50vw",
+        maxHeight: "50vh",
         overflowY: "auto",
-        background: "rgba(0,0,0,0.85)",
+        background: "rgba(0,0,0,0.8)",
         color: "#0f0",
         fontFamily: "monospace",
-        fontSize: 12,
+        fontSize: 14,
         padding: 8,
         zIndex: 99999,
         pointerEvents: "none",
         whiteSpace: "pre-wrap",
-        lineHeight: 1.35,
+        lineHeight: 1.4,
       }}
     >
-      {lines.map((l, i) => (
-        <div key={i}>{l}</div>
+      {lines.map((line, i) => (
+        <div key={i}>{line}</div>
       ))}
     </div>
   );
