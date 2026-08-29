@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "@/lib/canvas";
+import { debugLog } from "@/lib/debugOverlay";
 
 interface ScaleToFitProps {
   children: ReactNode;
@@ -28,8 +29,7 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
     const w = window.screen.width;
     const h = window.screen.height;
 
-    // TEMP DEBUG LOG — remove once confirmed stable.
-    console.log("[ScaleToFit]", { w, h, scaleX: w / CANVAS_WIDTH, scaleY: h / CANVAS_HEIGHT, time: Date.now() });
+    debugLog("[ScaleToFit] mount", { w, h, scaleX: w / CANVAS_WIDTH, scaleY: h / CANVAS_HEIGHT });
 
     if (w < 1 || h < 1) return;
     canvas.style.transform = `scale(${w / CANVAS_WIDTH}, ${h / CANVAS_HEIGHT})`;
