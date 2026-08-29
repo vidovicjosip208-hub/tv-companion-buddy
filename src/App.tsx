@@ -10,7 +10,6 @@ import ExitAppDialog from "./components/ExitAppDialog.tsx";
 import ScaleToFit from "./components/ScaleToFit.tsx";
 import SplashGate from "./components/SplashGate.tsx";
 import RequireLogin from "./components/RequireLogin.tsx";
-import DebugOverlay from "./components/DebugOverlay.tsx";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Videoteka = lazy(() => import("./pages/Videoteka.tsx"));
@@ -35,7 +34,6 @@ const App = () => (
         <FullscreenBootstrap />
         <BrowserRouter>
           <RemoteBackKey />
-          <DebugOverlay />
           <ScaleToFit>
             {/*
               ExitAppDialog je premješten UNUTAR ScaleToFit (prije je bio izvan, kao brat
