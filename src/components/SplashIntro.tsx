@@ -61,6 +61,9 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
   const sourceVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const canvasRefs = useRef<Array<HTMLCanvasElement | null>>([]);
   const animationFrame = useRef<number | null>(null);
+  // Holds the teardown function created inside the delayed setup below, so the
+  // effect's cleanup can call it even though setup itself runs asynchronously.
+  const cleanupRef = useRef<(() => void) | null>(null);
   const { data: content } = useSplashContent();
   const videos = content ?? [];
 
@@ -257,10 +260,6 @@ const SplashIntro = ({ duration = 11000, onFinished }: SplashIntroProps) => {
       cleanupRef.current = null;
     };
   }, [loadedSourceCount, uniqueVideos]);
-
-  // Holds the teardown function created inside the delayed setup above, so the
-  // effect's cleanup can call it even though setup itself runs asynchronously.
-  const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!revealed) return;
