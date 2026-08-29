@@ -5,19 +5,6 @@ interface ScaleToFitProps {
   children: ReactNode;
 }
 
-/**
- * Stretches the fixed reference canvas (CANVAS_WIDTH x CANVAS_HEIGHT) onto the
- * real available area so the composition is always edge to edge — identical on
- * a laptop, a phone or a TV.
- *
- * The scale is derived from screen.width/screen.height, not from
- * window.innerWidth/innerHeight or getBoundingClientRect(). On some TV/mirrored
- * browser environments the reported viewport size fluctuates on its own within
- * a second of load (address bar, mirroring renegotiation, etc.) even with no
- * user interaction — screen.width/height stays stable across those same
- * fluctuations. The scale is computed exactly once, on mount, and is never
- * recomputed afterwards for any reason.
- */
 const ScaleToFit = ({ children }: ScaleToFitProps) => {
   const canvasRef = useRef<HTMLDivElement>(null);
 
