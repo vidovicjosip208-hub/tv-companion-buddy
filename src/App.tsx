@@ -10,6 +10,7 @@ import ExitAppDialog from "./components/ExitAppDialog.tsx";
 import ScaleToFit from "./components/ScaleToFit.tsx";
 import SplashGate from "./components/SplashGate.tsx";
 import RequireLogin from "./components/RequireLogin.tsx";
+import PerfOverlay from "./components/PerfOverlay.tsx";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Videoteka = lazy(() => import("./pages/Videoteka.tsx"));
@@ -34,16 +35,8 @@ const App = () => (
         <FullscreenBootstrap />
         <BrowserRouter>
           <RemoteBackKey />
+          <PerfOverlay />
           <ScaleToFit>
-            {/*
-              ExitAppDialog je premješten UNUTAR ScaleToFit (prije je bio izvan, kao brat
-              elementa <BrowserRouter>/<ScaleToFit> na istoj razini). ScaleToFit je taj koji
-              cijeloj aplikaciji daje dosljedno skaliranje između različitih ekrana (laptop,
-              TV...) - dok je dialog bio izvan njega, renderirao se mimo tog skaliranja i
-              oslanjao se na sirovu veličinu preglednika umjesto na isti scale-faktor kao
-              ostatak app-a, pa je ispadao neusklađen (drugačiji % širine ekrana) na TV-u
-              u odnosu na laptop.
-            */}
             <ExitAppDialog />
             <SplashGate />
             <Suspense fallback={null}>
