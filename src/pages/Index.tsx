@@ -1273,6 +1273,10 @@ const Index = () => {
     >
       <StarryBackground />
 
+      {/* Startup Action — zadnje gledani kanal svira u pozadini ispod UI-a */}
+      {bgStreamUrl && <BackgroundPlayer streamUrl={bgStreamUrl} muted={startup?.backgroundAudio === "muted"} />}
+
+
       <TVHeader />
 
       <div className="flex-1 flex overflow-hidden relative min-h-0">
