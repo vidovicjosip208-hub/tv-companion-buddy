@@ -580,6 +580,12 @@ const Index = () => {
     setBgStreamUrl(favoriteEpgChannels[idx]?.streamUrl);
   }, [startup, favoriteEpgChannels]);
 
+  // Pozadinski kanal svira samo dok smo u prikazu Omiljenih (startup stanje).
+  useEffect(() => {
+    if (!showFavorites) setBgStreamUrl(undefined);
+  }, [showFavorites]);
+
+
 
   const allPlayerChannels: FavoriteChannel[] = useMemo(() => {
     return liveChannelCards.map((card) => ({
