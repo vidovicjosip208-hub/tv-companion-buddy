@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { debugLog } from "@/lib/debugOverlay";
 
 type FSDoc = Document & {
   webkitFullscreenElement?: Element | null;
@@ -45,12 +46,10 @@ const FullscreenBootstrap = () => {
     const onGesture = () => {
       void requestFs();
     };
-
     // Try immediately on load (works on TV browsers / kiosk & app launchers where
     // fullscreen doesn't require a user gesture). If the browser rejects it,
     // the gesture listeners below take over.
     const autoTimers = [0, 100, 500, 1500].map((ms) => window.setTimeout(() => void requestFs(), ms));
-
     // Only the first real interaction may complete startup fullscreen. Keeping
     // these listeners active made an arbitrary later keypress (notably Back,
     // which opens the exit dialog) re-enter fullscreen and change the TV
@@ -59,6 +58,15 @@ const FullscreenBootstrap = () => {
     window.addEventListener("pointerdown", onGesture, { once: true });
 
     const onFsChange = () => {
+      debugLog("[FullscreenBootstrap] fsChange", {
+        isFullscreen: isFullscreen(),
+        wasFullscreen: wasFullscreenRef.current,
+        innerW: window.innerWidth,
+        innerH: window.innerHeight,
+        screenW: window.screen.width,
+        screenH: window.screen.height,
+      });
+
       if (isFullscreen()) {
         wasFullscreenRef.current = true;
       } else if (wasFullscreenRef.current) {
