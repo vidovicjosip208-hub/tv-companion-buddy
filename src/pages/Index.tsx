@@ -631,8 +631,10 @@ const Index = () => {
       const ch = activeEpgChannels[channelIdx];
       if (!ch) return;
       const liveProgram = ch.programs.find((p) => p.isLive) ?? ch.programs[0];
+      setLastWatchedChannel(ch.name);
       setPlayerData({
         channelId: ch.id,
+
         channelNumber: String(ch.number),
         showTitle: liveProgram?.title ?? ch.name,
         timeRange: liveProgram ? `${liveProgram.startTime} - ${liveProgram.endTime}` : "",
