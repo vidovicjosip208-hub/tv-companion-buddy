@@ -29,6 +29,12 @@ import {
   Home,
   Router,
   Cable,
+  ToggleLeft,
+  ToggleRight,
+  Volume2,
+  VolumeX,
+  Star,
+  LayoutGrid,
   LucideIcon,
   createLucideIcon,
   type IconNode,
@@ -90,6 +96,64 @@ const deviceItems = [
 ];
 
 // ─────────────────────────────────────────────────────────────
+// Startup Action — opcije zaslona pri pokretanju i zvuka u pozadini.
+// ─────────────────────────────────────────────────────────────
+
+type StartupScreenOption = "favorites" | "home" | "channels";
+
+const STARTUP_SCREEN_OPTIONS: {
+  key: StartupScreenOption;
+  icon: LucideIcon;
+  label: string;
+  description: string;
+}[] = [
+  {
+    key: "favorites",
+    icon: Star,
+    label: "Zadnji gledani kanal u Omiljenima",
+    description: "Zadano — otvara Omiljene i odmah fokusira zadnji gledani kanal.",
+  },
+  {
+    key: "home",
+    icon: Home,
+    label: "Početna stranica",
+    description: "Uređaj se pokreće na početnom (Home) zaslonu.",
+  },
+  {
+    key: "channels",
+    icon: LayoutGrid,
+    label: "TV Kanali (puni ekran)",
+    description: "Uređaj se pokreće izravno na popisu TV kanala u punom zaslonu.",
+  },
+];
+
+type BackgroundAudioOption = "on" | "muted";
+
+const BACKGROUND_AUDIO_OPTIONS: {
+  key: BackgroundAudioOption;
+  icon: LucideIcon;
+  label: string;
+  description: string;
+}[] = [
+  {
+    key: "on",
+    icon: Volume2,
+    label: "Uključeno",
+    description: "Zvuk kreće odmah pri pokretanju.",
+  },
+  {
+    key: "muted",
+    icon: VolumeX,
+    label: "Utišano",
+    description: "Bez zvuka dok se ne pritisne kanal ili zatvori izbornik.",
+  },
+];
+
+// Ukupan broj fokusabilnih redaka na Startup Action ekranu:
+// 1 (glavni prekidač) + opcije zaslona + opcije zvuka.
+const STARTUP_ROW_COUNT = 1 + STARTUP_SCREEN_OPTIONS.length + BACKGROUND_AUDIO_OPTIONS.length;
+
+// ─────────────────────────────────────────────────────────────
 // TODO: Zamijeni ova tri placeholdera stvarnim pozivima prema Supabase
 // kad povežeš bazu putem Lovable chata (tablica npr. profiles.parental_pin_hash).
 // currentProfile bi trebao doći iz auth/profile konteksta aplikacije.
@@ -111,6 +175,39 @@ async function checkAccess(enteredPin: string, currentProfile: string | null): P
 async function savePin(newPin: string, currentProfile: string | null): Promise<void> {
   // TODO: spremi (hashirano) u Supabase
   // npr: await supabase.from('profiles').update({ parental_pin_hash: hash(newPin) }).eq('id', currentProfile);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Startup Action — placeholderi za Supabase (npr. tablica device_settings
+// s poljem startup_action po profilu/uređaju). Do tada radimo s razumnim
+// zadanim vrijednostima kako bi UI bio potpuno funkcionalan.
+// ─────────────────────────────────────────────────────────────
+
+interface StartupActionSettings {
+  enabled: boolean;
+  screen: StartupScreenOption;
+  backgroundAudio: BackgroundAudioOption;
+}
+
+const DEFAULT_STARTUP_ACTION_SETTINGS: StartupActionSettings = {
+  enabled: true,
+  screen: "favorites",
+  backgroundAudio: "on",
+};
+
+async function fetchStartupActionSettings(currentProfile: string | null): Promise<StartupActionSettings> {
+  // TODO: dohvati iz Supabase (npr. device_settings.startup_action za currentProfile/uređaj)
+  // npr: const { data } = await supabase.from('device_settings').select('startup_action').eq('profile_id', currentProfile).single();
+  // return data?.startup_action ?? DEFAULT_STARTUP_ACTION_SETTINGS;
+  return DEFAULT_STARTUP_ACTION_SETTINGS;
+}
+
+async function saveStartupActionSettings(
+  settings: StartupActionSettings,
+  currentProfile: string | null,
+): Promise<void> {
+  // TODO: spremi u Supabase
+  // npr: await supabase.from('device_settings').upsert({ profile_id: currentProfile, startup_action: settings });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -189,7 +286,9 @@ const Settings = () => {
     languages.findIndex((l) => l.code === i18n.language),
   );
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [view, setView] = useState<"menu" | "language" | "internet" | "device" | "speedtest" | "networkstatus">("menu");
+  const [view, setView] = useState<
+    "menu" | "language" | "internet" | "device" | "speedtest" | "networkstatus" | "startupaction"
+  >("menu");
   const [langFocused, setLangFocused] = useState(initialLangIdx);
   const [selectedLang, setSelectedLang] = useState(initialLangIdx);
   const [scrollStart, setScrollStart] = useState(0);
@@ -203,6 +302,12 @@ const Settings = () => {
   // Device Controls podizbornik
   const [deviceFocused, setDeviceFocused] = useState(0);
   const [deviceScrollStart, setDeviceScrollStart] = useState(0);
+
+  // Startup Action podizbornik
+  const [startupSettings, setStartupSettings] = useState<StartupActionSettings>(DEFAULT_STARTUP_ACTION_SETTINGS);
+  const [startupFocused, setStartupFocused] = useState(0);
+  const [startupLoading, setStartupLoading] = useState(false);
+  const startupRunIdRef = useRef(0);
 
   // PIN modal state
   const [showPinModal, setShowPinModal] = useState(false);
@@ -312,11 +417,74 @@ const Settings = () => {
     });
   }, []);
 
+  const openStartupAction = useCallback(() => {
+    const runId = ++startupRunIdRef.current;
+    setView("startupaction");
+    setStartupFocused(0);
+    setStartupLoading(true);
+    fetchStartupActionSettings(currentProfile).then((data) => {
+      if (startupRunIdRef.current !== runId) return; // prikaz je napušten u međuvremenu
+      setStartupSettings(data);
+      setStartupLoading(false);
+    });
+  }, [currentProfile]);
+
+  // Zajednički helper koji odmah ažurira lokalno stanje i sprema promjenu.
+  const updateStartupSettings = useCallback(
+    (updater: (prev: StartupActionSettings) => StartupActionSettings) => {
+      setStartupSettings((prev) => {
+        const next = updater(prev);
+        saveStartupActionSettings(next, currentProfile);
+        return next;
+      });
+    },
+    [currentProfile],
+  );
+
+  const toggleStartupEnabled = useCallback(() => {
+    updateStartupSettings((prev) => ({ ...prev, enabled: !prev.enabled }));
+  }, [updateStartupSettings]);
+
+  const selectStartupScreen = useCallback(
+    (screen: StartupScreenOption) => {
+      updateStartupSettings((prev) => ({ ...prev, screen }));
+    },
+    [updateStartupSettings],
+  );
+
+  const selectBackgroundAudio = useCallback(
+    (backgroundAudio: BackgroundAudioOption) => {
+      updateStartupSettings((prev) => ({ ...prev, backgroundAudio }));
+    },
+    [updateStartupSettings],
+  );
+
+  // index 0 = glavni prekidač, 1-3 = ekran pri pokretanju, 4-5 = zvuk u pozadini
+  const handleStartupRowActivate = useCallback(
+    (index: number) => {
+      if (index === 0) {
+        toggleStartupEnabled();
+        return;
+      }
+      if (!startupSettings.enabled) return; // opcije su zaključane dok je Startup Action isključen
+      if (index >= 1 && index <= STARTUP_SCREEN_OPTIONS.length) {
+        selectStartupScreen(STARTUP_SCREEN_OPTIONS[index - 1].key);
+      } else {
+        const audioIndex = index - (1 + STARTUP_SCREEN_OPTIONS.length);
+        if (audioIndex >= 0 && audioIndex < BACKGROUND_AUDIO_OPTIONS.length) {
+          selectBackgroundAudio(BACKGROUND_AUDIO_OPTIONS[audioIndex].key);
+        }
+      }
+    },
+    [startupSettings.enabled, toggleStartupEnabled, selectStartupScreen, selectBackgroundAudio],
+  );
+
   useEffect(() => {
     return () => {
       clearSpeedTestTimers();
       stRunIdRef.current += 1;
       nsRunIdRef.current += 1;
+      startupRunIdRef.current += 1;
     };
   }, [clearSpeedTestTimers]);
 
@@ -336,10 +504,17 @@ const Settings = () => {
     [openSpeedTest, openNetworkStatus],
   );
 
-  const handleDeviceItemSelect = useCallback((key: string) => {
-    // TODO: poveži sa stvarnom akcijom/rutom za svaku stavku
-    // npr. navigate(`/settings/device/${key}`) ili otvori odgovarajući modal
-  }, []);
+  const handleDeviceItemSelect = useCallback(
+    (key: string) => {
+      if (key === "startupAction") {
+        openStartupAction();
+        return;
+      }
+      // TODO: poveži ostale stavke sa stvarnom akcijom/rutom
+      // npr. navigate(`/settings/device/${key}`) ili otvori odgovarajući modal
+    },
+    [openStartupAction],
+  );
 
   const openInternetSettings = useCallback(() => {
     setView("internet");
@@ -507,6 +682,30 @@ const Settings = () => {
         return;
       }
 
+      if (view === "startupaction") {
+        switch (e.key) {
+          case "ArrowDown":
+            e.preventDefault();
+            setStartupFocused((prev) => Math.min(prev + 1, STARTUP_ROW_COUNT - 1));
+            break;
+          case "ArrowUp":
+            e.preventDefault();
+            setStartupFocused((prev) => Math.max(prev - 1, 0));
+            break;
+          case "Backspace":
+          case "Escape":
+            e.preventDefault();
+            startupRunIdRef.current += 1;
+            setView("device");
+            break;
+          case "Enter":
+            e.preventDefault();
+            if (!startupLoading) handleStartupRowActivate(startupFocused);
+            break;
+        }
+        return;
+      }
+
       if (view === "internet") {
         switch (e.key) {
           case "ArrowDown":
@@ -666,6 +865,9 @@ const Settings = () => {
       stPhase,
       startSpeedTest,
       resetSpeedTest,
+      startupFocused,
+      startupLoading,
+      handleStartupRowActivate,
     ],
   );
 
@@ -697,6 +899,18 @@ const Settings = () => {
           onBack={() => {
             nsRunIdRef.current += 1;
             setView("internet");
+          }}
+        />
+      ) : view === "startupaction" ? (
+        <StartupActionView
+          loading={startupLoading}
+          settings={startupSettings}
+          focusedIndex={startupFocused}
+          onFocusChange={setStartupFocused}
+          onActivateRow={handleStartupRowActivate}
+          onBack={() => {
+            startupRunIdRef.current += 1;
+            setView("device");
           }}
         />
       ) : (
@@ -1086,23 +1300,14 @@ const SpeedGauge = ({ value, max, unit }: { value: number; max: number; unit: st
 
       {/* Kazaljka */}
       <g style={{ transition: "all 0.2s linear" }}>
-        <polygon
-          points={`${tip.x},${tip.y} ${baseL.x},${baseL.y} ${baseR.x},${baseR.y}`}
-          className="fill-foreground"
-        />
+        <polygon points={`${tip.x},${tip.y} ${baseL.x},${baseL.y} ${baseR.x},${baseR.y}`} className="fill-foreground" />
       </g>
       {/* Središnji nosač */}
       <circle cx={cx} cy={cy} r={16} className="fill-muted" />
       <circle cx={cx} cy={cy} r={11} className="fill-foreground" />
 
       {/* Digitalni ispis */}
-      <text
-        x={cx}
-        y={cy + 62}
-        textAnchor="middle"
-        className="fill-accent"
-        style={{ fontSize: 34, fontWeight: 700 }}
-      >
+      <text x={cx} y={cy + 62} textAnchor="middle" className="fill-accent" style={{ fontSize: 34, fontWeight: 700 }}>
         {clamped < 10 ? clamped.toFixed(1) : Math.round(clamped)}
       </text>
       <text x={cx} y={cy + 86} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14 }}>
@@ -1255,6 +1460,143 @@ const NetworkStatusView = ({ loading, data, onBack }: NetworkStatusViewProps) =>
           value={loading || !data ? placeholder : connectionLabel}
         />
       </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+// Startup Action — prezentacijske komponente
+// ─────────────────────────────────────────────────────────────
+
+interface StartupActionViewProps {
+  loading: boolean;
+  settings: StartupActionSettings;
+  focusedIndex: number;
+  onFocusChange: (index: number) => void;
+  onActivateRow: (index: number) => void;
+  onBack: () => void;
+}
+
+const StartupActionView = ({
+  loading,
+  settings,
+  focusedIndex,
+  onFocusChange,
+  onActivateRow,
+  onBack,
+}: StartupActionViewProps) => {
+  const optionsLocked = !settings.enabled;
+
+  return (
+    <div className="relative z-10 flex-1 h-full flex flex-col items-center justify-center px-16">
+      <button
+        onClick={onBack}
+        className="absolute top-10 left-16 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Natrag na postavke uređaja
+      </button>
+
+      <span className="text-xs tracking-[3px] text-muted-foreground uppercase mb-2">Postavke pokretanja</span>
+      <h1 className="text-2xl font-light text-foreground mb-8">Startup Action</h1>
+
+      <div className={cn("w-full max-w-md flex flex-col gap-6", loading && "opacity-50 pointer-events-none")}>
+        {/* Glavni prekidač */}
+        <button
+          onClick={() => {
+            onFocusChange(0);
+            onActivateRow(0);
+          }}
+          className={cn(
+            "w-full flex items-center gap-4 px-5 py-4 rounded-xl border transition-all text-left",
+            focusedIndex === 0 ? "bg-white/10 border-accent/60" : "border-border/30 bg-white/5 hover:bg-white/8",
+          )}
+        >
+          {settings.enabled ? (
+            <ToggleRight className="w-6 h-6 text-accent shrink-0" />
+          ) : (
+            <ToggleLeft className="w-6 h-6 text-muted-foreground shrink-0" />
+          )}
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className="text-[15px] font-medium text-foreground">Omogući Startup Action</span>
+            <span className="text-xs text-muted-foreground">{settings.enabled ? "Uključeno" : "Isključeno"}</span>
+          </div>
+        </button>
+
+        {/* Ekran pri pokretanju */}
+        <div className={cn("flex flex-col gap-1.5", optionsLocked && "opacity-40 pointer-events-none")}>
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground px-1 mb-1">
+            Ekran pri pokretanju
+          </span>
+          {STARTUP_SCREEN_OPTIONS.map((option, i) => {
+            const index = i + 1;
+            const Icon = option.icon;
+            const isFocused = focusedIndex === index;
+            const isSelected = settings.screen === option.key;
+            return (
+              <button
+                key={option.key}
+                onClick={() => {
+                  onFocusChange(index);
+                  onActivateRow(index);
+                }}
+                className={cn(
+                  "flex items-center gap-4 px-5 py-3 rounded-lg border transition-all text-left",
+                  isFocused ? "bg-white/10 border-accent/60" : "border-border/20 bg-white/5 hover:bg-white/8",
+                )}
+              >
+                <Icon className={cn("w-4.5 h-4.5 shrink-0", isSelected ? "text-accent" : "text-muted-foreground")} />
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span
+                    className={cn("text-[14px]", isSelected ? "font-medium text-foreground" : "text-muted-foreground")}
+                  >
+                    {option.label}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground/80">{option.description}</span>
+                </div>
+                <Check className={cn("w-4 h-4 shrink-0", isSelected ? "text-accent opacity-100" : "opacity-0")} />
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Zvuk u pozadini */}
+        <div className={cn("flex flex-col gap-1.5", optionsLocked && "opacity-40 pointer-events-none")}>
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground px-1 mb-1">Zvuk u pozadini</span>
+          {BACKGROUND_AUDIO_OPTIONS.map((option, i) => {
+            const index = i + 1 + STARTUP_SCREEN_OPTIONS.length;
+            const Icon = option.icon;
+            const isFocused = focusedIndex === index;
+            const isSelected = settings.backgroundAudio === option.key;
+            return (
+              <button
+                key={option.key}
+                onClick={() => {
+                  onFocusChange(index);
+                  onActivateRow(index);
+                }}
+                className={cn(
+                  "flex items-center gap-4 px-5 py-3 rounded-lg border transition-all text-left",
+                  isFocused ? "bg-white/10 border-accent/60" : "border-border/20 bg-white/5 hover:bg-white/8",
+                )}
+              >
+                <Icon className={cn("w-4.5 h-4.5 shrink-0", isSelected ? "text-accent" : "text-muted-foreground")} />
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span
+                    className={cn("text-[14px]", isSelected ? "font-medium text-foreground" : "text-muted-foreground")}
+                  >
+                    {option.label}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground/80">{option.description}</span>
+                </div>
+                <Check className={cn("w-4 h-4 shrink-0", isSelected ? "text-accent opacity-100" : "opacity-0")} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground mt-6">Enter odabire/mijenja · Escape/Natrag se vraća</p>
     </div>
   );
 };
