@@ -43,6 +43,7 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
       lastW = w;
       lastH = h;
       canvas.style.transform = `scale(${w / CANVAS_WIDTH}, ${h / CANVAS_HEIGHT})`;
+      console.log("[ScaleToFit]", { w, h, scaleX: w / CANVAS_WIDTH, scaleY: h / CANVAS_HEIGHT, time: Date.now() });
     };
 
     const measure = () => {
@@ -52,10 +53,9 @@ const ScaleToFit = ({ children }: ScaleToFitProps) => {
 
     const ro = new ResizeObserver(measure);
     ro.observe(host);
-
     apply();
-    window.addEventListener("orientationchange", measure);
 
+    window.addEventListener("orientationchange", measure);
     return () => {
       if (raf) window.cancelAnimationFrame(raf);
       ro.disconnect();
