@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { debugLog } from "@/lib/debugOverlay";
 
 type FSDoc = Document & {
   webkitFullscreenElement?: Element | null;
@@ -58,15 +57,6 @@ const FullscreenBootstrap = () => {
     window.addEventListener("pointerdown", onGesture, { once: true });
 
     const onFsChange = () => {
-      debugLog("[FullscreenBootstrap] fsChange", {
-        isFullscreen: isFullscreen(),
-        wasFullscreen: wasFullscreenRef.current,
-        innerW: window.innerWidth,
-        innerH: window.innerHeight,
-        screenW: window.screen.width,
-        screenH: window.screen.height,
-      });
-
       if (isFullscreen()) {
         wasFullscreenRef.current = true;
       } else if (wasFullscreenRef.current) {
@@ -75,6 +65,11 @@ const FullscreenBootstrap = () => {
         // taj fullscreen izlaz u isti, deduplicirani aplikacijski Back događaj.
         wasFullscreenRef.current = false;
         window.dispatchEvent(new CustomEvent("app:fullscreen-back"));
+        // Back button samo nusprodukno gasi fullscreen dok se guta prvi
+        // fizički pritisak. Odmah ga vrati da host container stvarno nikad
+        // ne smanji svoju veličinu (umjesto da canvas ostane "prevelik" za
+        // smanjeni host, što izgleda kao sužavanje/odsijecanje prikaza).
+        void requestFs();
       }
     };
     document.addEventListener("fullscreenchange", onFsChange);
