@@ -497,6 +497,7 @@ const Index = () => {
   );
 
   const openPlayerFromCard = useCallback((card: (typeof liveChannelCards)[0]) => {
+    setLastWatchedChannel(card.channelName);
     setPlayerData({
       channelId: card.id,
       channelNumber: card.channelNumber,
@@ -509,6 +510,7 @@ const Index = () => {
     });
     setPlayerVisible(true);
   }, []);
+
 
   const favoriteEpgChannels = useMemo(() => {
     return favorites
