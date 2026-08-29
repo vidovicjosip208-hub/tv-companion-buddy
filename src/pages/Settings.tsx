@@ -178,37 +178,21 @@ async function savePin(newPin: string, currentProfile: string | null): Promise<v
 }
 
 // ─────────────────────────────────────────────────────────────
-// Startup Action — placeholderi za Supabase (npr. tablica device_settings
-// s poljem startup_action po profilu/uređaju). Do tada radimo s razumnim
-// zadanim vrijednostima kako bi UI bio potpuno funkcionalan.
+// Startup Action — postavke se čuvaju lokalno na uređaju (src/lib/startupAction.ts),
+// pa ih početni zaslon (Index) može pročitati pri pokretanju aplikacije.
 // ─────────────────────────────────────────────────────────────
 
-interface StartupActionSettings {
-  enabled: boolean;
-  screen: StartupScreenOption;
-  backgroundAudio: BackgroundAudioOption;
-}
-
-const DEFAULT_STARTUP_ACTION_SETTINGS: StartupActionSettings = {
-  enabled: true,
-  screen: "favorites",
-  backgroundAudio: "on",
-};
-
 async function fetchStartupActionSettings(currentProfile: string | null): Promise<StartupActionSettings> {
-  // TODO: dohvati iz Supabase (npr. device_settings.startup_action za currentProfile/uređaj)
-  // npr: const { data } = await supabase.from('device_settings').select('startup_action').eq('profile_id', currentProfile).single();
-  // return data?.startup_action ?? DEFAULT_STARTUP_ACTION_SETTINGS;
-  return DEFAULT_STARTUP_ACTION_SETTINGS;
+  return loadStartupActionSettings();
 }
 
 async function saveStartupActionSettings(
   settings: StartupActionSettings,
   currentProfile: string | null,
 ): Promise<void> {
-  // TODO: spremi u Supabase
-  // npr: await supabase.from('device_settings').upsert({ profile_id: currentProfile, startup_action: settings });
+  saveStartupActionSettingsLocal(settings);
 }
+
 
 // ─────────────────────────────────────────────────────────────
 // Speed test — simulacija (zamijeni stvarnim mjerenjem kad bude dostupno,
