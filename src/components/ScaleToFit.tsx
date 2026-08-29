@@ -10,61 +10,40 @@ interface ScaleToFitProps {
  * real available area so the composition is always edge to edge — identical on
  * a laptop, a phone or a TV.
  *
- * The available area is measured from the fixed wrapper instead of
- * window.innerWidth/innerHeight. A ResizeObserver re-establishes the scale on
- * real size changes (window resize, fullscreen enter/exit, orientation change,
- * player teardown). Applying is rAF-batched (not delayed by a timer) so the
- * correction happens on the very next frame instead of visibly lagging behind
- * the size change.
+ * Mobile/TV browsers report a smaller viewport height on the very first paint
+ * (address bar / system UI still visible) than their steady-state height once
+ * that chrome settles a moment later. Measuring immediately on mount can lock
+ * in that transient, too-small height and produce a visibly "zoomed in" /
+ * cropped layout. To avoid that, the scale is computed once, after a short
+ * settle delay, and is never recomputed afterwards for any reason.
  */
 const ScaleToFit = ({ children }: ScaleToFitProps) => {
-  const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    const host = hostRef.current;
     const canvas = canvasRef.current;
-    if (!host || !canvas) return;
-
-    let raf = 0;
-    let lastW = 0;
-    let lastH = 0;
+    if (!canvas) return;
 
     const apply = () => {
-      raf = 0;
-      const rect = host.getBoundingClientRect();
-      const w = rect.width || host.clientWidth || document.documentElement.clientWidth;
-      const h = rect.height || host.clientHeight || document.documentElement.clientHeight;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
       if (w < 1 || h < 1) return;
-      // Skip no-op re-applies (sub-pixel noise from TV WebViews compositing
-      // overlays or tearing down the video surface) so we don't keep touching
-      // the transform when nothing actually changed.
-      if (Math.abs(w - lastW) < 0.5 && Math.abs(h - lastH) < 0.5) return;
-      lastW = w;
-      lastH = h;
       canvas.style.transform = `scale(${w / CANVAS_WIDTH}, ${h / CANVAS_HEIGHT})`;
     };
 
-    const measure = () => {
-      if (raf) return;
-      raf = window.requestAnimationFrame(apply);
-    };
-
-    const ro = new ResizeObserver(measure);
-    ro.observe(host);
-
-    apply();
-    window.addEventListener("orientationchange", measure);
+    // Let the browser chrome (address bar, system bars) settle to its
+    // steady-state size before taking the one-and-only measurement.
+    const timer = window.setTimeout(() => {
+      window.requestAnimationFrame(apply);
+    }, 400);
 
     return () => {
-      if (raf) window.cancelAnimationFrame(raf);
-      ro.disconnect();
-      window.removeEventListener("orientationchange", measure);
+      window.clearTimeout(timer);
     };
   }, []);
 
   return (
-    <div ref={hostRef} className="fixed inset-0 overflow-hidden bg-background">
+    <div className="fixed inset-0 overflow-hidden bg-background">
       <div
         ref={canvasRef}
         className="scale-to-fit-canvas"
