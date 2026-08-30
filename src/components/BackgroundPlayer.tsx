@@ -4,6 +4,7 @@ import Hls from "hls.js";
 interface BackgroundPlayerProps {
   streamUrl?: string;
   muted?: boolean;
+  onReady?: () => void;
 }
 
 /**
@@ -11,7 +12,7 @@ interface BackgroundPlayerProps {
  * Nema kontrola ni fokusa — čim korisnik potvrdi kanal, otvara se pravi VideoPlayer,
  * a ova komponenta se demontira (i oslobađa dekoder).
  */
-const BackgroundPlayer = ({ streamUrl, muted = false }: BackgroundPlayerProps) => {
+const BackgroundPlayer = ({ streamUrl, muted = false, onReady }: BackgroundPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
 
@@ -35,11 +36,16 @@ const BackgroundPlayer = ({ streamUrl, muted = false }: BackgroundPlayerProps) =
     }
 
     const tryPlay = () => void video.play().catch(() => {});
-    video.addEventListener("canplay", tryPlay);
+    const handleReady = () => {
+      tryPlay();
+      onReady?.();
+    };
+    video.addEventListener("canplay", handleReady);
     tryPlay();
+    if (video.readyState >= 3) onReady?.();
 
     return () => {
-      video.removeEventListener("canplay", tryPlay);
+      video.removeEventListener("canplay", handleReady);
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
