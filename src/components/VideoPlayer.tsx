@@ -95,7 +95,6 @@ interface VideoPlayerProps {
   onReady?: () => void;
 }
 
-
 interface ControlItem {
   icon: React.ElementType;
   label: string;
@@ -469,7 +468,6 @@ const EPGCard = memo(({ channel, isFocused, isFuture, onSelect }: EPGCardProps) 
         style={{ filter: isFuture && !isFocused ? "grayscale(100%)" : "none" }}
         decoding="async"
         loading="lazy"
-
       />
 
       {!isFuture &&
@@ -647,7 +645,6 @@ const VideoPlayer = ({
     return FALLBACK_MINI_CHANNELS;
   }, [scheduleEnabled, dwRows, fallbackThumb]);
 
-
   const playScheduleItem = useCallback(
     (idx: number) => {
       const item = miniChannels[idx];
@@ -800,7 +797,6 @@ const VideoPlayer = ({
       window.removeEventListener("keydown", enableSoundOnGesture);
     };
 
-
     video.addEventListener("playing", onPlaying);
     video.addEventListener("waiting", showSpinner);
     video.addEventListener("stalled", showSpinner);
@@ -919,7 +915,6 @@ const VideoPlayer = ({
         // ignore
       }
     };
-
   }, [streamUrl]);
 
   useEffect(() => {
@@ -940,8 +935,6 @@ const VideoPlayer = ({
       /* noop */
     }
   }, [backgroundMode, backgroundMuted, videoReady]);
-
-
 
   const [channelInput, setChannelInput] = useState<string>("");
   const [showChannelOverlay, setShowChannelOverlay] = useState<boolean>(false);
@@ -1412,7 +1405,6 @@ const VideoPlayer = ({
     };
   }, [isVisible, streamUrl, backgroundMode]);
 
-
   if (!isVisible) return null;
 
   // HUD kartica je UVIJEK fokus zona. Skrolanjem se mijenja koji se kanal prikazuje
@@ -1462,7 +1454,6 @@ const VideoPlayer = ({
       }
       style={{ backgroundColor: backgroundMode ? "transparent" : "#0d0d0d" }}
     >
-
       {pinOpen && (
         <div
           style={{
@@ -1554,7 +1545,6 @@ const VideoPlayer = ({
               opacity: backgroundMode ? 0.4 : 1,
             }}
           >
-
             <video
               ref={videoRef}
               playsInline
@@ -1627,7 +1617,6 @@ const VideoPlayer = ({
             <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
           </>
         )}
-
 
         <AnimatePresence>
           {videoReady && showChannelOverlay && (
@@ -2106,4 +2095,6 @@ const VideoPlayer = ({
   );
 };
 
-export default VideoPlayer;
+VideoPlayer.displayName = "VideoPlayer";
+
+export default memo(VideoPlayer);
