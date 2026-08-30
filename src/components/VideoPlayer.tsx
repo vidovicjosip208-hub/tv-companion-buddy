@@ -770,26 +770,26 @@ const VideoPlayer = ({
       if (spinnerRef.current) spinnerRef.current.style.opacity = "0";
     };
 
+    const applyMute = () => {
+      try {
+        video.muted = backgroundModeRef.current ? backgroundMutedRef.current : false;
+        video.volume = 1;
+      } catch {
+        /* noop */
+      }
+    };
     const onPlaying = () => {
       setVideoReady(true);
       hideSpinner();
-      try {
-        video.muted = false;
-        video.volume = 1;
-      } catch {
-        /* noop */
-      }
+      applyMute();
+      onReadyRef.current?.();
     };
     const enableSoundOnGesture = () => {
-      try {
-        video.muted = false;
-        video.volume = 1;
-      } catch {
-        /* noop */
-      }
+      applyMute();
       window.removeEventListener("pointerdown", enableSoundOnGesture);
       window.removeEventListener("keydown", enableSoundOnGesture);
     };
+
 
     video.addEventListener("playing", onPlaying);
     video.addEventListener("waiting", showSpinner);
