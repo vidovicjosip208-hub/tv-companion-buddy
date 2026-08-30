@@ -12,7 +12,7 @@ interface BackgroundPlayerProps {
  * Nema kontrola ni fokusa — čim korisnik potvrdi kanal, otvara se pravi VideoPlayer,
  * a ova komponenta se demontira (i oslobađa dekoder).
  */
-const BackgroundPlayer = ({ streamUrl, muted = false }: BackgroundPlayerProps) => {
+const BackgroundPlayer = ({ streamUrl, muted = false, onReady }: BackgroundPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
 
