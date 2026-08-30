@@ -590,10 +590,13 @@ const Index = () => {
     setBgStreamUrl(favoriteEpgChannels[idx]?.streamUrl);
   }, [startup, favoriteEpgChannels]);
 
-  // Pozadinski kanal svira samo dok smo u prikazu Omiljenih (startup stanje).
+  // Pozadinski kanal nastavlja svirati kroz cijeli početni ekran (Omiljeni, TV
+  // kanali, kartice, kamere, radio...). Gasi se samo kad uđemo u Profil sekciju
+  // ili kad se otvori pravi player (oslobađanje dekodera). Videoteka i Settings
+  // su zasebne rute pa se ova komponenta ionako demontira.
   useEffect(() => {
-    if (!showFavorites) setBgStreamUrl(undefined);
-  }, [showFavorites]);
+    if (showProfile || playerVisible) setBgStreamUrl(undefined);
+  }, [showProfile, playerVisible]);
 
   // Sigurnosni timeout: ako stream ne javi "canplay" u razumnom roku (slaba
   // mreža, mrtav stream), ipak pusti UI da se pokaže.
