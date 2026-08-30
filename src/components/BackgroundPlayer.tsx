@@ -36,11 +36,16 @@ const BackgroundPlayer = ({ streamUrl, muted = false, onReady }: BackgroundPlaye
     }
 
     const tryPlay = () => void video.play().catch(() => {});
-    video.addEventListener("canplay", tryPlay);
+    const handleReady = () => {
+      tryPlay();
+      onReady?.();
+    };
+    video.addEventListener("canplay", handleReady);
     tryPlay();
+    if (video.readyState >= 3) onReady?.();
 
     return () => {
-      video.removeEventListener("canplay", tryPlay);
+      video.removeEventListener("canplay", handleReady);
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
