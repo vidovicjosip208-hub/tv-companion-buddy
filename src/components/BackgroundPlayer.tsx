@@ -4,6 +4,7 @@ import Hls from "hls.js";
 interface BackgroundPlayerProps {
   streamUrl?: string;
   muted?: boolean;
+  onReady?: () => void;
 }
 
 /**
