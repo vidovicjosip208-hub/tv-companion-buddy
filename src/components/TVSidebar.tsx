@@ -29,7 +29,14 @@ interface TVSidebarProps {
   isMini?: boolean;
   onItemClick: (index: number) => void;
   onItemHover?: (index: number) => void;
+  /**
+   * Rasterećenje (TV, slabiji CPU): dok video svira u pozadini, nefokusirane
+   * stavke sidebara su statični DOM elementi — bez Framer Motion animacija,
+   * hover listenera i CSS tranzicija.
+   */
+  lightweight?: boolean;
 }
+
 
 // NAPOMENA (performanse): izdvojeno u vlastitu memo komponentu tako da promjena fokusa
 // (focusedIndex) re-renderira SAMO onaj gumb čiji se fokus stvarno promijenio (stari i
