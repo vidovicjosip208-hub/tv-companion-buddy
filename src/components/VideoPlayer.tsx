@@ -1379,10 +1379,17 @@ const VideoPlayer = ({
     ],
   );
 
-  useZoneKeys("tv-player", handleKeyDown, isVisible, 40);
+  useZoneKeys("tv-player", handleKeyDown, isVisible && !backgroundMode, 40);
 
+  // U pozadinskom modu nema HUD-a. Čim mod prestane (korisnik odabere kanal koji
+  // već svira), HUD se pokaže na 4.5s bez ponovnog učitavanja streama.
   useEffect(() => {
     if (!isVisible) return;
+    if (backgroundMode) {
+      setShowHud(false);
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      return;
+    }
     setShowHud(true);
     setFocusedControl(-1);
     if (hideTimer.current) clearTimeout(hideTimer.current);
@@ -1393,7 +1400,8 @@ const VideoPlayer = ({
     return () => {
       if (hideTimer.current) clearTimeout(hideTimer.current);
     };
-  }, [isVisible, streamUrl]);
+  }, [isVisible, streamUrl, backgroundMode]);
+
 
   if (!isVisible) return null;
 
