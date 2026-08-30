@@ -608,8 +608,21 @@ const VideoPlayer = ({
   favoriteChannels = [],
   allChannels,
   onSwitchChannel,
+  backgroundMode = false,
+  backgroundMuted = false,
+  onReady,
 }: VideoPlayerProps) => {
+  // Refovi da promjena moda / callbacka ne ponovno pokreće HLS efekt (koji bi
+  // iznova učitao stream — točno ono što u seamless prijelazu ne smije nastati).
+  const backgroundModeRef = useRef(backgroundMode);
+  backgroundModeRef.current = backgroundMode;
+  const backgroundMutedRef = useRef(backgroundMuted);
+  backgroundMutedRef.current = backgroundMuted;
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+
   const channelLookup = allChannels && allChannels.length > 0 ? allChannels : favoriteChannels;
+
   const showTitle = data?.showTitle ?? "Vesti B92";
   const timeRange = data?.timeRange ?? "18:10 - 18:30";
   const thumbnail = data?.thumbnail ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80";
