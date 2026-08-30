@@ -1342,29 +1342,27 @@ const Index = () => {
     >
       <StarryBackground />
 
-      {/* Startup Action — zadnje gledani kanal svira u pozadini ispod UI-a.
-          U seamless modu isti element ostaje montiran (stream se NE učitava
-          iznova), samo se makne zatamnjenje i uključi zvuk. */}
+      {/* Startup Action — zadnje gledani kanal svira ISPOD UI-a početne stranice.
+          To je isti VideoPlayer koji se koristi za gledanje: u pozadinskom modu
+          nema HUD-a (umjesto njega je UI početne stranice). Kada se odabere kanal
+          koji već svira, mod se samo ugasi — isti element preuzima puni ekran bez
+          ponovnog učitavanja streama i HUD se pokaže na 4.5s. */}
       {bgStreamUrl && (
-        <BackgroundPlayer
-          streamUrl={bgStreamUrl}
-          muted={seamlessData ? false : startup?.backgroundAudio === "muted"}
-          dimmed={!seamlessData}
+        <VideoPlayer
+          isVisible={true}
+          onClose={() => setSeamlessData(null)}
+          data={seamlessData ?? bgPlayerData}
+          backgroundMode={!seamlessData}
+          backgroundMuted={startup?.backgroundAudio === "muted"}
           onReady={() => setStartupReady(true)}
+          isFavorite={isFavorite(seamlessData?.channelName ?? bgPlayerData?.channelName ?? "")}
+          onToggleFavorite={() => toggleFavorite(seamlessData?.channelName ?? bgPlayerData?.channelName ?? "")}
+          favoriteChannels={playerFavoriteChannels}
+          allChannels={allPlayerChannels}
+          onSwitchChannel={handleSwitchChannel}
         />
       )}
 
-      {/* Seamless HUD — kratki prikaz trake playera nad pozadinskim streamom */}
-      {seamlessData && (
-        <SeamlessLiveHud
-          visible={seamlessHud}
-          channelName={seamlessData.channelName}
-          channelNumber={seamlessData.channelNumber}
-          showTitle={seamlessData.showTitle}
-          timeRange={seamlessData.timeRange}
-          logoUrl={seamlessData.logoUrl}
-        />
-      )}
 
       {/* Loading sloj: drži ekran dok pozadinski video i Omiljeni nisu spremni */}
       {startupGateActive && (
