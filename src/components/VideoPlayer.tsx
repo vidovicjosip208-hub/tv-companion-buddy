@@ -82,7 +82,19 @@ interface VideoPlayerProps {
   favoriteChannels?: FavoriteChannel[];
   allChannels?: FavoriteChannel[];
   onSwitchChannel?: (data: PlayerData) => void;
+  /**
+   * Pozadinski mod: isti player svira ispod UI-a početne stranice (Startup
+   * Action). Video je zatamnjen, HUD/sidebar/kontrole i tipke su isključeni.
+   * Kada se mod ugasi, ISTI element preuzima puni ekran bez ponovnog
+   * učitavanja streama i HUD se pokaže na 4.5s.
+   */
+  backgroundMode?: boolean;
+  /** Zvuk u pozadinskom modu (u punom modu je zvuk uvijek uključen). */
+  backgroundMuted?: boolean;
+  /** Javlja da je stream počeo svirati (koristi startup loading gate). */
+  onReady?: () => void;
 }
+
 
 interface ControlItem {
   icon: React.ElementType;
