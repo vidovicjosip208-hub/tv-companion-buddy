@@ -641,6 +641,26 @@ const Index = () => {
     }));
   }, [liveChannelCards]);
 
+  // Podaci kanala koji svira u pozadinskom VideoPlayeru — koriste se za HUD
+  // u trenutku kada pozadinski mod prestane.
+  const bgPlayerData: PlayerData | undefined = useMemo(() => {
+    if (!bgStreamUrl) return undefined;
+    const card = liveChannelCards.find((c) => c.streamUrl === bgStreamUrl);
+    if (!card) return { streamUrl: bgStreamUrl };
+    return {
+      channelId: card.id,
+      channelNumber: card.channelNumber,
+      showTitle: card.title,
+      timeRange: card.timeSlot,
+      thumbnail: card.thumbnail.replace("w=400", "w=1920"),
+      channelName: card.channelName,
+      streamUrl: card.streamUrl,
+      logoUrl: card.logoUrl,
+    };
+  }, [bgStreamUrl, liveChannelCards]);
+
+
+
   const handleSwitchChannel = useCallback(
     (next: PlayerData) => {
       const matchedCard = liveChannelCards.find((c) => c.channelName === next.channelName);
