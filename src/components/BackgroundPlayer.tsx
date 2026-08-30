@@ -5,14 +5,18 @@ interface BackgroundPlayerProps {
   streamUrl?: string;
   muted?: boolean;
   onReady?: () => void;
+  /** true = zatamnjen sloj ispod UI-a; false = full-opacity "seamless" gledanje */
+  dimmed?: boolean;
 }
 
 /**
  * Lagani video sloj koji svira kanal U POZADINI ispod TV UI-a (Startup Action).
  * Nema kontrola ni fokusa — čim korisnik potvrdi kanal, otvara se pravi VideoPlayer,
  * a ova komponenta se demontira (i oslobađa dekoder).
+ * Iznimka: seamless mod (dimmed=false) — isti stream nastavlja svirati na
+ * punom ekranu bez ponovnog učitavanja, samo se skloni UI preko njega.
  */
-const BackgroundPlayer = ({ streamUrl, muted = false, onReady }: BackgroundPlayerProps) => {
+const BackgroundPlayer = ({ streamUrl, muted = false, onReady, dimmed = true }: BackgroundPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
 
