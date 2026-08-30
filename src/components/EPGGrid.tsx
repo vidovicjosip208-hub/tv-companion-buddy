@@ -87,22 +87,35 @@ function calculateProgress(startTime: string, endTime: string): number {
   return Math.max(0, Math.min(100, ((current - start) / total) * 100));
 }
 
+// Fiksna visina jedne stavke liste kanala (h-11 sadržaj + py-3) — koristi se za
+// "spacer" kutije izvan vidljivog okvira, tako da lazy rendering ne mijenja layout.
+const CHANNEL_ITEM_HEIGHT = 68;
+
 const ChannelItem = memo(
   ({
     channel,
     isFocused,
-    onClick,
+    onSelect,
     index,
     showNumber = false,
+    lightweight = false,
   }: {
     channel: EPGChannel;
     isFocused: boolean;
-    onClick?: () => void;
+    onSelect?: (index: number) => void;
     index: number;
     showNumber?: boolean;
+    lightweight?: boolean;
   }) => {
     const ref = useRef<HTMLButtonElement>(null);
     const [logoError, setLogoError] = useState(false);
+
+    // Stabilan handler po stavci — roditelj više ne stvara novu closure po renderu,
+    // pa React.memo stvarno drži (prije se cijela lista re-renderirala pri svakom
+    // pomaku fokusa D-Padom).
+    const handleSelect = useCallback(() => {
+      onSelect?.(index);
+    }, [onSelect, index]);
 
     useEffect(() => {
       if (isFocused && ref.current) {
@@ -114,36 +127,28 @@ const ChannelItem = memo(
       setLogoError(false);
     }, [channel.logoUrl]);
 
-    return (
-      <motion.button
-        ref={ref}
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.03 }}
-        onClick={onClick}
-        onMouseEnter={onClick}
-        className={cn(
-          "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-300 text-left",
-          "border border-transparent",
-          isFocused ? "bg-accent/15 border-accent/40" : "bg-transparent hover:bg-muted/20",
-        )}
-      >
+    const className = cn(
+      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left border border-transparent",
+      // Tranzicije se drže samo kad NE svira pozadinski video — na TV-u su
+      // paralelne CSS tranzicije po stavci glavni izvor jank-a.
+      !lightweight && "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-300",
+      isFocused ? "bg-accent/15 border-accent/40" : lightweight ? "bg-transparent" : "bg-transparent hover:bg-muted/20",
+    );
+
+    const inner = (
+      <>
         {showNumber && (
           <span
             className={cn(
-              "flex-shrink-0 min-w-[28px] text-center text-sm font-bold tabular-nums px-1.5 py-0.5 rounded-md border transition-colors",
+              "flex-shrink-0 min-w-[28px] text-center text-sm font-bold tabular-nums px-1.5 py-0.5 rounded-md border",
+              !lightweight && "transition-colors",
               isFocused ? "text-accent border-accent/60 bg-accent/10" : "text-foreground/50 border-border/40",
             )}
           >
             {channel.number}
           </span>
         )}
-        <div
-          className={cn(
-            "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-[background-color,border-color,color,box-shadow,transform,opacity] overflow-hidden",
-            "bg-transparent",
-          )}
-        >
+        <div className="w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden bg-transparent">
           {channel.logoUrl && !logoError ? (
             <img
               src={channel.logoUrl}
@@ -156,7 +161,8 @@ const ChannelItem = memo(
           ) : (
             <span
               className={cn(
-                "text-sm font-bold tracking-wide transition-colors",
+                "text-sm font-bold tracking-wide",
+                !lightweight && "transition-colors",
                 isFocused ? "text-accent" : "text-foreground/60",
               )}
             >
@@ -166,17 +172,43 @@ const ChannelItem = memo(
         </div>
         <span
           className={cn(
-            "text-sm font-medium truncate transition-colors",
+            "text-sm font-medium truncate",
+            !lightweight && "transition-colors",
             isFocused ? "text-foreground" : "text-foreground/50",
           )}
         >
           {channel.name}
         </span>
+      </>
+    );
+
+    // Statična varijanta: nefokusirana stavka dok svira pozadinski video —
+    // nema Framer Motion animacije ni hover listenera, samo DOM.
+    if (lightweight && !isFocused) {
+      return (
+        <button ref={ref} type="button" onClick={handleSelect} className={className}>
+          {inner}
+        </button>
+      );
+    }
+
+    return (
+      <motion.button
+        ref={ref}
+        initial={lightweight ? false : { opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.03 }}
+        onClick={handleSelect}
+        onMouseEnter={handleSelect}
+        className={className}
+      >
+        {inner}
       </motion.button>
     );
   },
 );
 ChannelItem.displayName = "ChannelItem";
+
 
 const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; index: number; isFocused: boolean }) => {
   const ref = useRef<HTMLDivElement>(null);
