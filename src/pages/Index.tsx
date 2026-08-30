@@ -18,8 +18,6 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useChannels, useEPGData } from "@/hooks/useChannels";
 import liveCamsLogo from "@/assets/livecams-logo.png.asset.json";
 import appLogo from "@/assets/max-ovizija-logo.png";
-import BackgroundPlayer from "@/components/BackgroundPlayer";
-import SeamlessLiveHud from "@/components/SeamlessLiveHud";
 import {
   consumeStartupAction,
   getLastWatchedChannel,
@@ -386,7 +384,6 @@ const Index = () => {
   // Seamless gledanje: pozadinski stream preuzima puni ekran bez reloada,
   // UI se skloni i na kratko se pokaže HUD traka (kao u VideoPlayeru).
   const [seamlessData, setSeamlessData] = useState<PlayerData | null>(null);
-  const [seamlessHud, setSeamlessHud] = useState(false);
   // Dok je Startup Action aktivan, UI se drži iza loading sloja dok pozadinski
   // video ne javi da je spreman (ili istekne sigurnosni timeout).
   const [startupReady, setStartupReady] = useState(!startsInFavorites);
@@ -526,7 +523,6 @@ const Index = () => {
         streamUrl: card.streamUrl,
         logoUrl: card.logoUrl,
       });
-      setSeamlessHud(true);
       return;
     }
     setPlayerData({
