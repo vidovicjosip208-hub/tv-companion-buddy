@@ -53,8 +53,12 @@ interface EPGGridProps {
 // animacije), i to samo ako stavka nije već potpuno vidljiva — isti "nearest" efekt
 // kao prije, samo bez tranzicije koja se ima s čime sudariti.
 function scrollIntoViewNearest(container: HTMLElement, el: HTMLElement) {
-  const elTop = el.offsetTop;
-  const elBottom = elTop + el.offsetHeight;
+  // Mjerimo relativno na stvarni scroll kontejner (offsetTop se odnosi na
+  // offsetParent, koji ovdje NIJE lista, pa bi vrijednosti bile pomaknute).
+  const elRect = el.getBoundingClientRect();
+  const cRect = container.getBoundingClientRect();
+  const elTop = elRect.top - cRect.top + container.scrollTop;
+  const elBottom = elTop + elRect.height;
   const viewTop = container.scrollTop;
   const viewBottom = viewTop + container.clientHeight;
 
@@ -64,6 +68,7 @@ function scrollIntoViewNearest(container: HTMLElement, el: HTMLElement) {
     container.scrollTop = elBottom - container.clientHeight;
   }
 }
+
 
 // Ovo je TV aplikacija — scroll mišem/kotačićem ne treba postojati nigdje, samo
 // navigacija strelicama. React od v17 dodaje wheel/touch listenere kao PASSIVE po

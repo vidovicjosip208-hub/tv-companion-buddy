@@ -64,8 +64,12 @@ const ContentRow = ({
   const WINDOW_BEFORE = 3;
   const WINDOW_AFTER = 7;
   const shouldWindow = !peek && items.length > 14;
-  const windowStart = shouldWindow ? Math.max(0, focusedIndex - WINDOW_BEFORE) : 0;
-  const windowEnd = shouldWindow ? Math.min(items.length - 1, focusedIndex + WINDOW_AFTER) : items.length - 1;
+  // Kada je `uniform` aktivan, red je pomaknut na index 0 (translateX ignorira
+  // focusedIndex), pa i prozor mora biti centriran na 0 — inače su vidljive kartice prazne.
+  const windowAnchor = uniform ? 0 : focusedIndex;
+  const windowStart = shouldWindow ? Math.max(0, windowAnchor - WINDOW_BEFORE) : 0;
+  const windowEnd = shouldWindow ? Math.min(items.length - 1, windowAnchor + WINDOW_AFTER) : items.length - 1;
+
 
   return (
     <div className={cn("relative z-10 mb-2", peek && "opacity-60")}>
