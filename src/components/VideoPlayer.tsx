@@ -759,8 +759,6 @@ const VideoPlayer = ({
   const [isProgressFocused, setIsProgressFocused] = useState(false);
   const [focusedControl, setFocusedControl] = useState<number>(1);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [showHud, setShowHud] = useState<boolean>(false);
-  const [epgMode, setEpgMode] = useState<boolean>(false);
   const [isSeeking, setIsSeeking] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
