@@ -333,6 +333,7 @@ const EPGGrid = ({
   hideSchedule = false,
   isRadio = false,
   showNumbers = false,
+  lightweight = false,
 }: EPGGridProps) => {
   const { t } = useTranslation();
   const selectedChannel = isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
@@ -343,6 +344,19 @@ const EPGGrid = ({
   const noWheelChannelListRef = useNoWheelRef<HTMLDivElement>();
   const noWheelProgramListRef = useNoWheelRef<HTMLDivElement>();
   const noWheelDetailPanelRef = useNoWheelRef<HTMLDivElement>();
+
+  // Stabilan handler — jedan za cijelu listu, pa se memoizirane stavke ne
+  // re-renderiraju pri svakom pomaku D-Pada.
+  const handleChannelSelect = useCallback((index: number) => onChannelClick?.(index), [onChannelClick]);
+
+  // Lazy rendering liste kanala: stavke izvan vidljivog okvira su prazne kutije
+  // fiksne visine — layout i scroll pozicije ostaju identični, ali se logotipi i
+  // DOM stablo za njih ne grade (bitno na 2GB TV boxu s dugim listama).
+  const WINDOW_BEFORE = 8;
+  const WINDOW_AFTER = 14;
+  const shouldWindow = channels.length > 24;
+  const windowStart = shouldWindow ? Math.max(0, focusedIndex - WINDOW_BEFORE) : 0;
+  const windowEnd = shouldWindow ? Math.min(channels.length - 1, focusedIndex + WINDOW_AFTER) : channels.length - 1;
 
   const selectedProgram = useMemo(() => {
     if (!selectedChannel) return undefined;
@@ -359,7 +373,7 @@ const EPGGrid = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={lightweight ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
       className="flex flex-row flex-1 overflow-hidden rounded-xl gap-2"
@@ -373,17 +387,24 @@ const EPGGrid = ({
         )}
       >
         <h2 className="text-muted-foreground font-medium text-sm px-4 pb-2">{t("epg.live")}</h2>
-        {channels.map((channel, index) => (
-          <ChannelItem
-            key={channel.id}
-            channel={channel}
-            isFocused={isFocusActive && focusedIndex === index}
-            onClick={() => onChannelClick?.(index)}
-            index={index}
-            showNumber={showNumbers}
-          />
-        ))}
+        {channels.map((channel, index) => {
+          if (index < windowStart || index > windowEnd) {
+            return <div key={channel.id} aria-hidden="true" style={{ height: CHANNEL_ITEM_HEIGHT }} />;
+          }
+          return (
+            <ChannelItem
+              key={channel.id}
+              channel={channel}
+              isFocused={isFocusActive && focusedIndex === index}
+              onSelect={handleChannelSelect}
+              index={index}
+              showNumber={showNumbers}
+              lightweight={lightweight}
+            />
+          );
+        })}
       </div>
+
 
       {/* Gold Divider */}
       <div className="w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
