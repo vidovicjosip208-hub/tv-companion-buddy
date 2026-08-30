@@ -539,7 +539,32 @@ const Index = () => {
       logoUrl: card.logoUrl,
     });
     setPlayerVisible(true);
-  }, []);
+  }, [bgStreamUrl]);
+
+  // Seamless mod: tipke upravljaju samo HUD-om; Back vraća na UI bez gašenja streama.
+  const handleSeamlessKey = useCallback(
+    (key: string): boolean => {
+      if (key === "Backspace" || key === "Escape") {
+        setSeamlessData(null);
+        setSeamlessHud(false);
+        return true;
+      }
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", " "].includes(key)) {
+        setSeamlessHud(true);
+        return true;
+      }
+      return true; // sve ostale tipke progutaj dok je seamless aktivan
+    },
+    [],
+  );
+  useZoneKeys("seamless-live", handleSeamlessKey, !!seamlessData, 20);
+
+  // Auto-hide seamless HUD-a nakon 4.5s — isto ponašanje kao VideoPlayer HUD.
+  useEffect(() => {
+    if (!seamlessData || !seamlessHud) return;
+    const t = window.setTimeout(() => setSeamlessHud(false), 4500);
+    return () => window.clearTimeout(t);
+  }, [seamlessData, seamlessHud]);
 
 
   const favoriteEpgChannels = useMemo(() => {
