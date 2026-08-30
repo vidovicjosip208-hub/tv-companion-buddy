@@ -630,11 +630,23 @@ const VideoPlayer = ({
   const channelId = data?.channelId;
   const fallbackThumb = data?.thumbnail ?? thumbnail;
 
-  const { data: dwRows } = useDwSchedule();
+  // Deklarirano ovdje (a ne niže s ostalim stanjem) jer o njima ovisi hoće li se
+  // EPG uopće dohvaćati u ovom renderu.
+  const [showHud, setShowHud] = useState<boolean>(false);
+  const [epgMode, setEpgMode] = useState<boolean>(false);
+
+  // EPG raspored se dohvaća/gradi SAMO kada je HUD (ili EPG prikaz) stvarno vidljiv.
+
+  // U pozadinskom modu i u "mirnom" punom modu (HUD sakriven) nema mrežnog poziva,
+  // ni mapiranja stotina redova — video svira bez ikakvog dodatnog opterećenja.
+  const scheduleEnabled = !backgroundMode && (showHud || epgMode);
+  const { data: dwRows } = useDwSchedule(scheduleEnabled);
   const miniChannels: MiniChannel[] = useMemo(() => {
+    if (!scheduleEnabled) return [];
     if (dwRows && dwRows.length > 0) return buildMiniChannelsFromDw(dwRows, fallbackThumb);
     return FALLBACK_MINI_CHANNELS;
-  }, [dwRows, fallbackThumb]);
+  }, [scheduleEnabled, dwRows, fallbackThumb]);
+
 
   const playScheduleItem = useCallback(
     (idx: number) => {
@@ -747,8 +759,6 @@ const VideoPlayer = ({
   const [isProgressFocused, setIsProgressFocused] = useState(false);
   const [focusedControl, setFocusedControl] = useState<number>(1);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [showHud, setShowHud] = useState<boolean>(false);
-  const [epgMode, setEpgMode] = useState<boolean>(false);
   const [isSeeking, setIsSeeking] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -1589,28 +1599,35 @@ const VideoPlayer = ({
         {/* Zatamnjenje ispod UI-a početne stranice (pozadinski mod) */}
         {backgroundMode && <div className="absolute inset-0 bg-background/70" style={{ zIndex: 2 }} />}
 
-        <div
-          ref={spinnerRef}
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: 56,
-            height: 56,
-            marginTop: -28,
-            marginLeft: -28,
-            border: "4px solid rgba(255,255,255,0.18)",
-            borderTopColor: GOLD,
-            borderRadius: "50%",
-            animation: "vp-spin 0.9s linear infinite",
-            opacity: videoReady || backgroundMode ? 0 : 1,
-            transition: "opacity 0.15s linear",
-            pointerEvents: "none",
-            zIndex: 5,
-          }}
-        />
-        <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
+        {/* Spinner (i njegova beskonačna CSS animacija) postoji SAMO dok se stream
+            učitava u punom modu. U pozadinskom modu i nakon što video krene se
+            uopće ne montira — inače bi rotacija trošila GPU/CPU cijelo vrijeme. */}
+        {!videoReady && !backgroundMode && (
+          <>
+            <div
+              ref={spinnerRef}
+              aria-hidden
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                width: 56,
+                height: 56,
+                marginTop: -28,
+                marginLeft: -28,
+                border: "4px solid rgba(255,255,255,0.18)",
+                borderTopColor: GOLD,
+                borderRadius: "50%",
+                animation: "vp-spin 0.9s linear infinite",
+                transition: "opacity 0.15s linear",
+                pointerEvents: "none",
+                zIndex: 5,
+              }}
+            />
+            <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
+          </>
+        )}
+
 
         <AnimatePresence>
           {videoReady && showChannelOverlay && (
