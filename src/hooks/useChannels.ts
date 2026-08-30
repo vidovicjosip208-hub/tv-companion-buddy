@@ -159,9 +159,11 @@ export interface DwScheduleItem {
  * Fetch all schedule items from `dw_schedule` ordered by start_time ascending.
  * Used by VideoPlayer to render the mini EPG strip and switch streams on click.
  */
-export const useDwSchedule = () => {
+export const useDwSchedule = (enabled = true) => {
   return useQuery({
+    enabled,
     queryKey: ["dw_schedule", "all"],
+
     queryFn: async (): Promise<DwScheduleItem[]> => {
       const { data, error } = await supabase
         .from("dw_schedule")
