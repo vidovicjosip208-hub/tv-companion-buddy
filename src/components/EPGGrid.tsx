@@ -210,7 +210,18 @@ const ChannelItem = memo(
 ChannelItem.displayName = "ChannelItem";
 
 
-const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; index: number; isFocused: boolean }) => {
+const ProgramRow = memo(
+  ({
+    program,
+    index,
+    isFocused,
+    lightweight = false,
+  }: {
+    program: EPGProgram;
+    index: number;
+    isFocused: boolean;
+    lightweight?: boolean;
+  }) => {
   const ref = useRef<HTMLDivElement>(null);
   const progress = useMemo(
     () => (program.isLive ? calculateProgress(program.startTime, program.endTime) : 0),
