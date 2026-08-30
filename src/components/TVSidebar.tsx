@@ -173,8 +173,10 @@ const TVSidebar = memo(function TVSidebar({
             label={t(item.labelKey)}
             onItemClick={onItemClick}
             onItemHover={onItemHover}
+            lightweight={lightweight}
           />
         ))}
+
       </nav>
 
       {/* Profile Button */}
