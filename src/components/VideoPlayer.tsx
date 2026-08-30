@@ -630,7 +630,13 @@ const VideoPlayer = ({
   const channelId = data?.channelId;
   const fallbackThumb = data?.thumbnail ?? thumbnail;
 
+  // Deklarirano ovdje (a ne niže s ostalim stanjem) jer o njima ovisi hoće li se
+  // EPG uopće dohvaćati u ovom renderu.
+  const [showHud, setShowHud] = useState<boolean>(false);
+  const [epgMode, setEpgMode] = useState<boolean>(false);
+
   // EPG raspored se dohvaća/gradi SAMO kada je HUD (ili EPG prikaz) stvarno vidljiv.
+
   // U pozadinskom modu i u "mirnom" punom modu (HUD sakriven) nema mrežnog poziva,
   // ni mapiranja stotina redova — video svira bez ikakvog dodatnog opterećenja.
   const scheduleEnabled = !backgroundMode && (showHud || epgMode);
