@@ -382,6 +382,10 @@ const Index = () => {
   // pozadini. Sam prikaz Omiljenih postavljen je sinkrono iznad, bez bljeska.
   const startupAppliedRef = useRef(false);
   const [bgStreamUrl, setBgStreamUrl] = useState<string | undefined>();
+  // Seamless gledanje: pozadinski stream preuzima puni ekran bez reloada,
+  // UI se skloni i na kratko se pokaže HUD traka (kao u VideoPlayeru).
+  const [seamlessData, setSeamlessData] = useState<PlayerData | null>(null);
+  const [seamlessHud, setSeamlessHud] = useState(false);
   // Dok je Startup Action aktivan, UI se drži iza loading sloja dok pozadinski
   // video ne javi da je spreman (ili istekne sigurnosni timeout).
   const [startupReady, setStartupReady] = useState(!startsInFavorites);
@@ -508,6 +512,22 @@ const Index = () => {
 
   const openPlayerFromCard = useCallback((card: (typeof liveChannelCards)[0]) => {
     setLastWatchedChannel(card.channelName);
+    // Seamless: kanal već svira u pozadini (isti stream) — ne otvaraj pravi
+    // player i ne učitavaj stream iznova; samo skloni UI i na kratko pokaži HUD.
+    if (card.streamUrl && card.streamUrl === bgStreamUrl) {
+      setSeamlessData({
+        channelId: card.id,
+        channelNumber: card.channelNumber,
+        showTitle: card.title,
+        timeRange: card.timeSlot,
+        thumbnail: card.thumbnail.replace("w=400", "w=1920"),
+        channelName: card.channelName,
+        streamUrl: card.streamUrl,
+        logoUrl: card.logoUrl,
+      });
+      setSeamlessHud(true);
+      return;
+    }
     setPlayerData({
       channelId: card.id,
       channelNumber: card.channelNumber,
