@@ -18,8 +18,6 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useChannels, useEPGData } from "@/hooks/useChannels";
 import liveCamsLogo from "@/assets/livecams-logo.png.asset.json";
 import appLogo from "@/assets/max-ovizija-logo.png";
-import BackgroundPlayer from "@/components/BackgroundPlayer";
-import SeamlessLiveHud from "@/components/SeamlessLiveHud";
 import {
   consumeStartupAction,
   getLastWatchedChannel,
@@ -386,7 +384,6 @@ const Index = () => {
   // Seamless gledanje: pozadinski stream preuzima puni ekran bez reloada,
   // UI se skloni i na kratko se pokaže HUD traka (kao u VideoPlayeru).
   const [seamlessData, setSeamlessData] = useState<PlayerData | null>(null);
-  const [seamlessHud, setSeamlessHud] = useState(false);
   // Dok je Startup Action aktivan, UI se drži iza loading sloja dok pozadinski
   // video ne javi da je spreman (ili istekne sigurnosni timeout).
   const [startupReady, setStartupReady] = useState(!startsInFavorites);
@@ -526,7 +523,6 @@ const Index = () => {
         streamUrl: card.streamUrl,
         logoUrl: card.logoUrl,
       });
-      setSeamlessHud(true);
       return;
     }
     setPlayerData({
@@ -542,26 +538,9 @@ const Index = () => {
     setPlayerVisible(true);
   }, [bgStreamUrl]);
 
-  // Seamless mod: tipke upravljaju samo HUD-om; Back vraća na UI bez gašenja streama.
-  const handleSeamlessKey = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Backspace" || e.key === "Escape") {
-      setSeamlessData(null);
-      setSeamlessHud(false);
-      return;
-    }
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", " "].includes(e.key)) {
-      setSeamlessHud(true);
-    }
-    // Sve ostale tipke se ignoriraju dok je seamless aktivan (home zona je isključena).
-  }, []);
-  useZoneKeys("seamless-live", handleSeamlessKey, !!seamlessData, 20);
+  // Seamless prijelaz nazad: Back u playeru vraća UI početne stranice; stream i
+  // dalje svira u istom (sada pozadinskom) VideoPlayeru.
 
-  // Auto-hide seamless HUD-a nakon 4.5s — isto ponašanje kao VideoPlayer HUD.
-  useEffect(() => {
-    if (!seamlessData || !seamlessHud) return;
-    const t = window.setTimeout(() => setSeamlessHud(false), 4500);
-    return () => window.clearTimeout(t);
-  }, [seamlessData, seamlessHud]);
 
 
   const favoriteEpgChannels = useMemo(() => {
@@ -662,6 +641,26 @@ const Index = () => {
     }));
   }, [liveChannelCards]);
 
+  // Podaci kanala koji svira u pozadinskom VideoPlayeru — koriste se za HUD
+  // u trenutku kada pozadinski mod prestane.
+  const bgPlayerData: PlayerData | undefined = useMemo(() => {
+    if (!bgStreamUrl) return undefined;
+    const card = liveChannelCards.find((c) => c.streamUrl === bgStreamUrl);
+    if (!card) return { streamUrl: bgStreamUrl };
+    return {
+      channelId: card.id,
+      channelNumber: card.channelNumber,
+      showTitle: card.title,
+      timeRange: card.timeSlot,
+      thumbnail: card.thumbnail.replace("w=400", "w=1920"),
+      channelName: card.channelName,
+      streamUrl: card.streamUrl,
+      logoUrl: card.logoUrl,
+    };
+  }, [bgStreamUrl, liveChannelCards]);
+
+
+
   const handleSwitchChannel = useCallback(
     (next: PlayerData) => {
       const matchedCard = liveChannelCards.find((c) => c.channelName === next.channelName);
@@ -701,9 +700,8 @@ const Index = () => {
       if (!ch) return;
       const liveProgram = ch.programs.find((p) => p.isLive) ?? ch.programs[0];
       setLastWatchedChannel(ch.name);
-      setPlayerData({
+      const nextData: PlayerData = {
         channelId: ch.id,
-
         channelNumber: String(ch.number),
         showTitle: liveProgram?.title ?? ch.name,
         timeRange: liveProgram ? `${liveProgram.startTime} - ${liveProgram.endTime}` : "",
@@ -712,11 +710,19 @@ const Index = () => {
         channelName: ch.name,
         streamUrl: ch.streamUrl,
         logoUrl: ch.logoUrl,
-      });
+      };
+      // Kanal već svira u pozadini (isti player) — samo skloni UI početne
+      // stranice; stream se NE učitava iznova, HUD se pokaže na 4.5s.
+      if (ch.streamUrl && ch.streamUrl === bgStreamUrl) {
+        setSeamlessData(nextData);
+        return;
+      }
+      setPlayerData(nextData);
       setPlayerVisible(true);
     },
-    [activeEpgChannels],
+    [activeEpgChannels, bgStreamUrl],
   );
+
 
   const showEPG =
     (showCategories &&
@@ -1342,29 +1348,27 @@ const Index = () => {
     >
       <StarryBackground />
 
-      {/* Startup Action — zadnje gledani kanal svira u pozadini ispod UI-a.
-          U seamless modu isti element ostaje montiran (stream se NE učitava
-          iznova), samo se makne zatamnjenje i uključi zvuk. */}
+      {/* Startup Action — zadnje gledani kanal svira ISPOD UI-a početne stranice.
+          To je isti VideoPlayer koji se koristi za gledanje: u pozadinskom modu
+          nema HUD-a (umjesto njega je UI početne stranice). Kada se odabere kanal
+          koji već svira, mod se samo ugasi — isti element preuzima puni ekran bez
+          ponovnog učitavanja streama i HUD se pokaže na 4.5s. */}
       {bgStreamUrl && (
-        <BackgroundPlayer
-          streamUrl={bgStreamUrl}
-          muted={seamlessData ? false : startup?.backgroundAudio === "muted"}
-          dimmed={!seamlessData}
+        <VideoPlayer
+          isVisible={true}
+          onClose={() => setSeamlessData(null)}
+          data={seamlessData ?? bgPlayerData}
+          backgroundMode={!seamlessData}
+          backgroundMuted={startup?.backgroundAudio === "muted"}
           onReady={() => setStartupReady(true)}
+          isFavorite={isFavorite(seamlessData?.channelName ?? bgPlayerData?.channelName ?? "")}
+          onToggleFavorite={() => toggleFavorite(seamlessData?.channelName ?? bgPlayerData?.channelName ?? "")}
+          favoriteChannels={playerFavoriteChannels}
+          allChannels={allPlayerChannels}
+          onSwitchChannel={handleSwitchChannel}
         />
       )}
 
-      {/* Seamless HUD — kratki prikaz trake playera nad pozadinskim streamom */}
-      {seamlessData && (
-        <SeamlessLiveHud
-          visible={seamlessHud}
-          channelName={seamlessData.channelName}
-          channelNumber={seamlessData.channelNumber}
-          showTitle={seamlessData.showTitle}
-          timeRange={seamlessData.timeRange}
-          logoUrl={seamlessData.logoUrl}
-        />
-      )}
 
       {/* Loading sloj: drži ekran dok pozadinski video i Omiljeni nisu spremni */}
       {startupGateActive && (

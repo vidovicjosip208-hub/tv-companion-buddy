@@ -82,7 +82,19 @@ interface VideoPlayerProps {
   favoriteChannels?: FavoriteChannel[];
   allChannels?: FavoriteChannel[];
   onSwitchChannel?: (data: PlayerData) => void;
+  /**
+   * Pozadinski mod: isti player svira ispod UI-a početne stranice (Startup
+   * Action). Video je zatamnjen, HUD/sidebar/kontrole i tipke su isključeni.
+   * Kada se mod ugasi, ISTI element preuzima puni ekran bez ponovnog
+   * učitavanja streama i HUD se pokaže na 4.5s.
+   */
+  backgroundMode?: boolean;
+  /** Zvuk u pozadinskom modu (u punom modu je zvuk uvijek uključen). */
+  backgroundMuted?: boolean;
+  /** Javlja da je stream počeo svirati (koristi startup loading gate). */
+  onReady?: () => void;
 }
+
 
 interface ControlItem {
   icon: React.ElementType;
@@ -596,8 +608,21 @@ const VideoPlayer = ({
   favoriteChannels = [],
   allChannels,
   onSwitchChannel,
+  backgroundMode = false,
+  backgroundMuted = false,
+  onReady,
 }: VideoPlayerProps) => {
+  // Refovi da promjena moda / callbacka ne ponovno pokreće HLS efekt (koji bi
+  // iznova učitao stream — točno ono što u seamless prijelazu ne smije nastati).
+  const backgroundModeRef = useRef(backgroundMode);
+  backgroundModeRef.current = backgroundMode;
+  const backgroundMutedRef = useRef(backgroundMuted);
+  backgroundMutedRef.current = backgroundMuted;
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+
   const channelLookup = allChannels && allChannels.length > 0 ? allChannels : favoriteChannels;
+
   const showTitle = data?.showTitle ?? "Vesti B92";
   const timeRange = data?.timeRange ?? "18:10 - 18:30";
   const thumbnail = data?.thumbnail ?? "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80";
@@ -745,26 +770,26 @@ const VideoPlayer = ({
       if (spinnerRef.current) spinnerRef.current.style.opacity = "0";
     };
 
+    const applyMute = () => {
+      try {
+        video.muted = backgroundModeRef.current ? backgroundMutedRef.current : false;
+        video.volume = 1;
+      } catch {
+        /* noop */
+      }
+    };
     const onPlaying = () => {
       setVideoReady(true);
       hideSpinner();
-      try {
-        video.muted = false;
-        video.volume = 1;
-      } catch {
-        /* noop */
-      }
+      applyMute();
+      onReadyRef.current?.();
     };
     const enableSoundOnGesture = () => {
-      try {
-        video.muted = false;
-        video.volume = 1;
-      } catch {
-        /* noop */
-      }
+      applyMute();
       window.removeEventListener("pointerdown", enableSoundOnGesture);
       window.removeEventListener("keydown", enableSoundOnGesture);
     };
+
 
     video.addEventListener("playing", onPlaying);
     video.addEventListener("waiting", showSpinner);
@@ -893,6 +918,20 @@ const VideoPlayer = ({
     if (isPlaying) video.play().catch(() => {});
     else video.pause();
   }, [isPlaying, streamUrl]);
+
+  // Zvuk se mijenja bez dodirivanja streama (prijelaz pozadina ⇄ puni ekran).
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    try {
+      video.muted = backgroundMode ? backgroundMuted : false;
+      video.volume = 1;
+    } catch {
+      /* noop */
+    }
+  }, [backgroundMode, backgroundMuted, videoReady]);
+
+
 
   const [channelInput, setChannelInput] = useState<string>("");
   const [showChannelOverlay, setShowChannelOverlay] = useState<boolean>(false);
@@ -1340,10 +1379,17 @@ const VideoPlayer = ({
     ],
   );
 
-  useZoneKeys("tv-player", handleKeyDown, isVisible, 40);
+  useZoneKeys("tv-player", handleKeyDown, isVisible && !backgroundMode, 40);
 
+  // U pozadinskom modu nema HUD-a. Čim mod prestane (korisnik odabere kanal koji
+  // već svira), HUD se pokaže na 4.5s bez ponovnog učitavanja streama.
   useEffect(() => {
     if (!isVisible) return;
+    if (backgroundMode) {
+      setShowHud(false);
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      return;
+    }
     setShowHud(true);
     setFocusedControl(-1);
     if (hideTimer.current) clearTimeout(hideTimer.current);
@@ -1354,7 +1400,8 @@ const VideoPlayer = ({
     return () => {
       if (hideTimer.current) clearTimeout(hideTimer.current);
     };
-  }, [isVisible, streamUrl]);
+  }, [isVisible, streamUrl, backgroundMode]);
+
 
   if (!isVisible) return null;
 
@@ -1398,9 +1445,14 @@ const VideoPlayer = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 overflow-hidden"
-      style={{ backgroundColor: "#0d0d0d" }}
+      className={
+        backgroundMode
+          ? "absolute inset-0 z-0 overflow-hidden pointer-events-none"
+          : "absolute inset-0 z-50 overflow-hidden"
+      }
+      style={{ backgroundColor: backgroundMode ? "transparent" : "#0d0d0d" }}
     >
+
       {pinOpen && (
         <div
           style={{
@@ -1479,7 +1531,9 @@ const VideoPlayer = ({
         </div>
       )}
       <div className="relative w-full h-full overflow-hidden">
-        {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
+        {!videoReady && !backgroundMode && (
+          <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />
+        )}
         {streamUrl && (
           <div
             style={{
@@ -1487,8 +1541,10 @@ const VideoPlayer = ({
               inset: 0,
               zIndex: 1,
               overflow: "hidden",
+              opacity: backgroundMode ? 0.4 : 1,
             }}
           >
+
             <video
               ref={videoRef}
               playsInline
@@ -1530,6 +1586,9 @@ const VideoPlayer = ({
             />
           </div>
         )}
+        {/* Zatamnjenje ispod UI-a početne stranice (pozadinski mod) */}
+        {backgroundMode && <div className="absolute inset-0 bg-background/70" style={{ zIndex: 2 }} />}
+
         <div
           ref={spinnerRef}
           aria-hidden
@@ -1545,7 +1604,7 @@ const VideoPlayer = ({
             borderTopColor: GOLD,
             borderRadius: "50%",
             animation: "vp-spin 0.9s linear infinite",
-            opacity: videoReady ? 0 : 1,
+            opacity: videoReady || backgroundMode ? 0 : 1,
             transition: "opacity 0.15s linear",
             pointerEvents: "none",
             zIndex: 5,
