@@ -36,7 +36,15 @@ interface EPGGridProps {
   hideSchedule?: boolean;
   isRadio?: boolean;
   showNumbers?: boolean;
+  /**
+   * Rasterećenje (Android TV, slabiji CPU): dok se video emitira u pozadini,
+   * sve NEfokusirane stavke se renderiraju kao statični, "mrtvi" elementi —
+   * bez Framer Motion animacija, bez tranzicija i bez per-item listenera.
+   * Dinamičan ostaje samo video sloj i trenutno fokusirani element.
+   */
+  lightweight?: boolean;
 }
+
 
 // Ovo je TV aplikacija — scroll mišem/kotačićem ne treba postojati nigdje, samo
 // navigacija strelicama. React od v17 dodaje wheel/touch listenere kao PASSIVE po
