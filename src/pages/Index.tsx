@@ -723,6 +723,14 @@ const Index = () => {
     [activeEpgChannels, bgStreamUrl],
   );
 
+  // Stabilan callback — inače bi svaka stavka EPG liste dobila novu closure po
+  // renderu i React.memo ne bi imao efekta pri navigaciji D-Padom.
+  const handleEpgChannelClick = useCallback((i: number) => {
+    setFocusZone("epg");
+    setEpgIndex(i);
+    setProgramIndex(0);
+  }, []);
+
 
   const showEPG =
     (showCategories &&
