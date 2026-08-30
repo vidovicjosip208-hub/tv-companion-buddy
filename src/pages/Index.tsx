@@ -543,21 +543,17 @@ const Index = () => {
   }, [bgStreamUrl]);
 
   // Seamless mod: tipke upravljaju samo HUD-om; Back vraća na UI bez gašenja streama.
-  const handleSeamlessKey = useCallback(
-    (key: string): boolean => {
-      if (key === "Backspace" || key === "Escape") {
-        setSeamlessData(null);
-        setSeamlessHud(false);
-        return true;
-      }
-      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", " "].includes(key)) {
-        setSeamlessHud(true);
-        return true;
-      }
-      return true; // sve ostale tipke progutaj dok je seamless aktivan
-    },
-    [],
-  );
+  const handleSeamlessKey = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Backspace" || e.key === "Escape") {
+      setSeamlessData(null);
+      setSeamlessHud(false);
+      return;
+    }
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", " "].includes(e.key)) {
+      setSeamlessHud(true);
+    }
+    // Sve ostale tipke se ignoriraju dok je seamless aktivan (home zona je isključena).
+  }, []);
   useZoneKeys("seamless-live", handleSeamlessKey, !!seamlessData, 20);
 
   // Auto-hide seamless HUD-a nakon 4.5s — isto ponašanje kao VideoPlayer HUD.
