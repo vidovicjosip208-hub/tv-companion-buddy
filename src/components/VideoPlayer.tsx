@@ -919,6 +919,20 @@ const VideoPlayer = ({
     else video.pause();
   }, [isPlaying, streamUrl]);
 
+  // Zvuk se mijenja bez dodirivanja streama (prijelaz pozadina ⇄ puni ekran).
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    try {
+      video.muted = backgroundMode ? backgroundMuted : false;
+      video.volume = 1;
+    } catch {
+      /* noop */
+    }
+  }, [backgroundMode, backgroundMuted, videoReady]);
+
+
+
   const [channelInput, setChannelInput] = useState<string>("");
   const [showChannelOverlay, setShowChannelOverlay] = useState<boolean>(false);
   const channelInputTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
