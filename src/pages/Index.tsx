@@ -350,16 +350,24 @@ const Index = () => {
     };
   }, [isOkKey]);
 
-  const [sidebarIndex, setSidebarIndex] = useState(0);
+  // Startup prikaz mora biti poznat već tijekom prvog rendera. Ako bismo ga
+  // postavili tek u effectu nakon učitavanja kanala, Home kartice bi nakratko
+  // bljesnule između odabira profila i prikaza Omiljenih.
+  const startupRef = useRef<StartupActionSettings | null | undefined>(undefined);
+  if (startupRef.current === undefined) startupRef.current = consumeStartupAction();
+  const startup = startupRef.current;
+  const startsInFavorites = startup?.screen === "favorites";
+
+  const [sidebarIndex, setSidebarIndex] = useState(startsInFavorites ? FAVORITES_INDEX : 0);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  const [focusZone, setFocusZone] = useState<FocusZone>("cards");
+  const [focusZone, setFocusZone] = useState<FocusZone>(startsInFavorites ? "epg" : "cards");
   const [epgIndex, setEpgIndex] = useState(0);
   const [programIndex, setProgramIndex] = useState(0);
   const [cardIndex, setCardIndex] = useState(0);
   const [filterIndex, setFilterIndex] = useState(0);
   const [categoryIndex, setCategoryIndex] = useState(0);
   const [showCategories, setShowCategories] = useState(false);
-  const [showFavorites, setShowFavorites] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(startsInFavorites);
   const [showCameras, setShowCameras] = useState(false);
   const [showRadio, setShowRadio] = useState(false);
   const [cameraIndex, setCameraIndex] = useState(0);
@@ -369,11 +377,8 @@ const Index = () => {
   const [playerData, setPlayerData] = useState<PlayerData | undefined>();
 
   // ── Startup Action ──────────────────────────────────────────
-  // Pri pokretanju aplikacije (samo jednom) otvara Omiljene, fokusira zadnje
-  // gledani kanal i pušta ga u pozadini ispod UI-a.
-  const startupRef = useRef<StartupActionSettings | null | undefined>(undefined);
-  if (startupRef.current === undefined) startupRef.current = consumeStartupAction();
-  const startup = startupRef.current;
+  // Nakon što podaci stignu, fokusira zadnje gledani kanal i pušta ga u
+  // pozadini. Sam prikaz Omiljenih postavljen je sinkrono iznad, bez bljeska.
   const startupAppliedRef = useRef(false);
   const [bgStreamUrl, setBgStreamUrl] = useState<string | undefined>();
 
