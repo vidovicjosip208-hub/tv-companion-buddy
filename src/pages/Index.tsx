@@ -1380,6 +1380,9 @@ const Index = () => {
       )}
 
 
+      {/* Sav UI se sklanja dok je seamless gledanje aktivno — video ostaje netaknut */}
+      {!seamlessData && (
+      <>
       <TVHeader />
 
       <div className="flex-1 flex overflow-hidden relative min-h-0">
@@ -1610,6 +1613,8 @@ const Index = () => {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Popup za dodjelu broja omiljenom kanalu */}
       {numberEditor && (
