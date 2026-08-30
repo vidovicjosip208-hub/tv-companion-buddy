@@ -183,16 +183,21 @@ const TVSidebar = memo(function TVSidebar({
       <div className="px-2 mt-auto pt-4 mx-2">
         <motion.button
           onClick={handleProfileClick}
-          onMouseEnter={handleProfileClick}
-          whileHover={{ scale: 1.02 }}
+          onMouseEnter={lightweight ? undefined : handleProfileClick}
+          whileHover={lightweight ? undefined : { scale: 1.02 }}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
+            "w-full flex items-center gap-3 px-3 py-3 rounded-xl",
+            !lightweight &&
+              "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
             isMini && "justify-center px-2",
             focusedIndex === PROFILE_INDEX
               ? "text-white bg-muted"
-              : "text-sidebar-foreground hover:bg-muted hover:text-white",
+              : lightweight
+                ? "text-sidebar-foreground"
+                : "text-sidebar-foreground hover:bg-muted hover:text-white",
           )}
         >
+
           <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <User className="w-5 h-5 text-white" />
           </div>
