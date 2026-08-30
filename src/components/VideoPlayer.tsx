@@ -1445,9 +1445,14 @@ const VideoPlayer = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 overflow-hidden"
-      style={{ backgroundColor: "#0d0d0d" }}
+      className={
+        backgroundMode
+          ? "absolute inset-0 z-0 overflow-hidden pointer-events-none"
+          : "absolute inset-0 z-50 overflow-hidden"
+      }
+      style={{ backgroundColor: backgroundMode ? "transparent" : "#0d0d0d" }}
     >
+
       {pinOpen && (
         <div
           style={{
