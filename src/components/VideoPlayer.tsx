@@ -1531,7 +1531,9 @@ const VideoPlayer = ({
         </div>
       )}
       <div className="relative w-full h-full overflow-hidden">
-        {!videoReady && <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />}
+        {!videoReady && !backgroundMode && (
+          <div className="absolute inset-0" style={{ backgroundColor: "#000", zIndex: 0 }} />
+        )}
         {streamUrl && (
           <div
             style={{
@@ -1539,8 +1541,10 @@ const VideoPlayer = ({
               inset: 0,
               zIndex: 1,
               overflow: "hidden",
+              opacity: backgroundMode ? 0.4 : 1,
             }}
           >
+
             <video
               ref={videoRef}
               playsInline
