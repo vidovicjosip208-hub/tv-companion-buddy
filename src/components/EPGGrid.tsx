@@ -455,7 +455,9 @@ const EPGGrid = ({
                       program={program}
                       index={i}
                       isFocused={isProgramFocused && focusedProgramIndex === i}
+                      lightweight={lightweight}
                     />
+
                   ))}
                 </div>
               </motion.div>
