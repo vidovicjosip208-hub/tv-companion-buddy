@@ -1597,7 +1597,7 @@ const VideoPlayer = ({
             borderTopColor: GOLD,
             borderRadius: "50%",
             animation: "vp-spin 0.9s linear infinite",
-            opacity: videoReady ? 0 : 1,
+            opacity: videoReady || backgroundMode ? 0 : 1,
             transition: "opacity 0.15s linear",
             pointerEvents: "none",
             zIndex: 5,
