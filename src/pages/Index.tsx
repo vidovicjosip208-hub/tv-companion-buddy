@@ -17,6 +17,7 @@ import VideoPlayer, { PlayerData, FavoriteChannel } from "@/components/VideoPlay
 import { useFavorites } from "@/hooks/useFavorites";
 import { useChannels, useEPGData } from "@/hooks/useChannels";
 import liveCamsLogo from "@/assets/livecams-logo.png.asset.json";
+import appLogo from "@/assets/max-ovizija-logo.png";
 import BackgroundPlayer from "@/components/BackgroundPlayer";
 import {
   consumeStartupAction,
@@ -593,6 +594,14 @@ const Index = () => {
   useEffect(() => {
     if (!showFavorites) setBgStreamUrl(undefined);
   }, [showFavorites]);
+
+  // Sigurnosni timeout: ako stream ne javi "canplay" u razumnom roku (slaba
+  // mreža, mrtav stream), ipak pusti UI da se pokaže.
+  useEffect(() => {
+    if (!startsInFavorites || startupReady) return;
+    const t = window.setTimeout(() => setStartupReady(true), 4500);
+    return () => window.clearTimeout(t);
+  }, [startsInFavorites, startupReady]);
 
 
 
@@ -1289,7 +1298,22 @@ const Index = () => {
       <StarryBackground />
 
       {/* Startup Action — zadnje gledani kanal svira u pozadini ispod UI-a */}
-      {bgStreamUrl && <BackgroundPlayer streamUrl={bgStreamUrl} muted={startup?.backgroundAudio === "muted"} />}
+      {bgStreamUrl && (
+        <BackgroundPlayer
+          streamUrl={bgStreamUrl}
+          muted={startup?.backgroundAudio === "muted"}
+          onReady={() => setStartupReady(true)}
+        />
+      )}
+
+      {/* Loading sloj: drži ekran dok pozadinski video i Omiljeni nisu spremni */}
+      {startupGateActive && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-background">
+          <StarryBackground />
+          <img src={appLogo} alt="Cube Player" className="h-28 w-auto relative z-10 animate-pulse" />
+          <div className="relative z-10 h-10 w-10 rounded-full border-4 border-accent/30 border-t-accent animate-spin" />
+        </div>
+      )}
 
 
       <TVHeader />
