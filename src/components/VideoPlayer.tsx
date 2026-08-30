@@ -630,11 +630,17 @@ const VideoPlayer = ({
   const channelId = data?.channelId;
   const fallbackThumb = data?.thumbnail ?? thumbnail;
 
-  const { data: dwRows } = useDwSchedule();
+  // EPG raspored se dohvaća/gradi SAMO kada je HUD (ili EPG prikaz) stvarno vidljiv.
+  // U pozadinskom modu i u "mirnom" punom modu (HUD sakriven) nema mrežnog poziva,
+  // ni mapiranja stotina redova — video svira bez ikakvog dodatnog opterećenja.
+  const scheduleEnabled = !backgroundMode && (showHud || epgMode);
+  const { data: dwRows } = useDwSchedule(scheduleEnabled);
   const miniChannels: MiniChannel[] = useMemo(() => {
+    if (!scheduleEnabled) return [];
     if (dwRows && dwRows.length > 0) return buildMiniChannelsFromDw(dwRows, fallbackThumb);
     return FALLBACK_MINI_CHANNELS;
-  }, [dwRows, fallbackThumb]);
+  }, [scheduleEnabled, dwRows, fallbackThumb]);
+
 
   const playScheduleItem = useCallback(
     (idx: number) => {
