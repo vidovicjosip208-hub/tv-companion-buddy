@@ -36,7 +36,15 @@ interface EPGGridProps {
   hideSchedule?: boolean;
   isRadio?: boolean;
   showNumbers?: boolean;
+  /**
+   * Rasterećenje (Android TV, slabiji CPU): dok se video emitira u pozadini,
+   * sve NEfokusirane stavke se renderiraju kao statični, "mrtvi" elementi —
+   * bez Framer Motion animacija, bez tranzicija i bez per-item listenera.
+   * Dinamičan ostaje samo video sloj i trenutno fokusirani element.
+   */
+  lightweight?: boolean;
 }
+
 
 // Ovo je TV aplikacija — scroll mišem/kotačićem ne treba postojati nigdje, samo
 // navigacija strelicama. React od v17 dodaje wheel/touch listenere kao PASSIVE po
@@ -79,22 +87,35 @@ function calculateProgress(startTime: string, endTime: string): number {
   return Math.max(0, Math.min(100, ((current - start) / total) * 100));
 }
 
+// Fiksna visina jedne stavke liste kanala (h-11 sadržaj + py-3) — koristi se za
+// "spacer" kutije izvan vidljivog okvira, tako da lazy rendering ne mijenja layout.
+const CHANNEL_ITEM_HEIGHT = 68;
+
 const ChannelItem = memo(
   ({
     channel,
     isFocused,
-    onClick,
+    onSelect,
     index,
     showNumber = false,
+    lightweight = false,
   }: {
     channel: EPGChannel;
     isFocused: boolean;
-    onClick?: () => void;
+    onSelect?: (index: number) => void;
     index: number;
     showNumber?: boolean;
+    lightweight?: boolean;
   }) => {
     const ref = useRef<HTMLButtonElement>(null);
     const [logoError, setLogoError] = useState(false);
+
+    // Stabilan handler po stavci — roditelj više ne stvara novu closure po renderu,
+    // pa React.memo stvarno drži (prije se cijela lista re-renderirala pri svakom
+    // pomaku fokusa D-Padom).
+    const handleSelect = useCallback(() => {
+      onSelect?.(index);
+    }, [onSelect, index]);
 
     useEffect(() => {
       if (isFocused && ref.current) {
@@ -106,36 +127,28 @@ const ChannelItem = memo(
       setLogoError(false);
     }, [channel.logoUrl]);
 
-    return (
-      <motion.button
-        ref={ref}
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.03 }}
-        onClick={onClick}
-        onMouseEnter={onClick}
-        className={cn(
-          "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-300 text-left",
-          "border border-transparent",
-          isFocused ? "bg-accent/15 border-accent/40" : "bg-transparent hover:bg-muted/20",
-        )}
-      >
+    const className = cn(
+      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left border border-transparent",
+      // Tranzicije se drže samo kad NE svira pozadinski video — na TV-u su
+      // paralelne CSS tranzicije po stavci glavni izvor jank-a.
+      !lightweight && "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-300",
+      isFocused ? "bg-accent/15 border-accent/40" : lightweight ? "bg-transparent" : "bg-transparent hover:bg-muted/20",
+    );
+
+    const inner = (
+      <>
         {showNumber && (
           <span
             className={cn(
-              "flex-shrink-0 min-w-[28px] text-center text-sm font-bold tabular-nums px-1.5 py-0.5 rounded-md border transition-colors",
+              "flex-shrink-0 min-w-[28px] text-center text-sm font-bold tabular-nums px-1.5 py-0.5 rounded-md border",
+              !lightweight && "transition-colors",
               isFocused ? "text-accent border-accent/60 bg-accent/10" : "text-foreground/50 border-border/40",
             )}
           >
             {channel.number}
           </span>
         )}
-        <div
-          className={cn(
-            "w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-[background-color,border-color,color,box-shadow,transform,opacity] overflow-hidden",
-            "bg-transparent",
-          )}
-        >
+        <div className="w-16 h-11 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden bg-transparent">
           {channel.logoUrl && !logoError ? (
             <img
               src={channel.logoUrl}
@@ -148,7 +161,8 @@ const ChannelItem = memo(
           ) : (
             <span
               className={cn(
-                "text-sm font-bold tracking-wide transition-colors",
+                "text-sm font-bold tracking-wide",
+                !lightweight && "transition-colors",
                 isFocused ? "text-accent" : "text-foreground/60",
               )}
             >
@@ -158,19 +172,56 @@ const ChannelItem = memo(
         </div>
         <span
           className={cn(
-            "text-sm font-medium truncate transition-colors",
+            "text-sm font-medium truncate",
+            !lightweight && "transition-colors",
             isFocused ? "text-foreground" : "text-foreground/50",
           )}
         >
           {channel.name}
         </span>
+      </>
+    );
+
+    // Statična varijanta: nefokusirana stavka dok svira pozadinski video —
+    // nema Framer Motion animacije ni hover listenera, samo DOM.
+    if (lightweight && !isFocused) {
+      return (
+        <button ref={ref} type="button" onClick={handleSelect} className={className}>
+          {inner}
+        </button>
+      );
+    }
+
+    return (
+      <motion.button
+        ref={ref}
+        initial={lightweight ? false : { opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.03 }}
+        onClick={handleSelect}
+        onMouseEnter={handleSelect}
+        className={className}
+      >
+        {inner}
       </motion.button>
     );
   },
 );
 ChannelItem.displayName = "ChannelItem";
 
-const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; index: number; isFocused: boolean }) => {
+
+const ProgramRow = memo(
+  ({
+    program,
+    index,
+    isFocused,
+    lightweight = false,
+  }: {
+    program: EPGProgram;
+    index: number;
+    isFocused: boolean;
+    lightweight?: boolean;
+  }) => {
   const ref = useRef<HTMLDivElement>(null);
   const progress = useMemo(
     () => (program.isLive ? calculateProgress(program.startTime, program.endTime) : 0),
@@ -183,17 +234,14 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
     }
   }, [isFocused]);
 
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.04 }}
-      className={cn(
-        "flex items-center gap-4 px-5 py-3 rounded-lg transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
-        isFocused ? "bg-accent/15" : program.isLive ? "bg-accent/8" : "bg-transparent hover:bg-muted/10",
-      )}
-    >
+  const rowClass = cn(
+    "flex items-center gap-4 px-5 py-3 rounded-lg",
+    !lightweight && "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
+    isFocused ? "bg-accent/15" : program.isLive ? "bg-accent/8" : lightweight ? "bg-transparent" : "bg-transparent hover:bg-muted/10",
+  );
+
+  const inner = (
+    <>
       <span
         className={cn(
           "text-sm font-mono w-14 flex-shrink-0",
@@ -228,12 +276,20 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
         </span>
         {program.isLive && (
           <div className="mt-1.5 w-full max-w-[240px] h-[3px] rounded-full bg-muted/30 overflow-hidden">
-            <motion.div
-              className="h-full w-full origin-left rounded-full bg-accent"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: progress / 100 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            />
+            {lightweight ? (
+              // Statična traka napretka — bez animacijskog loopa dok svira video.
+              <div
+                className="h-full w-full origin-left rounded-full bg-accent"
+                style={{ transform: `scaleX(${progress / 100})` }}
+              />
+            ) : (
+              <motion.div
+                className="h-full w-full origin-left rounded-full bg-accent"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: progress / 100 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              />
+            )}
           </div>
         )}
       </div>
@@ -241,10 +297,31 @@ const ProgramRow = memo(({ program, index, isFocused }: { program: EPGProgram; i
       <span className="text-xs text-muted-foreground flex-shrink-0">{program.endTime}</span>
 
       <span className="hidden text-xs text-muted-foreground/60 flex-shrink-0 w-14 text-right">{program.date}</span>
+    </>
+  );
+
+  if (lightweight && !isFocused) {
+    return (
+      <div ref={ref} className={rowClass}>
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={lightweight ? false : { opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.04 }}
+      className={rowClass}
+    >
+      {inner}
     </motion.div>
   );
 });
 ProgramRow.displayName = "ProgramRow";
+
 
 const EPGGrid = ({
   channels,
@@ -256,6 +333,7 @@ const EPGGrid = ({
   hideSchedule = false,
   isRadio = false,
   showNumbers = false,
+  lightweight = false,
 }: EPGGridProps) => {
   const { t } = useTranslation();
   const selectedChannel = isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
@@ -266,6 +344,19 @@ const EPGGrid = ({
   const noWheelChannelListRef = useNoWheelRef<HTMLDivElement>();
   const noWheelProgramListRef = useNoWheelRef<HTMLDivElement>();
   const noWheelDetailPanelRef = useNoWheelRef<HTMLDivElement>();
+
+  // Stabilan handler — jedan za cijelu listu, pa se memoizirane stavke ne
+  // re-renderiraju pri svakom pomaku D-Pada.
+  const handleChannelSelect = useCallback((index: number) => onChannelClick?.(index), [onChannelClick]);
+
+  // Lazy rendering liste kanala: stavke izvan vidljivog okvira su prazne kutije
+  // fiksne visine — layout i scroll pozicije ostaju identični, ali se logotipi i
+  // DOM stablo za njih ne grade (bitno na 2GB TV boxu s dugim listama).
+  const WINDOW_BEFORE = 8;
+  const WINDOW_AFTER = 14;
+  const shouldWindow = channels.length > 24;
+  const windowStart = shouldWindow ? Math.max(0, focusedIndex - WINDOW_BEFORE) : 0;
+  const windowEnd = shouldWindow ? Math.min(channels.length - 1, focusedIndex + WINDOW_AFTER) : channels.length - 1;
 
   const selectedProgram = useMemo(() => {
     if (!selectedChannel) return undefined;
@@ -282,7 +373,7 @@ const EPGGrid = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={lightweight ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
       className="flex flex-row flex-1 overflow-hidden rounded-xl gap-2"
@@ -296,17 +387,24 @@ const EPGGrid = ({
         )}
       >
         <h2 className="text-muted-foreground font-medium text-sm px-4 pb-2">{t("epg.live")}</h2>
-        {channels.map((channel, index) => (
-          <ChannelItem
-            key={channel.id}
-            channel={channel}
-            isFocused={isFocusActive && focusedIndex === index}
-            onClick={() => onChannelClick?.(index)}
-            index={index}
-            showNumber={showNumbers}
-          />
-        ))}
+        {channels.map((channel, index) => {
+          if (index < windowStart || index > windowEnd) {
+            return <div key={channel.id} aria-hidden="true" style={{ height: CHANNEL_ITEM_HEIGHT }} />;
+          }
+          return (
+            <ChannelItem
+              key={channel.id}
+              channel={channel}
+              isFocused={isFocusActive && focusedIndex === index}
+              onSelect={handleChannelSelect}
+              index={index}
+              showNumber={showNumbers}
+              lightweight={lightweight}
+            />
+          );
+        })}
       </div>
+
 
       {/* Gold Divider */}
       <div className="w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
@@ -357,7 +455,9 @@ const EPGGrid = ({
                       program={program}
                       index={i}
                       isFocused={isProgramFocused && focusedProgramIndex === i}
+                      lightweight={lightweight}
                     />
+
                   ))}
                 </div>
               </motion.div>

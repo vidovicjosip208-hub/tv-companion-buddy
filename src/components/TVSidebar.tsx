@@ -29,7 +29,14 @@ interface TVSidebarProps {
   isMini?: boolean;
   onItemClick: (index: number) => void;
   onItemHover?: (index: number) => void;
+  /**
+   * Rasterećenje (TV, slabiji CPU): dok video svira u pozadini, nefokusirane
+   * stavke sidebara su statični DOM elementi — bez Framer Motion animacija,
+   * hover listenera i CSS tranzicija.
+   */
+  lightweight?: boolean;
 }
+
 
 // NAPOMENA (performanse): izdvojeno u vlastitu memo komponentu tako da promjena fokusa
 // (focusedIndex) re-renderira SAMO onaj gumb čiji se fokus stvarno promijenio (stari i
@@ -44,6 +51,7 @@ interface SidebarNavItemProps {
   label: string;
   onItemClick: (index: number) => void;
   onItemHover?: (index: number) => void;
+  lightweight?: boolean;
 }
 
 const SidebarNavItem = memo(function SidebarNavItem({
@@ -55,6 +63,7 @@ const SidebarNavItem = memo(function SidebarNavItem({
   label,
   onItemClick,
   onItemHover,
+  lightweight = false,
 }: SidebarNavItemProps) {
   const handleClick = useCallback(() => {
     onItemClick(index);
@@ -66,31 +75,57 @@ const SidebarNavItem = memo(function SidebarNavItem({
     }
   }, [item.id, onItemHover, onItemClick, index]);
 
+  const className = cn(
+    "flex items-center gap-3 px-3 py-3 rounded-xl w-full",
+    !lightweight && "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
+    isMini && "justify-center px-2",
+    isFocused
+      ? "text-white bg-muted"
+      : lightweight
+        ? "text-sidebar-foreground"
+        : "text-sidebar-foreground hover:bg-muted hover:text-white",
+  );
+
+  const inner = (
+    <>
+      <span className="flex-shrink-0">{item.icon}</span>
+      {showLabels &&
+        (lightweight && !isFocused ? (
+          <span className="font-medium text-base whitespace-nowrap">{label}</span>
+        ) : (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="font-medium text-base whitespace-nowrap"
+          >
+            {label}
+          </motion.span>
+        ))}
+    </>
+  );
+
+  // Statična stavka: nefokusirana dok svira pozadinski video.
+  if (lightweight && !isFocused) {
+    return (
+      <button type="button" onClick={handleClick} className={className}>
+        {inner}
+      </button>
+    );
+  }
+
   return (
     <motion.button
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       whileHover={{ scale: 1.02 }}
-      className={cn(
-        "flex items-center gap-3 px-3 py-3 rounded-xl transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 w-full",
-        isMini && "justify-center px-2",
-        isFocused ? "text-white bg-muted" : "text-sidebar-foreground hover:bg-muted hover:text-white",
-      )}
+      className={className}
     >
-      <span className="flex-shrink-0">{item.icon}</span>
-      {showLabels && (
-        <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="font-medium text-base whitespace-nowrap"
-        >
-          {label}
-        </motion.span>
-      )}
+      {inner}
     </motion.button>
   );
 });
+
 SidebarNavItem.displayName = "SidebarNavItem";
 
 const TVSidebar = memo(function TVSidebar({
@@ -99,7 +134,9 @@ const TVSidebar = memo(function TVSidebar({
   isMini = false,
   onItemClick,
   onItemHover,
+  lightweight = false,
 }: TVSidebarProps) {
+
   const { t } = useTranslation();
   const showLabels = isExpanded && !isMini;
 
@@ -136,24 +173,31 @@ const TVSidebar = memo(function TVSidebar({
             label={t(item.labelKey)}
             onItemClick={onItemClick}
             onItemHover={onItemHover}
+            lightweight={lightweight}
           />
         ))}
+
       </nav>
 
       {/* Profile Button */}
       <div className="px-2 mt-auto pt-4 mx-2">
         <motion.button
           onClick={handleProfileClick}
-          onMouseEnter={handleProfileClick}
-          whileHover={{ scale: 1.02 }}
+          onMouseEnter={lightweight ? undefined : handleProfileClick}
+          whileHover={lightweight ? undefined : { scale: 1.02 }}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
+            "w-full flex items-center gap-3 px-3 py-3 rounded-xl",
+            !lightweight &&
+              "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
             isMini && "justify-center px-2",
             focusedIndex === PROFILE_INDEX
               ? "text-white bg-muted"
-              : "text-sidebar-foreground hover:bg-muted hover:text-white",
+              : lightweight
+                ? "text-sidebar-foreground"
+                : "text-sidebar-foreground hover:bg-muted hover:text-white",
           )}
         >
+
           <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <User className="w-5 h-5 text-white" />
           </div>

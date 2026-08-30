@@ -723,6 +723,14 @@ const Index = () => {
     [activeEpgChannels, bgStreamUrl],
   );
 
+  // Stabilan callback — inače bi svaka stavka EPG liste dobila novu closure po
+  // renderu i React.memo ne bi imao efekta pri navigaciji D-Padom.
+  const handleEpgChannelClick = useCallback((i: number) => {
+    setFocusZone("epg");
+    setEpgIndex(i);
+    setProgramIndex(0);
+  }, []);
+
 
   const showEPG =
     (showCategories &&
@@ -1392,7 +1400,10 @@ const Index = () => {
           isMini={isSidebarMini}
           onItemClick={handleSidebarItemClick}
           onItemHover={handleSidebarItemHover}
+          /* Dok video svira u pozadini — nefokusirane stavke su statične. */
+          lightweight={!!bgStreamUrl}
         />
+
 
         <TVCategoryMenu
           isVisible={showCategories}
@@ -1559,12 +1570,11 @@ const Index = () => {
                       hideSchedule={showRadio}
                       isRadio={showRadio}
                       showNumbers={showFavorites}
-                      onChannelClick={(i) => {
-                        setFocusZone("epg");
-                        setEpgIndex(i);
-                        setProgramIndex(0);
-                      }}
+                      /* Dok video svira u pozadini, nefokusirane stavke su statične. */
+                      lightweight={!!bgStreamUrl}
+                      onChannelClick={handleEpgChannelClick}
                     />
+
                   ) : (
                     <div className="flex-1 flex items-center justify-center px-4 text-center">
                       <p className="text-muted-foreground text-sm">
