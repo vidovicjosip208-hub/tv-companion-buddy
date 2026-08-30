@@ -234,17 +234,14 @@ const ProgramRow = memo(
     }
   }, [isFocused]);
 
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.04 }}
-      className={cn(
-        "flex items-center gap-4 px-5 py-3 rounded-lg transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
-        isFocused ? "bg-accent/15" : program.isLive ? "bg-accent/8" : "bg-transparent hover:bg-muted/10",
-      )}
-    >
+  const rowClass = cn(
+    "flex items-center gap-4 px-5 py-3 rounded-lg",
+    !lightweight && "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
+    isFocused ? "bg-accent/15" : program.isLive ? "bg-accent/8" : lightweight ? "bg-transparent" : "bg-transparent hover:bg-muted/10",
+  );
+
+  const inner = (
+    <>
       <span
         className={cn(
           "text-sm font-mono w-14 flex-shrink-0",
@@ -279,12 +276,20 @@ const ProgramRow = memo(
         </span>
         {program.isLive && (
           <div className="mt-1.5 w-full max-w-[240px] h-[3px] rounded-full bg-muted/30 overflow-hidden">
-            <motion.div
-              className="h-full w-full origin-left rounded-full bg-accent"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: progress / 100 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            />
+            {lightweight ? (
+              // Statična traka napretka — bez animacijskog loopa dok svira video.
+              <div
+                className="h-full w-full origin-left rounded-full bg-accent"
+                style={{ transform: `scaleX(${progress / 100})` }}
+              />
+            ) : (
+              <motion.div
+                className="h-full w-full origin-left rounded-full bg-accent"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: progress / 100 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              />
+            )}
           </div>
         )}
       </div>
@@ -292,10 +297,31 @@ const ProgramRow = memo(
       <span className="text-xs text-muted-foreground flex-shrink-0">{program.endTime}</span>
 
       <span className="hidden text-xs text-muted-foreground/60 flex-shrink-0 w-14 text-right">{program.date}</span>
+    </>
+  );
+
+  if (lightweight && !isFocused) {
+    return (
+      <div ref={ref} className={rowClass}>
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={lightweight ? false : { opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.04 }}
+      className={rowClass}
+    >
+      {inner}
     </motion.div>
   );
 });
 ProgramRow.displayName = "ProgramRow";
+
 
 const EPGGrid = ({
   channels,
