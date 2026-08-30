@@ -381,6 +381,10 @@ const Index = () => {
   // pozadini. Sam prikaz Omiljenih postavljen je sinkrono iznad, bez bljeska.
   const startupAppliedRef = useRef(false);
   const [bgStreamUrl, setBgStreamUrl] = useState<string | undefined>();
+  // Dok je Startup Action aktivan, UI se drži iza loading sloja dok pozadinski
+  // video ne javi da je spreman (ili istekne sigurnosni timeout).
+  const [startupReady, setStartupReady] = useState(!startsInFavorites);
+  const startupGateActive = startsInFavorites && !startupReady;
 
 
 
