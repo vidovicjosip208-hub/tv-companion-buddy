@@ -255,7 +255,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-6xl font-black text-foreground tracking-tight mb-5 -mt-24"
+            className="text-6xl font-black text-foreground tracking-tight mb-5 -mt-4"
           >
             {details.title}
           </motion.h1>
