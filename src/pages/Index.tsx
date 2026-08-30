@@ -701,9 +701,8 @@ const Index = () => {
       if (!ch) return;
       const liveProgram = ch.programs.find((p) => p.isLive) ?? ch.programs[0];
       setLastWatchedChannel(ch.name);
-      setPlayerData({
+      const nextData: PlayerData = {
         channelId: ch.id,
-
         channelNumber: String(ch.number),
         showTitle: liveProgram?.title ?? ch.name,
         timeRange: liveProgram ? `${liveProgram.startTime} - ${liveProgram.endTime}` : "",
@@ -712,11 +711,19 @@ const Index = () => {
         channelName: ch.name,
         streamUrl: ch.streamUrl,
         logoUrl: ch.logoUrl,
-      });
+      };
+      // Kanal već svira u pozadini (isti player) — samo skloni UI početne
+      // stranice; stream se NE učitava iznova, HUD se pokaže na 4.5s.
+      if (ch.streamUrl && ch.streamUrl === bgStreamUrl) {
+        setSeamlessData(nextData);
+        return;
+      }
+      setPlayerData(nextData);
       setPlayerVisible(true);
     },
-    [activeEpgChannels],
+    [activeEpgChannels, bgStreamUrl],
   );
+
 
   const showEPG =
     (showCategories &&
