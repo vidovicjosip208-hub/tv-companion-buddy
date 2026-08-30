@@ -1400,7 +1400,10 @@ const Index = () => {
           isMini={isSidebarMini}
           onItemClick={handleSidebarItemClick}
           onItemHover={handleSidebarItemHover}
+          /* Dok video svira u pozadini — nefokusirane stavke su statične. */
+          lightweight={!!bgStreamUrl}
         />
+
 
         <TVCategoryMenu
           isVisible={showCategories}
