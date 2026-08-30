@@ -70,10 +70,10 @@ const BackgroundPlayer = ({ streamUrl, muted = false, onReady, dimmed = true }: 
         autoPlay
         playsInline
         preload="auto"
-        className="w-full h-full object-cover opacity-40"
+        className={`w-full h-full object-cover ${dimmed ? "opacity-40" : "opacity-100"}`}
         style={{ transform: "translate3d(0,0,0)" }}
       />
-      <div className="absolute inset-0 bg-background/70" />
+      {dimmed && <div className="absolute inset-0 bg-background/70" />}
     </div>
   );
 };
