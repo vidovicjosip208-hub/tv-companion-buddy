@@ -1589,28 +1589,35 @@ const VideoPlayer = ({
         {/* Zatamnjenje ispod UI-a početne stranice (pozadinski mod) */}
         {backgroundMode && <div className="absolute inset-0 bg-background/70" style={{ zIndex: 2 }} />}
 
-        <div
-          ref={spinnerRef}
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: 56,
-            height: 56,
-            marginTop: -28,
-            marginLeft: -28,
-            border: "4px solid rgba(255,255,255,0.18)",
-            borderTopColor: GOLD,
-            borderRadius: "50%",
-            animation: "vp-spin 0.9s linear infinite",
-            opacity: videoReady || backgroundMode ? 0 : 1,
-            transition: "opacity 0.15s linear",
-            pointerEvents: "none",
-            zIndex: 5,
-          }}
-        />
-        <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
+        {/* Spinner (i njegova beskonačna CSS animacija) postoji SAMO dok se stream
+            učitava u punom modu. U pozadinskom modu i nakon što video krene se
+            uopće ne montira — inače bi rotacija trošila GPU/CPU cijelo vrijeme. */}
+        {!videoReady && !backgroundMode && (
+          <>
+            <div
+              ref={spinnerRef}
+              aria-hidden
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                width: 56,
+                height: 56,
+                marginTop: -28,
+                marginLeft: -28,
+                border: "4px solid rgba(255,255,255,0.18)",
+                borderTopColor: GOLD,
+                borderRadius: "50%",
+                animation: "vp-spin 0.9s linear infinite",
+                transition: "opacity 0.15s linear",
+                pointerEvents: "none",
+                zIndex: 5,
+              }}
+            />
+            <style>{`@keyframes vp-spin { to { transform: rotate(360deg); } }`}</style>
+          </>
+        )}
+
 
         <AnimatePresence>
           {videoReady && showChannelOverlay && (
