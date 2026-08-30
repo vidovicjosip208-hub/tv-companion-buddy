@@ -19,6 +19,7 @@ import { useChannels, useEPGData } from "@/hooks/useChannels";
 import liveCamsLogo from "@/assets/livecams-logo.png.asset.json";
 import appLogo from "@/assets/max-ovizija-logo.png";
 import BackgroundPlayer from "@/components/BackgroundPlayer";
+import SeamlessLiveHud from "@/components/SeamlessLiveHud";
 import {
   consumeStartupAction,
   getLastWatchedChannel,
@@ -1254,7 +1255,7 @@ const Index = () => {
     ],
   );
 
-  useZoneKeys("home", handleKeyDown, !playerVisible && !showProfile, 0);
+  useZoneKeys("home", handleKeyDown, !playerVisible && !showProfile && !seamlessData, 0);
 
   useEffect(() => {
     setEpgIndex(0);
@@ -1345,12 +1346,27 @@ const Index = () => {
     >
       <StarryBackground />
 
-      {/* Startup Action — zadnje gledani kanal svira u pozadini ispod UI-a */}
+      {/* Startup Action — zadnje gledani kanal svira u pozadini ispod UI-a.
+          U seamless modu isti element ostaje montiran (stream se NE učitava
+          iznova), samo se makne zatamnjenje i uključi zvuk. */}
       {bgStreamUrl && (
         <BackgroundPlayer
           streamUrl={bgStreamUrl}
-          muted={startup?.backgroundAudio === "muted"}
+          muted={seamlessData ? false : startup?.backgroundAudio === "muted"}
+          dimmed={!seamlessData}
           onReady={() => setStartupReady(true)}
+        />
+      )}
+
+      {/* Seamless HUD — kratki prikaz trake playera nad pozadinskim streamom */}
+      {seamlessData && (
+        <SeamlessLiveHud
+          visible={seamlessHud}
+          channelName={seamlessData.channelName}
+          channelNumber={seamlessData.channelNumber}
+          showTitle={seamlessData.showTitle}
+          timeRange={seamlessData.timeRange}
+          logoUrl={seamlessData.logoUrl}
         />
       )}
 
