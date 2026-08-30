@@ -1586,6 +1586,9 @@ const VideoPlayer = ({
             />
           </div>
         )}
+        {/* Zatamnjenje ispod UI-a početne stranice (pozadinski mod) */}
+        {backgroundMode && <div className="absolute inset-0 bg-background/70" style={{ zIndex: 2 }} />}
+
         <div
           ref={spinnerRef}
           aria-hidden
