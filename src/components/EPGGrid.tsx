@@ -45,20 +45,40 @@ interface EPGGridProps {
   lightweight?: boolean;
 }
 
+// Ručno klampani scroll umjesto scrollIntoView({behavior:"smooth"}) — smooth scroll
+// pokreće browserovu animaciju koja traje ~300ms, a strelice na daljinskom se mogu
+// ponavljati svakih ~90ms (throttle u focusZone.ts). Svaki novi pritisak prekida
+// animaciju u tijeku i tjera browser da naglo promijeni smjer/cilj usred nje — to se
+// vizualno vidi kao trzaj. Ova funkcija umjesto toga postavlja scrollTop izravno (bez
+// animacije), i to samo ako stavka nije već potpuno vidljiva — isti "nearest" efekt
+// kao prije, samo bez tranzicije koja se ima s čime sudariti.
+function scrollIntoViewNearest(container: HTMLElement, el: HTMLElement) {
+  const elTop = el.offsetTop;
+  const elBottom = elTop + el.offsetHeight;
+  const viewTop = container.scrollTop;
+  const viewBottom = viewTop + container.clientHeight;
+
+  if (elTop < viewTop) {
+    container.scrollTop = elTop;
+  } else if (elBottom > viewBottom) {
+    container.scrollTop = elBottom - container.clientHeight;
+  }
+}
 
 // Ovo je TV aplikacija — scroll mišem/kotačićem ne treba postojati nigdje, samo
 // navigacija strelicama. React od v17 dodaje wheel/touch listenere kao PASSIVE po
 // defaultu, pa preventDefault() unutar običnog onWheel propa NEMA efekta (browser ga
 // ignorira). Ovaj hook ručno veže native "wheel" listener s { passive: false } preko
 // ref callbacka — zakači se točno kad React montira DOM element, neovisno o
-// Framer Motion/AnimatePresence tajmingu. Vraća ref koji se stavlja na scrollable div;
-// postojeći scrollIntoView() pozivi (za praćenje fokusa strelicama) ostaju netaknuti,
-// jer to je programski scroll, ne scroll mišem.
+// Framer Motion/AnimatePresence tajmingu. Uz callback ref vraća i pravi RefObject na
+// isti DOM node (nodeRef) — treba ga djeci (ChannelItem/ProgramRow) da mogu izračunati
+// ručni scrollIntoViewNearest bez oslanjanja na closest()/klase. Postojeći programski
+// scroll (za praćenje fokusa strelicama) ostaje netaknut, jer to nije scroll mišem.
 function useNoWheelRef<T extends HTMLElement>() {
   const nodeRef = useRef<T | null>(null);
   const blockWheel = useCallback((e: WheelEvent) => e.preventDefault(), []);
 
-  return useCallback(
+  const refCallback = useCallback(
     (el: T | null) => {
       if (nodeRef.current) {
         nodeRef.current.removeEventListener("wheel", blockWheel);
@@ -70,6 +90,8 @@ function useNoWheelRef<T extends HTMLElement>() {
     },
     [blockWheel],
   );
+
+  return [refCallback, nodeRef] as const;
 }
 
 function calculateProgress(startTime: string, endTime: string): number {
@@ -99,6 +121,7 @@ const ChannelItem = memo(
     index,
     showNumber = false,
     lightweight = false,
+    scrollContainerRef,
   }: {
     channel: EPGChannel;
     isFocused: boolean;
@@ -106,6 +129,7 @@ const ChannelItem = memo(
     index: number;
     showNumber?: boolean;
     lightweight?: boolean;
+    scrollContainerRef?: { current: HTMLElement | null };
   }) => {
     const ref = useRef<HTMLButtonElement>(null);
     const [logoError, setLogoError] = useState(false);
@@ -118,10 +142,10 @@ const ChannelItem = memo(
     }, [onSelect, index]);
 
     useEffect(() => {
-      if (isFocused && ref.current) {
-        ref.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      if (isFocused && ref.current && scrollContainerRef?.current) {
+        scrollIntoViewNearest(scrollContainerRef.current, ref.current);
       }
-    }, [isFocused]);
+    }, [isFocused, scrollContainerRef]);
 
     useEffect(() => {
       setLogoError(false);
@@ -209,119 +233,126 @@ const ChannelItem = memo(
 );
 ChannelItem.displayName = "ChannelItem";
 
-
 const ProgramRow = memo(
   ({
     program,
     index,
     isFocused,
     lightweight = false,
+    scrollContainerRef,
   }: {
     program: EPGProgram;
     index: number;
     isFocused: boolean;
     lightweight?: boolean;
+    scrollContainerRef?: { current: HTMLElement | null };
   }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const progress = useMemo(
-    () => (program.isLive ? calculateProgress(program.startTime, program.endTime) : 0),
-    [program.startTime, program.endTime, program.isLive],
-  );
+    const ref = useRef<HTMLDivElement>(null);
+    const progress = useMemo(
+      () => (program.isLive ? calculateProgress(program.startTime, program.endTime) : 0),
+      [program.startTime, program.endTime, program.isLive],
+    );
 
-  useEffect(() => {
-    if (isFocused && ref.current) {
-      ref.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-  }, [isFocused]);
+    useEffect(() => {
+      if (isFocused && ref.current && scrollContainerRef?.current) {
+        scrollIntoViewNearest(scrollContainerRef.current, ref.current);
+      }
+    }, [isFocused, scrollContainerRef]);
 
-  const rowClass = cn(
-    "flex items-center gap-4 px-5 py-3 rounded-lg",
-    !lightweight && "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
-    isFocused ? "bg-accent/15" : program.isLive ? "bg-accent/8" : lightweight ? "bg-transparent" : "bg-transparent hover:bg-muted/10",
-  );
+    const rowClass = cn(
+      "flex items-center gap-4 px-5 py-3 rounded-lg",
+      !lightweight && "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200",
+      isFocused
+        ? "bg-accent/15"
+        : program.isLive
+          ? "bg-accent/8"
+          : lightweight
+            ? "bg-transparent"
+            : "bg-transparent hover:bg-muted/10",
+    );
 
-  const inner = (
-    <>
-      <span
-        className={cn(
-          "text-sm font-mono w-14 flex-shrink-0",
-          isFocused
-            ? "text-accent font-semibold"
-            : program.isLive
-              ? "text-accent font-semibold"
-              : "text-muted-foreground",
-        )}
-      >
-        {program.startTime}
-      </span>
-
-      {program.isLive && (
-        <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-          <Play className="w-3 h-3 fill-current text-accent-foreground" />
-        </div>
-      )}
-
-      <div className="flex-1 min-w-0">
+    const inner = (
+      <>
         <span
           className={cn(
-            "text-sm block truncate",
+            "text-sm font-mono w-14 flex-shrink-0",
             isFocused
-              ? "text-foreground font-semibold"
+              ? "text-accent font-semibold"
               : program.isLive
-                ? "text-foreground font-semibold"
-                : "text-foreground/70",
+                ? "text-accent font-semibold"
+                : "text-muted-foreground",
           )}
         >
-          {program.title}
+          {program.startTime}
         </span>
+
         {program.isLive && (
-          <div className="mt-1.5 w-full max-w-[240px] h-[3px] rounded-full bg-muted/30 overflow-hidden">
-            {lightweight ? (
-              // Statična traka napretka — bez animacijskog loopa dok svira video.
-              <div
-                className="h-full w-full origin-left rounded-full bg-accent"
-                style={{ transform: `scaleX(${progress / 100})` }}
-              />
-            ) : (
-              <motion.div
-                className="h-full w-full origin-left rounded-full bg-accent"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: progress / 100 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-              />
-            )}
+          <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+            <Play className="w-3 h-3 fill-current text-accent-foreground" />
           </div>
         )}
-      </div>
 
-      <span className="text-xs text-muted-foreground flex-shrink-0">{program.endTime}</span>
+        <div className="flex-1 min-w-0">
+          <span
+            className={cn(
+              "text-sm block truncate",
+              isFocused
+                ? "text-foreground font-semibold"
+                : program.isLive
+                  ? "text-foreground font-semibold"
+                  : "text-foreground/70",
+            )}
+          >
+            {program.title}
+          </span>
+          {program.isLive && (
+            <div className="mt-1.5 w-full max-w-[240px] h-[3px] rounded-full bg-muted/30 overflow-hidden">
+              {lightweight ? (
+                // Statična traka napretka — bez animacijskog loopa dok svira video.
+                <div
+                  className="h-full w-full origin-left rounded-full bg-accent"
+                  style={{ transform: `scaleX(${progress / 100})` }}
+                />
+              ) : (
+                <motion.div
+                  className="h-full w-full origin-left rounded-full bg-accent"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: progress / 100 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                />
+              )}
+            </div>
+          )}
+        </div>
 
-      <span className="hidden text-xs text-muted-foreground/60 flex-shrink-0 w-14 text-right">{program.date}</span>
-    </>
-  );
+        <span className="text-xs text-muted-foreground flex-shrink-0">{program.endTime}</span>
 
-  if (lightweight && !isFocused) {
-    return (
-      <div ref={ref} className={rowClass}>
-        {inner}
-      </div>
+        <span className="hidden text-xs text-muted-foreground/60 flex-shrink-0 w-14 text-right">{program.date}</span>
+      </>
     );
-  }
 
-  return (
-    <motion.div
-      ref={ref}
-      initial={lightweight ? false : { opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.04 }}
-      className={rowClass}
-    >
-      {inner}
-    </motion.div>
-  );
-});
+    if (lightweight && !isFocused) {
+      return (
+        <div ref={ref} className={rowClass}>
+          {inner}
+        </div>
+      );
+    }
+
+    return (
+      <motion.div
+        ref={ref}
+        initial={lightweight ? false : { opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.04 }}
+        className={rowClass}
+      >
+        {inner}
+      </motion.div>
+    );
+  },
+);
 ProgramRow.displayName = "ProgramRow";
-
 
 const EPGGrid = ({
   channels,
@@ -339,11 +370,14 @@ const EPGGrid = ({
   const selectedChannel = isFocusActive || isProgramFocused ? channels[focusedIndex] : channels[0];
 
   // Refovi koji blokiraju scroll mišem na sva tri scrollable stupca (lista kanala,
-  // raspored programa, panel s detaljima) — postojeći scrollIntoView() u ChannelItem/
-  // ProgramRow (za praćenje fokusa strelicama) ostaje netaknut jer je to programski scroll.
-  const noWheelChannelListRef = useNoWheelRef<HTMLDivElement>();
-  const noWheelProgramListRef = useNoWheelRef<HTMLDivElement>();
-  const noWheelDetailPanelRef = useNoWheelRef<HTMLDivElement>();
+  // raspored programa, panel s detaljima) — postojeći scrollIntoViewNearest() u
+  // ChannelItem/ProgramRow (za praćenje fokusa strelicama) ostaje netaknut jer je to
+  // programski scroll, ne scroll mišem. Uz callback ref za wheel-blokadu, hook vraća i
+  // pravi RefObject na kontejner (drugi element niza) — prosljeđuje se djeci kao
+  // scrollContainerRef za ručni klampani scroll.
+  const [noWheelChannelListRef, channelListNodeRef] = useNoWheelRef<HTMLDivElement>();
+  const [noWheelProgramListRef, programListNodeRef] = useNoWheelRef<HTMLDivElement>();
+  const [noWheelDetailPanelRef] = useNoWheelRef<HTMLDivElement>();
 
   // Stabilan handler — jedan za cijelu listu, pa se memoizirane stavke ne
   // re-renderiraju pri svakom pomaku D-Pada.
@@ -400,11 +434,11 @@ const EPGGrid = ({
               index={index}
               showNumber={showNumbers}
               lightweight={lightweight}
+              scrollContainerRef={channelListNodeRef}
             />
           );
         })}
       </div>
-
 
       {/* Gold Divider */}
       <div className="w-px bg-gradient-to-b from-transparent via-accent/40 to-transparent flex-shrink-0" />
@@ -456,8 +490,8 @@ const EPGGrid = ({
                       index={i}
                       isFocused={isProgramFocused && focusedProgramIndex === i}
                       lightweight={lightweight}
+                      scrollContainerRef={programListNodeRef}
                     />
-
                   ))}
                 </div>
               </motion.div>
@@ -494,7 +528,7 @@ const EPGGrid = ({
                       alt={selectedChannel.name}
                       className="w-full h-full object-contain scale-125"
                       loading="eager"
-                        decoding="async"
+                      decoding="async"
                     />
                   ) : (
                     <span className="text-sm font-bold text-accent tracking-wider">
