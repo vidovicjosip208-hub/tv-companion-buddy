@@ -134,7 +134,9 @@ const TVSidebar = memo(function TVSidebar({
   isMini = false,
   onItemClick,
   onItemHover,
+  lightweight = false,
 }: TVSidebarProps) {
+
   const { t } = useTranslation();
   const showLabels = isExpanded && !isMini;
 
