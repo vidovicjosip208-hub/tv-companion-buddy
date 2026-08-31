@@ -5,14 +5,22 @@
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=overlays-content" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Lovable App</title>
+    <title>Cube Player — Live TV & Videoteka</title>
     <meta
       name="description"
-      content="My TV Hub is a media application for streaming live TV, radio, and live camera feeds with an electronic program guide."
+      content="Cube Player is a media application for streaming live TV, radio, and live camera feeds with an electronic program guide."
     />
-    <meta name="author" content="Lovable" />
-    <!-- TODO: Update og:title to match your application name -->
+    <meta name="author" content="Cube Player" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CubePlayer" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+
     <meta property="og:type" content="website" />
     <meta
       property="og:image"
@@ -24,8 +32,8 @@
       name="twitter:image"
       content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4a6afd48-b964-497b-8612-c261c8326759/id-preview-3794ab11--764b882c-e089-4c46-94bb-e36408ee8d5f.lovable.app-1784369562910.png"
     />
-    <meta property="og:title" content="Lovable App" />
-    <meta name="twitter:title" content="Lovable App" />
+    <meta property="og:title" content="Cube Player — Live TV & Videoteka" />
+    <meta name="twitter:title" content="Cube Player — Live TV & Videoteka" />
     <meta
       property="og:description"
       content="My TV Hub is a media application for streaming live TV, radio, and live camera feeds with an electronic program guide."
@@ -38,5 +46,35 @@
   <body style="background: #050505; margin: 0; padding: 0;">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Register the install-only service worker only in the published app,
+      // never in dev or Lovable preview (previews must always get fresh code).
+      (function () {
+        if (!("serviceWorker" in navigator)) return;
+        var host = window.location.hostname;
+        var isPreview =
+          host.startsWith("id-preview--") ||
+          host.startsWith("preview--") ||
+          host === "lovableproject.com" ||
+          host.endsWith(".lovableproject.com") ||
+          host.endsWith(".lovableproject-dev.com") ||
+          host.endsWith(".beta.lovable.dev") ||
+          host === "localhost" ||
+          host === "127.0.0.1";
+        var swOff = new URLSearchParams(window.location.search).has("sw");
+        var inIframe = window.self !== window.top;
+        if (isPreview || swOff || inIframe) {
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (r) {
+              if (r.active && r.active.scriptURL.endsWith("/sw.js")) r.unregister();
+            });
+          });
+          return;
+        }
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js");
+        });
+      })();
+    </script>
   </body>
 </html>
