@@ -1243,6 +1243,8 @@ const SpeedGauge = ({ value, max, unit }: { value: number; max: number; unit: st
   const tip = polar(needleAngle, radius - 34);
   const baseL = polar(needleAngle + 90, 9);
   const baseR = polar(needleAngle - 90, 9);
+  // Pomični indikator na traci koji uvijek prati kut kazaljke.
+  const indicatorDot = polar(needleAngle, radius);
 
   return (
     <svg viewBox="0 0 320 320" className="w-[280px] h-[280px] md:w-[320px] md:h-[320px]">
@@ -1256,17 +1258,26 @@ const SpeedGauge = ({ value, max, unit }: { value: number; max: number; unit: st
           className="stroke-white/10"
           strokeDasharray={`${arcLength} ${fullCircumference}`}
         />
-        {/* Aktivni (obojeni) dio ljestvice */}
+        {/* Aktivni (obojeni) dio ljestvice — bez zaobljenih krajeva kako fiksna točka na početku ne bi ostajala vidljiva */}
         <circle
           r={radius}
           fill="none"
           strokeWidth={22}
-          strokeLinecap="round"
+          strokeLinecap="butt"
           className="stroke-accent"
           strokeDasharray={`${progressLength} ${fullCircumference}`}
           style={{ transition: "stroke-dasharray 0.2s linear" }}
         />
       </g>
+
+      {/* Pomični indikator (točka) koji prati kazaljku duž trake */}
+      <circle
+        cx={indicatorDot.x}
+        cy={indicatorDot.y}
+        r={11}
+        className="fill-accent"
+        style={{ transition: "cx 0.2s linear, cy 0.2s linear" }}
+      />
 
       {/* Brojevi unutar luka */}
       {labels.map((v) => {
