@@ -1270,14 +1270,10 @@ const SpeedGauge = ({ value, max, unit }: { value: number; max: number; unit: st
         />
       </g>
 
-      {/* Pomični indikator (točka) koji prati kazaljku duž trake */}
-      <circle
-        cx={indicatorDot.x}
-        cy={indicatorDot.y}
-        r={11}
-        className="fill-accent"
-        style={{ transition: "cx 0.2s linear, cy 0.2s linear" }}
-      />
+      {/* Pomični indikator (točka) koji prati kazaljku duž trake — bez CSS tranzicije,
+          jer bi ona kod čestih ažuriranja (svaki animacijski frame) uzrokovala da točka
+          uvijek "juri" metu koja joj stalno bježi i time izgleda kao da zaostaje. */}
+      <circle cx={indicatorDot.x} cy={indicatorDot.y} r={11} className="fill-accent" />
 
       {/* Brojevi unutar luka */}
       {labels.map((v) => {
