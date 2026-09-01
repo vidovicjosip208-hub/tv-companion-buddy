@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cube Player</string>
+    <string name="title_activity_main">Cube Player</string>
+    <string name="package_name">app.lovable.p764b882ce0894c4694bbe36408ee8d5f</string>
+    <string name="custom_url_scheme">app.lovable.p764b882ce0894c4694bbe36408ee8d5f</string>
+</resources>
