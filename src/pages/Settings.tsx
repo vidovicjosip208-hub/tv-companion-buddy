@@ -51,7 +51,6 @@ import {
   type StartupActionSettings,
 } from "@/lib/startupAction";
 
-
 // Prilagođena ikona daljinskog upravljača (lucide nema ugrađenu "Remote" ikonu)
 const remoteIconNode: IconNode = [
   ["rect", { x: "7", y: "2", width: "10", height: "20", rx: "3" }],
@@ -199,7 +198,6 @@ async function saveStartupActionSettings(
 ): Promise<void> {
   saveStartupActionSettingsLocal(settings);
 }
-
 
 // ─────────────────────────────────────────────────────────────
 // Speed test — simulacija (zamijeni stvarnim mjerenjem kad bude dostupno,
@@ -1480,14 +1478,6 @@ const StartupActionView = ({
 
   return (
     <div className="relative z-10 flex-1 h-full flex flex-col items-center justify-center px-16">
-      <button
-        onClick={onBack}
-        className="absolute top-10 left-16 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Natrag na postavke uređaja
-      </button>
-
       <span className="text-xs tracking-[3px] text-muted-foreground uppercase mb-2">Postavke pokretanja</span>
       <h1 className="text-2xl font-light text-foreground mb-8">Startup Action</h1>
 
@@ -1586,8 +1576,6 @@ const StartupActionView = ({
           })}
         </div>
       </div>
-
-      <p className="text-xs text-muted-foreground mt-6">Enter odabire/mijenja · Escape/Natrag se vraća</p>
     </div>
   );
 };
