@@ -304,43 +304,12 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             transition={{ delay: 0.5 }}
             className="absolute bottom-24 left-0 right-0 flex flex-col items-center gap-3 px-0"
           >
-            <div
-              className="flex flex-col items-center gap-3 w-auto"
-              style={{ minHeight: `${VISIBLE_COUNT * 56}px` }}
-            >
-              <AnimatePresence mode="popLayout">
-                {MAIN_BUTTONS.map((id, idx) => {
-                  const visibleStart = scrollOffset;
-                  const visibleEnd = scrollOffset + VISIBLE_COUNT;
-
-                  if (idx < visibleStart || idx >= visibleEnd) return null;
-
-                  const hasMoreAbove = visibleStart > 0;
-                  const hasMoreBelow = visibleEnd < MAIN_BUTTONS.length;
-
-                  const isPeekTop = idx === visibleStart && hasMoreAbove;
-                  const isPeekBottom = idx === visibleEnd - 1 && hasMoreBelow;
-                  const isPeek = isPeekTop || isPeekBottom;
-
-                  return (
-                    <motion.div
-                      key={id}
-                      layout
-                      initial={{ opacity: 0, y: isPeekTop ? -20 : 20 }}
-                      animate={{
-                        opacity: isPeek ? 0.35 : 1,
-                        y: 0,
-                        scale: isPeek ? 0.9 : 1,
-                      }}
-                      exit={{ opacity: 0, y: isPeekTop ? -20 : 20 }}
-                      transition={{ duration: 0.25 }}
-                      className="w-auto"
-                    >
-                      {getButtonContent(id, f(id))}
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+            <div className="flex flex-col items-center gap-3 w-auto">
+              {MAIN_BUTTONS.map((id) => (
+                <div key={id} className="w-auto">
+                  {getButtonContent(id, f(id))}
+                </div>
+              ))}
             </div>
           </motion.div>
 
