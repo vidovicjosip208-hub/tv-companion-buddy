@@ -292,7 +292,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-muted-foreground text-lg leading-relaxed mb-10 line-clamp-5 max-w-[700px]"
+            className="text-muted-foreground text-lg leading-relaxed mb-10 line-clamp-6 max-w-[700px]"
           >
             {details.description}
           </motion.p>
@@ -302,7 +302,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="absolute bottom-32 left-0 right-0 flex flex-col items-center gap-3 px-0"
+            className="absolute bottom-20 left-0 right-0 flex flex-col items-center gap-3 px-0"
           >
             <div
               className="flex flex-col items-center gap-3 w-auto"
