@@ -302,7 +302,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="absolute bottom-20 left-0 right-0 flex flex-col items-center gap-3 px-0"
+            className="absolute bottom-24 left-0 right-0 flex flex-col items-center gap-3 px-0"
           >
             <div
               className="flex flex-col items-center gap-3 w-auto"
