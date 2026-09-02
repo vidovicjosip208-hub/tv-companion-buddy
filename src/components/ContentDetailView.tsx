@@ -305,11 +305,16 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             className="absolute bottom-24 left-0 right-0 flex flex-col items-center gap-3 px-0"
           >
             <div className="flex flex-col items-center gap-3 w-auto">
-              {MAIN_BUTTONS.map((id) => (
-                <div key={id} className="w-auto">
-                  {getButtonContent(id, f(id))}
-                </div>
-              ))}
+              {MAIN_BUTTONS.map((id, idx) => {
+                const visibleStart = scrollOffset;
+                const visibleEnd = scrollOffset + VISIBLE_COUNT;
+                if (idx < visibleStart || idx >= visibleEnd) return null;
+                return (
+                  <div key={id} className="w-auto">
+                    {getButtonContent(id, f(id))}
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
 
