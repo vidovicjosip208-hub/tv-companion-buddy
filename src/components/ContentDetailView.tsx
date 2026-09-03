@@ -239,7 +239,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center px-12 w-full h-full text-center pb-[280px]">
+        <div className="relative z-10 flex flex-col items-center justify-start pt-[7vh] px-12 w-full h-full text-center pb-[280px]">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
