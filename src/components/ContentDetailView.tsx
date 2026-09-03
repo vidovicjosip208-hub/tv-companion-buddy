@@ -239,7 +239,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center px-12 w-full h-full text-center pb-[280px]">
+        <div className="relative z-10 flex flex-col items-center justify-start pt-[7vh] px-12 w-full h-full text-center pb-[280px]">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -265,7 +265,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center gap-3 text-base mb-5 flex-wrap justify-center"
+            className="flex items-center gap-3 text-base mb-5 flex-wrap justify-center min-h-[3.5rem]"
           >
             <span className="text-foreground">{details.year}</span>
             <span className="text-muted-foreground">•</span>
