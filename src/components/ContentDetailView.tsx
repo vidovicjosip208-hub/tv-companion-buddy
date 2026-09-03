@@ -265,7 +265,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center gap-3 text-base mb-5 flex-wrap justify-center min-h-[3.5rem]"
+            className="flex items-center gap-3 text-base mb-5 flex-wrap justify-center"
           >
             <span className="text-foreground">{details.year}</span>
             <span className="text-muted-foreground">•</span>
