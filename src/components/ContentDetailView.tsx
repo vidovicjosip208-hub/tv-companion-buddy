@@ -247,7 +247,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             transition={{ delay: 0.15 }}
             className="mb-4 -mt-24"
           >
-            <img src={logo} alt="Max Ovizija" className="h-[180px] w-auto translate-y-4" />
+            <img src={logo} alt="Max Ovizija" className="h-[180px] w-auto translate-y-6" />
           </motion.div>
 
           {/* Title */}
