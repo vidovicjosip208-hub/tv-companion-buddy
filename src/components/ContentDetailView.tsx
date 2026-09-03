@@ -245,7 +245,7 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="mb-4 -mt-24"
+            className="mb-4 -mt-16"
           >
             <img src={logo} alt="Max Ovizija" className="h-[180px] w-auto" />
           </motion.div>
