@@ -287,12 +287,13 @@ const ContentDetailView = ({ details, thumbnail, itemId, onClose }: ContentDetai
             </span>
           </motion.div>
 
-          {/* Description */}
+          {/* Description — fiksna visina za 3 reda; višak se reže s tri točke */}
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-muted-foreground text-lg leading-relaxed mb-10 line-clamp-6 max-w-[700px]"
+            className="text-muted-foreground text-lg leading-relaxed mb-10 line-clamp-3 max-w-[700px] overflow-hidden"
+            style={{ minHeight: "5.1rem", maxHeight: "5.1rem" }}
           >
             {details.description}
           </motion.p>
